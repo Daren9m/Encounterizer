@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SRD_MONSTERS } from '@/data/srd-monsters';
+import { ALL_MONSTERS } from '@/data';
 import { filterMonsters } from '@/lib/monster-filter';
 import { generateEncounter } from '@/lib/encounter-generator';
 import { generateMap } from '@/lib/map-generator';
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   };
 
   const encounter = generateEncounter(
-    SRD_MONSTERS,
+    ALL_MONSTERS,
     { party, difficulty, environment, filter: monsterFilter as never },
     filterMonsters
   );

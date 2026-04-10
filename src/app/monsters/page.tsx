@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { SRD_MONSTERS } from '@/data/srd-monsters';
+import { ALL_MONSTERS } from '@/data';
 import { filterMonsters } from '@/lib/monster-filter';
 import type { Monster, MonsterFilter } from '@/lib/types';
 import FilterPanel from '@/components/FilterPanel';
@@ -18,7 +18,7 @@ export default function BestiaryPage() {
   const [filter, setFilter] = useState<MonsterFilter>({});
   const [selectedMonster, setSelectedMonster] = useState<Monster | null>(null);
 
-  const results = useMemo(() => filterMonsters(SRD_MONSTERS, filter), [filter]);
+  const results = useMemo(() => filterMonsters(ALL_MONSTERS, filter), [filter]);
 
   return (
     <div className="animate-fade-in">

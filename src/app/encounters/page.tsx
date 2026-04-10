@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { SRD_MONSTERS } from '@/data/srd-monsters';
+import { ALL_MONSTERS } from '@/data';
 import { filterMonsters } from '@/lib/monster-filter';
 import { generateEncounter } from '@/lib/encounter-generator';
 import { generateMap } from '@/lib/map-generator';
@@ -47,7 +47,7 @@ export default function EncounterPage() {
     };
 
     const enc = generateEncounter(
-      SRD_MONSTERS,
+      ALL_MONSTERS,
       { party, difficulty, environment, filter: monsterFilter },
       filterMonsters
     );

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SRD_MONSTERS } from '@/data/srd-monsters';
+import { ALL_MONSTERS } from '@/data';
 import { filterMonsters } from '@/lib/monster-filter';
 import type { MonsterFilter } from '@/lib/types';
 
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   if (params.has('sortBy')) filter.sortBy = params.get('sortBy') as MonsterFilter['sortBy'];
   if (params.has('sortDir')) filter.sortDir = params.get('sortDir') as MonsterFilter['sortDir'];
 
-  const results = filterMonsters(SRD_MONSTERS, filter);
+  const results = filterMonsters(ALL_MONSTERS, filter);
 
   return NextResponse.json({
     count: results.length,
