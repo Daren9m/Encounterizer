@@ -19,6 +19,17 @@ import DifficultyBadge from '@/components/DifficultyBadge';
 import MonsterStatBlock from '@/components/MonsterStatBlock';
 import MapGrid from '@/components/MapGrid';
 import FilterPanel from '@/components/FilterPanel';
+import PartySetupPanel from '@/components/PartySetupPanel';
+import BattleReportCard from '@/components/BattleReportCard';
+import { simulateBattle } from '@/lib/battle-sim';
+import { monsterToSimMonster } from '@/lib/monster-to-sim';
+import { buildSimPlayer, defaultPartyConfig } from '@/data/class-templates';
+import { usePersistentState } from '@/lib/use-persistent-state';
+import {
+  PARTY_CONFIG_STORAGE_KEY,
+  type BattleReport,
+  type PartyConfig,
+} from '@/lib/battle-sim-types';
 
 const DIFFICULTIES: Difficulty[] = ['Low', 'Moderate', 'High'];
 const ENVIRONMENTS: Environment[] = [
@@ -93,6 +104,23 @@ function isEnvironment(v: string | null): v is Environment {
   return v !== null && (ENVIRONMENTS as string[]).includes(v);
 }
 
+function isPartyConfig(v: unknown): v is PartyConfig {
+  return (
+    typeof v === 'object' && v !== null
+    && (v as PartyConfig).version === 1
+    && Array.isArray((v as PartyConfig).members)
+  );
+}
+
+/** Stable fingerprint of an encounter's composition for staleness checks. */
+function encounterSignature(encounter: Encounter | null): string {
+  if (!encounter) return '';
+  return encounter.monsters
+    .map((em) => `${em.monster.id}x${em.count}`)
+    .sort()
+    .join('|');
+}
+
 // ─── Page ─────────────────────────────────────────────────────────
 
 export default function EncounterPage() {
@@ -121,6 +149,17 @@ function EncounterBuilder() {
   const [includeMap, setIncludeMap] = useState(true);
   const [showManualAdd, setShowManualAdd] = useState(false);
   const [manualSearch, setManualSearch] = useState('');
+
+  // Battle Forecast state
+  const [partyConfig, setPartyConfig] = usePersistentState<PartyConfig | null>(
+    PARTY_CONFIG_STORAGE_KEY,
+    null,
+    (v): v is PartyConfig | null => v === null || isPartyConfig(v),
+  );
+  const [showPartySetup, setShowPartySetup] = useState(false);
+  const [report, setReport] = useState<BattleReport | null>(null);
+  const [reportSignature, setReportSignature] = useState('');
+  const [simRunning, setSimRunning] = useState(false);
 
   // Current party for XP budgets
   const party = useMemo(() => buildParty(partySize, partyLevel), [partySize, partyLevel]);
@@ -218,6 +257,29 @@ function EncounterBuilder() {
       setTimeout(() => setLinkCopied(false), 2000);
     });
   }, []);
+
+  const runForecast = useCallback((config: PartyConfig, enc: Encounter) => {
+    setSimRunning(true);
+    // Let the skeleton paint before the (fast but synchronous) simulation.
+    setTimeout(() => {
+      const players = config.members.map((m, i) => buildSimPlayer(m, i));
+      const monsters = enc.monsters.flatMap((em) =>
+        Array.from({ length: em.count }, (_, i) => monsterToSimMonster(em.monster, i, em.count)),
+      );
+      setReport(simulateBattle(players, monsters, { seed: randomSeed() }));
+      setReportSignature(encounterSignature(enc));
+      setSimRunning(false);
+    }, 30);
+  }, []);
+
+  function handleForecastClick() {
+    if (!encounter || encounter.monsters.length === 0) return;
+    if (!partyConfig || partyConfig.members.length === 0) {
+      setShowPartySetup(true);
+      return;
+    }
+    runForecast(partyConfig, encounter);
+  }
 
   const handleAddMonster = useCallback((monster: Monster) => {
     setEncounter(prev => {
@@ -334,6 +396,19 @@ function EncounterBuilder() {
           </button>
           <button
             type="button"
+            onClick={handleForecastClick}
+            disabled={!encounter || encounter.monsters.length === 0 || simRunning}
+            className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
+            title={
+              !encounter || encounter.monsters.length === 0
+                ? 'Generate or build an encounter first'
+                : 'Simulate this battle 1,000 times'
+            }
+          >
+            ⚔ Battle Forecast
+          </button>
+          <button
+            type="button"
             onClick={() => setShowManualAdd(!showManualAdd)}
             className="btn-primary"
           >
@@ -377,6 +452,22 @@ function EncounterBuilder() {
           </div>
         )}
       </div>
+
+      {/* Battle Forecast party setup */}
+      {showPartySetup && (
+        <PartySetupPanel
+          members={partyConfig?.members ?? defaultPartyConfig(partySize, partyLevel)}
+          onSave={(members) => {
+            const config: PartyConfig = { version: 1, members };
+            setPartyConfig(config);
+            setShowPartySetup(false);
+            if (encounter && encounter.monsters.length > 0) {
+              runForecast(config, encounter);
+            }
+          }}
+          onCancel={() => setShowPartySetup(false)}
+        />
+      )}
 
       {/* Manual Monster Add Panel */}
       {showManualAdd && (
@@ -440,6 +531,26 @@ function EncounterBuilder() {
               </div>
             </div>
           </div>
+
+          {/* Battle Forecast */}
+          {simRunning && (
+            <div className="card animate-pulse" role="status" aria-label="Running battle forecast">
+              <h3 className="text-xl font-bold text-[var(--gold)] mb-2">Battle Forecast</h3>
+              <p className="text-sm text-[var(--parchment-dark)]">
+                Simulating 1,000 battles…
+              </p>
+              <div className="h-24 mt-3 rounded bg-[var(--dungeon-dark)]" />
+            </div>
+          )}
+          {!simRunning && report && summary.assessment && (
+            <BattleReportCard
+              report={report}
+              xpLabel={summary.assessment}
+              stale={reportSignature !== encounterSignature(encounter)}
+              onRerun={() => encounter && partyConfig && runForecast(partyConfig, encounter)}
+              onEditParty={() => setShowPartySetup(true)}
+            />
+          )}
 
           {/* Monsters */}
           <div className="card">
