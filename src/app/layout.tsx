@@ -1,8 +1,17 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Cinzel } from 'next/font/google';
 import './globals.css';
 import NavBar from '@/components/NavBar';
 import { SITE_DESCRIPTION, SITE_URL } from '@/lib/site';
+
+// Self-hosted at build time by next/font — zero runtime requests.
+const cinzel = Cinzel({
+  subsets: ['latin'],
+  weight: ['700'],
+  variable: '--font-heading',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -23,7 +32,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={cinzel.variable}>
       <body className="min-h-screen flex flex-col">
         <NavBar />
 
@@ -33,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-[var(--dungeon-accent)] bg-[var(--dungeon-mid)] py-4">
+        <footer className="border-t border-[var(--dungeon-accent)] bg-[var(--dungeon-mid)] py-4 print:hidden">
           <div className="max-w-7xl mx-auto px-4 text-center text-sm text-[var(--parchment-dark)] opacity-60 space-y-1">
             <div>Encounterizer — Built for Dungeon Masters. Uses 5.5e / 2024 rules.</div>
             <div>

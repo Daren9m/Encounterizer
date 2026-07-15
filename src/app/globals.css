@@ -24,6 +24,29 @@ body {
   font-family: Georgia, 'Times New Roman', serif;
 }
 
+/* Display serif for headings (self-hosted Cinzel via next/font) */
+h1, h2, .font-heading {
+  font-family: var(--font-heading), Georgia, serif;
+  letter-spacing: 0.015em;
+}
+
+/* Visible keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--dungeon-dark); }
@@ -161,4 +184,52 @@ select:focus, input:focus {
 
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
+}
+
+/* ─── Print styles ────────────────────────────────────────────────
+   The whole theme flows from the CSS variables, so remapping them here
+   flips every component to a printable light palette at once. Controls
+   and chrome are hidden with Tailwind's print:hidden on the elements. */
+@media print {
+  :root {
+    --parchment: #1a1a1a;
+    --parchment-dark: #3d3d3d;
+    --dragon-red: #7a1616;
+    --dragon-red-light: #7a1616;
+    --dungeon-dark: #ffffff;
+    --dungeon-mid: #ffffff;
+    --dungeon-accent: #bbbbbb;
+    --gold: #705400;
+    --gold-light: #705400;
+  }
+
+  @page {
+    margin: 0.5in;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #1a1a1a;
+  }
+
+  .card {
+    break-inside: avoid;
+    border: 1px solid #999999;
+  }
+
+  .stat-block {
+    break-inside: avoid;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .map-cell {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    border-color: rgba(0, 0, 0, 0.15);
+  }
+
+  .animate-fade-in {
+    animation: none;
+  }
 }
