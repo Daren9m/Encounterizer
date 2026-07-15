@@ -25,6 +25,7 @@ import { simulateBattle } from '@/lib/battle-sim';
 import { monsterToSimMonster } from '@/lib/monster-to-sim';
 import { buildSimPlayer, defaultPartyConfig } from '@/data/class-templates';
 import { usePersistentState } from '@/lib/use-persistent-state';
+import { storageLoad, storageSave } from '@/lib/storage';
 import {
   PARTY_CONFIG_STORAGE_KEY,
   type BattleReport,
@@ -112,6 +113,35 @@ function isPartyConfig(v: unknown): v is PartyConfig {
   );
 }
 
+interface EncounterSettings {
+  partySize: number;
+  partyLevel: number;
+  difficulty: Difficulty;
+  environment: Environment;
+  includeMap: boolean;
+}
+
+function isEncounterSettings(v: unknown): v is EncounterSettings {
+  if (typeof v !== 'object' || v === null) return false;
+  const s = v as EncounterSettings;
+  return (
+    typeof s.partySize === 'number'
+    && typeof s.partyLevel === 'number'
+    && isDifficulty(s.difficulty)
+    && isEnvironment(s.environment)
+    && typeof s.includeMap === 'boolean'
+  );
+}
+
+interface SavedEncounter {
+  id: string;
+  name: string;
+  savedAt: number;
+  encounter: Encounter;
+}
+
+const MAX_SAVED_ENCOUNTERS = 20;
+
 /** Stable fingerprint of an encounter's composition for staleness checks. */
 function encounterSignature(encounter: Encounter | null): string {
   if (!encounter) return '';
@@ -160,6 +190,35 @@ function EncounterBuilder() {
   const [report, setReport] = useState<BattleReport | null>(null);
   const [reportSignature, setReportSignature] = useState('');
   const [simRunning, setSimRunning] = useState(false);
+
+  // Saved encounters + save-name input
+  const [savedEncounters, setSavedEncounters, savedHydrated] =
+    usePersistentState<SavedEncounter[]>('savedEncounters', []);
+  const [savingName, setSavingName] = useState<string | null>(null);
+
+  // Persisted page settings. Declared BEFORE the URL-init effect so a shared
+  // link's params win over remembered settings.
+  const settingsHydrated = useRef(false);
+  useEffect(() => {
+    const stored = storageLoad<EncounterSettings | null>(
+      'encounterSettings', null,
+      (v): v is EncounterSettings | null => v === null || isEncounterSettings(v),
+    );
+    if (stored) {
+      setPartySize(stored.partySize);
+      setPartyLevel(stored.partyLevel);
+      setDifficulty(stored.difficulty);
+      setEnvironment(stored.environment);
+      setIncludeMap(stored.includeMap);
+    }
+    settingsHydrated.current = true;
+  }, []);
+  useEffect(() => {
+    if (!settingsHydrated.current) return;
+    storageSave('encounterSettings', {
+      partySize, partyLevel, difficulty, environment, includeMap,
+    } satisfies EncounterSettings);
+  }, [partySize, partyLevel, difficulty, environment, includeMap]);
 
   // Current party for XP budgets
   const party = useMemo(() => buildParty(partySize, partyLevel), [partySize, partyLevel]);
@@ -342,6 +401,24 @@ function EncounterBuilder() {
     URL.revokeObjectURL(url);
   }, [encounter]);
 
+  const handleSaveEncounter = useCallback(() => {
+    if (!encounter || savingName === null) return;
+    const name = savingName.trim() || encounter.name;
+    setSavedEncounters((prev) => [
+      { id: `saved-${Date.now()}`, name, savedAt: Date.now(), encounter },
+      ...prev,
+    ].slice(0, MAX_SAVED_ENCOUNTERS));
+    setSavingName(null);
+  }, [encounter, savingName, setSavedEncounters]);
+
+  const handleLoadSaved = useCallback((saved: SavedEncounter) => {
+    setEncounter(saved.encounter);
+    setIsSeeded(false); // the pool may have changed since it was saved
+    clearUrlSeed();
+    setExpandedMonster(null);
+    setReport(null);
+  }, []);
+
   return (
     <div className="animate-fade-in">
       <h1 className="text-3xl font-bold text-[var(--gold)] mb-6">Encounter Builder</h1>
@@ -434,6 +511,46 @@ function EncounterBuilder() {
               Export JSON
             </button>
           )}
+          {encounter && encounter.monsters.length > 0 && (
+            savingName === null ? (
+              <button
+                type="button"
+                onClick={() => setSavingName(encounter.name)}
+                className="btn-secondary text-sm"
+              >
+                Save
+              </button>
+            ) : (
+              <span className="flex items-center gap-1">
+                <label htmlFor="save-encounter-name" className="sr-only">
+                  Name for this saved encounter
+                </label>
+                <input
+                  id="save-encounter-name"
+                  type="text"
+                  className="text-sm w-44"
+                  value={savingName}
+                  autoFocus
+                  onChange={(e) => setSavingName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveEncounter();
+                    if (e.key === 'Escape') setSavingName(null);
+                  }}
+                />
+                <button type="button" onClick={handleSaveEncounter} className="btn-gold text-sm">
+                  ✓
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSavingName(null)}
+                  className="btn-secondary text-sm"
+                  aria-label="Cancel saving"
+                >
+                  ✕
+                </button>
+              </span>
+            )
+          )}
           {encounter && isSeeded && (
             <button
               type="button"
@@ -452,6 +569,46 @@ function EncounterBuilder() {
           </div>
         )}
       </div>
+
+      {/* Saved Encounters */}
+      {savedHydrated && savedEncounters.length > 0 && (
+        <details className="card mb-6">
+          <summary className="cursor-pointer font-bold text-[var(--gold)]">
+            Saved Encounters ({savedEncounters.length})
+          </summary>
+          <ul className="mt-3 divide-y divide-[var(--dungeon-accent)]">
+            {savedEncounters.map((saved) => (
+              <li key={saved.id} className="flex items-center justify-between py-2 gap-2 text-sm">
+                <div className="min-w-0">
+                  <span className="font-bold">{saved.name}</span>
+                  <span className="text-[var(--parchment-dark)] ml-2">
+                    {saved.encounter.difficulty} · {saved.encounter.totalXp.toLocaleString()} XP ·{' '}
+                    {saved.encounter.monsters.reduce((s, em) => s + em.count, 0)} monsters ·{' '}
+                    {new Date(saved.savedAt).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleLoadSaved(saved)}
+                    className="btn-secondary text-xs"
+                  >
+                    Load
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSavedEncounters((prev) => prev.filter((s) => s.id !== saved.id))}
+                    aria-label={`Delete saved encounter ${saved.name}`}
+                    className="text-red-400 hover:text-red-300 px-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
 
       {/* Battle Forecast party setup */}
       {showPartySetup && (

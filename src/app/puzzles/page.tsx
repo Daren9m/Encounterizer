@@ -2,17 +2,20 @@
 
 import { useState } from 'react';
 import { generatePuzzle, getPuzzleCategories } from '@/lib/puzzle-generator';
+import { usePersistentState } from '@/lib/use-persistent-state';
 import type { Puzzle, PuzzleCategory, PuzzleDifficulty } from '@/lib/puzzle-generator';
 
 const DIFFICULTIES: PuzzleDifficulty[] = ['Easy', 'Medium', 'Hard'];
 
 export default function PuzzlesPage() {
-  const [category, setCategory] = useState<PuzzleCategory | ''>('');
-  const [difficulty, setDifficulty] = useState<PuzzleDifficulty | ''>('');
-  const [partyLevel, setPartyLevel] = useState(5);
+  const [category, setCategory] = usePersistentState<PuzzleCategory | ''>('puzzleCategory', '');
+  const [difficulty, setDifficulty] = usePersistentState<PuzzleDifficulty | ''>('puzzleDifficulty', '');
+  const [partyLevel, setPartyLevel] = usePersistentState<number>('puzzlePartyLevel', 5);
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [showSolution, setShowSolution] = useState(false);
-  const [history, setHistory] = useState<Puzzle[]>([]);
+  const [history, setHistory] = usePersistentState<Puzzle[]>(
+    'puzzleHistory', [], (v): v is Puzzle[] => Array.isArray(v),
+  );
 
   function handleGenerate() {
     const p = generatePuzzle({
@@ -183,8 +186,8 @@ export default function PuzzlesPage() {
         </div>
       )}
 
-      {/* History */}
-      {history.length > 1 && (
+      {/* History (persists across visits) */}
+      {history.length > 0 && !(history.length === 1 && puzzle?.id === history[0].id) && (
         <div className="mt-6">
           <h2 className="text-lg font-bold text-[var(--gold)] mb-3">Recent Puzzles</h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">

@@ -7,6 +7,7 @@ import FilterPanel from '@/components/FilterPanel';
 import MonsterStatBlock from '@/components/MonsterStatBlock';
 import CustomMonsterPanel from '@/components/CustomMonsterPanel';
 import { useMonsters } from '@/app/hooks/useMonsters';
+import { usePersistentState } from '@/lib/use-persistent-state';
 
 function crDisplay(cr: number): string {
   if (cr === 0.125) return '1/8';
@@ -20,7 +21,9 @@ type ViewMode = 'grid' | 'list';
 export default function BestiaryPage() {
   const [filter, setFilter] = useState<MonsterFilter>({});
   const [selectedMonster, setSelectedMonster] = useState<Monster | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [viewMode, setViewMode] = usePersistentState<ViewMode>(
+    'bestiaryViewMode', 'grid', (v): v is ViewMode => v === 'grid' || v === 'list',
+  );
 
   const { all: allMonsters, custom } = useMonsters();
   const results = useMemo(() => filterMonsters(allMonsters, filter), [allMonsters, filter]);

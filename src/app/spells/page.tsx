@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { SRD_SPELLS, searchSpells, filterSpells, levelLabel } from '@/data/spells';
+import { usePersistentState } from '@/lib/use-persistent-state';
 import type { Spell, SpellSchool } from '@/data/spells';
 
 const SCHOOLS: SpellSchool[] = ['Abjuration', 'Conjuration', 'Divination', 'Enchantment', 'Evocation', 'Illusion', 'Necromancy', 'Transmutation'];
@@ -16,7 +17,16 @@ export default function SpellsPage() {
   const [concFilter, setConcFilter] = useState<'' | 'yes' | 'no'>('');
   const [ritualFilter, setRitualFilter] = useState<'' | 'yes' | 'no'>('');
   const [selected, setSelected] = useState<Spell | null>(null);
-  const [pinned, setPinned] = useState<Spell[]>([]);
+  // Pins persist as ids so a data update can't strand stale spell objects.
+  const [pinnedIds, setPinnedIds] = usePersistentState<string[]>(
+    'pinnedSpells', [], (v): v is string[] => Array.isArray(v) && v.every((x) => typeof x === 'string'),
+  );
+  const pinned = useMemo(
+    () => pinnedIds
+      .map((id) => SRD_SPELLS.find((s) => s.id === id))
+      .filter((s): s is Spell => s !== undefined),
+    [pinnedIds],
+  );
 
   const results = useMemo(() => {
     let spells = searchSpells(query, SRD_SPELLS);
@@ -31,7 +41,9 @@ export default function SpellsPage() {
   }, [query, levelFilter, schoolFilter, classFilter, concFilter, ritualFilter]);
 
   function togglePin(spell: Spell) {
-    setPinned(prev => prev.some(p => p.id === spell.id) ? prev.filter(p => p.id !== spell.id) : [...prev.slice(-2), spell]);
+    setPinnedIds(prev => prev.includes(spell.id)
+      ? prev.filter(id => id !== spell.id)
+      : [...prev.slice(-2), spell.id]);
   }
 
   return (

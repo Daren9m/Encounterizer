@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { generateMap, TERRAIN_INFO } from '@/lib/map-generator';
+import { usePersistentState } from '@/lib/use-persistent-state';
 import type { EncounterMap, Environment } from '@/lib/types';
 import MapGrid from '@/components/MapGrid';
 
@@ -9,6 +10,11 @@ const ENVIRONMENTS: Environment[] = [
   'Arctic', 'Coastal', 'Desert', 'Forest', 'Grassland', 'Hill',
   'Mountain', 'Swamp', 'Underdark', 'Underwater', 'Urban', 'Planar',
 ];
+
+const isMapEnvironment = (v: unknown): v is Environment =>
+  typeof v === 'string' && (ENVIRONMENTS as string[]).includes(v);
+const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+const isMapArray = (v: unknown): v is EncounterMap[] => Array.isArray(v);
 
 const ENV_DESCRIPTIONS: Partial<Record<Environment, string>> = {
   Underdark: 'Cellular automata caverns with organic tunnels',
@@ -26,11 +32,11 @@ const ENV_DESCRIPTIONS: Partial<Record<Environment, string>> = {
 };
 
 export default function MapsPage() {
-  const [environment, setEnvironment] = useState<Environment>('Underdark');
-  const [width, setWidth] = useState(24);
-  const [height, setHeight] = useState(18);
+  const [environment, setEnvironment] = usePersistentState<Environment>('mapEnvironment', 'Underdark', isMapEnvironment);
+  const [width, setWidth] = usePersistentState<number>('mapWidth', 24, isNumber);
+  const [height, setHeight] = usePersistentState<number>('mapHeight', 18, isNumber);
   const [map, setMap] = useState<EncounterMap | null>(null);
-  const [history, setHistory] = useState<EncounterMap[]>([]);
+  const [history, setHistory] = usePersistentState<EncounterMap[]>('mapHistory', [], isMapArray);
 
   const handleGenerate = useCallback(() => {
     const result = generateMap({
@@ -41,7 +47,7 @@ export default function MapsPage() {
     });
     setMap(result);
     setHistory(prev => [result, ...prev.slice(0, 9)]);
-  }, [environment, width, height]);
+  }, [environment, width, height, setHistory]);
 
   const handleExport = useCallback(() => {
     if (!map) return;
@@ -159,8 +165,8 @@ export default function MapsPage() {
         </div>
       )}
 
-      {/* Map History */}
-      {history.length > 1 && (
+      {/* Map History (persists across visits) */}
+      {history.length > 0 && !(history.length === 1 && map?.id === history[0].id) && (
         <div className="mt-6">
           <h2 className="text-lg font-bold text-[var(--gold)] mb-3">Recent Maps</h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">

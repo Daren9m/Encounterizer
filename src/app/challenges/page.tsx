@@ -2,16 +2,19 @@
 
 import { useState } from 'react';
 import { generateNoncombatEncounter, getChallengeTypes } from '@/lib/noncombat-generator';
+import { usePersistentState } from '@/lib/use-persistent-state';
 import type { NoncombatEncounter, ChallengeType } from '@/lib/noncombat-generator';
 
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard'] as const;
 
 export default function ChallengesPage() {
-  const [type, setType] = useState<ChallengeType | ''>('');
-  const [difficulty, setDifficulty] = useState<'Easy' | 'Medium' | 'Hard'>('Medium');
-  const [partyLevel, setPartyLevel] = useState(5);
+  const [type, setType] = usePersistentState<ChallengeType | ''>('challengeType', '');
+  const [difficulty, setDifficulty] = usePersistentState<'Easy' | 'Medium' | 'Hard'>('challengeDifficulty', 'Medium');
+  const [partyLevel, setPartyLevel] = usePersistentState<number>('challengePartyLevel', 5);
   const [encounter, setEncounter] = useState<NoncombatEncounter | null>(null);
-  const [history, setHistory] = useState<NoncombatEncounter[]>([]);
+  const [history, setHistory] = usePersistentState<NoncombatEncounter[]>(
+    'challengeHistory', [], (v): v is NoncombatEncounter[] => Array.isArray(v),
+  );
 
   const types = getChallengeTypes();
 
@@ -174,8 +177,8 @@ export default function ChallengesPage() {
         </div>
       )}
 
-      {/* History */}
-      {history.length > 1 && (
+      {/* History (persists across visits) */}
+      {history.length > 0 && !(history.length === 1 && encounter?.id === history[0].id) && (
         <div className="mt-6">
           <h2 className="text-lg font-bold text-[var(--gold)] mb-3">Recent Encounters</h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
