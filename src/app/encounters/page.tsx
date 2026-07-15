@@ -1,25 +1,26 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ALL_MONSTERS } from '@/data';
 import { filterMonsters } from '@/lib/monster-filter';
 import {
+  assessEncounterDifficulty,
   generateEncounter,
-  getPartyXpThreshold,
-  getEncounterDifficulty,
+  summarizeEncounter,
 } from '@/lib/encounter-generator';
 import { generateMap } from '@/lib/map-generator';
+import { randomSeed } from '@/lib/random';
 import type {
-  Encounter, EncounterMonster, Difficulty, Environment,
+  Encounter, Difficulty, Environment,
   Party, Monster, MonsterFilter,
 } from '@/lib/types';
-import { getEncounterMultiplier } from '@/lib/types';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import MonsterStatBlock from '@/components/MonsterStatBlock';
 import MapGrid from '@/components/MapGrid';
 import FilterPanel from '@/components/FilterPanel';
 
-const DIFFICULTIES: Difficulty[] = ['Easy', 'Medium', 'Hard', 'Deadly'];
+const DIFFICULTIES: Difficulty[] = ['Low', 'Moderate', 'High'];
 const ENVIRONMENTS: Environment[] = [
   'Arctic', 'Coastal', 'Desert', 'Forest', 'Grassland', 'Hill',
   'Mountain', 'Swamp', 'Underdark', 'Underwater', 'Urban', 'Planar',
@@ -44,12 +45,75 @@ function buildParty(size: number, level: number): Party {
   };
 }
 
+// ─── Shareable URL state ──────────────────────────────────────────
+
+interface GenerateConfig {
+  partySize: number;
+  partyLevel: number;
+  difficulty: Difficulty;
+  environment: Environment;
+  includeMap: boolean;
+  filter: MonsterFilter;
+  seed: number;
+}
+
+function writeUrl(cfg: GenerateConfig): void {
+  const params = new URLSearchParams();
+  params.set('size', String(cfg.partySize));
+  params.set('level', String(cfg.partyLevel));
+  params.set('diff', cfg.difficulty);
+  params.set('env', cfg.environment);
+  if (cfg.includeMap) params.set('map', '1');
+  params.set('seed', String(cfg.seed));
+  if (Object.keys(cfg.filter).length > 0) params.set('f', JSON.stringify(cfg.filter));
+  window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
+}
+
+function clearUrlSeed(): void {
+  const params = new URLSearchParams(window.location.search);
+  params.delete('seed');
+  const query = params.toString();
+  window.history.replaceState(
+    null, '', query ? `${window.location.pathname}?${query}` : window.location.pathname,
+  );
+}
+
+function clampInt(raw: string | null, min: number, max: number): number | null {
+  if (raw === null) return null;
+  const n = Number.parseInt(raw, 10);
+  if (Number.isNaN(n)) return null;
+  return Math.min(max, Math.max(min, n));
+}
+
+function isDifficulty(v: string | null): v is Difficulty {
+  return v !== null && (DIFFICULTIES as string[]).includes(v);
+}
+
+function isEnvironment(v: string | null): v is Environment {
+  return v !== null && (ENVIRONMENTS as string[]).includes(v);
+}
+
+// ─── Page ─────────────────────────────────────────────────────────
+
 export default function EncounterPage() {
+  // useSearchParams requires a Suspense boundary under static prerendering.
+  return (
+    <Suspense fallback={null}>
+      <EncounterBuilder />
+    </Suspense>
+  );
+}
+
+function EncounterBuilder() {
+  const searchParams = useSearchParams();
+
   const [partySize, setPartySize] = useState(4);
   const [partyLevel, setPartyLevel] = useState(3);
-  const [difficulty, setDifficulty] = useState<Difficulty>('Medium');
+  const [difficulty, setDifficulty] = useState<Difficulty>('Moderate');
   const [environment, setEnvironment] = useState<Environment>('Forest');
   const [encounter, setEncounter] = useState<Encounter | null>(null);
+  const [isSeeded, setIsSeeded] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [monsterFilter, setMonsterFilter] = useState<MonsterFilter>({});
   const [expandedMonster, setExpandedMonster] = useState<string | null>(null);
@@ -57,30 +121,14 @@ export default function EncounterPage() {
   const [showManualAdd, setShowManualAdd] = useState(false);
   const [manualSearch, setManualSearch] = useState('');
 
-  // Current party for XP calculations
+  // Current party for XP budgets
   const party = useMemo(() => buildParty(partySize, partyLevel), [partySize, partyLevel]);
 
-  // XP thresholds for the difficulty meter
-  const thresholds = useMemo(() => ({
-    easy: getPartyXpThreshold(party, 'Easy'),
-    medium: getPartyXpThreshold(party, 'Medium'),
-    hard: getPartyXpThreshold(party, 'Hard'),
-    deadly: getPartyXpThreshold(party, 'Deadly'),
-  }), [party]);
-
-  // Current encounter XP (for real-time difficulty)
-  const encounterXp = useMemo(() => {
-    if (!encounter) return { total: 0, adjusted: 0, count: 0 };
-    const total = encounter.monsters.reduce((s, em) => s + em.monster.xp * em.count, 0);
-    const count = encounter.monsters.reduce((s, em) => s + em.count, 0);
-    const mult = getEncounterMultiplier(count, partySize);
-    return { total, adjusted: Math.round(total * mult), count };
-  }, [encounter, partySize]);
-
-  const currentDifficulty = useMemo(() => {
-    if (!encounter || encounterXp.count === 0) return null;
-    return getEncounterDifficulty(encounterXp.total, encounterXp.count, party);
-  }, [encounter, encounterXp, party]);
+  // The single source of XP truth for the meter, badge, and header stats
+  const summary = useMemo(
+    () => summarizeEncounter(encounter?.monsters ?? [], party),
+    [encounter, party],
+  );
 
   // Monsters for manual add search
   const manualResults = useMemo(() => {
@@ -88,32 +136,100 @@ export default function EncounterPage() {
     return filterMonsters(ALL_MONSTERS, { search: manualSearch }).slice(0, 20);
   }, [manualSearch]);
 
-  function handleGenerate() {
+  const runGenerate = useCallback((cfg: GenerateConfig) => {
     const enc = generateEncounter(
       ALL_MONSTERS,
-      { party, difficulty, environment, filter: monsterFilter },
-      filterMonsters
+      {
+        party: buildParty(cfg.partySize, cfg.partyLevel),
+        difficulty: cfg.difficulty,
+        environment: cfg.environment,
+        filter: cfg.filter,
+        seed: cfg.seed,
+      },
+      filterMonsters,
     );
-    if (includeMap) {
-      enc.map = generateMap({ environment, seed: Date.now() });
+    if (cfg.includeMap) {
+      enc.map = generateMap({ environment: cfg.environment, seed: cfg.seed });
     }
     setEncounter(enc);
+    setIsSeeded(true);
+    setLinkCopied(false);
     setExpandedMonster(null);
+    writeUrl(cfg);
+  }, []);
+
+  // One-shot hydration from a shared link (?seed=...)
+  const didInit = useRef(false);
+  useEffect(() => {
+    if (didInit.current) return;
+    didInit.current = true;
+
+    const size = clampInt(searchParams.get('size'), 1, 10);
+    const level = clampInt(searchParams.get('level'), 1, 20);
+    const diff = searchParams.get('diff');
+    const env = searchParams.get('env');
+    const seed = clampInt(searchParams.get('seed'), 0, 0x7fffffff);
+    const withMap = searchParams.get('map') === '1';
+
+    let filter: MonsterFilter = {};
+    const rawFilter = searchParams.get('f');
+    if (rawFilter) {
+      try {
+        const parsed: unknown = JSON.parse(rawFilter);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          filter = parsed as MonsterFilter;
+        }
+      } catch {
+        // malformed filter param — ignore it
+      }
+    }
+
+    if (size !== null) setPartySize(size);
+    if (level !== null) setPartyLevel(level);
+    if (isDifficulty(diff)) setDifficulty(diff);
+    if (isEnvironment(env)) setEnvironment(env);
+    if (Object.keys(filter).length > 0) setMonsterFilter(filter);
+    if (seed !== null) setIncludeMap(withMap);
+
+    if (seed !== null && size !== null && level !== null && isDifficulty(diff) && isEnvironment(env)) {
+      runGenerate({
+        partySize: size,
+        partyLevel: level,
+        difficulty: diff,
+        environment: env,
+        includeMap: withMap,
+        filter,
+        seed,
+      });
+    }
+  }, [searchParams, runGenerate]);
+
+  function handleGenerate() {
+    runGenerate({
+      partySize, partyLevel, difficulty, environment,
+      includeMap, filter: monsterFilter, seed: randomSeed(),
+    });
   }
+
+  const handleCopyLink = useCallback(() => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    });
+  }, []);
 
   const handleAddMonster = useCallback((monster: Monster) => {
     setEncounter(prev => {
       if (!prev) {
-        // Create a new encounter shell
         return {
-          id: `enc-${Date.now()}`,
+          id: `enc-custom-${Date.now()}`,
           name: 'Custom Encounter',
           description: 'A manually built encounter.',
           environment,
-          difficulty: 'Medium',
+          difficulty: assessEncounterDifficulty(monster.xp, party),
           monsters: [{ monster, count: 1 }],
           totalXp: monster.xp,
-          adjustedXp: monster.xp,
+          seed: 0,
         };
       }
       const existing = prev.monsters.find(em => em.monster.id === monster.id);
@@ -123,11 +239,16 @@ export default function EncounterPage() {
           )
         : [...prev.monsters, { monster, count: 1 }];
       const totalXp = monsters.reduce((s, em) => s + em.monster.xp * em.count, 0);
-      const totalCount = monsters.reduce((s, em) => s + em.count, 0);
-      const mult = getEncounterMultiplier(totalCount, partySize);
-      return { ...prev, monsters, totalXp, adjustedXp: Math.round(totalXp * mult) };
+      return {
+        ...prev, monsters, totalXp,
+        difficulty: assessEncounterDifficulty(totalXp, party),
+        seed: 0,
+      };
     });
-  }, [environment, partySize]);
+    // A manual edit detaches the encounter from its seed — the link would lie.
+    setIsSeeded(false);
+    clearUrlSeed();
+  }, [environment, party]);
 
   const handleRemoveMonster = useCallback((monsterId: string) => {
     setEncounter(prev => {
@@ -136,11 +257,15 @@ export default function EncounterPage() {
         .map(em => em.monster.id === monsterId ? { ...em, count: em.count - 1 } : em)
         .filter(em => em.count > 0);
       const totalXp = monsters.reduce((s, em) => s + em.monster.xp * em.count, 0);
-      const totalCount = monsters.reduce((s, em) => s + em.count, 0);
-      const mult = getEncounterMultiplier(totalCount, partySize);
-      return { ...prev, monsters, totalXp, adjustedXp: Math.round(totalXp * mult) };
+      return {
+        ...prev, monsters, totalXp,
+        difficulty: assessEncounterDifficulty(totalXp, party),
+        seed: 0,
+      };
     });
-  }, [partySize]);
+    setIsSeeded(false);
+    clearUrlSeed();
+  }, [party]);
 
   const handleExport = useCallback(() => {
     if (!encounter) return;
@@ -167,7 +292,7 @@ export default function EncounterPage() {
             </label>
             <input
               type="number" min={1} max={10} value={partySize}
-              onChange={e => setPartySize(Math.max(1, Number(e.target.value)))}
+              onChange={e => setPartySize(Math.max(1, Math.min(10, Number(e.target.value))))}
               className="w-full"
             />
           </div>
@@ -200,7 +325,7 @@ export default function EncounterPage() {
         </div>
 
         {/* Difficulty Meter */}
-        <DifficultyMeter thresholds={thresholds} adjustedXp={encounterXp.adjusted} />
+        <DifficultyMeter budgets={summary.budgets} totalXp={summary.totalXp} />
 
         <div className="flex flex-wrap items-center gap-3 mt-4">
           <button type="button" onClick={handleGenerate} className="btn-gold text-lg">
@@ -231,6 +356,16 @@ export default function EncounterPage() {
           {encounter && (
             <button type="button" onClick={handleExport} className="btn-secondary text-sm">
               Export JSON
+            </button>
+          )}
+          {encounter && isSeeded && (
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className="btn-secondary text-sm"
+              title="Anyone opening this link regenerates this exact encounter (with the built-in bestiary)"
+            >
+              {linkCopied ? 'Copied!' : 'Copy Link'}
             </button>
           )}
         </div>
@@ -279,7 +414,7 @@ export default function EncounterPage() {
           <div className="card">
             <div className="flex items-start justify-between mb-3">
               <h2 className="text-2xl font-bold text-[var(--gold)]">{encounter.name}</h2>
-              {currentDifficulty && <DifficultyBadge difficulty={currentDifficulty} />}
+              {summary.assessment && <DifficultyBadge difficulty={summary.assessment} />}
             </div>
             {encounter.description && (
               <p className="text-[var(--parchment-dark)] mb-4 italic">{encounter.description}</p>
@@ -288,15 +423,15 @@ export default function EncounterPage() {
             <div className="grid sm:grid-cols-4 gap-4 text-sm">
               <div>
                 <span className="text-[var(--gold)] font-bold">Total XP: </span>
-                {encounterXp.total.toLocaleString()}
+                {summary.totalXp.toLocaleString()}
               </div>
               <div>
-                <span className="text-[var(--gold)] font-bold">Adjusted XP: </span>
-                {encounterXp.adjusted.toLocaleString()}
+                <span className="text-[var(--gold)] font-bold">{difficulty} Budget: </span>
+                {summary.budgets[difficulty].toLocaleString()}
               </div>
               <div>
                 <span className="text-[var(--gold)] font-bold">Monsters: </span>
-                {encounterXp.count}
+                {summary.monsterCount}
               </div>
               <div>
                 <span className="text-[var(--gold)] font-bold">Environment: </span>
@@ -392,51 +527,51 @@ export default function EncounterPage() {
 // ─── Difficulty Meter ─────────────────────────────────────────────
 
 function DifficultyMeter({
-  thresholds,
-  adjustedXp,
+  budgets,
+  totalXp,
 }: {
-  thresholds: { easy: number; medium: number; hard: number; deadly: number };
-  adjustedXp: number;
+  budgets: Record<Difficulty, number>;
+  totalXp: number;
 }) {
-  const max = thresholds.deadly * 1.3;
+  // The zone past High is "Extreme" territory; scale the bar so it exists.
+  const max = budgets.High * 1.3;
   const pct = (v: number) => Math.min((v / max) * 100, 100);
+
+  const gradient =
+    totalXp > budgets.High
+      ? 'linear-gradient(90deg, #2e7d32, #f57f17, #d84315, #b71c1c)'
+      : totalXp > budgets.Moderate
+      ? 'linear-gradient(90deg, #2e7d32, #f57f17, #d84315)'
+      : totalXp > budgets.Low
+      ? 'linear-gradient(90deg, #2e7d32, #f57f17)'
+      : '#2e7d32';
 
   return (
     <div className="mt-3">
       <div className="flex justify-between text-xs text-[var(--parchment-dark)] mb-1">
-        <span>Easy ({thresholds.easy})</span>
-        <span>Medium ({thresholds.medium})</span>
-        <span>Hard ({thresholds.hard})</span>
-        <span>Deadly ({thresholds.deadly})</span>
+        <span>Low ({budgets.Low.toLocaleString()})</span>
+        <span>Moderate ({budgets.Moderate.toLocaleString()})</span>
+        <span>High ({budgets.High.toLocaleString()})</span>
+        <span className="text-[#b71c1c] font-bold">Extreme</span>
       </div>
       <div className="relative h-6 bg-[var(--dungeon-dark)] rounded overflow-hidden border border-[var(--dungeon-accent)]">
-        {/* Threshold markers */}
-        <div className="absolute top-0 bottom-0 border-r border-green-600" style={{ left: `${pct(thresholds.easy)}%` }} />
-        <div className="absolute top-0 bottom-0 border-r border-yellow-600" style={{ left: `${pct(thresholds.medium)}%` }} />
-        <div className="absolute top-0 bottom-0 border-r border-orange-600" style={{ left: `${pct(thresholds.hard)}%` }} />
-        <div className="absolute top-0 bottom-0 border-r border-red-600" style={{ left: `${pct(thresholds.deadly)}%` }} />
+        {/* Budget markers */}
+        <div className="absolute top-0 bottom-0 border-r border-green-600" style={{ left: `${pct(budgets.Low)}%` }} />
+        <div className="absolute top-0 bottom-0 border-r border-yellow-600" style={{ left: `${pct(budgets.Moderate)}%` }} />
+        <div className="absolute top-0 bottom-0 border-r border-red-600" style={{ left: `${pct(budgets.High)}%` }} />
 
         {/* Current XP bar */}
-        {adjustedXp > 0 && (
+        {totalXp > 0 && (
           <div
             className="absolute top-0 bottom-0 transition-all duration-300"
-            style={{
-              width: `${pct(adjustedXp)}%`,
-              background: adjustedXp >= thresholds.deadly
-                ? 'linear-gradient(90deg, #2e7d32, #f57f17, #d84315, #b71c1c)'
-                : adjustedXp >= thresholds.hard
-                ? 'linear-gradient(90deg, #2e7d32, #f57f17, #d84315)'
-                : adjustedXp >= thresholds.medium
-                ? 'linear-gradient(90deg, #2e7d32, #f57f17)'
-                : '#2e7d32',
-            }}
+            style={{ width: `${pct(totalXp)}%`, background: gradient }}
           />
         )}
 
         {/* XP label */}
-        {adjustedXp > 0 && (
+        {totalXp > 0 && (
           <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white drop-shadow-md">
-            {adjustedXp.toLocaleString()} XP (adjusted)
+            {totalXp.toLocaleString()} XP
           </div>
         )}
       </div>

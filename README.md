@@ -37,7 +37,7 @@ src/
     FilterPanel.tsx       # Full-criteria monster filter UI
     MonsterStatBlock.tsx  # 5e-style stat block renderer
     MapGrid.tsx           # Grid-based map display with terrain legend
-    DifficultyBadge.tsx   # Easy/Medium/Hard/Deadly pill badge
+    DifficultyBadge.tsx   # Low/Moderate/High/Extreme pill badge
   lib/
     types.ts              # Core type system (Monster, Encounter, Map, Party)
     monster-filter.ts     # Search/filter engine for Monster[]
@@ -93,10 +93,15 @@ The database can be expanded via the 5etools JSON importer (`src/lib/import-5eto
 
 ## Encounter Math
 
-Uses official 5e XP thresholds and encounter multipliers:
-- XP budget per player level and difficulty tier (Easy/Medium/Hard/Deadly)
-- Monster count multipliers adjusted for party size
-- Knapsack-style monster selection that fits the XP budget with variety
+Uses the official 2024 Dungeon Master's Guide encounter-building rules:
+- XP Budget per character level and difficulty tier (Low/Moderate/High)
+- Raw monster XP compared directly against the budget — the 2024 rules
+  dropped the 2014 monster-count multiplier entirely
+- Encounters exceeding the High budget are flagged **Extreme** (a house
+  label — the DMG defines nothing above High)
+- Knapsack-style monster selection that fills the budget with variety
+- Every generated encounter embeds its RNG seed: **Copy Link** produces a
+  URL that regenerates the exact same encounter and map
 
 The encounter generator also produces:
 - Scenario hooks (20 templates with combinatorial variety)

@@ -67,11 +67,17 @@ body {
   color: var(--dragon-red);
 }
 
-/* Difficulty badges */
+/* Encounter difficulty badges (2024 tiers + Extreme assessment) */
+.badge-low { background-color: #2e7d32; color: white; }
+.badge-moderate { background-color: #f57f17; color: #1a1a2e; }
+.badge-high { background-color: #d84315; color: white; }
+.badge-extreme { background-color: #b71c1c; color: white; }
+
+/* Skill-check DC badges (puzzles & challenges — Easy/Medium/Hard is still
+   the 2024 vocabulary for check difficulty, unlike encounter tiers) */
 .badge-easy { background-color: #2e7d32; color: white; }
-.badge-medium { background-color: #f57f17; color: white; }
+.badge-medium { background-color: #f57f17; color: #1a1a2e; }
 .badge-hard { background-color: #d84315; color: white; }
-.badge-deadly { background-color: #b71c1c; color: white; }
 
 /* Button variants */
 .btn-primary {
