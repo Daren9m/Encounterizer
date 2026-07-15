@@ -47,8 +47,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         {/* Footer */}
         <footer className="border-t border-[var(--dungeon-accent)] bg-[var(--dungeon-mid)] py-4">
-          <div className="max-w-7xl mx-auto px-4 text-center text-sm text-[var(--parchment-dark)] opacity-60">
-            Encounterizer — Built for Dungeon Masters. Uses 5.5e / 2024 rules.
+          <div className="max-w-7xl mx-auto px-4 text-center text-sm text-[var(--parchment-dark)] opacity-60 space-y-1">
+            <div>Encounterizer — Built for Dungeon Masters. Uses 5.5e / 2024 rules.</div>
+            <div>
+              Includes material from the SRD 5.2.1 by Wizards of the Coast LLC, licensed under
+              CC-BY-4.0. Unofficial fan content.{' '}
+              <Link href="/credits" className="underline hover:text-[var(--gold)]">
+                Credits &amp; licensing
+              </Link>
+            </div>
           </div>
         </footer>
       </body>
