@@ -43,15 +43,16 @@ function ChipGroup<T extends string>({
 }) {
   return (
     <div>
-      <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+      <span className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
         {label}
-      </label>
+      </span>
       <div className="flex flex-wrap gap-1">
         {options.map(opt => (
           <button
             key={opt}
             type="button"
             onClick={() => onToggle(opt)}
+            aria-pressed={selected.includes(opt)}
             className={`filter-chip ${selected.includes(opt) ? 'active' : ''}`}
           >
             {opt}
@@ -85,14 +86,15 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
   ).length;
 
   return (
-    <div className="card mb-6">
+    <div className="card mb-6 print:hidden">
       {/* Search + CR range (always visible) */}
       <div className="flex flex-wrap gap-4 items-end">
         <div className="flex-1 min-w-[200px]">
-          <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+          <label htmlFor="filter-search" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
             Search
           </label>
           <input
+            id="filter-search"
             type="text"
             placeholder="Monster name, type, or tag..."
             value={filter.search ?? ''}
@@ -101,10 +103,11 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
           />
         </div>
         <div className="w-24">
-          <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+          <label htmlFor="filter-cr-min" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
             CR Min
           </label>
           <input
+            id="filter-cr-min"
             type="number"
             min={0}
             max={30}
@@ -115,10 +118,11 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
           />
         </div>
         <div className="w-24">
-          <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+          <label htmlFor="filter-cr-max" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
             CR Max
           </label>
           <input
+            id="filter-cr-max"
             type="number"
             min={0}
             max={30}
@@ -132,6 +136,8 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
           <button
             type="button"
             onClick={() => setExpanded(!expanded)}
+            aria-expanded={expanded}
+            aria-controls="filter-panel-expanded"
             className="btn-secondary text-sm"
           >
             {expanded ? 'Less Filters' : 'More Filters'}
@@ -161,7 +167,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
 
       {/* Expanded filters */}
       {expanded && (
-        <div className="mt-4 space-y-4 animate-fade-in">
+        <div id="filter-panel-expanded" className="mt-4 space-y-4 animate-fade-in">
           <ChipGroup label="Size" options={SIZES} selected={filter.sizes ?? []} onToggle={v => toggle('sizes', v)} />
           <ChipGroup label="Creature Type" options={TYPES} selected={filter.types ?? []} onToggle={v => toggle('types', v)} />
           <ChipGroup label="Environment" options={ENVIRONMENTS} selected={filter.environments ?? []} onToggle={v => toggle('environments', v)} />
@@ -206,10 +212,11 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
           {/* Sort */}
           <div className="flex gap-4 items-end">
             <div>
-              <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+              <label htmlFor="filter-sort-by" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
                 Sort By
               </label>
               <select
+                id="filter-sort-by"
                 value={filter.sortBy ?? 'name'}
                 onChange={e => set('sortBy', e.target.value as MonsterFilter['sortBy'])}
               >
@@ -220,10 +227,11 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+              <label htmlFor="filter-sort-dir" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
                 Direction
               </label>
               <select
+                id="filter-sort-dir"
                 value={filter.sortDir ?? 'asc'}
                 onChange={e => set('sortDir', e.target.value as 'asc' | 'desc')}
               >

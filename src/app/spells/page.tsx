@@ -57,6 +57,7 @@ export default function SpellsPage() {
       <div className="card mb-4">
         <input
           type="text"
+          aria-label="Search spells"
           placeholder="Search by name, school, class, damage type..."
           value={query}
           onChange={e => setQuery(e.target.value)}
@@ -65,24 +66,24 @@ export default function SpellsPage() {
         />
         {/* Compact filters */}
         <div className="flex flex-wrap gap-2 mt-3">
-          <select value={levelFilter} onChange={e => setLevelFilter(e.target.value === '' ? '' : Number(e.target.value))} className="text-sm">
+          <select aria-label="Filter by level" value={levelFilter} onChange={e => setLevelFilter(e.target.value === '' ? '' : Number(e.target.value))} className="text-sm">
             <option value="">All Levels</option>
             {[0,1,2,3,4,5,6,7,8,9].map(l => <option key={l} value={l}>{levelLabel(l)}</option>)}
           </select>
-          <select value={schoolFilter} onChange={e => setSchoolFilter(e.target.value as SpellSchool | '')} className="text-sm">
+          <select aria-label="Filter by school" value={schoolFilter} onChange={e => setSchoolFilter(e.target.value as SpellSchool | '')} className="text-sm">
             <option value="">All Schools</option>
             {SCHOOLS.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
-          <select value={classFilter} onChange={e => setClassFilter(e.target.value)} className="text-sm">
+          <select aria-label="Filter by class" value={classFilter} onChange={e => setClassFilter(e.target.value)} className="text-sm">
             <option value="">All Classes</option>
             {CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <select value={concFilter} onChange={e => setConcFilter(e.target.value as '' | 'yes' | 'no')} className="text-sm">
+          <select aria-label="Filter by concentration" value={concFilter} onChange={e => setConcFilter(e.target.value as '' | 'yes' | 'no')} className="text-sm">
             <option value="">Concentration?</option>
             <option value="yes">Concentration</option>
             <option value="no">No Concentration</option>
           </select>
-          <select value={ritualFilter} onChange={e => setRitualFilter(e.target.value as '' | 'yes' | 'no')} className="text-sm">
+          <select aria-label="Filter by ritual" value={ritualFilter} onChange={e => setRitualFilter(e.target.value as '' | 'yes' | 'no')} className="text-sm">
             <option value="">Ritual?</option>
             <option value="yes">Ritual</option>
             <option value="no">Not Ritual</option>
@@ -125,7 +126,7 @@ export default function SpellsPage() {
             <SpellCard spell={selected} onPin={togglePin} isPinned={pinned.some(p => p.id === selected.id)} />
           ) : (
             <div className="card text-center py-12 text-[var(--parchment-dark)]">
-              <div className="text-4xl mb-3">✨</div>
+              <div className="text-4xl mb-3" aria-hidden="true">✨</div>
               <p>Select a spell to view its mechanics</p>
             </div>
           )}
@@ -158,7 +159,7 @@ function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (
       <div className="flex items-start justify-between mb-1">
         <h2 className={`font-bold text-[var(--gold)] ${compact ? 'text-base' : 'text-xl'}`}>{spell.name}</h2>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={() => onPin(spell)} title={isPinned ? 'Unpin' : 'Pin for comparison'}
+          <button type="button" onClick={() => onPin(spell)} aria-pressed={isPinned} title={isPinned ? 'Unpin' : 'Pin for comparison'}
             className={`text-sm px-2 py-0.5 rounded ${isPinned ? 'bg-[var(--gold)] text-[var(--dungeon-dark)]' : 'bg-[var(--dungeon-accent)] text-[var(--parchment-dark)]'}`}>
             {isPinned ? 'Pinned' : 'Pin'}
           </button>
@@ -206,7 +207,7 @@ function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (
       {/* Full description (expandable) */}
       {!compact && (
         <div className="mt-2">
-          <button type="button" onClick={() => setExpanded(!expanded)}
+          <button type="button" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}
             className="text-xs text-[var(--parchment-dark)] hover:text-[var(--gold)] transition-colors">
             {expanded ? '▼ Hide full text' : '▶ Full description'}
           </button>
