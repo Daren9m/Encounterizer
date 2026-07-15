@@ -1,5 +1,7 @@
 // ─── Non-Combat Encounter Generator ──────────────────────────────
 
+import { seededRandom, pickRandom as pick } from './random';
+
 export type ChallengeType = 'social' | 'exploration' | 'skill-challenge' | 'trap';
 
 export interface SkillCheck {
@@ -21,15 +23,6 @@ export interface NoncombatEncounter {
   complication: string;
   outcomes: { label: string; description: string }[];
   reward: string;
-}
-
-function seededRandom(seed: number): () => number {
-  let s = seed;
-  return () => { s = (s * 1664525 + 1013904223) & 0x7fffffff; return s / 0x7fffffff; };
-}
-
-function pick<T>(arr: T[], rng: () => number): T {
-  return arr[Math.floor(rng() * arr.length)];
 }
 
 function dc(level: number, diff: 'Easy' | 'Medium' | 'Hard'): number {

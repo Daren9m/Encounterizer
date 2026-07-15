@@ -2,6 +2,7 @@ import {
   Monster, Encounter, EncounterMonster, Party, Difficulty, Environment,
   MonsterFilter, XP_THRESHOLDS, getEncounterMultiplier,
 } from './types';
+import { seededRandom, shuffleArray, pickRandom } from './random';
 
 // ─── XP Budget Calculation ───────────────────────────────────────
 
@@ -42,23 +43,6 @@ interface GenerateOptions {
   preferMixed?: boolean;   // prefer multiple monster types vs homogeneous
   maxMonsterTypes?: number; // max distinct monster stat blocks
   maxTotalMonsters?: number;
-}
-
-function seededRandom(seed: number): () => number {
-  let s = seed;
-  return () => {
-    s = (s * 1664525 + 1013904223) & 0x7fffffff;
-    return s / 0x7fffffff;
-  };
-}
-
-function shuffleArray<T>(arr: T[], rng: () => number): T[] {
-  const result = [...arr];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
 }
 
 export function selectMonstersForBudget(
@@ -279,10 +263,6 @@ function formatMonsterList(monsters: EncounterMonster[]): string {
     .map(em => em.count > 1 ? `${em.count} ${em.monster.name}s` : `a ${em.monster.name}`)
     .join(', ')
     .replace(/, ([^,]*)$/, ' and $1');  // Oxford-comma-ish join
-}
-
-function pickRandom<T>(arr: T[], rng: () => number): T {
-  return arr[Math.floor(rng() * arr.length)];
 }
 
 function generateScenarioHook(

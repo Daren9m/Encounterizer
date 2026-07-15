@@ -1,4 +1,5 @@
 import { Monster, Environment, CreatureType } from './types';
+import type { Rng } from './random';
 
 // ─── Encounter Recipe System ─────────────────────────────────────
 
@@ -254,6 +255,7 @@ export function fillRecipeSlots(
   allMonsters: Monster[],
   partyLevel: number,
   environment?: Environment,
+  rng: Rng = Math.random,
 ): { role: MonsterRole; monster: Monster; count: number }[] {
   const results: { role: MonsterRole; monster: Monster; count: number }[] = [];
 
@@ -283,7 +285,7 @@ export function fillRecipeSlots(
       Math.abs(a.challengeRating - targetCr) - Math.abs(b.challengeRating - targetCr)
     );
 
-    const pick = candidates[Math.floor(Math.random() * Math.min(5, candidates.length))];
+    const pick = candidates[Math.floor(rng() * Math.min(5, candidates.length))];
     if (pick) {
       results.push({ role: slot.role, monster: pick, count: slot.count });
     }

@@ -1,5 +1,7 @@
 // ─── Puzzle & Minigame Generator ─────────────────────────────────
 
+import { seededRandom, shuffleArray, pickRandom as pick } from './random';
+
 export type PuzzleCategory = 'logic' | 'word' | 'physical' | 'minigame' | 'environmental';
 export type PuzzleDifficulty = 'Easy' | 'Medium' | 'Hard';
 
@@ -23,18 +25,6 @@ interface PuzzleTemplate {
   difficulty: PuzzleDifficulty;
   estimatedMinutes: number;
   generate: (partyLevel: number, rng: () => number) => Puzzle;
-}
-
-function seededRandom(seed: number): () => number {
-  let s = seed;
-  return () => {
-    s = (s * 1664525 + 1013904223) & 0x7fffffff;
-    return s / 0x7fffffff;
-  };
-}
-
-function pick<T>(arr: T[], rng: () => number): T {
-  return arr[Math.floor(rng() * arr.length)];
 }
 
 function dcForLevel(level: number, diff: PuzzleDifficulty): number {
@@ -127,7 +117,7 @@ const TEMPLATES: PuzzleTemplate[] = [
     category: 'logic', difficulty: 'Medium', estimatedMinutes: 15,
     generate(level, rng) {
       const elements = pick(SEQUENCE_ELEMENTS, rng);
-      const sequence = [...elements].sort(() => rng() - 0.5).slice(0, 4);
+      const sequence = shuffleArray(elements, rng).slice(0, 4);
       const dc = dcForLevel(level, 'Medium');
       return {
         id: `puzzle-${Date.now()}`, name: 'The Sequence Lock', category: 'logic', difficulty: 'Medium', estimatedMinutes: 15,
