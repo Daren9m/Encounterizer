@@ -21,6 +21,7 @@ import MapGrid from '@/components/MapGrid';
 import FilterPanel from '@/components/FilterPanel';
 import PartySetupPanel from '@/components/PartySetupPanel';
 import BattleReportCard from '@/components/BattleReportCard';
+import PrintButton from '@/components/PrintButton';
 import { simulateBattle } from '@/lib/battle-sim';
 import { monsterToSimMonster } from '@/lib/monster-to-sim';
 import { buildSimPlayer, defaultPartyConfig } from '@/data/class-templates';
@@ -424,41 +425,43 @@ function EncounterBuilder() {
       <h1 className="text-3xl font-bold text-[var(--gold)] mb-6">Encounter Builder</h1>
 
       {/* Controls */}
-      <div className="card mb-6">
+      <div className="card mb-6 print:hidden">
         <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div>
-            <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+            <label htmlFor="enc-party-size" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
               Party Size
             </label>
             <input
+              id="enc-party-size"
               type="number" min={1} max={10} value={partySize}
               onChange={e => setPartySize(Math.max(1, Math.min(10, Number(e.target.value))))}
               className="w-full"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+            <label htmlFor="enc-party-level" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
               Party Level
             </label>
             <input
+              id="enc-party-level"
               type="number" min={1} max={20} value={partyLevel}
               onChange={e => setPartyLevel(Math.max(1, Math.min(20, Number(e.target.value))))}
               className="w-full"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+            <label htmlFor="enc-difficulty" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
               Difficulty
             </label>
-            <select value={difficulty} onChange={e => setDifficulty(e.target.value as Difficulty)} className="w-full">
+            <select id="enc-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value as Difficulty)} className="w-full">
               {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+            <label htmlFor="enc-environment" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
               Environment
             </label>
-            <select value={environment} onChange={e => setEnvironment(e.target.value as Environment)} className="w-full">
+            <select id="enc-environment" value={environment} onChange={e => setEnvironment(e.target.value as Environment)} className="w-full">
               {ENVIRONMENTS.map(e => <option key={e} value={e}>{e}</option>)}
             </select>
           </div>
@@ -487,6 +490,7 @@ function EncounterBuilder() {
           <button
             type="button"
             onClick={() => setShowManualAdd(!showManualAdd)}
+            aria-expanded={showManualAdd}
             className="btn-primary"
           >
             {showManualAdd ? 'Hide' : 'Add Monsters Manually'}
@@ -502,6 +506,7 @@ function EncounterBuilder() {
           <button
             type="button"
             onClick={() => setShowFilters(!showFilters)}
+            aria-expanded={showFilters}
             className="btn-secondary text-sm"
           >
             {showFilters ? 'Hide' : 'Show'} Monster Filters
@@ -511,6 +516,7 @@ function EncounterBuilder() {
               Export JSON
             </button>
           )}
+          {encounter && <PrintButton label="Print Encounter" />}
           {encounter && encounter.monsters.length > 0 && (
             savingName === null ? (
               <button
@@ -572,7 +578,7 @@ function EncounterBuilder() {
 
       {/* Saved Encounters */}
       {savedHydrated && savedEncounters.length > 0 && (
-        <details className="card mb-6">
+        <details className="card mb-6 print:hidden">
           <summary className="cursor-pointer font-bold text-[var(--gold)]">
             Saved Encounters ({savedEncounters.length})
           </summary>
@@ -628,11 +634,13 @@ function EncounterBuilder() {
 
       {/* Manual Monster Add Panel */}
       {showManualAdd && (
-        <div className="card mb-6 animate-fade-in">
+        <div className="card mb-6 animate-fade-in print:hidden">
           <h3 className="text-lg font-bold text-[var(--gold)] mb-3">Add Monsters</h3>
           <input
+            id="enc-manual-search"
             type="text"
             placeholder="Search monsters by name..."
+            aria-label="Search monsters to add"
             value={manualSearch}
             onChange={e => setManualSearch(e.target.value)}
             className="w-full mb-3"
@@ -721,6 +729,7 @@ function EncounterBuilder() {
                       onClick={() => setExpandedMonster(
                         expandedMonster === em.monster.id ? null : em.monster.id
                       )}
+                      aria-expanded={expandedMonster === em.monster.id}
                       className="flex items-center gap-3 text-left flex-1 hover:opacity-80 transition-opacity"
                     >
                       <span className="bg-[var(--dragon-red)] text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
@@ -740,14 +749,16 @@ function EncounterBuilder() {
                       <button
                         type="button"
                         onClick={() => handleAddMonster(em.monster)}
-                        className="w-7 h-7 rounded bg-green-800 hover:bg-green-700 text-white font-bold text-sm"
+                        className="w-7 h-7 rounded bg-green-800 hover:bg-green-700 text-white font-bold text-sm print:hidden"
                         title="Add one more"
+                        aria-label={`Add one more ${em.monster.name}`}
                       >+</button>
                       <button
                         type="button"
                         onClick={() => handleRemoveMonster(em.monster.id)}
-                        className="w-7 h-7 rounded bg-red-800 hover:bg-red-700 text-white font-bold text-sm"
+                        className="w-7 h-7 rounded bg-red-800 hover:bg-red-700 text-white font-bold text-sm print:hidden"
                         title="Remove one"
+                        aria-label={`Remove one ${em.monster.name}`}
                       >-</button>
                     </div>
                   </div>

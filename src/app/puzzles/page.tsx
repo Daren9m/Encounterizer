@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { generatePuzzle, getPuzzleCategories } from '@/lib/puzzle-generator';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import type { Puzzle, PuzzleCategory, PuzzleDifficulty } from '@/lib/puzzle-generator';
+import PrintButton from '@/components/PrintButton';
 
 const DIFFICULTIES: PuzzleDifficulty[] = ['Easy', 'Medium', 'Hard'];
 
@@ -73,25 +74,25 @@ export default function PuzzlesPage() {
       </p>
 
       {/* Controls */}
-      <div className="card mb-6">
+      <div className="card mb-6 print:hidden">
         <div className="grid sm:grid-cols-3 gap-4 mb-4">
           <div>
-            <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">Category</label>
-            <select value={category} onChange={e => setCategory(e.target.value as PuzzleCategory | '')} className="w-full">
+            <label htmlFor="puzzle-category" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">Category</label>
+            <select id="puzzle-category" value={category} onChange={e => setCategory(e.target.value as PuzzleCategory | '')} className="w-full">
               <option value="">Any</option>
               {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">Difficulty</label>
-            <select value={difficulty} onChange={e => setDifficulty(e.target.value as PuzzleDifficulty | '')} className="w-full">
+            <label htmlFor="puzzle-difficulty" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">Difficulty</label>
+            <select id="puzzle-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value as PuzzleDifficulty | '')} className="w-full">
               <option value="">Any</option>
               {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">Party Level</label>
-            <input type="number" min={1} max={20} value={partyLevel} onChange={e => setPartyLevel(Math.max(1, Math.min(20, Number(e.target.value))))} className="w-full" />
+            <label htmlFor="puzzle-party-level" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">Party Level</label>
+            <input id="puzzle-party-level" type="number" min={1} max={20} value={partyLevel} onChange={e => setPartyLevel(Math.max(1, Math.min(20, Number(e.target.value))))} className="w-full" />
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -100,6 +101,7 @@ export default function PuzzlesPage() {
             <>
               <button type="button" onClick={handleGenerate} className="btn-secondary">Regenerate</button>
               <button type="button" onClick={handleExport} className="btn-secondary">Export Markdown</button>
+              <PrintButton label="Print Puzzle" />
             </>
           )}
         </div>
@@ -148,7 +150,7 @@ export default function PuzzlesPage() {
           )}
 
           {/* Hints */}
-          <div className="card">
+          <div className="card print:hidden">
             <h3 className="text-lg font-bold text-[var(--gold)] mb-2">Hints (reveal as needed)</h3>
             <div className="space-y-2">
               {puzzle.hints.map((hint, i) => (
@@ -158,10 +160,11 @@ export default function PuzzlesPage() {
           </div>
 
           {/* Solution (hidden by default) */}
-          <div className="card">
+          <div className="card print:hidden">
             <button
               type="button"
               onClick={() => setShowSolution(!showSolution)}
+              aria-expanded={showSolution}
               className="flex items-center gap-2 text-lg font-bold text-[var(--gold)]"
             >
               {showSolution ? '▼' : '▶'} Solution
@@ -183,12 +186,32 @@ export default function PuzzlesPage() {
               </div>
             )}
           </div>
+
+          {/* Print-only: everything expanded for the DM's paper copy */}
+          <div className="hidden print:block space-y-4">
+            <div className="card">
+              <h3 className="text-lg font-bold text-[var(--gold)] mb-2">Hints</h3>
+              <ol className="text-sm list-decimal list-inside space-y-1">
+                {puzzle.hints.map((hint, i) => (
+                  <li key={i}>{hint}</li>
+                ))}
+              </ol>
+            </div>
+            <div className="card">
+              <h3 className="text-lg font-bold text-[var(--gold)] mb-2">Solution</h3>
+              <p className="text-sm">{puzzle.solution}</p>
+              <h4 className="text-sm font-bold text-[var(--dragon-red)] mt-3">On Failure</h4>
+              <p className="text-sm">{puzzle.failureConsequence}</p>
+              <h4 className="text-sm font-bold text-[var(--gold)] mt-3">Reward</h4>
+              <p className="text-sm">{puzzle.reward}</p>
+            </div>
+          </div>
         </div>
       )}
 
       {/* History (persists across visits) */}
       {history.length > 0 && !(history.length === 1 && puzzle?.id === history[0].id) && (
-        <div className="mt-6">
+        <div className="mt-6 print:hidden">
           <h2 className="text-lg font-bold text-[var(--gold)] mb-3">Recent Puzzles</h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
             {history.map((p) => (

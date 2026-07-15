@@ -57,7 +57,7 @@ export default function CustomMonsterPanel({ allMonsters }: { allMonsters: Monst
   }
 
   return (
-    <div className="card mb-4">
+    <div className="card mb-4 print:hidden">
       <button
         type="button"
         onClick={() => setOpen(!open)}

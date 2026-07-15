@@ -201,7 +201,7 @@ export default function BattleReportCard({
         </details>
       )}
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 print:hidden">
         <button type="button" className="btn-gold text-sm" onClick={onRerun}>
           Run Again
         </button>

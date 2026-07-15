@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { generateNoncombatEncounter, getChallengeTypes } from '@/lib/noncombat-generator';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import type { NoncombatEncounter, ChallengeType } from '@/lib/noncombat-generator';
+import PrintButton from '@/components/PrintButton';
 
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard'] as const;
 
@@ -55,24 +56,24 @@ export default function ChallengesPage() {
       </p>
 
       {/* Controls */}
-      <div className="card mb-6">
+      <div className="card mb-6 print:hidden">
         <div className="grid sm:grid-cols-3 gap-4 mb-4">
           <div>
-            <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">Type</label>
-            <select value={type} onChange={e => setType(e.target.value as ChallengeType | '')} className="w-full">
+            <label htmlFor="challenge-type" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">Type</label>
+            <select id="challenge-type" value={type} onChange={e => setType(e.target.value as ChallengeType | '')} className="w-full">
               <option value="">Any</option>
               {types.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">Difficulty</label>
-            <select value={difficulty} onChange={e => setDifficulty(e.target.value as typeof difficulty)} className="w-full">
+            <label htmlFor="challenge-difficulty" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">Difficulty</label>
+            <select id="challenge-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value as typeof difficulty)} className="w-full">
               {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">Party Level</label>
-            <input type="number" min={1} max={20} value={partyLevel} onChange={e => setPartyLevel(Math.max(1, Math.min(20, Number(e.target.value))))} className="w-full" />
+            <label htmlFor="challenge-party-level" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">Party Level</label>
+            <input id="challenge-party-level" type="number" min={1} max={20} value={partyLevel} onChange={e => setPartyLevel(Math.max(1, Math.min(20, Number(e.target.value))))} className="w-full" />
           </div>
         </div>
         {/* Type descriptions */}
@@ -91,6 +92,7 @@ export default function ChallengesPage() {
             <>
               <button type="button" onClick={handleGenerate} className="btn-secondary">Regenerate</button>
               <button type="button" onClick={handleExport} className="btn-secondary">Export Markdown</button>
+              <PrintButton label="Print Challenge" />
             </>
           )}
         </div>
@@ -179,7 +181,7 @@ export default function ChallengesPage() {
 
       {/* History (persists across visits) */}
       {history.length > 0 && !(history.length === 1 && encounter?.id === history[0].id) && (
-        <div className="mt-6">
+        <div className="mt-6 print:hidden">
           <h2 className="text-lg font-bold text-[var(--gold)] mb-3">Recent Encounters</h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
             {history.map(h => (

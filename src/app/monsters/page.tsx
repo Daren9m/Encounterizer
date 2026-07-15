@@ -6,6 +6,7 @@ import type { Monster, MonsterFilter } from '@/lib/types';
 import FilterPanel from '@/components/FilterPanel';
 import MonsterStatBlock from '@/components/MonsterStatBlock';
 import CustomMonsterPanel from '@/components/CustomMonsterPanel';
+import PrintButton from '@/components/PrintButton';
 import { useMonsters } from '@/app/hooks/useMonsters';
 import { usePersistentState } from '@/lib/use-persistent-state';
 
@@ -42,10 +43,11 @@ export default function BestiaryPage() {
             {results.length} of {allMonsters.length} monsters
             {custom.length > 0 && ` (${custom.length} custom)`}
           </span>
-          <div className="flex border border-[var(--dungeon-accent)] rounded overflow-hidden ml-2">
+          <div className="flex border border-[var(--dungeon-accent)] rounded overflow-hidden ml-2 print:hidden">
             <button
               type="button"
               onClick={() => setViewMode('grid')}
+              aria-pressed={viewMode === 'grid'}
               className={`px-3 py-1 text-xs ${viewMode === 'grid' ? 'bg-[var(--gold)] text-[var(--dungeon-dark)] font-bold' : 'bg-[var(--dungeon-mid)] text-[var(--parchment-dark)]'}`}
             >
               Grid
@@ -53,6 +55,7 @@ export default function BestiaryPage() {
             <button
               type="button"
               onClick={() => setViewMode('list')}
+              aria-pressed={viewMode === 'list'}
               className={`px-3 py-1 text-xs ${viewMode === 'list' ? 'bg-[var(--gold)] text-[var(--dungeon-dark)] font-bold' : 'bg-[var(--dungeon-mid)] text-[var(--parchment-dark)]'}`}
             >
               List
@@ -67,7 +70,7 @@ export default function BestiaryPage() {
 
       {/* Summary bar */}
       {Object.keys(stats.typeDistribution).length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4 text-xs">
+        <div className="flex flex-wrap gap-2 mb-4 text-xs print:hidden">
           {Object.entries(stats.typeDistribution)
             .sort(([, a], [, b]) => b - a)
             .map(([type, count]) => (
@@ -80,7 +83,7 @@ export default function BestiaryPage() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Monster List */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 print:hidden">
           {viewMode === 'grid' ? (
             <div className="grid sm:grid-cols-2 gap-3">
               {results.map(monster => (
@@ -142,14 +145,17 @@ export default function BestiaryPage() {
         </div>
 
         {/* Stat Block Detail */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 print:col-span-3">
           {selectedMonster ? (
             <div className="sticky top-4">
+              <div className="mb-2 flex justify-end">
+                <PrintButton label="Print Stat Block" />
+              </div>
               <MonsterStatBlock monster={selectedMonster} />
             </div>
           ) : (
             <div className="card text-center py-12 text-[var(--parchment-dark)]">
-              <div className="text-4xl mb-3">🐉</div>
+              <div className="text-4xl mb-3" aria-hidden="true">🐉</div>
               <p>Select a monster to view its full stat block</p>
               <p className="text-xs mt-2 opacity-60">Click any monster card or row</p>
             </div>

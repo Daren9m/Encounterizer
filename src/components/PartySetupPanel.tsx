@@ -89,7 +89,7 @@ export default function PartySetupPanel({
   }
 
   return (
-    <div className="card mb-6 animate-fade-in space-y-4">
+    <div className="card mb-6 animate-fade-in space-y-4 print:hidden">
       <div>
         <h3 className="text-lg font-bold text-[var(--gold)]">Party Setup</h3>
         <p className="text-sm text-[var(--parchment-dark)]">
