@@ -1,44 +1,31 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
+import NavBar from '@/components/NavBar';
+import { SITE_DESCRIPTION, SITE_URL } from '@/lib/site';
 
 export const metadata: Metadata = {
-  title: 'Encounterizer — D&D Encounter Generator',
-  description: 'Generate balanced encounters, browse monsters, and create battle maps for your D&D 5.5e campaigns.',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'Encounterizer — D&D 5.5e Encounter Toolkit',
+    template: '%s · Encounterizer',
+  },
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: 'website',
+    siteName: 'Encounterizer',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
 };
-
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="px-3 py-2 rounded transition-colors hover:bg-[var(--dungeon-accent)] text-[var(--parchment-dark)] hover:text-[var(--gold)]"
-    >
-      {children}
-    </Link>
-  );
-}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-screen flex flex-col">
-        {/* Navigation */}
-        <header className="border-b border-[var(--dungeon-accent)] bg-[var(--dungeon-mid)]">
-          <nav className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="text-2xl">⚔️</span>
-              <span className="text-xl font-bold text-[var(--gold)]">Encounterizer</span>
-            </Link>
-            <div className="flex items-center gap-1">
-              <NavLink href="/encounters">Encounters</NavLink>
-              <NavLink href="/monsters">Bestiary</NavLink>
-              <NavLink href="/maps">Maps</NavLink>
-              <NavLink href="/puzzles">Puzzles</NavLink>
-              <NavLink href="/challenges">Challenges</NavLink>
-              <NavLink href="/spells">Spells</NavLink>
-            </div>
-          </nav>
-        </header>
+        <NavBar />
 
         {/* Main Content */}
         <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
