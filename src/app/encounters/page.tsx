@@ -2,8 +2,8 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { ALL_MONSTERS } from '@/data';
 import { filterMonsters } from '@/lib/monster-filter';
+import { useMonsters } from '@/app/hooks/useMonsters';
 import {
   assessEncounterDifficulty,
   generateEncounter,
@@ -106,6 +106,7 @@ export default function EncounterPage() {
 
 function EncounterBuilder() {
   const searchParams = useSearchParams();
+  const { all: allMonsters } = useMonsters();
 
   const [partySize, setPartySize] = useState(4);
   const [partyLevel, setPartyLevel] = useState(3);
@@ -132,13 +133,13 @@ function EncounterBuilder() {
 
   // Monsters for manual add search
   const manualResults = useMemo(() => {
-    if (!manualSearch.trim()) return ALL_MONSTERS.slice(0, 20);
-    return filterMonsters(ALL_MONSTERS, { search: manualSearch }).slice(0, 20);
-  }, [manualSearch]);
+    if (!manualSearch.trim()) return allMonsters.slice(0, 20);
+    return filterMonsters(allMonsters, { search: manualSearch }).slice(0, 20);
+  }, [allMonsters, manualSearch]);
 
   const runGenerate = useCallback((cfg: GenerateConfig) => {
     const enc = generateEncounter(
-      ALL_MONSTERS,
+      allMonsters,
       {
         party: buildParty(cfg.partySize, cfg.partyLevel),
         difficulty: cfg.difficulty,
@@ -156,7 +157,7 @@ function EncounterBuilder() {
     setLinkCopied(false);
     setExpandedMonster(null);
     writeUrl(cfg);
-  }, []);
+  }, [allMonsters]);
 
   // One-shot hydration from a shared link (?seed=...)
   const didInit = useRef(false);

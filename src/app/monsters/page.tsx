@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { ALL_MONSTERS } from '@/data';
 import { filterMonsters, getMonsterSummaryStats } from '@/lib/monster-filter';
 import type { Monster, MonsterFilter } from '@/lib/types';
 import FilterPanel from '@/components/FilterPanel';
 import MonsterStatBlock from '@/components/MonsterStatBlock';
+import CustomMonsterPanel from '@/components/CustomMonsterPanel';
+import { useMonsters } from '@/app/hooks/useMonsters';
 
 function crDisplay(cr: number): string {
   if (cr === 0.125) return '1/8';
@@ -21,7 +22,8 @@ export default function BestiaryPage() {
   const [selectedMonster, setSelectedMonster] = useState<Monster | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
-  const results = useMemo(() => filterMonsters(ALL_MONSTERS, filter), [filter]);
+  const { all: allMonsters, custom } = useMonsters();
+  const results = useMemo(() => filterMonsters(allMonsters, filter), [allMonsters, filter]);
   const stats = useMemo(() => getMonsterSummaryStats(results), [results]);
 
   const handleSelect = useCallback((monster: Monster) => {
@@ -34,7 +36,8 @@ export default function BestiaryPage() {
         <h1 className="text-3xl font-bold text-[var(--gold)]">Monster Bestiary</h1>
         <div className="flex items-center gap-2 text-sm">
           <span className="text-[var(--parchment-dark)]">
-            {results.length} of {ALL_MONSTERS.length} monsters
+            {results.length} of {allMonsters.length} monsters
+            {custom.length > 0 && ` (${custom.length} custom)`}
           </span>
           <div className="flex border border-[var(--dungeon-accent)] rounded overflow-hidden ml-2">
             <button
@@ -54,6 +57,8 @@ export default function BestiaryPage() {
           </div>
         </div>
       </div>
+
+      <CustomMonsterPanel allMonsters={allMonsters} />
 
       <FilterPanel filter={filter} onChange={setFilter} resultCount={results.length} />
 
