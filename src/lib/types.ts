@@ -326,24 +326,44 @@ export const CR_PROF: Record<number, number> = {
 export interface FiveEToolsMonster {
   name: string;
   source: string;
+  /** true = included in SRD 5.2.1 verbatim; a string = the SRD rename */
+  srd52?: boolean | string;
   size?: string[];
-  type?: string | { type: string; tags?: string[] };
+  type?: string | { type: string; tags?: Array<string | { tag: string; prefix?: string }> };
   alignment?: Array<string | { alignment: string[] }>;
   ac?: Array<number | { ac: number; from?: string[] }>;
   hp?: { average?: number; formula?: string };
   speed?: Record<string, number | boolean | { number: number; condition: string }>;
+  initiative?: { proficiency?: number } | number;
   str?: number;
   dex?: number;
   con?: number;
   int?: number;
   wis?: number;
   cha?: number;
-  cr?: string | { cr: string; lair?: string };
-  trait?: Array<{ name: string; entries: string[] }>;
-  action?: Array<{ name: string; entries: string[] }>;
-  bonus?: Array<{ name: string; entries: string[] }>;
-  reaction?: Array<{ name: string; entries: string[] }>;
-  legendary?: Array<{ name: string; entries: string[] }>;
+  /** e.g. { dex: "+3" } */
+  save?: Partial<Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', string>>;
+  /** e.g. { stealth: "+6" } — values can also be nested objects (ignored) */
+  skill?: Record<string, unknown>;
+  senses?: string[] | string;
+  passive?: number | string;
+  languages?: string[] | string;
+  /** 2024 data uses xpLair; older data used a lair CR string */
+  cr?: string | { cr: string; lair?: string; xpLair?: number };
+  trait?: Array<{ name?: string; entries?: unknown }>;
+  action?: Array<{ name?: string; entries?: unknown }>;
+  bonus?: Array<{ name?: string; entries?: unknown }>;
+  reaction?: Array<{ name?: string; entries?: unknown }>;
+  legendary?: Array<{ name?: string; entries?: unknown }>;
+  mythic?: Array<{ name?: string; entries?: unknown }>;
+  lair?: unknown[];
+  /** Structured spellcasting blocks (2024 format) */
+  spellcasting?: unknown[];
+  vulnerable?: unknown[];
+  resist?: unknown[];
+  immune?: unknown[];
+  conditionImmune?: unknown[];
+  gear?: unknown[];
   environment?: string[];
   [key: string]: unknown;
 }
