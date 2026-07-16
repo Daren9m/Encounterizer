@@ -73,3 +73,23 @@ describe('back-compat (spec §5/§11)', () => {
     expect(getPuzzleCategories()).toHaveLength(5);
   });
 });
+
+describe('frozen draw-order contract (golden pins)', () => {
+  // These pins ARE the permanent ?seed= replay contract (spec §5.1).
+  // If this test fails, shared links have changed meaning — never update
+  // the expected values without versioning the seed URLs.
+  it('fixed seeds resolve to pinned family/theme/difficulty/category', () => {
+    const got = [1, 2, 3, 42, 1337, 424242].map(seed => {
+      const p = generatePuzzle({ seed });
+      return `${seed}=>${p.id}|${p.theme}|${p.difficulty}|${p.category}`;
+    });
+    expect(got).toEqual([
+      '1=>puzzle-1-knights-knaves|arcane-sanctum|Medium|logic',
+      '2=>puzzle-2-sequence-lock|feywild-revel|Medium|logic',
+      '3=>puzzle-3-sum-lock|ancient-tomb|Medium|physical',
+      '42=>puzzle-42-logic-grid|wild-frontier|Medium|logic',
+      '1337=>puzzle-1337-riddle-frames|ancient-tomb|Medium|word',
+      '424242=>puzzle-424242-plate-grid|city-streets|Easy|physical',
+    ]);
+  });
+});
