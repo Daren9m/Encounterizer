@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { seededRandom } from '../random';
 import { THEME_PACKS } from '../../data/noncombat-themes';
-import { successesNeeded, phaseSplit, groupCheckThreshold, dcFor } from '../noncombat/levers';
+import { successesNeeded, phaseSplit, groupCheckThreshold, dcFor, damageDice } from '../noncombat/levers';
 import type { Difficulty, ResolvedLevers, TimeBudget } from '../noncombat/types';
 import { skillChallenge, buildChallengeStructure } from '../challenge-frameworks/skill-challenge';
 import { social, buildAttitudeTrack } from '../challenge-frameworks/social';
 import { exploration, TIER_GUIDANCE } from '../challenge-frameworks/exploration';
+import { trap, COUNTERMEASURE_STEPS } from '../challenge-frameworks/trap';
 import { LEVERAGE } from '../../data/noncombat-cast';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
@@ -130,5 +131,26 @@ describe('exploration framework (spec §8.3)', () => {
       expect(out.readAloud).not.toMatch(/[a-z] Overhead,/);
       for (const st of out.stages ?? []) expect(st.text).not.toMatch(/[a-z] Creative option:/);
     }
+  });
+});
+
+describe('trap framework (spec §8.4)', () => {
+  it('countermeasure steps slice 2/2/3 by difficulty and sequence in text', () => {
+    expect(COUNTERMEASURE_STEPS).toEqual({ Easy: 2, Medium: 2, Hard: 3 });
+    for (const diff of DIFFS) {
+      const out = trap.generate({ levers: mkLevers(diff, 13), rng: seededRandom(13) });
+      const steps = out.skillChecks.filter(c => /^Step \d/.test(c.onSuccess));
+      expect(steps).toHaveLength(COUNTERMEASURE_STEPS[diff]);
+    }
+  });
+  it('uses climactic damage for the trigger and recurring for escalation', () => {
+    const out = trap.generate({ levers: mkLevers('Hard', 17, { partyLevel: 11 }), rng: seededRandom(17) });
+    expect(out.stakes).toContain(damageDice(11, 'Hard', 'climactic'));
+    expect(out.stakes).toContain(damageDice(11, 'Hard', 'recurring'));
+  });
+  it('surfaces detection clues in the situation and the twist as the complication', () => {
+    const out = trap.generate({ levers: mkLevers('Medium', 19), rng: seededRandom(19) });
+    expect(out.situation).toMatch(/Clue/i);
+    expect(out.complication.length).toBeGreaterThan(10);
   });
 });
