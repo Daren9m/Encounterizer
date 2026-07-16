@@ -3,8 +3,8 @@
 ## Development Setup
 
 ```bash
-git clone https://github.com/Daren9m/Encounterizer-.git
-cd Encounterizer-
+git clone https://github.com/Daren9m/Encounterizer.git
+cd Encounterizer
 npm install
 npm run dev
 ```
@@ -12,41 +12,59 @@ npm run dev
 ## Code Standards
 
 - **TypeScript strict mode** — no `any` types, no implicit returns
-- **Next.js App Router** — pages in `src/app/`, components in `src/components/`
-- **Tailwind CSS** — use the D&D-themed CSS variables defined in `src/app/globals.css` (e.g., `var(--gold)`, `var(--dungeon-dark)`)
-- **No external API calls** — all computation is client-side
-- **Accurate D&D stats** — monster data should match published 5e/5.5e sources
+- **Next.js App Router, static export** — pages in `src/app/`, components in
+  `src/components/`. No server code: API routes and middleware are
+  unsupported under `output: 'export'`
+- **Pure engine layer** — logic in `src/lib/` is side-effect-free (no DOM,
+  no storage, no network); browser concerns live in `src/app/` and
+  `src/components/`
+- **Tailwind CSS** — the palette lives in CSS variables in
+  `src/app/globals.css`; the Tailwind color tokens alias them, so
+  `text-gold` and `text-[var(--gold)]` are equivalent (prefer the tokens)
+- **Seeded randomness** — all generators draw from `src/lib/random.ts`.
+  Shareable links replay seeds, so never change the LCG formula
+- **No external API calls at runtime** — all computation is client-side
+- **Accurate D&D stats** — monster data must match the SRD 5.2.1; the
+  encounter math must match the 2024 DMG
+- **Conventional commits** — `feat:`, `fix:`, `chore:`, `docs:`, `test:`,
+  `ci:`; reference issues (`closes #N`) where applicable
 
-## Adding Monsters
+## The Monster Database Is Generated
 
-1. Find the appropriate CR-range file in `src/data/` (e.g., `monsters-cr5-8.ts`)
-2. Add a new `Monster` object following the full interface in `src/lib/types.ts`
-3. All fields are required — see existing monsters for examples
-4. Populate computed fields: `movementModes`, `attackDamageTypes`, `attackDeliveryModes`, `tags`
-5. The monster will automatically appear in `ALL_MONSTERS` via the barrel export in `src/data/index.ts`
+Do **not** hand-edit `src/data/monsters-*.ts` — they are produced by the
+import pipeline and overwritten on every run:
 
-## Expanding the Database via 5etools
+```bash
+npm run import:bestiary                 # fetch pinned source and regenerate
+npm run import:bestiary -- --local f.json  # use a local bestiary file
+```
 
-The `src/lib/import-5etools.ts` utility converts 5etools JSON format to our `Monster` type. To bulk-import:
+The script filters the 5etools 2024 Monster Manual data to entries flagged
+`srd52` (the CC-BY-4.0 subset), converts them with
+`src/lib/import-5etools.ts`, and fails on any audit violation (unstripped
+`{@...}` tags, lost attacks, zero XP above CR 0). To fix a monster, fix the
+converter or the source pin — not the generated file.
 
-1. Obtain a 5etools bestiary JSON file
-2. Use `import5eToolsBestiary(json)` to convert
-3. Review and spot-check the output
-4. Split into CR-range files and add to `src/data/`
+Monsters that aren't in the SRD belong in users' own JSON imports (Bestiary
+page → Custom Monsters), never in the repo.
 
 ## Before Submitting
 
 ```bash
-npx tsc --noEmit     # Must pass with 0 errors
-npm run build        # Must complete successfully
+npm run typecheck    # tsc --noEmit — must pass with 0 errors
+npm run lint         # ESLint — no warnings or errors
+npm test             # Vitest — all tests green
+npm run build        # Static export must complete
 ```
+
+CI runs the same four steps on every pull request.
 
 ## Issue Labels
 
 - `enhancement` — New feature
 - `bug` — Something broken
-- `data` — Monster database work
+- `data` — Monster/spell database work
 - `ui` — Frontend/visual changes
-- `integration` — Wiring/import fixes
+- `integration` — Wiring and imports
 - `infrastructure` — Build, deploy, CI/CD
 - `feature` — Major new capability
