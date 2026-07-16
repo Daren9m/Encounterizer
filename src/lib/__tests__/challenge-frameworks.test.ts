@@ -89,6 +89,8 @@ describe('social framework (spec §8.2)', () => {
     const a = social.generate({ levers: mkLevers('Hard', 21), rng: seededRandom(21) });
     const b = social.generate({ levers: mkLevers('Hard', 21), rng: seededRandom(21) });
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
-    expect(a.readAloud.length).toBeGreaterThan(40);
+    expect(a.readAloud).toMatch(/Their speech: /);
+    expect(a.readAloud).toMatch(/Their tell: /);
+    expect(a.readAloud).not.toMatch(/\bThey [a-z]+s\b/); // no third-person-singular after "They"
   });
 });

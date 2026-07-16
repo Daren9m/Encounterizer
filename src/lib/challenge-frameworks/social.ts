@@ -29,6 +29,8 @@ export function buildAttitudeTrack(levers: ResolvedLevers, leverage: Leverage, r
         shiftUp: cap(leverage.approach),
         shiftDown: cap(leverage.counter),
       },
+      // Friendly is the top stage — there is nothing to shift up TO, so
+      // shiftUp carries maintenance guidance instead of leverage.approach.
       {
         attitude: 'Friendly', influenceDc: dc - 2,
         unlocks: 'The guard drops: the secret is within reach for anyone paying attention.',
@@ -58,7 +60,7 @@ export const social: ChallengeFramework = {
     const interruption = pick(INTERRUPTIONS, rng);
     return {
       name: `The ${pick(['Proposition', 'Petition', 'Bargain', 'Confession', 'Overture', 'Reckoning'], rng)}`,
-      readAloud: `${cap(persona.archetype)} seeks you out — ${pack.sensory[0]}. They ${persona.speech}, and ${persona.quirk}.`,
+      readAloud: `${cap(persona.archetype)} seeks you out — ${pack.sensory[0]}. Their speech: ${persona.speech}. Their tell: ${persona.quirk}.`,
       situation: [
         `${cap(persona.archetype)} wants: ${want}. Their manner: starts ${track.start}.`,
         `Leverage (${leverage.kind}): ${leverage.approach}. Backfires: ${leverage.counter}.`,
