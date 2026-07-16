@@ -12,9 +12,11 @@ export interface SpellConvertOptions {
   /** Value for every converted spell's `source` field, e.g. 'SRD 5.2.1' */
   source: string;
   /** Raw (pre-rename) spell name → class names, built from data/spells/sources.json */
-  classesByOriginalName: Map<string, string[]>;
+  classesByOriginalName?: Map<string, string[]>;
   /** Curated effectSummary overrides keyed by spell id (src/data/spell-summaries.ts) */
   summaryOverrides?: Record<string, string>;
+  /** Prepended to generated ids, e.g. 'custom-' for in-browser imports */
+  idPrefix?: string;
 }
 
 export function slugifySpellName(name: string): string {
@@ -318,7 +320,7 @@ export function synthesizeEffectSummary(
 
 export function convert5eToolsSpell(raw: FiveEToolsSpell, opts: SpellConvertOptions): Spell {
   const name = typeof raw.srd52 === 'string' ? raw.srd52 : raw.name;
-  const id = slugifySpellName(name);
+  const id = `${opts.idPrefix ?? ''}${slugifySpellName(name)}`;
 
   const school = SCHOOL_NAME[raw.school];
   if (!school) throw new Error(`${raw.name}: unknown school code '${raw.school}'`);
@@ -357,7 +359,7 @@ export function convert5eToolsSpell(raw: FiveEToolsSpell, opts: SpellConvertOpti
     ...(damageType ? { damageType } : {}),
     effectSummary,
     ...(upcast ? { upcast } : {}),
-    classes: [...(opts.classesByOriginalName.get(raw.name) ?? [])].sort(),
+    classes: [...(opts.classesByOriginalName?.get(raw.name) ?? [])].sort(),
     description,
     source: opts.source,
   };

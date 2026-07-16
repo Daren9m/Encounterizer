@@ -2,8 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import { Sparkles } from 'lucide-react';
-import { SRD_SPELLS, searchSpells, filterSpells, levelLabel } from '@/data/spells';
+import { searchSpells, filterSpells, levelLabel } from '@/data/spells';
 import { usePersistentState } from '@/lib/use-persistent-state';
+import { useSpells } from '@/app/hooks/useSpells';
+import CustomSpellPanel from '@/components/CustomSpellPanel';
 import type { Spell, SpellSchool } from '@/data/spells';
 
 const SCHOOLS: SpellSchool[] = ['Abjuration', 'Conjuration', 'Divination', 'Enchantment', 'Evocation', 'Illusion', 'Necromancy', 'Transmutation'];
@@ -18,19 +20,20 @@ export default function SpellsPage() {
   const [concFilter, setConcFilter] = useState<'' | 'yes' | 'no'>('');
   const [ritualFilter, setRitualFilter] = useState<'' | 'yes' | 'no'>('');
   const [selected, setSelected] = useState<Spell | null>(null);
+  const allSpells = useSpells();
   // Pins persist as ids so a data update can't strand stale spell objects.
   const [pinnedIds, setPinnedIds] = usePersistentState<string[]>(
     'pinnedSpells', [], (v): v is string[] => Array.isArray(v) && v.every((x) => typeof x === 'string'),
   );
   const pinned = useMemo(
     () => pinnedIds
-      .map((id) => SRD_SPELLS.find((s) => s.id === id))
+      .map((id) => allSpells.find((s) => s.id === id))
       .filter((s): s is Spell => s !== undefined),
-    [pinnedIds],
+    [pinnedIds, allSpells],
   );
 
   const results = useMemo(() => {
-    let spells = searchSpells(query, SRD_SPELLS);
+    let spells = searchSpells(query, allSpells);
     spells = filterSpells(spells, {
       level: levelFilter === '' ? undefined : levelFilter,
       school: schoolFilter || undefined,
@@ -39,7 +42,7 @@ export default function SpellsPage() {
       ritual: ritualFilter === '' ? undefined : ritualFilter === 'yes',
     });
     return spells.sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
-  }, [query, levelFilter, schoolFilter, classFilter, concFilter, ritualFilter]);
+  }, [query, levelFilter, schoolFilter, classFilter, concFilter, ritualFilter, allSpells]);
 
   function togglePin(spell: Spell) {
     setPinnedIds(prev => prev.includes(spell.id)
@@ -92,6 +95,9 @@ export default function SpellsPage() {
           <span className="text-xs text-[var(--text-2)] self-center ml-2">{results.length} spells</span>
         </div>
       </div>
+
+      {/* Custom spell import — client-side only, never uploaded */}
+      <CustomSpellPanel allSpells={allSpells} />
 
       <div className="grid lg:grid-cols-3 gap-4">
         {/* Spell List */}
