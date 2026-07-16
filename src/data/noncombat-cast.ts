@@ -45,7 +45,7 @@ export const WANTS: string[] = [
   'a stolen heirloom returned before its absence is noticed',
   'a dangerous rumor about them stopped before it spreads further',
   'an outsider to vouch for them at a hearing they cannot attend',
-  'safe escort past a checkpoint they would rather not explain',
+  'safe escort past a watch post they would rather not explain',
   'a poisoned business deal undone before the ink dries',
   'someone willing to take the blame for a mistake that was not theirs',
   'a family grudge settled without it turning into a feud',

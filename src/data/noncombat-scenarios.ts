@@ -367,7 +367,7 @@ export const TRAP_FRAMES: TrapFrame[] = [
     countermeasures: [
       { skill: 'Arcana', action: 'read the correct celestial order from the star markings on the orrery itself' },
       { skill: 'Acrobatics', action: 'keep footing on the tilting floor long enough to reach the control arm' },
-      { skill: 'Investigation', action: 'trace the gear train to the manual override switch' },
+      { skill: 'Investigation', action: 'trace the gear train to the override lever and throw it' },
     ],
     clues: ['the arms of the orrery are etched with faint numerals in an old astronomical script', 'scuff marks on the floor trace the same widening arc every time'],
     reset: 'the floor levels and the ceiling stills a minute after the arms are set correctly',
@@ -470,7 +470,7 @@ export const INVESTIGATION_FRAMES: InvestigationFrame[] = [
   {
     crime: 'a respected merchant found dead in a locked counting house, no sign of forced entry',
     methods: ['a slow poison worked into the nightly tea', 'a blade thin enough to leave almost no wound, delivered before the door was locked'],
-    motives: ['a business partnership about to be exposed as fraudulent', 'a debt so large that death was cheaper than repayment', 'an inheritance that only pays out while the merchant is gone'],
+    motives: ['a business partnership about to be exposed as fraudulent', 'a debt so large that death was cheaper than repayment', 'an inheritance that only comes due while the merchant is gone'],
   },
   {
     crime: 'a temple relic vanished from a warded reliquary overnight',
