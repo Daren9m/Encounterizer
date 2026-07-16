@@ -111,6 +111,23 @@ function PuzzleBuilder() {
     setHistory(prev => [p, ...prev.filter(h => h.id !== p.id).slice(0, 9)]);
   }
 
+  function handleReroll() {
+    if (!puzzle) return;
+    const p = generatePuzzle({
+      category: puzzle.requested.category,
+      difficulty: puzzle.requested.difficulty,
+      partyLevel: puzzle.partyLevel,
+      partySize: puzzle.partySize,
+      theme: puzzle.requested.theme,
+      tone: puzzle.tone,
+      timeBudget: puzzle.timeBudget,
+      seed: randomSeed(),
+    });
+    setPuzzle(p);
+    setShowSolution(false);
+    setHistory(prev => [p, ...prev.filter(h => h.id !== p.id).slice(0, 9)]);
+  }
+
   function handleCopyLink() {
     if (!puzzle) return;
     navigator.clipboard.writeText(buildShareUrl(puzzle)).then(() => {
@@ -133,14 +150,14 @@ function PuzzleBuilder() {
       lines.push('', '### Adjudication', puzzle.dmAdjudication);
     }
     lines.push('', '## Read Aloud', puzzle.readAloud);
+    if (puzzle.handout) {
+      lines.push('', '## Player Handout', handoutToText(puzzle.handout));
+    }
     if (puzzle.stages && puzzle.stages.length > 0) {
       lines.push('', '## Stages');
       for (const stage of puzzle.stages) {
         lines.push(`### ${stage.title}`, stage.text, '');
       }
-    }
-    if (puzzle.handout) {
-      lines.push('## Player Handout', handoutToText(puzzle.handout));
     }
     lines.push(
       '',
@@ -260,7 +277,7 @@ function PuzzleBuilder() {
               </span>
               <button
                 type="button"
-                onClick={() => handleGenerate(randomSeed())}
+                onClick={() => handleReroll()}
                 className="px-3 py-1 rounded-full text-xs bg-[var(--steel-800)] text-[var(--text-2)] hover:text-[var(--bronze)] transition-colors"
                 title="Reroll with a fresh seed, same levers"
               >
@@ -374,9 +391,7 @@ function PuzzleBuilder() {
                 className={`card text-left text-sm ${puzzle?.id === p.id ? 'border-[var(--bronze)]' : ''}`}>
                 <div className="font-bold text-[var(--text-1)]">{p.name}</div>
                 <div className="text-xs text-[var(--text-2)]">
-                  {categories.find(c => c.value === p.category)?.label} · {p.difficulty} · ~{p.estimatedMinutes} min
-                  · {THEME_OPTIONS.find(o => o.value === p.theme)?.label ?? p.theme}
-                  · {TIME_OPTIONS.find(o => o.value === p.timeBudget)?.label ?? p.timeBudget}
+                  {categories.find(c => c.value === p.category)?.label} · {p.difficulty} · ~{p.estimatedMinutes} min · {THEME_OPTIONS.find(o => o.value === p.theme)?.label ?? p.theme} · {TIME_OPTIONS.find(o => o.value === p.timeBudget)?.label ?? p.timeBudget}
                 </div>
               </button>
             ))}
