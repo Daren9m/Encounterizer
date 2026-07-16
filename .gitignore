@@ -33,3 +33,6 @@ next-env.d.ts
 # data
 *.sqlite
 *.db
+
+# vendored font sources (build-time only; committed artifact is the subset)
+scripts/vendor/

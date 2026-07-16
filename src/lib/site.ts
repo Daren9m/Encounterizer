@@ -64,7 +64,7 @@ export const TOOL_ROUTES: RouteInfo[] = [
     label: 'Puzzles',
     title: 'Puzzle Generator',
     description:
-      'Ready-to-run riddles, ciphers, and minigames with DM briefs, read-aloud text, player handouts, and progressive hints.',
+      'Verified logic puzzles, riddles, ciphers, and contests — themed, seeded, and shareable, with print-ready player handouts.',
     icon: 'puzzle',
   },
   {
