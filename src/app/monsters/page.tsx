@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
-import { Skull } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Maximize2, Skull, X } from 'lucide-react';
 import { filterMonsters, getMonsterSummaryStats } from '@/lib/monster-filter';
 import type { Monster, MonsterFilter } from '@/lib/types';
 import FilterPanel from '@/components/FilterPanel';
@@ -12,6 +12,7 @@ import MonsterPortrait from '@/components/MonsterPortrait';
 import { useMonsters } from '@/app/hooks/useMonsters';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import { getMonsterPhysicalDescription } from '@/data/monster-description-index';
+import { getMonsterImage } from '@/data/monster-visual-index';
 
 function crDisplay(cr: number): string {
   if (cr === 0.125) return '1/8';
@@ -25,6 +26,7 @@ type ViewMode = 'grid' | 'list';
 export default function BestiaryPage() {
   const [filter, setFilter] = useState<MonsterFilter>({});
   const [selectedMonster, setSelectedMonster] = useState<Monster | null>(null);
+  const [isHandoutOpen, setIsHandoutOpen] = useState(false);
   const [viewMode, setViewMode] = usePersistentState<ViewMode>(
     'bestiaryViewMode', 'grid', (v): v is ViewMode => v === 'grid' || v === 'list',
   );
@@ -34,11 +36,53 @@ export default function BestiaryPage() {
   const stats = useMemo(() => getMonsterSummaryStats(results), [results]);
 
   const handleSelect = useCallback((monster: Monster) => {
+    setIsHandoutOpen(false);
     setSelectedMonster(prev => prev?.id === monster.id ? null : monster);
   }, []);
 
+  useEffect(() => {
+    if (!isHandoutOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsHandoutOpen(false);
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isHandoutOpen]);
+
   return (
     <div className="animate-fade-in">
+      {isHandoutOpen && selectedMonster && getMonsterImage(selectedMonster.id) && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${selectedMonster.name} image handout`}
+          className="fixed inset-0 z-[100] bg-black print:hidden"
+        >
+          <MonsterPortrait
+            monsterId={selectedMonster.id}
+            sizes="100vw"
+            fit="contain"
+            className="h-full w-full"
+          />
+          <button
+            type="button"
+            autoFocus
+            onClick={() => setIsHandoutOpen(false)}
+            className="absolute right-4 top-4 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-black/70 text-white transition-colors hover:border-[var(--bronze)] hover:text-[var(--bronze)]"
+            aria-label="Close image handout"
+          >
+            <X size={24} aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl">Monster Bestiary</h1>
         <div className="flex items-center gap-2 text-sm">
@@ -167,7 +211,17 @@ export default function BestiaryPage() {
                 sizes="(min-width: 1024px) 42vw, 100vw"
                 className="mb-3 aspect-[4/5] rounded border border-[var(--steel-800)] shadow-lg print:hidden"
               />
-              <div className="mb-2 flex justify-end">
+              <div className="mb-2 flex justify-end gap-2">
+                {getMonsterImage(selectedMonster.id) && (
+                  <button
+                    type="button"
+                    onClick={() => setIsHandoutOpen(true)}
+                    className="btn-primary inline-flex items-center gap-1.5 text-sm print:hidden"
+                  >
+                    <Maximize2 size={16} aria-hidden="true" />
+                    Handout Mode
+                  </button>
+                )}
                 <PrintButton label="Print Stat Block" />
               </div>
               <MonsterStatBlock
