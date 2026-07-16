@@ -14,8 +14,8 @@ export default function MapGrid({ map }: { map: EncounterMap }) {
   return (
     <div className="animate-fade-in">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-bold text-[var(--gold)]">{map.name}</h3>
-        <span className="text-sm text-[var(--parchment-dark)]">
+        <h3 className="text-lg">{map.name}</h3>
+        <span className="text-sm text-[var(--text-2)]">
           {map.width} × {map.height} — {map.environment}
         </span>
       </div>
@@ -24,7 +24,7 @@ export default function MapGrid({ map }: { map: EncounterMap }) {
       <div
         role="img"
         aria-label={`Battle map: ${map.name}, ${map.width} by ${map.height} cells, ${map.environment}`}
-        className="inline-grid border border-[var(--dungeon-accent)] rounded overflow-hidden"
+        className="inline-grid border border-[var(--steel-800)] rounded overflow-hidden"
         style={{
           gridTemplateColumns: `repeat(${map.width}, 24px)`,
         }}
@@ -49,7 +49,7 @@ export default function MapGrid({ map }: { map: EncounterMap }) {
       </div>
 
       {/* Hover info */}
-      <div className="mt-2 h-6 text-sm text-[var(--parchment-dark)] print:hidden">
+      <div className="mt-2 h-6 text-sm text-[var(--text-2)] print:hidden">
         {hoveredTerrain && (
           <span>
             ({hoveredCell!.x}, {hoveredCell!.y}) — {TERRAIN_INFO[hoveredTerrain.terrain].label}
@@ -59,7 +59,7 @@ export default function MapGrid({ map }: { map: EncounterMap }) {
       </div>
 
       {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-3 text-xs text-[var(--parchment-dark)]">
+      <div className="mt-4 flex flex-wrap gap-3 text-xs text-[var(--text-2)]">
         {Object.entries(TERRAIN_INFO)
           .filter(([type]) => {
             // Only show terrain types present in this map

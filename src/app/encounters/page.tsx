@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Check, Minus, Plus, Swords, X } from 'lucide-react';
 import { filterMonsters } from '@/lib/monster-filter';
 import { useMonsters } from '@/app/hooks/useMonsters';
 import {
@@ -422,13 +423,13 @@ function EncounterBuilder() {
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-3xl font-bold text-[var(--gold)] mb-6">Encounter Builder</h1>
+      <h1 className="text-3xl mb-6">Encounter Builder</h1>
 
       {/* Controls */}
       <div className="card mb-6 print:hidden">
         <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div>
-            <label htmlFor="enc-party-size" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+            <label htmlFor="enc-party-size" className="micro-label block mb-1">
               Party Size
             </label>
             <input
@@ -439,7 +440,7 @@ function EncounterBuilder() {
             />
           </div>
           <div>
-            <label htmlFor="enc-party-level" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+            <label htmlFor="enc-party-level" className="micro-label block mb-1">
               Party Level
             </label>
             <input
@@ -450,7 +451,7 @@ function EncounterBuilder() {
             />
           </div>
           <div>
-            <label htmlFor="enc-difficulty" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+            <label htmlFor="enc-difficulty" className="micro-label block mb-1">
               Difficulty
             </label>
             <select id="enc-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value as Difficulty)} className="w-full">
@@ -458,7 +459,7 @@ function EncounterBuilder() {
             </select>
           </div>
           <div>
-            <label htmlFor="enc-environment" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+            <label htmlFor="enc-environment" className="micro-label block mb-1">
               Environment
             </label>
             <select id="enc-environment" value={environment} onChange={e => setEnvironment(e.target.value as Environment)} className="w-full">
@@ -471,27 +472,28 @@ function EncounterBuilder() {
         <DifficultyMeter budgets={summary.budgets} totalXp={summary.totalXp} />
 
         <div className="flex flex-wrap items-center gap-3 mt-4">
-          <button type="button" onClick={handleGenerate} className="btn-gold text-lg">
+          <button type="button" onClick={handleGenerate} className="btn-primary text-lg">
             Auto-Generate
           </button>
           <button
             type="button"
             onClick={handleForecastClick}
             disabled={!encounter || encounter.monsters.length === 0 || simRunning}
-            className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
+            className="btn-secondary inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
             title={
               !encounter || encounter.monsters.length === 0
                 ? 'Generate or build an encounter first'
                 : 'Simulate this battle 1,000 times'
             }
           >
-            ⚔ Battle Forecast
+            <Swords size={16} className="text-[var(--bronze)]" aria-hidden="true" />
+            Battle Forecast
           </button>
           <button
             type="button"
             onClick={() => setShowManualAdd(!showManualAdd)}
             aria-expanded={showManualAdd}
-            className="btn-primary"
+            className="btn-ghost"
           >
             {showManualAdd ? 'Hide' : 'Add Monsters Manually'}
           </button>
@@ -499,7 +501,7 @@ function EncounterBuilder() {
             <input
               type="checkbox" checked={includeMap}
               onChange={e => setIncludeMap(e.target.checked)}
-              className="accent-[var(--gold)]"
+              className="accent-[var(--bronze)]"
             />
             Include Map
           </label>
@@ -507,7 +509,7 @@ function EncounterBuilder() {
             type="button"
             onClick={() => setShowFilters(!showFilters)}
             aria-expanded={showFilters}
-            className="btn-secondary text-sm"
+            className="btn-ghost text-sm"
           >
             {showFilters ? 'Hide' : 'Show'} Monster Filters
           </button>
@@ -543,16 +545,21 @@ function EncounterBuilder() {
                     if (e.key === 'Escape') setSavingName(null);
                   }}
                 />
-                <button type="button" onClick={handleSaveEncounter} className="btn-gold text-sm">
-                  ✓
+                <button
+                  type="button"
+                  onClick={handleSaveEncounter}
+                  className="btn-primary text-sm inline-flex items-center"
+                  aria-label="Save encounter"
+                >
+                  <Check size={16} aria-hidden="true" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setSavingName(null)}
-                  className="btn-secondary text-sm"
+                  className="btn-secondary text-sm inline-flex items-center"
                   aria-label="Cancel saving"
                 >
-                  ✕
+                  <X size={16} aria-hidden="true" />
                 </button>
               </span>
             )
@@ -579,15 +586,15 @@ function EncounterBuilder() {
       {/* Saved Encounters */}
       {savedHydrated && savedEncounters.length > 0 && (
         <details className="card mb-6 print:hidden">
-          <summary className="cursor-pointer font-bold text-[var(--gold)]">
+          <summary className="cursor-pointer font-display">
             Saved Encounters ({savedEncounters.length})
           </summary>
-          <ul className="mt-3 divide-y divide-[var(--dungeon-accent)]">
+          <ul className="mt-3 divide-y divide-[var(--steel-800)]">
             {savedEncounters.map((saved) => (
               <li key={saved.id} className="flex items-center justify-between py-2 gap-2 text-sm">
                 <div className="min-w-0">
                   <span className="font-bold">{saved.name}</span>
-                  <span className="text-[var(--parchment-dark)] ml-2">
+                  <span className="text-[var(--text-2)] ml-2">
                     {saved.encounter.difficulty} · {saved.encounter.totalXp.toLocaleString()} XP ·{' '}
                     {saved.encounter.monsters.reduce((s, em) => s + em.count, 0)} monsters ·{' '}
                     {new Date(saved.savedAt).toLocaleDateString()}
@@ -605,9 +612,9 @@ function EncounterBuilder() {
                     type="button"
                     onClick={() => setSavedEncounters((prev) => prev.filter((s) => s.id !== saved.id))}
                     aria-label={`Delete saved encounter ${saved.name}`}
-                    className="text-red-400 hover:text-red-300 px-1"
+                    className="text-[var(--accent-danger)] hover:opacity-80 px-1 inline-flex items-center"
                   >
-                    ✕
+                    <X size={16} aria-hidden="true" />
                   </button>
                 </div>
               </li>
@@ -635,7 +642,7 @@ function EncounterBuilder() {
       {/* Manual Monster Add Panel */}
       {showManualAdd && (
         <div className="card mb-6 animate-fade-in print:hidden">
-          <h3 className="text-lg font-bold text-[var(--gold)] mb-3">Add Monsters</h3>
+          <h3 className="text-lg mb-3">Add Monsters</h3>
           <input
             id="enc-manual-search"
             type="text"
@@ -651,11 +658,11 @@ function EncounterBuilder() {
                 key={m.id}
                 type="button"
                 onClick={() => handleAddMonster(m)}
-                className="text-left p-2 rounded bg-[var(--dungeon-dark)] hover:bg-[var(--dungeon-accent)] transition-colors text-sm"
+                className="text-left p-2 rounded bg-[var(--steel-950)] hover:bg-[var(--steel-800)] transition-colors text-sm"
               >
                 <span className="font-bold">{m.name}</span>
-                <span className="text-[var(--gold)] ml-2">CR {crDisplay(m.challengeRating)}</span>
-                <div className="text-xs text-[var(--parchment-dark)]">
+                <span className="text-[var(--bronze)] ml-2">CR {crDisplay(m.challengeRating)}</span>
+                <div className="text-xs text-[var(--text-2)]">
                   {m.size} {m.type} | AC {m.armor.ac} | HP {m.hitPoints}
                 </div>
               </button>
@@ -670,28 +677,28 @@ function EncounterBuilder() {
           {/* Encounter Header */}
           <div className="card">
             <div className="flex items-start justify-between mb-3">
-              <h2 className="text-2xl font-bold text-[var(--gold)]">{encounter.name}</h2>
+              <h2 className="text-2xl">{encounter.name}</h2>
               {summary.assessment && <DifficultyBadge difficulty={summary.assessment} />}
             </div>
             {encounter.description && (
-              <p className="text-[var(--parchment-dark)] mb-4 italic">{encounter.description}</p>
+              <p className="text-[var(--text-2)] mb-4 italic">{encounter.description}</p>
             )}
 
             <div className="grid sm:grid-cols-4 gap-4 text-sm">
               <div>
-                <span className="text-[var(--gold)] font-bold">Total XP: </span>
+                <span className="text-[var(--bronze)] font-bold">Total XP: </span>
                 {summary.totalXp.toLocaleString()}
               </div>
               <div>
-                <span className="text-[var(--gold)] font-bold">{difficulty} Budget: </span>
+                <span className="text-[var(--bronze)] font-bold">{difficulty} Budget: </span>
                 {summary.budgets[difficulty].toLocaleString()}
               </div>
               <div>
-                <span className="text-[var(--gold)] font-bold">Monsters: </span>
+                <span className="text-[var(--bronze)] font-bold">Monsters: </span>
                 {summary.monsterCount}
               </div>
               <div>
-                <span className="text-[var(--gold)] font-bold">Environment: </span>
+                <span className="text-[var(--bronze)] font-bold">Environment: </span>
                 {encounter.environment}
               </div>
             </div>
@@ -700,11 +707,11 @@ function EncounterBuilder() {
           {/* Battle Forecast */}
           {simRunning && (
             <div className="card animate-pulse" role="status" aria-label="Running battle forecast">
-              <h3 className="text-xl font-bold text-[var(--gold)] mb-2">Battle Forecast</h3>
-              <p className="text-sm text-[var(--parchment-dark)]">
+              <h3 className="text-xl mb-2">Battle Forecast</h3>
+              <p className="text-sm text-[var(--text-2)]">
                 Simulating 1,000 battles…
               </p>
-              <div className="h-24 mt-3 rounded bg-[var(--dungeon-dark)]" />
+              <div className="h-24 mt-3 rounded bg-[var(--steel-950)]" />
             </div>
           )}
           {!simRunning && report && summary.assessment && (
@@ -719,11 +726,11 @@ function EncounterBuilder() {
 
           {/* Monsters */}
           <div className="card">
-            <h3 className="text-xl font-bold text-[var(--gold)] mb-4">Monsters</h3>
+            <h3 className="text-xl mb-4">Monsters</h3>
             <div className="space-y-3">
               {encounter.monsters.map(em => (
                 <div key={em.monster.id}>
-                  <div className="flex items-center justify-between p-3 rounded bg-[var(--dungeon-dark)]">
+                  <div className="flex items-center justify-between p-3 rounded bg-[var(--steel-950)]">
                     <button
                       type="button"
                       onClick={() => setExpandedMonster(
@@ -732,34 +739,34 @@ function EncounterBuilder() {
                       aria-expanded={expandedMonster === em.monster.id}
                       className="flex items-center gap-3 text-left flex-1 hover:opacity-80 transition-opacity"
                     >
-                      <span className="bg-[var(--dragon-red)] text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                      <span className="bg-[var(--steel-800)] text-[var(--bronze)] rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
                         {em.count}x
                       </span>
                       <div>
                         <span className="font-bold">{em.monster.name}</span>
-                        <span className="text-sm text-[var(--parchment-dark)] ml-2">
+                        <span className="text-sm text-[var(--text-2)] ml-2">
                           CR {crDisplay(em.monster.challengeRating)} | AC {em.monster.armor.ac} | HP {em.monster.hitPoints}
                         </span>
                       </div>
                     </button>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-[var(--gold)]">
+                      <span className="xp-capsule text-xs">
                         {(em.monster.xp * em.count).toLocaleString()} XP
                       </span>
                       <button
                         type="button"
                         onClick={() => handleAddMonster(em.monster)}
-                        className="w-7 h-7 rounded bg-green-800 hover:bg-green-700 text-white font-bold text-sm print:hidden"
+                        className="w-7 h-7 rounded-md bg-[var(--steel-800)] hover:bg-[var(--steel-700)] text-[var(--bronze)] print:hidden inline-flex items-center justify-center transition-colors"
                         title="Add one more"
                         aria-label={`Add one more ${em.monster.name}`}
-                      >+</button>
+                      ><Plus size={16} aria-hidden="true" /></button>
                       <button
                         type="button"
                         onClick={() => handleRemoveMonster(em.monster.id)}
-                        className="w-7 h-7 rounded bg-red-800 hover:bg-red-700 text-white font-bold text-sm print:hidden"
+                        className="w-7 h-7 rounded-md bg-[var(--steel-800)] hover:bg-[var(--steel-700)] text-[var(--accent-danger)] print:hidden inline-flex items-center justify-center transition-colors"
                         title="Remove one"
                         aria-label={`Remove one ${em.monster.name}`}
-                      >-</button>
+                      ><Minus size={16} aria-hidden="true" /></button>
                     </div>
                   </div>
 
@@ -776,8 +783,8 @@ function EncounterBuilder() {
           {/* Tactics */}
           {encounter.tactics && (
             <div className="card">
-              <h3 className="text-xl font-bold text-[var(--gold)] mb-3">Tactics</h3>
-              <div className="text-sm text-[var(--parchment-dark)] whitespace-pre-line">
+              <h3 className="text-xl mb-3">Tactics</h3>
+              <div className="text-sm text-[var(--text-2)] whitespace-pre-line">
                 {encounter.tactics}
               </div>
             </div>
@@ -786,15 +793,15 @@ function EncounterBuilder() {
           {/* Treasure */}
           {encounter.treasure && (
             <div className="card">
-              <h3 className="text-xl font-bold text-[var(--gold)] mb-3">Treasure</h3>
-              <p className="text-sm text-[var(--parchment-dark)]">{encounter.treasure}</p>
+              <h3 className="text-xl mb-3">Treasure</h3>
+              <p className="text-sm text-[var(--text-2)]">{encounter.treasure}</p>
             </div>
           )}
 
           {/* Map */}
           {encounter.map && (
             <div className="card overflow-x-auto">
-              <h3 className="text-xl font-bold text-[var(--gold)] mb-3">Battle Map</h3>
+              <h3 className="text-xl mb-3">Battle Map</h3>
               <MapGrid map={encounter.map} />
             </div>
           )}
@@ -819,26 +826,26 @@ function DifficultyMeter({
 
   const gradient =
     totalXp > budgets.High
-      ? 'linear-gradient(90deg, #2e7d32, #f57f17, #d84315, #b71c1c)'
+      ? 'linear-gradient(90deg, #7acb9a, #e3c567, #e69c55, #d05a59)'
       : totalXp > budgets.Moderate
-      ? 'linear-gradient(90deg, #2e7d32, #f57f17, #d84315)'
+      ? 'linear-gradient(90deg, #7acb9a, #e3c567, #e69c55)'
       : totalXp > budgets.Low
-      ? 'linear-gradient(90deg, #2e7d32, #f57f17)'
-      : '#2e7d32';
+      ? 'linear-gradient(90deg, #7acb9a, #e3c567)'
+      : '#7acb9a';
 
   return (
     <div className="mt-3">
-      <div className="flex justify-between text-xs text-[var(--parchment-dark)] mb-1">
+      <div className="flex justify-between text-xs text-[var(--text-2)] mb-1">
         <span>Low ({budgets.Low.toLocaleString()})</span>
         <span>Moderate ({budgets.Moderate.toLocaleString()})</span>
         <span>High ({budgets.High.toLocaleString()})</span>
-        <span className="text-[#b71c1c] font-bold">Extreme</span>
+        <span className="text-[var(--difficulty-deadly)] font-bold">Extreme</span>
       </div>
-      <div className="relative h-6 bg-[var(--dungeon-dark)] rounded overflow-hidden border border-[var(--dungeon-accent)]">
+      <div className="relative h-6 bg-[var(--steel-950)] rounded overflow-hidden border border-[var(--steel-800)]">
         {/* Budget markers */}
-        <div className="absolute top-0 bottom-0 border-r border-green-600" style={{ left: `${pct(budgets.Low)}%` }} />
-        <div className="absolute top-0 bottom-0 border-r border-yellow-600" style={{ left: `${pct(budgets.Moderate)}%` }} />
-        <div className="absolute top-0 bottom-0 border-r border-red-600" style={{ left: `${pct(budgets.High)}%` }} />
+        <div className="absolute top-0 bottom-0 border-r" style={{ left: `${pct(budgets.Low)}%`, borderColor: 'var(--difficulty-easy)' }} />
+        <div className="absolute top-0 bottom-0 border-r" style={{ left: `${pct(budgets.Moderate)}%`, borderColor: 'var(--difficulty-medium)' }} />
+        <div className="absolute top-0 bottom-0 border-r" style={{ left: `${pct(budgets.High)}%`, borderColor: 'var(--difficulty-hard)' }} />
 
         {/* Current XP bar */}
         {totalXp > 0 && (

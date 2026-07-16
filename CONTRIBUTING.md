@@ -20,7 +20,7 @@ npm run dev
   `src/components/`
 - **Tailwind CSS** — the palette lives in CSS variables in
   `src/app/globals.css`; the Tailwind color tokens alias them, so
-  `text-gold` and `text-[var(--gold)]` are equivalent (prefer the tokens)
+  `text-bronze` and `text-[var(--bronze)]` are equivalent (prefer the tokens)
 - **Seeded randomness** — all generators draw from `src/lib/random.ts`.
   Shareable links replay seeds, so never change the LCG formula
 - **No external API calls at runtime** — all computation is client-side

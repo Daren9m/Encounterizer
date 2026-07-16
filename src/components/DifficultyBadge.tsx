@@ -16,7 +16,7 @@ const TOOLTIPS: Partial<Record<EncounterAssessment, string>> = {
 export default function DifficultyBadge({ difficulty }: { difficulty: EncounterAssessment }) {
   return (
     <span
-      className={`${CLASSES[difficulty]} px-3 py-1 rounded-full text-sm font-bold`}
+      className={`${CLASSES[difficulty]} px-3 py-1 rounded-full text-xs`}
       title={TOOLTIPS[difficulty]}
     >
       {difficulty}

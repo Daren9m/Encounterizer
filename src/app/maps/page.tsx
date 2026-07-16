@@ -78,12 +78,12 @@ export default function MapsPage() {
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-3xl font-bold text-[var(--gold)] mb-6">Map Generator</h1>
+      <h1 className="text-3xl mb-6">Map Generator</h1>
 
       <div className="card mb-6 print:hidden">
         <div className="grid sm:grid-cols-3 gap-4 mb-4">
           <div>
-            <label htmlFor="map-environment" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+            <label htmlFor="map-environment" className="micro-label block mb-1">
               Environment
             </label>
             <select
@@ -94,12 +94,12 @@ export default function MapsPage() {
             >
               {ENVIRONMENTS.map(e => <option key={e} value={e}>{e}</option>)}
             </select>
-            <p className="mt-1 text-xs text-[var(--parchment-dark)] opacity-60">
+            <p className="mt-1 text-xs text-[var(--text-2)] opacity-60">
               {ENV_DESCRIPTIONS[environment]}
             </p>
           </div>
           <div>
-            <label htmlFor="map-width" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+            <label htmlFor="map-width" className="micro-label block mb-1">
               Width (cells)
             </label>
             <input
@@ -115,13 +115,13 @@ export default function MapsPage() {
               {[16, 24, 32].map(w => (
                 <button key={w} type="button" onClick={() => setWidth(w)}
                   aria-pressed={width === w}
-                  className={`text-xs px-2 py-0.5 rounded ${width === w ? 'bg-[var(--gold)] text-[var(--dungeon-dark)]' : 'bg-[var(--dungeon-accent)] text-[var(--parchment-dark)]'}`}
+                  className={`text-xs px-2 py-0.5 rounded ${width === w ? 'bg-[var(--bronze)] text-[#1d1105]' : 'bg-[var(--steel-800)] text-[var(--text-2)]'}`}
                 >{w}</button>
               ))}
             </div>
           </div>
           <div>
-            <label htmlFor="map-height" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+            <label htmlFor="map-height" className="micro-label block mb-1">
               Height (cells)
             </label>
             <input
@@ -137,7 +137,7 @@ export default function MapsPage() {
               {[12, 18, 24].map(h => (
                 <button key={h} type="button" onClick={() => setHeight(h)}
                   aria-pressed={height === h}
-                  className={`text-xs px-2 py-0.5 rounded ${height === h ? 'bg-[var(--gold)] text-[var(--dungeon-dark)]' : 'bg-[var(--dungeon-accent)] text-[var(--parchment-dark)]'}`}
+                  className={`text-xs px-2 py-0.5 rounded ${height === h ? 'bg-[var(--bronze)] text-[#1d1105]' : 'bg-[var(--steel-800)] text-[var(--text-2)]'}`}
                 >{h}</button>
               ))}
             </div>
@@ -145,7 +145,7 @@ export default function MapsPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <button type="button" onClick={handleGenerate} className="btn-gold text-lg">
+          <button type="button" onClick={handleGenerate} className="btn-primary text-lg">
             Generate Map
           </button>
           {map && (
@@ -173,21 +173,21 @@ export default function MapsPage() {
       {/* Map History (persists across visits) */}
       {history.length > 0 && !(history.length === 1 && map?.id === history[0].id) && (
         <div className="mt-6 print:hidden">
-          <h2 className="text-lg font-bold text-[var(--gold)] mb-3">Recent Maps</h2>
+          <h2 className="text-lg mb-3">Recent Maps</h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {history.map((m, i) => (
               <button
                 key={m.id}
                 type="button"
                 onClick={() => setMap(m)}
-                className={`card text-left text-sm ${map?.id === m.id ? 'border-[var(--gold)]' : ''}`}
+                className={`card text-left text-sm ${map?.id === m.id ? 'border-[var(--bronze)]' : ''}`}
               >
-                <div className="font-bold text-[var(--parchment)]">{m.name}</div>
-                <div className="text-xs text-[var(--parchment-dark)]">
+                <div className="font-bold text-[var(--text-1)]">{m.name}</div>
+                <div className="text-xs text-[var(--text-2)]">
                   {m.width}x{m.height} — {m.environment}
                 </div>
                 {i === 0 && (
-                  <span className="text-[10px] text-[var(--gold)]">Latest</span>
+                  <span className="text-[10px] text-[var(--bronze)]">Latest</span>
                 )}
               </button>
             ))}

@@ -17,12 +17,21 @@ export const SITE_DESCRIPTION =
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://encounterizer.azurestaticapps.net';
 
+/** Lucide icon names for the tool routes — rendered by RouteIcon. */
+export type RouteIconName =
+  | 'swords'
+  | 'skull'
+  | 'map'
+  | 'puzzle'
+  | 'drama'
+  | 'sparkles';
+
 export interface RouteInfo {
   path: string;
   label: string;
   title: string;
   description: string;
-  icon: string;
+  icon: RouteIconName;
 }
 
 export const TOOL_ROUTES: RouteInfo[] = [
@@ -32,7 +41,7 @@ export const TOOL_ROUTES: RouteInfo[] = [
     title: 'Encounter Builder',
     description:
       'Build balanced D&D 5.5e encounters with 2024 XP budgets, then run the Battle Forecast — 1,000 simulated fights before your party rolls initiative.',
-    icon: '⚔️',
+    icon: 'swords',
   },
   {
     path: '/monsters',
@@ -40,7 +49,7 @@ export const TOOL_ROUTES: RouteInfo[] = [
     title: 'Monster Bestiary',
     description:
       'Browse 331 SRD 5.2.1 monsters with deep filters — CR, type, movement, damage types, resistances — or import your own from JSON.',
-    icon: '🐉',
+    icon: 'skull',
   },
   {
     path: '/maps',
@@ -48,7 +57,7 @@ export const TOOL_ROUTES: RouteInfo[] = [
     title: 'Battle Map Generator',
     description:
       'Procedural battle maps for D&D — BSP dungeons, cellular-automata caves, and outdoor terrain, tuned per environment.',
-    icon: '🗺️',
+    icon: 'map',
   },
   {
     path: '/puzzles',
@@ -56,7 +65,7 @@ export const TOOL_ROUTES: RouteInfo[] = [
     title: 'Puzzle Generator',
     description:
       'Ready-to-run riddles, ciphers, and minigames with DM briefs, read-aloud text, player handouts, and progressive hints.',
-    icon: '🧩',
+    icon: 'puzzle',
   },
   {
     path: '/challenges',
@@ -64,7 +73,7 @@ export const TOOL_ROUTES: RouteInfo[] = [
     title: 'Non-Combat Challenges',
     description:
       'Social encounters, exploration hazards, skill challenges, and traps — complete with stakes, complications, and outcomes.',
-    icon: '🎭',
+    icon: 'drama',
   },
   {
     path: '/spells',
@@ -72,7 +81,7 @@ export const TOOL_ROUTES: RouteInfo[] = [
     title: 'Spell Reference',
     description:
       'Instant spell lookup with mechanics-first summaries, filters for level, school, class, concentration, and side-by-side pinning.',
-    icon: '✨',
+    icon: 'sparkles',
   },
 ];
 

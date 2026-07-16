@@ -8,22 +8,36 @@ const config: Config = {
   theme: {
     extend: {
       // Aliases to the CSS custom properties in globals.css — the single
-      // source of truth for the palette. `text-gold` and `text-[var(--gold)]`
-      // resolve identically; new code should prefer the short tokens.
+      // source of truth for the palette. `text-bronze` and
+      // `text-[var(--bronze)]` resolve identically.
       colors: {
-        parchment: 'var(--parchment)',
-        'parchment-dark': 'var(--parchment-dark)',
-        'dragon-red': 'var(--dragon-red)',
-        'dragon-red-light': 'var(--dragon-red-light)',
-        'dungeon-dark': 'var(--dungeon-dark)',
-        'dungeon-mid': 'var(--dungeon-mid)',
-        'dungeon-accent': 'var(--dungeon-accent)',
-        gold: 'var(--gold)',
-        'gold-light': 'var(--gold-light)',
+        steel: {
+          950: 'var(--steel-950)',
+          900: 'var(--steel-900)',
+          800: 'var(--steel-800)',
+          700: 'var(--steel-700)',
+        },
+        bronze: {
+          DEFAULT: 'var(--bronze)',
+          light: 'var(--bronze-light)',
+          deep: 'var(--bronze-deep)',
+        },
+        ink: {
+          1: 'var(--text-1)',
+          2: 'var(--text-2)',
+          3: 'var(--text-3)',
+        },
+        danger: 'var(--accent-danger)',
+        difficulty: {
+          easy: 'var(--difficulty-easy)',
+          medium: 'var(--difficulty-medium)',
+          hard: 'var(--difficulty-hard)',
+          deadly: 'var(--difficulty-deadly)',
+        },
       },
       fontFamily: {
-        heading: ['var(--font-heading)', 'Georgia', 'serif'],
-        medieval: ['Georgia', 'Times New Roman', 'serif'],
+        display: ['var(--font-display)', 'Georgia', 'serif'],
+        sans: ['var(--font-body)', 'IBM Plex Sans', 'system-ui', 'sans-serif'],
       },
     },
   },

@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Menu, Swords, X } from 'lucide-react';
 import { TOOL_ROUTES } from '@/lib/site';
+import RouteIcon from '@/components/RouteIcon';
 
 function NavLink({
   href,
@@ -21,10 +23,10 @@ function NavLink({
       href={href}
       aria-current={active ? 'page' : undefined}
       onClick={onNavigate}
-      className={`px-3 py-2 rounded transition-colors hover:bg-[var(--dungeon-accent)] hover:text-[var(--gold)] ${
+      className={`px-3 py-1.5 rounded-full text-sm transition-colors hover:bg-[var(--steel-800)] hover:text-[var(--text-1)] ${
         active
-          ? 'text-[var(--gold)] font-bold border-b-2 border-[var(--gold)] rounded-b-none'
-          : 'text-[var(--parchment-dark)]'
+          ? 'bg-[var(--steel-800)] text-[var(--text-1)]'
+          : 'text-[var(--text-2)]'
       }`}
     >
       {children}
@@ -45,12 +47,12 @@ export default function NavBar() {
     pathname === path || pathname.startsWith(`${path}/`);
 
   return (
-    <header className="border-b border-[var(--dungeon-accent)] bg-[var(--dungeon-mid)] print:hidden">
+    <header className="border-b border-[var(--steel-800)] bg-[var(--steel-900)] print:hidden">
       <nav aria-label="Main" className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl" aria-hidden="true">⚔️</span>
-            <span className="text-xl font-bold text-[var(--gold)] font-heading">Encounterizer</span>
+          <Link href="/" className="flex items-center gap-2.5">
+            <Swords size={22} className="text-[var(--bronze)]" aria-hidden="true" />
+            <span className="text-xl font-display">Encounterizer</span>
           </Link>
 
           {/* Desktop links */}
@@ -65,19 +67,17 @@ export default function NavBar() {
           {/* Mobile hamburger */}
           <button
             type="button"
-            className="md:hidden p-2 rounded text-[var(--parchment-dark)] hover:text-[var(--gold)] hover:bg-[var(--dungeon-accent)]"
+            className="md:hidden p-2 rounded-md text-[var(--text-2)] hover:text-[var(--text-1)] hover:bg-[var(--steel-800)]"
             aria-expanded={menuOpen}
             aria-controls="mobile-nav"
             aria-label="Toggle navigation menu"
             onClick={() => setMenuOpen(!menuOpen)}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              {menuOpen ? (
-                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              ) : (
-                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              )}
-            </svg>
+            {menuOpen ? (
+              <X size={24} aria-hidden="true" />
+            ) : (
+              <Menu size={24} aria-hidden="true" />
+            )}
           </button>
         </div>
 
@@ -91,8 +91,14 @@ export default function NavBar() {
                 active={isActive(route.path)}
                 onNavigate={() => setMenuOpen(false)}
               >
-                <span aria-hidden="true" className="mr-2">{route.icon}</span>
-                {route.label}
+                <span className="flex items-center gap-2">
+                  <RouteIcon
+                    name={route.icon}
+                    size={16}
+                    className={isActive(route.path) ? 'text-[var(--bronze)]' : 'text-[var(--text-3)]'}
+                  />
+                  {route.label}
+                </span>
               </NavLink>
             ))}
           </div>

@@ -1,15 +1,23 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Cinzel } from 'next/font/google';
+import { Spectral, IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
 import NavBar from '@/components/NavBar';
 import { SITE_DESCRIPTION, SITE_URL } from '@/lib/site';
 
 // Self-hosted at build time by next/font — zero runtime requests.
-const cinzel = Cinzel({
+const spectral = Spectral({
   subsets: ['latin'],
-  weight: ['700'],
-  variable: '--font-heading',
+  weight: ['600', '700'],
+  variable: '--font-display',
+  display: 'swap',
+});
+
+const plexSans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-body',
   display: 'swap',
 });
 
@@ -32,7 +40,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cinzel.variable}>
+    <html lang="en" className={`${spectral.variable} ${plexSans.variable}`}>
       <body className="min-h-screen flex flex-col">
         <NavBar />
 
@@ -42,13 +50,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-[var(--dungeon-accent)] bg-[var(--dungeon-mid)] py-4 print:hidden">
-          <div className="max-w-7xl mx-auto px-4 text-center text-sm text-[var(--parchment-dark)] opacity-60 space-y-1">
+        <footer className="border-t border-[var(--steel-800)] bg-[var(--steel-900)] py-4 print:hidden">
+          <div className="max-w-7xl mx-auto px-4 text-center text-sm text-[var(--text-3)] space-y-1">
             <div>Encounterizer — Built for Dungeon Masters. Uses 5.5e / 2024 rules.</div>
             <div>
               Includes material from the SRD 5.2.1 by Wizards of the Coast LLC, licensed under
               CC-BY-4.0. Unofficial fan content.{' '}
-              <Link href="/credits" className="underline hover:text-[var(--gold)]">
+              <Link href="/credits" className="underline hover:text-[var(--bronze)]">
                 Credits &amp; licensing
               </Link>
             </div>

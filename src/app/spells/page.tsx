@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
 import { SRD_SPELLS, searchSpells, filterSpells, levelLabel } from '@/data/spells';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import type { Spell, SpellSchool } from '@/data/spells';
@@ -48,8 +49,8 @@ export default function SpellsPage() {
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-3xl font-bold text-[var(--gold)] mb-2">Spell Reference</h1>
-      <p className="text-[var(--parchment-dark)] mb-4 text-sm">
+      <h1 className="text-3xl mb-2">Spell Reference</h1>
+      <p className="text-[var(--text-2)] mb-4 text-sm">
         Type to search. Results appear instantly. Click a spell for full mechanics.
       </p>
 
@@ -88,7 +89,7 @@ export default function SpellsPage() {
             <option value="yes">Ritual</option>
             <option value="no">Not Ritual</option>
           </select>
-          <span className="text-xs text-[var(--parchment-dark)] self-center ml-2">{results.length} spells</span>
+          <span className="text-xs text-[var(--text-2)] self-center ml-2">{results.length} spells</span>
         </div>
       </div>
 
@@ -101,22 +102,22 @@ export default function SpellsPage() {
               type="button"
               onClick={() => setSelected(spell)}
               className={`w-full text-left p-2 rounded text-sm transition-colors ${
-                selected?.id === spell.id ? 'bg-[var(--dungeon-accent)] border border-[var(--gold)]' : 'hover:bg-[var(--dungeon-mid)] border border-transparent'
+                selected?.id === spell.id ? 'bg-[var(--steel-800)] border border-[var(--bronze)]' : 'hover:bg-[var(--steel-900)] border border-transparent'
               }`}
             >
               <div className="flex items-center justify-between">
                 <span className="font-bold">{spell.name}</span>
-                <span className="text-xs text-[var(--gold)]">{levelLabel(spell.level)}</span>
+                <span className="text-xs text-[var(--bronze)]">{levelLabel(spell.level)}</span>
               </div>
-              <div className="text-xs text-[var(--parchment-dark)]">
+              <div className="text-xs text-[var(--text-2)]">
                 {spell.school} · {spell.castingTime} · {spell.range}
-                {spell.concentration && <span className="ml-1 text-yellow-500">C</span>}
-                {spell.ritual && <span className="ml-1 text-blue-400">R</span>}
+                {spell.concentration && <span className="ml-1 text-[var(--bronze)]">C</span>}
+                {spell.ritual && <span className="ml-1 text-[var(--text-3)]">R</span>}
               </div>
             </button>
           ))}
           {results.length === 0 && (
-            <div className="text-center py-8 text-[var(--parchment-dark)]">No spells match.</div>
+            <div className="text-center py-8 text-[var(--text-2)]">No spells match.</div>
           )}
         </div>
 
@@ -125,8 +126,10 @@ export default function SpellsPage() {
           {selected ? (
             <SpellCard spell={selected} onPin={togglePin} isPinned={pinned.some(p => p.id === selected.id)} />
           ) : (
-            <div className="card text-center py-12 text-[var(--parchment-dark)]">
-              <div className="text-4xl mb-3" aria-hidden="true">✨</div>
+            <div className="card text-center py-12 text-[var(--text-2)]">
+              <div className="mb-3 flex justify-center" aria-hidden="true">
+                <Sparkles size={40} className="text-[var(--text-3)]" />
+              </div>
               <p>Select a spell to view its mechanics</p>
             </div>
           )}
@@ -134,7 +137,7 @@ export default function SpellsPage() {
           {/* Pinned comparison */}
           {pinned.length > 0 && (
             <div>
-              <h3 className="text-sm font-bold text-[var(--gold)] mb-2 uppercase tracking-wider">
+              <h3 className="micro-label font-sans mb-2">
                 Pinned for Comparison ({pinned.length}/3)
               </h3>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -157,62 +160,65 @@ function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (
     <div className="card">
       {/* Header */}
       <div className="flex items-start justify-between mb-1">
-        <h2 className={`font-bold text-[var(--gold)] ${compact ? 'text-base' : 'text-xl'}`}>{spell.name}</h2>
+        <h2 className={`${compact ? 'text-base' : 'text-xl'}`}>{spell.name}</h2>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => onPin(spell)} aria-pressed={isPinned} title={isPinned ? 'Unpin' : 'Pin for comparison'}
-            className={`text-sm px-2 py-0.5 rounded ${isPinned ? 'bg-[var(--gold)] text-[var(--dungeon-dark)]' : 'bg-[var(--dungeon-accent)] text-[var(--parchment-dark)]'}`}>
+            className={`text-sm px-2 py-0.5 rounded ${isPinned ? 'bg-[var(--bronze)] text-[#1d1105]' : 'bg-[var(--steel-800)] text-[var(--text-2)]'}`}>
             {isPinned ? 'Pinned' : 'Pin'}
           </button>
-          <span className="text-sm font-bold text-[var(--gold)]">{levelLabel(spell.level)}</span>
+          <span className="text-sm font-bold text-[var(--bronze)]">{levelLabel(spell.level)}</span>
         </div>
       </div>
 
       {/* One-line summary */}
-      <div className="text-xs text-[var(--parchment-dark)] mb-2">
+      <div className="text-xs text-[var(--text-2)] mb-2">
         {spell.school} · {spell.components}
-        {spell.concentration && <span className="ml-1 text-yellow-500 font-bold">[C]</span>}
-        {spell.ritual && <span className="ml-1 text-blue-400 font-bold">[R]</span>}
+        {spell.concentration && <span className="ml-1 text-[var(--bronze)] font-bold">[C]</span>}
+        {spell.ritual && <span className="ml-1 text-[var(--text-3)] font-bold">[R]</span>}
       </div>
 
       {/* Key mechanics row */}
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm mb-2">
-        <span><span className="text-[var(--gold)] font-bold">Cast:</span> {spell.castingTime}</span>
-        <span><span className="text-[var(--gold)] font-bold">Range:</span> {spell.range}</span>
-        {spell.area && <span><span className="text-[var(--gold)] font-bold">Area:</span> {spell.area}</span>}
-        <span><span className="text-[var(--gold)] font-bold">Duration:</span> {spell.duration}</span>
-        {spell.saveType && <span><span className="text-[var(--dragon-red)] font-bold">Save:</span> {spell.saveType}</span>}
-        {spell.attackType && <span><span className="text-[var(--dragon-red)] font-bold">Attack:</span> {spell.attackType} spell</span>}
-        {spell.damageType && <span><span className="text-[var(--dragon-red)] font-bold">Damage:</span> {spell.damageType}</span>}
+        <span><span className="text-[var(--bronze)] font-bold">Cast:</span> {spell.castingTime}</span>
+        <span><span className="text-[var(--bronze)] font-bold">Range:</span> {spell.range}</span>
+        {spell.area && <span><span className="text-[var(--bronze)] font-bold">Area:</span> {spell.area}</span>}
+        <span><span className="text-[var(--bronze)] font-bold">Duration:</span> {spell.duration}</span>
+        {spell.saveType && <span><span className="text-[var(--accent-danger)] font-bold">Save:</span> {spell.saveType}</span>}
+        {spell.attackType && <span><span className="text-[var(--accent-danger)] font-bold">Attack:</span> {spell.attackType} spell</span>}
+        {spell.damageType && <span><span className="text-[var(--accent-danger)] font-bold">Damage:</span> {spell.damageType}</span>}
       </div>
 
-      <hr className="border-[var(--dungeon-accent)] my-2" />
+      <hr className="border-[var(--steel-800)] my-2" />
 
       {/* Effect summary — the key mechanic */}
       <p className="text-sm font-bold mb-1">{spell.effectSummary}</p>
 
       {spell.upcast && (
-        <p className="text-xs text-[var(--parchment-dark)] mt-1">
-          <span className="text-[var(--gold)] font-bold">At Higher Levels:</span> {spell.upcast}
+        <p className="text-xs text-[var(--text-2)] mt-1">
+          <span className="text-[var(--bronze)] font-bold">At Higher Levels:</span> {spell.upcast}
         </p>
       )}
 
       {/* Classes */}
       <div className="flex flex-wrap gap-1 mt-2">
         {spell.classes.map(c => (
-          <span key={c} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--dungeon-accent)] text-[var(--parchment-dark)]">{c}</span>
+          <span key={c} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--steel-800)] text-[var(--text-2)]">{c}</span>
         ))}
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--dungeon-dark)] text-[var(--parchment-dark)] opacity-60">{spell.source}</span>
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--steel-950)] text-[var(--text-2)] opacity-60">{spell.source}</span>
       </div>
 
       {/* Full description (expandable) */}
       {!compact && (
         <div className="mt-2">
           <button type="button" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}
-            className="text-xs text-[var(--parchment-dark)] hover:text-[var(--gold)] transition-colors">
-            {expanded ? '▼ Hide full text' : '▶ Full description'}
+            className="text-xs text-[var(--text-2)] hover:text-[var(--bronze)] transition-colors inline-flex items-center gap-1">
+            {expanded
+              ? <ChevronDown size={14} aria-hidden="true" />
+              : <ChevronRight size={14} aria-hidden="true" />}
+            {expanded ? 'Hide full text' : 'Full description'}
           </button>
           {expanded && (
-            <p className="text-sm text-[var(--parchment-dark)] mt-2 italic animate-fade-in">{spell.description}</p>
+            <p className="text-sm text-[var(--text-2)] mt-2 italic animate-fade-in">{spell.description}</p>
           )}
         </div>
       )}

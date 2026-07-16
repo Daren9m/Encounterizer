@@ -26,15 +26,15 @@ function crDisplay(cr: number): string {
 
 export default function MonsterStatBlock({ monster }: { monster: Monster }) {
   return (
-    <div className="stat-block rounded-lg animate-fade-in">
+    <div className="stat-block animate-fade-in">
       {/* Header */}
-      <h3 className="text-xl font-bold">{monster.name}</h3>
+      <h3 className="text-xl">{monster.name}</h3>
       <p className="text-sm italic mb-3">
         {monster.size} {monster.type}
         {monster.subtype ? ` (${monster.subtype})` : ''}, {monster.alignment}
       </p>
 
-      <hr className="border-[var(--dragon-red)] mb-2" />
+      <hr className="border-[var(--steel-800)] mb-2" />
 
       {/* Core Stats */}
       <div className="text-sm space-y-1">
@@ -43,19 +43,19 @@ export default function MonsterStatBlock({ monster }: { monster: Monster }) {
         <p><span className="stat-label">Speed</span> {formatSpeed(monster.speed)}</p>
       </div>
 
-      <hr className="border-[var(--dragon-red)] my-2" />
+      <hr className="border-[var(--steel-800)] my-2" />
 
       {/* Ability Scores */}
       <div className="grid grid-cols-6 gap-1 text-center text-sm mb-2">
         {(['str', 'dex', 'con', 'int', 'wis', 'cha'] as const).map(ab => (
           <div key={ab}>
-            <div className="font-bold text-[var(--dragon-red)] uppercase text-xs">{ab}</div>
+            <div className="font-bold text-[var(--bronze)] uppercase text-xs">{ab}</div>
             <div>{monster.abilities[ab]} ({abilityMod(monster.abilities[ab])})</div>
           </div>
         ))}
       </div>
 
-      <hr className="border-[var(--dragon-red)] my-2" />
+      <hr className="border-[var(--steel-800)] my-2" />
 
       {/* Details */}
       <div className="text-sm space-y-1">
@@ -110,7 +110,7 @@ export default function MonsterStatBlock({ monster }: { monster: Monster }) {
       {/* Special Abilities */}
       {monster.specialAbilities && monster.specialAbilities.length > 0 && (
         <>
-          <hr className="border-[var(--dragon-red)] my-2" />
+          <hr className="border-[var(--steel-800)] my-2" />
           {monster.specialAbilities.map((a, i) => (
             <div key={i} className="text-sm mb-2">
               <span className="stat-label italic">{a.name}. </span>
@@ -123,8 +123,8 @@ export default function MonsterStatBlock({ monster }: { monster: Monster }) {
       {/* Actions */}
       {monster.actions.length > 0 && (
         <>
-          <hr className="border-[var(--dragon-red)] my-2" />
-          <h4 className="text-base font-bold text-[var(--dragon-red)] mb-1">Actions</h4>
+          <hr className="border-[var(--steel-800)] my-2" />
+          <h4 className="text-base mb-1">Actions</h4>
           {monster.actions.map((a, i) => (
             <div key={i} className="text-sm mb-2">
               <span className="stat-label italic">{a.name}. </span>
@@ -137,8 +137,8 @@ export default function MonsterStatBlock({ monster }: { monster: Monster }) {
       {/* Bonus Actions */}
       {monster.bonusActions && monster.bonusActions.length > 0 && (
         <>
-          <hr className="border-[var(--dragon-red)] my-2" />
-          <h4 className="text-base font-bold text-[var(--dragon-red)] mb-1">Bonus Actions</h4>
+          <hr className="border-[var(--steel-800)] my-2" />
+          <h4 className="text-base mb-1">Bonus Actions</h4>
           {monster.bonusActions.map((a, i) => (
             <div key={i} className="text-sm mb-2">
               <span className="stat-label italic">{a.name}. </span>
@@ -151,8 +151,8 @@ export default function MonsterStatBlock({ monster }: { monster: Monster }) {
       {/* Reactions */}
       {monster.reactions && monster.reactions.length > 0 && (
         <>
-          <hr className="border-[var(--dragon-red)] my-2" />
-          <h4 className="text-base font-bold text-[var(--dragon-red)] mb-1">Reactions</h4>
+          <hr className="border-[var(--steel-800)] my-2" />
+          <h4 className="text-base mb-1">Reactions</h4>
           {monster.reactions.map((a, i) => (
             <div key={i} className="text-sm mb-2">
               <span className="stat-label italic">{a.name}. </span>
@@ -165,8 +165,8 @@ export default function MonsterStatBlock({ monster }: { monster: Monster }) {
       {/* Legendary Actions */}
       {monster.legendary && (
         <>
-          <hr className="border-[var(--dragon-red)] my-2" />
-          <h4 className="text-base font-bold text-[var(--dragon-red)] mb-1">Legendary Actions</h4>
+          <hr className="border-[var(--steel-800)] my-2" />
+          <h4 className="text-base mb-1">Legendary Actions</h4>
           <p className="text-sm mb-2 italic">{monster.legendary.description}</p>
           {monster.legendary.actions.map((a, i) => (
             <div key={i} className="text-sm mb-2">
@@ -181,7 +181,7 @@ export default function MonsterStatBlock({ monster }: { monster: Monster }) {
       {monster.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-3">
           {monster.tags.map(tag => (
-            <span key={tag} className="text-xs bg-[var(--dragon-red)] text-white px-2 py-0.5 rounded-full">
+            <span key={tag} className="text-xs bg-[var(--steel-800)] text-[var(--text-2)] px-2 py-0.5 rounded-full">
               {tag}
             </span>
           ))}

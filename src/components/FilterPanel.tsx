@@ -43,7 +43,7 @@ function ChipGroup<T extends string>({
 }) {
   return (
     <div>
-      <span className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+      <span className="micro-label block mb-1">
         {label}
       </span>
       <div className="flex flex-wrap gap-1">
@@ -90,7 +90,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
       {/* Search + CR range (always visible) */}
       <div className="flex flex-wrap gap-4 items-end">
         <div className="flex-1 min-w-[200px]">
-          <label htmlFor="filter-search" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+          <label htmlFor="filter-search" className="micro-label block mb-1">
             Search
           </label>
           <input
@@ -103,7 +103,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
           />
         </div>
         <div className="w-24">
-          <label htmlFor="filter-cr-min" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+          <label htmlFor="filter-cr-min" className="micro-label block mb-1">
             CR Min
           </label>
           <input
@@ -118,7 +118,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
           />
         </div>
         <div className="w-24">
-          <label htmlFor="filter-cr-max" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+          <label htmlFor="filter-cr-max" className="micro-label block mb-1">
             CR Max
           </label>
           <input
@@ -142,7 +142,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
           >
             {expanded ? 'Less Filters' : 'More Filters'}
             {activeFilterCount > 0 && (
-              <span className="ml-1 bg-[var(--gold)] text-[var(--dungeon-dark)] rounded-full px-1.5 text-xs">
+              <span className="ml-1 bg-[var(--steel-950)] text-[var(--bronze)] font-bold rounded-full px-1.5 text-xs">
                 {activeFilterCount}
               </span>
             )}
@@ -151,7 +151,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
             <button
               type="button"
               onClick={() => onChange({})}
-              className="text-sm text-[var(--parchment-dark)] hover:text-[var(--gold)] underline"
+              className="text-sm text-[var(--text-2)] hover:text-[var(--bronze)] underline"
             >
               Clear
             </button>
@@ -160,7 +160,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
       </div>
 
       {resultCount !== undefined && (
-        <div className="mt-2 text-sm text-[var(--parchment-dark)]">
+        <div className="mt-2 text-sm text-[var(--text-2)]">
           {resultCount} monster{resultCount !== 1 ? 's' : ''} found
         </div>
       )}
@@ -185,7 +185,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
                 type="checkbox"
                 checked={filter.isLegendary ?? false}
                 onChange={e => set('isLegendary', e.target.checked || undefined)}
-                className="accent-[var(--gold)]"
+                className="accent-[var(--bronze)]"
               />
               <span className="text-sm">Legendary only</span>
             </label>
@@ -194,7 +194,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
                 type="checkbox"
                 checked={filter.hasSpellcasting ?? false}
                 onChange={e => set('hasSpellcasting', e.target.checked || undefined)}
-                className="accent-[var(--gold)]"
+                className="accent-[var(--bronze)]"
               />
               <span className="text-sm">Has Spellcasting</span>
             </label>
@@ -203,7 +203,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
                 type="checkbox"
                 checked={filter.hasLair ?? false}
                 onChange={e => set('hasLair', e.target.checked || undefined)}
-                className="accent-[var(--gold)]"
+                className="accent-[var(--bronze)]"
               />
               <span className="text-sm">Has Lair</span>
             </label>
@@ -212,7 +212,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
           {/* Sort */}
           <div className="flex gap-4 items-end">
             <div>
-              <label htmlFor="filter-sort-by" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+              <label htmlFor="filter-sort-by" className="micro-label block mb-1">
                 Sort By
               </label>
               <select
@@ -227,7 +227,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
               </select>
             </div>
             <div>
-              <label htmlFor="filter-sort-dir" className="block text-xs font-bold text-[var(--gold)] mb-1 uppercase tracking-wider">
+              <label htmlFor="filter-sort-dir" className="micro-label block mb-1">
                 Direction
               </label>
               <select
