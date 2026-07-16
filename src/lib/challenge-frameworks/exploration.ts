@@ -50,19 +50,19 @@ export const exploration: ChallengeFramework = {
     );
     return {
       name: chain.length > 1 ? `The ${pick(['Long Road', 'Hard Crossing', 'Winding Descent', 'Overland Gauntlet'], rng)}` : lead.name,
-      readAloud: `${cap(lead.desc)} Overhead, ${weather} — ${pack.sensory[3] ?? pack.sensory[0]}.`,
+      readAloud: `${cap(lead.desc)}. Overhead, ${weather} — ${pack.sensory[3] ?? pack.sensory[0]}.`,
       situation: `The party must get through. Weather: ${weather}. At this tier, ${guidance}. Creative route for ${lead.name.toLowerCase()}: ${lead.creative}.`,
       stakes: `Success: the journey continues on schedule. Failure: ${RESOURCE_COST[levers.difficulty]}.`,
       skillChecks: [groupCheck, ...rest],
       complication: pick(pack.consequences, rng),
       outcomes: [
         { label: 'Push through', description: 'Checks and grit — the party arrives tired but on time.' },
-        { label: 'The creative route', description: chain.map(o => o.creative).join(' Then: ') },
+        { label: 'The creative route', description: chain.map(o => `${cap(o.creative)}.`).join(' Then: ') },
         { label: 'Go around', description: 'Half a day lost, but no risk — and whatever waits ahead has longer to prepare.' },
       ],
       reward: rewardText(levers, rng),
       stages: chain.length > 1
-        ? chain.map(o => ({ title: o.name, text: `${o.desc} Creative option: ${o.creative}` }))
+        ? chain.map(o => ({ title: o.name, text: `${cap(o.desc)}. Creative option: ${o.creative}.` }))
         : undefined,
     };
   },

@@ -124,4 +124,11 @@ describe('exploration framework (spec §8.3)', () => {
     const out = exploration.generate({ levers: mkLevers('Medium', 12), rng: seededRandom(12) });
     expect(out.situation).toMatch(/Weather:/);
   });
+  it('read-aloud fragments are punctuated (no mid-sentence capitalized run-ons)', () => {
+    for (let s = 0; s < 50; s++) {
+      const out = exploration.generate({ levers: mkLevers('Medium', s), rng: seededRandom(s) });
+      expect(out.readAloud).not.toMatch(/[a-z] Overhead,/);
+      for (const st of out.stages ?? []) expect(st.text).not.toMatch(/[a-z] Creative option:/);
+    }
+  });
 });
