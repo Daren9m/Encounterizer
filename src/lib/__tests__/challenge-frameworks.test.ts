@@ -5,6 +5,7 @@ import { successesNeeded, phaseSplit, groupCheckThreshold, dcFor } from '../nonc
 import type { Difficulty, ResolvedLevers, TimeBudget } from '../noncombat/types';
 import { skillChallenge, buildChallengeStructure } from '../challenge-frameworks/skill-challenge';
 import { social, buildAttitudeTrack } from '../challenge-frameworks/social';
+import { exploration, TIER_GUIDANCE } from '../challenge-frameworks/exploration';
 import { LEVERAGE } from '../../data/noncombat-cast';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
@@ -92,5 +93,35 @@ describe('social framework (spec §8.2)', () => {
     expect(a.readAloud).toMatch(/Their speech: /);
     expect(a.readAloud).toMatch(/Their tell: /);
     expect(a.readAloud).not.toMatch(/\bThey [a-z]+s\b/); // no third-person-singular after "They"
+  });
+});
+
+describe('exploration framework (spec §8.3)', () => {
+  it('chain length follows time budget; chains render as stages', () => {
+    const quick = exploration.generate({ levers: mkLevers('Medium', 4, { timeBudget: 'quick' }), rng: seededRandom(4) });
+    expect(quick.stages).toBeUndefined();
+    const std = exploration.generate({ levers: mkLevers('Medium', 4), rng: seededRandom(4) });
+    expect(std.stages).toHaveLength(2);
+    const set = exploration.generate({ levers: mkLevers('Medium', 4, { timeBudget: 'set-piece' }), rng: seededRandom(4) });
+    expect(set.stages).toHaveLength(3);
+    const names = set.stages!.map(s => s.title);
+    expect(new Set(names).size).toBe(3); // distinct obstacles
+  });
+  it('tier guidance tracks party level', () => {
+    expect(TIER_GUIDANCE).toHaveLength(4);
+    const low = exploration.generate({ levers: mkLevers('Medium', 8, { partyLevel: 3 }), rng: seededRandom(8) });
+    expect(low.situation).toContain(TIER_GUIDANCE[0]);
+    const high = exploration.generate({ levers: mkLevers('Medium', 8, { partyLevel: 18 }), rng: seededRandom(8) });
+    expect(high.situation).toContain(TIER_GUIDANCE[3]);
+  });
+  it('emits exactly one group check naming the party-size threshold', () => {
+    const out = exploration.generate({ levers: mkLevers('Hard', 6, { partySize: 6 }), rng: seededRandom(6) });
+    // groupCheckThreshold(6) = ceil(6/2) = 3
+    const groups = out.skillChecks.filter(c => c.onSuccess.includes('3 of 6') || c.onFailure.includes('3 of 6'));
+    expect(groups).toHaveLength(1);
+  });
+  it('weaves a weather condition into the situation', () => {
+    const out = exploration.generate({ levers: mkLevers('Medium', 12), rng: seededRandom(12) });
+    expect(out.situation).toMatch(/Weather:/);
   });
 });
