@@ -76,6 +76,14 @@ export const TOOL_ROUTES: RouteInfo[] = [
     icon: 'drama',
   },
   {
+    path: '/noncombat',
+    label: 'Puzzles & Challenges',
+    title: 'Puzzles & Challenges',
+    description:
+      'Verified puzzles, riddles, ciphers, contests, social encounters, journeys, traps, chases, and investigations — one levered, themed, seeded generator.',
+    icon: 'puzzle',
+  },
+  {
     path: '/spells',
     label: 'Spells',
     title: 'Spell Reference',

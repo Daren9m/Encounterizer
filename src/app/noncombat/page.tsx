@@ -1,0 +1,672 @@
+'use client';
+
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { generateNoncombat, getNoncombatKinds } from '@/lib/noncombat/generate';
+import type { NoncombatKind, NoncombatResult } from '@/lib/noncombat/generate';
+import { THEME_OPTIONS, TONE_OPTIONS, TIME_OPTIONS } from '@/lib/noncombat/theming';
+import type { ThemeChoice, Tone, TimeBudget, Difficulty } from '@/lib/noncombat/types';
+import { handoutToText } from '@/lib/noncombat/handout-text';
+import { randomSeed } from '@/lib/random';
+import { usePersistentState } from '@/lib/use-persistent-state';
+import PuzzleHandout from '@/components/PuzzleHandout';
+import PrintButton from '@/components/PrintButton';
+
+const DIFFICULTIES: Difficulty[] = ['Easy', 'Medium', 'Hard'];
+
+// ─── Share link ───────────────────────────────────────────────────
+// Serializes exactly the levers a shared link needs to reproduce the
+// result: `result.requested` (what the caller asked for) plus the
+// concrete values the generator resolved (lvl/size/tone/time) and the
+// seed. This URL contract is permanent — kind and difficulty are both
+// omitted when the caller left them as "Any" (a seeded draw).
+
+function buildShareUrl(r: NoncombatResult): string {
+  const params = new URLSearchParams();
+  params.set('seed', String(r.seed));
+  if (r.requested.kind) params.set('kind', r.requested.kind);
+  if (r.requested.difficulty) params.set('diff', r.requested.difficulty);
+  params.set('lvl', String(r.partyLevel));
+  params.set('size', String(r.partySize));
+  params.set('theme', r.requested.theme);
+  params.set('tone', r.tone);
+  params.set('time', r.timeBudget);
+  return `${window.location.origin}/noncombat?${params.toString()}`;
+}
+
+export default function NoncombatPage() {
+  // useSearchParams requires a Suspense boundary under static prerendering.
+  return (
+    <Suspense fallback={null}>
+      <NoncombatBuilder />
+    </Suspense>
+  );
+}
+
+function NoncombatBuilder() {
+  const [kind, setKind] = usePersistentState<NoncombatKind | ''>('noncombatKind', '');
+  const [difficulty, setDifficulty] = usePersistentState<Difficulty | ''>('noncombatDifficulty', '');
+  const [partyLevel, setPartyLevel] = usePersistentState<number>('noncombatPartyLevel', 5);
+  const [partySize, setPartySize] = usePersistentState<number>('noncombatPartySize', 4);
+  const [theme, setTheme] = usePersistentState<ThemeChoice>('noncombatTheme', 'any');
+  const [tone, setTone] = usePersistentState<Tone>('noncombatTone', 'standard');
+  const [timeBudget, setTimeBudget] = usePersistentState<TimeBudget>('noncombatTime', 'standard');
+  const [result, setResult] = useState<NoncombatResult | null>(null);
+  const [showSolution, setShowSolution] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [history, setHistory] = usePersistentState<NoncombatResult[]>(
+    'noncombatHistory1', [], (v): v is NoncombatResult[] => Array.isArray(v),
+  );
+
+  const kinds = getNoncombatKinds();
+
+  function pushHistory(r: NoncombatResult) {
+    setHistory(prev => [r, ...prev.filter(h => h.id !== r.id).slice(0, 9)]);
+  }
+
+  // One-shot hydration from a shared link (?seed=...). Persisted lever
+  // state above is declared first so a shared link's params win over
+  // remembered preferences.
+  const KINDS = kinds.map(k => k.value);
+  const searchParams = useSearchParams();
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
+    const clampInt = (raw: string | null, lo: number, hi: number): number | null => {
+      if (raw === null) return null;
+      const n = Number(raw);
+      return Number.isInteger(n) ? Math.max(lo, Math.min(hi, n)) : null;
+    };
+    const seedParam = clampInt(searchParams.get('seed'), 0, 0x7fffffff);
+    if (seedParam === null) return;
+    const kindP = searchParams.get('kind');
+    const kindV = KINDS.includes(kindP as NoncombatKind) ? (kindP as NoncombatKind) : undefined;
+    const diffP = searchParams.get('diff');
+    const diffV = DIFFICULTIES.includes(diffP as Difficulty) ? (diffP as Difficulty) : undefined;
+    const lvl = clampInt(searchParams.get('lvl'), 1, 20) ?? 5;
+    const size = clampInt(searchParams.get('size'), 1, 8) ?? 4;
+    const themeP = searchParams.get('theme');
+    const themeV = THEME_OPTIONS.some(o => o.value === themeP) ? (themeP as ThemeChoice) : 'any';
+    const toneP = searchParams.get('tone');
+    const toneV = TONE_OPTIONS.some(o => o.value === toneP) ? (toneP as Tone) : 'standard';
+    const timeP = searchParams.get('time');
+    const timeV = TIME_OPTIONS.some(o => o.value === timeP) ? (timeP as TimeBudget) : 'standard';
+    setKind(kindV ?? ''); setDifficulty(diffV ?? ''); setPartyLevel(lvl); setPartySize(size);
+    setTheme(themeV); setTone(toneV); setTimeBudget(timeV);
+    const r = generateNoncombat({ kind: kindV, difficulty: diffV, partyLevel: lvl, partySize: size, theme: themeV, tone: toneV, timeBudget: timeV, seed: seedParam });
+    setResult(r);
+    pushHistory(r);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleGenerate(seedOverride?: number, kindOverride?: NoncombatKind) {
+    const r = generateNoncombat({
+      kind: kindOverride ?? (kind || undefined),
+      difficulty: difficulty || undefined,
+      partyLevel,
+      partySize,
+      theme,
+      tone,
+      timeBudget,
+      seed: seedOverride ?? randomSeed(),
+    });
+    setResult(r);
+    setShowSolution(false);
+    setLinkCopied(false);
+    pushHistory(r);
+  }
+
+  function handleReroll() {
+    if (!result) return;
+    const r = generateNoncombat({
+      kind: result.requested.kind,
+      difficulty: result.requested.difficulty,
+      partyLevel: result.partyLevel,
+      partySize: result.partySize,
+      theme: result.requested.theme,
+      tone: result.tone,
+      timeBudget: result.timeBudget,
+      seed: randomSeed(),
+    });
+    setResult(r);
+    setShowSolution(false);
+    setLinkCopied(false);
+    pushHistory(r);
+  }
+
+  function handleCopyLink() {
+    if (!result) return;
+    navigator.clipboard.writeText(buildShareUrl(result)).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    });
+  }
+
+  function handleExport() {
+    if (!result) return;
+    const kindLabel = kinds.find(k => k.value === result.kind)?.label ?? result.kind;
+    const lines: string[] = [`# ${result.name}`];
+    if (result.resultKind === 'puzzle') {
+      lines.push(`Kind: ${kindLabel} | Difficulty: ${result.difficulty} | Est. Time: ${result.estimatedMinutes} min`);
+    } else {
+      lines.push(`Kind: ${kindLabel} | Difficulty: ${result.difficulty}`);
+    }
+    lines.push(`Theme: ${result.theme} | Tone: ${result.tone} | Time: ${result.timeBudget} | Party: ${result.partySize} × level ${result.partyLevel} | Seed: ${result.seed}`);
+
+    if (result.resultKind === 'puzzle') {
+      lines.push('', '## DM Brief', result.dmBrief);
+      if (result.dmAdjudication) {
+        lines.push('', '### Adjudication', result.dmAdjudication);
+      }
+      lines.push('', '## Read Aloud', result.readAloud);
+      if (result.handout) {
+        lines.push('', '## Player Handout', handoutToText(result.handout));
+      }
+      if (result.stages && result.stages.length > 0) {
+        lines.push('', '## Stages');
+        for (const stage of result.stages) {
+          lines.push(`### ${stage.title}`, stage.text, '');
+        }
+      }
+      lines.push(
+        '',
+        '## Hints',
+        ...result.hints.map((h, i) => `${i + 1}. ${h}`),
+        '',
+        '## Solution',
+        result.solution,
+        '',
+        '## Failure Consequence',
+        result.failureConsequence,
+        '',
+        '## Reward',
+        result.reward,
+      );
+    } else {
+      lines.push(
+        '', '## Read Aloud', result.readAloud,
+        '', '## Situation', result.situation,
+        '', '## Stakes', result.stakes,
+        '', '## Skill Checks', ...result.skillChecks.map(s => `- **${s.skill} (DC ${s.dc})**: Success — ${s.onSuccess} | Failure — ${s.onFailure}`),
+      );
+      if (result.structure) {
+        lines.push(
+          '',
+          '## Challenge Structure',
+          `${result.structure.successesNeeded} successes needed · ${result.structure.failuresAllowed} failures allowed`,
+          ...result.structure.phases.map(p => `- ${p.title}: ${p.successes} successes (${p.primarySkills.join(', ')})`),
+        );
+      }
+      if (result.stages && result.stages.length > 0) {
+        lines.push('', '## Stages');
+        for (const stage of result.stages) {
+          lines.push(`### ${stage.title}`, stage.text, '');
+        }
+      }
+      if (result.attitudeTrack) {
+        lines.push(
+          '',
+          '## Attitude Track',
+          `Start: ${result.attitudeTrack.start}`,
+          ...result.attitudeTrack.stages.map(s =>
+            `- ${s.attitude} (Influence DC ${s.influenceDc}): unlocks ${s.unlocks} | shift up: ${s.shiftUp} | shift down: ${s.shiftDown}`),
+        );
+      }
+      if (result.chase) {
+        lines.push(
+          '',
+          '## Chase Plan',
+          `${result.chase.rounds} rounds`,
+          ...result.chase.complications.map(c => `- Round ${c.round}: ${c.text} (${c.check})`),
+          `Escape: ${result.chase.escapeCondition}`,
+          `Catch: ${result.chase.catchCondition}`,
+        );
+      }
+      if (result.clueWeb) {
+        lines.push(
+          '',
+          '## Clue Web',
+          `Truth: ${result.clueWeb.truth.culprit} — ${result.clueWeb.truth.method}, motive: ${result.clueWeb.truth.motive}`,
+        );
+        for (const node of result.clueWeb.nodes) {
+          lines.push(`### ${node.revelation}`, ...node.clues.map(c => `- [${c.vector}] ${c.text} → ${c.pointsTo}`));
+        }
+        lines.push(`Red herring: ${result.clueWeb.redHerring.text} (disconfirmed by: ${result.clueWeb.redHerring.disconfirmedBy})`);
+      }
+      if (result.handout) {
+        lines.push('', '## Player Handout', handoutToText(result.handout));
+      }
+      lines.push(
+        '', '## Complication', result.complication,
+        '', '## Outcomes', ...result.outcomes.map(o => `- **${o.label}**: ${o.description}`),
+        '', '## Reward', result.reward,
+      );
+    }
+
+    const text = lines.join('\n');
+    const blob = new Blob([text], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${result.name.toLowerCase().replace(/\s+/g, '-')}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div className="animate-fade-in">
+      <h1 className="text-3xl mb-2">Puzzles & Challenges</h1>
+      <p className="text-[var(--text-2)] mb-6">
+        Verified puzzles, riddles, ciphers, contests, social encounters, journeys, traps, chases, and investigations — one levered, themed, seeded generator.
+      </p>
+
+      {/* Controls */}
+      <div className="card mb-6 print:hidden">
+        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div>
+            <label htmlFor="noncombat-kind" className="micro-label block mb-1">Kind</label>
+            <select id="noncombat-kind" value={kind} onChange={e => setKind(e.target.value as NoncombatKind | '')} className="w-full">
+              <option value="">Any</option>
+              {kinds.map(k => <option key={k.value} value={k.value}>{k.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="noncombat-difficulty" className="micro-label block mb-1">Difficulty</label>
+            <select id="noncombat-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value as Difficulty | '')} className="w-full">
+              <option value="">Any</option>
+              {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="noncombat-party-level" className="micro-label block mb-1">Party Level</label>
+            <input id="noncombat-party-level" type="number" min={1} max={20} value={partyLevel} onChange={e => setPartyLevel(Math.max(1, Math.min(20, Number(e.target.value))))} className="w-full" />
+          </div>
+          <div>
+            <label htmlFor="noncombat-party-size" className="micro-label block mb-1">Party Size</label>
+            <input id="noncombat-party-size" type="number" min={1} max={8} value={partySize} onChange={e => setPartySize(Math.max(1, Math.min(8, Number(e.target.value))))} className="w-full" />
+          </div>
+          <div>
+            <label htmlFor="noncombat-theme" className="micro-label block mb-1">Theme</label>
+            <select id="noncombat-theme" value={theme} onChange={e => setTheme(e.target.value as ThemeChoice)} className="w-full">
+              {THEME_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="noncombat-tone" className="micro-label block mb-1">Tone</label>
+            <select id="noncombat-tone" value={tone} onChange={e => setTone(e.target.value as Tone)} className="w-full">
+              {TONE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="noncombat-time" className="micro-label block mb-1">Time Budget</label>
+            <select id="noncombat-time" value={timeBudget} onChange={e => setTimeBudget(e.target.value as TimeBudget)} className="w-full">
+              {TIME_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+        </div>
+        {/* Kind quick-cards */}
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
+          {kinds.map(k => (
+            <button key={k.value} type="button" onClick={() => { setKind(k.value); handleGenerate(undefined, k.value); }}
+              className="card text-left text-xs hover:border-[var(--bronze)] transition-colors">
+              <div className="font-bold text-[var(--text-1)]">{k.label}</div>
+              <div className="text-[var(--text-2)]">{k.description}</div>
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <button type="button" onClick={() => handleGenerate()} className="btn-primary text-lg">Generate</button>
+          {result && (
+            <>
+              <button type="button" onClick={() => handleGenerate()} className="btn-secondary">Regenerate</button>
+              <button type="button" onClick={handleExport} className="btn-secondary">Export Markdown</button>
+              <button type="button" onClick={handleCopyLink} className="btn-secondary">
+                {linkCopied ? 'Copied ✓' : 'Share Link'}
+              </button>
+              <PrintButton label={result.resultKind === 'puzzle' ? 'Print Puzzle' : 'Print Challenge'} />
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Result Display */}
+      {result && (
+        <div className="space-y-4 animate-fade-in">
+          {/* Shared header */}
+          <div className="card">
+            <div className="flex items-start justify-between mb-2">
+              <h2 className="text-2xl">{result.name}</h2>
+              <div className="flex gap-2">
+                <span className={`px-3 py-1 rounded-full text-xs self-center ${
+                  result.difficulty === 'Easy' ? 'badge-easy' : result.difficulty === 'Medium' ? 'badge-medium' : 'badge-hard'
+                }`}>{result.difficulty}</span>
+                <span className="px-3 py-1 rounded-full text-sm bg-[var(--steel-800)] text-[var(--text-2)]">
+                  {kinds.find(k => k.value === result.kind)?.label}
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="micro-label">
+                {THEME_OPTIONS.find(o => o.value === result.theme)?.label ?? result.theme}
+              </span>
+              <span className="text-xs text-[var(--text-2)]">
+                · Party {result.partySize} × level {result.partyLevel}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleReroll()}
+                className="px-3 py-1 rounded-full text-xs bg-[var(--steel-800)] text-[var(--text-2)] hover:text-[var(--bronze)] transition-colors"
+                title="Reroll with a fresh seed, same levers"
+              >
+                Seed: {result.seed}
+              </button>
+            </div>
+          </div>
+
+          {result.resultKind === 'puzzle' ? (
+            <>
+              {/* DM Brief */}
+              <div className="card border-l-4 border-l-[var(--accent-danger)]">
+                <h3 className="text-lg mb-2">DM Brief (eyes only) · ~{result.estimatedMinutes} min</h3>
+                <p className="text-sm">{result.dmBrief}</p>
+                {result.dmAdjudication && (
+                  <div className="mt-3">
+                    <h4 className="text-sm font-bold text-[var(--bronze)]">Adjudication</h4>
+                    <p className="text-sm">{result.dmAdjudication}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Read Aloud */}
+              <div className="card border-l-4 border-l-[var(--bronze)]">
+                <h3 className="text-lg mb-2">Read Aloud</h3>
+                <p className="text-sm italic whitespace-pre-line">{result.readAloud}</p>
+              </div>
+
+              {/* Player Handout */}
+              {result.handout && <PuzzleHandout spec={result.handout} />}
+
+              {/* Stages */}
+              {result.stages && result.stages.length > 0 && (
+                <>
+                  {result.stages.map((stage, i) => (
+                    <div key={i} className="card border-l-4 border-l-[var(--bronze)]">
+                      <h3 className="text-lg mb-2">{stage.title}</h3>
+                      <p className="text-sm whitespace-pre-line">{stage.text}</p>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {/* Hints */}
+              <div className="card print:hidden">
+                <h3 className="text-lg mb-2">Hints (reveal as needed)</h3>
+                <div className="space-y-2">
+                  {result.hints.map((hint, i) => (
+                    <HintReveal key={i} index={i + 1} hint={hint} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Solution (hidden by default) */}
+              <div className="card print:hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowSolution(!showSolution)}
+                  aria-expanded={showSolution}
+                  className="flex items-center gap-2 text-lg font-bold text-[var(--bronze)]"
+                >
+                  {showSolution
+                    ? <ChevronDown size={18} aria-hidden="true" />
+                    : <ChevronRight size={18} aria-hidden="true" />} Solution
+                </button>
+                {showSolution && (
+                  <div className="mt-3 space-y-3 animate-fade-in">
+                    <div>
+                      <h4 className="text-sm">Answer</h4>
+                      <p className="text-sm">{result.solution}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm">On Failure</h4>
+                      <p className="text-sm">{result.failureConsequence}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm">Reward</h4>
+                      <p className="text-sm">{result.reward}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Print-only: everything expanded for the DM's paper copy */}
+              <div className="hidden print:block space-y-4">
+                <div className="card">
+                  <h3 className="text-lg mb-2">Hints</h3>
+                  <ol className="text-sm list-decimal list-inside space-y-1">
+                    {result.hints.map((hint, i) => (
+                      <li key={i}>{hint}</li>
+                    ))}
+                  </ol>
+                </div>
+                <div className="card">
+                  <h3 className="text-lg mb-2">Solution</h3>
+                  <p className="text-sm">{result.solution}</p>
+                  <h4 className="text-sm mt-3">On Failure</h4>
+                  <p className="text-sm">{result.failureConsequence}</p>
+                  <h4 className="text-sm mt-3">Reward</h4>
+                  <p className="text-sm">{result.reward}</p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Read Aloud */}
+              <div className="card border-l-4 border-l-[var(--bronze)]">
+                <h3 className="text-lg mb-2">Read Aloud</h3>
+                <p className="text-sm italic">{result.readAloud}</p>
+              </div>
+
+              {/* Situation & Stakes */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="card">
+                  <h3 className="text-lg mb-2">Situation</h3>
+                  <p className="text-sm whitespace-pre-line">{result.situation}</p>
+                </div>
+                <div className="card">
+                  <h3 className="text-lg mb-2">Stakes</h3>
+                  <p className="text-sm whitespace-pre-line">{result.stakes}</p>
+                </div>
+              </div>
+
+              {/* Skill Checks */}
+              <div className="card">
+                <h3 className="text-lg mb-3">Skill Checks</h3>
+                <div className="space-y-3">
+                  {result.skillChecks.map((sc, i) => (
+                    <div key={i} className="p-3 rounded bg-[var(--steel-950)]">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-[var(--text-1)]">{sc.skill}</span>
+                        <span className="text-sm font-bold text-[var(--bronze)]">DC {sc.dc}</span>
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-2 text-xs">
+                        <div><span className="text-[var(--difficulty-easy)] font-bold">Success:</span> {sc.onSuccess}</div>
+                        <div><span className="text-[var(--accent-danger)] font-bold">Failure:</span> {sc.onFailure}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Challenge Structure */}
+              {result.structure && (
+                <div className="card">
+                  <h3 className="text-lg mb-3">Challenge Structure</h3>
+                  <p className="text-sm mb-3">
+                    {result.structure.successesNeeded} successes needed · {result.structure.failuresAllowed} failures allowed
+                  </p>
+                  <div className="space-y-2">
+                    {result.structure.phases.map((phase, i) => (
+                      <div key={i} className="p-3 rounded bg-[var(--steel-950)] text-sm">
+                        <span className="font-bold text-[var(--text-1)]">{phase.title}</span>
+                        {' · '}{phase.successes} success{phase.successes === 1 ? '' : 'es'}{' · '}{phase.primarySkills.join(', ')}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Stages */}
+              {result.stages && result.stages.length > 0 && (
+                <>
+                  {result.stages.map((stage, i) => (
+                    <div key={i} className="card border-l-4 border-l-[var(--bronze)]">
+                      <h3 className="text-lg mb-2">{stage.title}</h3>
+                      <p className="text-sm whitespace-pre-line">{stage.text}</p>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {/* Attitude Track */}
+              {result.attitudeTrack && (
+                <div className="card">
+                  <h3 className="text-lg mb-3">Attitude Track</h3>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="micro-label">Starting attitude</span>
+                    <span className="px-3 py-1 rounded-full text-xs bg-[var(--steel-800)] text-[var(--text-2)]">{result.attitudeTrack.start}</span>
+                  </div>
+                  <div className="space-y-2">
+                    {result.attitudeTrack.stages.map((stage, i) => (
+                      <div key={i} className="p-3 rounded bg-[var(--steel-950)] text-sm">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-bold text-[var(--text-1)]">{stage.attitude}</span>
+                          <span className="text-xs font-bold text-[var(--bronze)]">Influence DC {stage.influenceDc}</span>
+                        </div>
+                        <p className="text-xs mb-1"><span className="text-[var(--text-2)] font-bold">Unlocks:</span> {stage.unlocks}</p>
+                        <div className="grid sm:grid-cols-2 gap-2 text-xs">
+                          <div><span className="text-[var(--difficulty-easy)] font-bold">Shift up:</span> {stage.shiftUp}</div>
+                          <div><span className="text-[var(--accent-danger)] font-bold">Shift down:</span> {stage.shiftDown}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Chase Rounds */}
+              {result.chase && (
+                <div className="card">
+                  <h3 className="text-lg mb-3">Chase Rounds</h3>
+                  <p className="text-sm mb-3">{result.chase.rounds} rounds</p>
+                  <div className="space-y-2 mb-3">
+                    {result.chase.complications.map((c, i) => (
+                      <div key={i} className="p-3 rounded bg-[var(--steel-950)] text-sm">
+                        <span className="font-bold text-[var(--bronze)]">Round {c.round}</span>{' · '}{c.text}{' · '}<span className="text-xs text-[var(--text-2)]">{c.check}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-2 text-xs">
+                    <div><span className="text-[var(--difficulty-easy)] font-bold">Escape:</span> {result.chase.escapeCondition}</div>
+                    <div><span className="text-[var(--accent-danger)] font-bold">Catch:</span> {result.chase.catchCondition}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Clue Web (DM eyes only) */}
+              {result.clueWeb && (
+                <div className="card border-l-4 border-l-[var(--accent-danger)]">
+                  <h3 className="text-lg mb-2">Clue Web (eyes only)</h3>
+                  <p className="text-sm mb-3">
+                    <span className="font-bold text-[var(--bronze)]">Truth:</span> {result.clueWeb.truth.culprit} — {result.clueWeb.truth.method}, motive: {result.clueWeb.truth.motive}
+                  </p>
+                  <div className="space-y-2 mb-3">
+                    {result.clueWeb.nodes.map((node, i) => (
+                      <div key={i} className="p-3 rounded bg-[var(--steel-950)] text-sm">
+                        <div className="font-bold text-[var(--text-1)] mb-1">{node.revelation}</div>
+                        <ul className="text-xs space-y-1">
+                          {node.clues.map((clue, j) => (
+                            <li key={j}><span className="uppercase tracking-wide text-[var(--text-2)]">[{clue.vector}]</span> {clue.text} <span className="text-[var(--text-2)]">→ {clue.pointsTo}</span></li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs">
+                    <span className="font-bold text-[var(--text-2)]">Red herring:</span> {result.clueWeb.redHerring.text}{' '}
+                    <span className="font-bold text-[var(--text-2)]">Disconfirmed by:</span> {result.clueWeb.redHerring.disconfirmedBy}
+                  </p>
+                </div>
+              )}
+
+              {/* Player Handout */}
+              {result.handout && <PuzzleHandout spec={result.handout} />}
+
+              {/* Complication */}
+              <div className="card border-l-4 border-l-[var(--accent-danger)]">
+                <h3 className="text-lg mb-2">Complication</h3>
+                <p className="text-sm">{result.complication}</p>
+              </div>
+
+              {/* Outcomes */}
+              <div className="card">
+                <h3 className="text-lg mb-3">Possible Outcomes</h3>
+                <div className="space-y-2">
+                  {result.outcomes.map((o, i) => (
+                    <div key={i} className="p-3 rounded bg-[var(--steel-950)]">
+                      <span className="font-bold text-[var(--bronze)]">{o.label}:</span>{' '}
+                      <span className="text-sm">{o.description}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reward */}
+              <div className="card border-l-4 border-l-[var(--difficulty-easy)]">
+                <h3 className="text-lg mb-2">Reward</h3>
+                <p className="text-sm">{result.reward}</p>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* History (persists across visits) */}
+      {history.length > 0 && !(history.length === 1 && result?.id === history[0].id) && (
+        <div className="mt-6 print:hidden">
+          <h2 className="text-lg mb-3">Recent Puzzles &amp; Challenges</h2>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {history.map(h => (
+              <button key={h.id} type="button" onClick={() => { setResult(h); setShowSolution(false); }}
+                className={`card text-left text-sm ${result?.id === h.id ? 'border-[var(--bronze)]' : ''}`}>
+                <div className="font-bold text-[var(--text-1)]">{h.name}</div>
+                <div className="text-xs text-[var(--text-2)]">
+                  {kinds.find(k => k.value === h.kind)?.label} · {h.difficulty} · {THEME_OPTIONS.find(o => o.value === h.theme)?.label ?? h.theme} · {TIME_OPTIONS.find(o => o.value === h.timeBudget)?.label ?? h.timeBudget}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HintReveal({ index, hint }: { index: number; hint: string }) {
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <div>
+      {revealed ? (
+        <p className="text-sm text-[var(--text-2)] animate-fade-in">
+          <span className="text-[var(--bronze)] font-bold">Hint {index}:</span> {hint}
+        </p>
+      ) : (
+        <button type="button" onClick={() => setRevealed(true)}
+          className="text-sm text-[var(--text-2)] hover:text-[var(--bronze)] transition-colors">
+          Click to reveal Hint {index}
+        </button>
+      )}
+    </div>
+  );
+}
