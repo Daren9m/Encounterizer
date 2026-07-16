@@ -13,6 +13,9 @@ import { tilePath, buildTilePathInstance, cluePaths } from '../puzzle-engines/ti
 import { cipherSuite, encodeCaesar, decodeCaesar, encodeAtbash, encodeKeyword, decodeKeyword, buildKeywordAlphabet } from '../puzzle-engines/cipher';
 import { riddleFrames, riddlePool } from '../puzzle-engines/riddle-frames';
 import { RIDDLES } from '../../data/riddles';
+import { contests } from '../puzzle-engines/contests';
+import { gauntlets } from '../puzzle-engines/gauntlets';
+import { CONTEST_TYPES, SIDE_EVENTS, GAUNTLET_HAZARDS } from '../../data/noncombat-scenarios';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
   return {
@@ -308,5 +311,28 @@ describe('riddle frames', () => {
     const a = riddleFrames.generate({ levers: mkLevers('Easy', 7), rng: seededRandom(7), category: 'word' });
     const b = riddleFrames.generate({ levers: mkLevers('Easy', 7), rng: seededRandom(7), category: 'word' });
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+  });
+});
+
+describe('contests & gauntlets', () => {
+  it('scenario pools meet minimum sizes', () => {
+    expect(CONTEST_TYPES.length).toBeGreaterThanOrEqual(10);
+    expect(SIDE_EVENTS.length).toBeGreaterThanOrEqual(6);
+    expect(GAUNTLET_HAZARDS.length).toBeGreaterThanOrEqual(10);
+  });
+  it('contest structure follows time budget and party size', () => {
+    const quick = contests.generate({ levers: mkLevers('Medium', 3, { timeBudget: 'quick', partySize: 5 }), rng: seededRandom(3) });
+    expect(quick.dmBrief).toContain('3 rounds');
+    expect(quick.dmBrief).toContain('+4'); // level 5 Medium: 2 + floor(5/2)
+    const big = contests.generate({ levers: mkLevers('Medium', 3, { partySize: 5 }), rng: seededRandom(3) });
+    expect(big.dmBrief.match(/side event/gi)?.length ?? 0).toBeGreaterThanOrEqual(1);
+  });
+  it('gauntlet phases follow time budget; escape window follows difficulty', () => {
+    const quick = gauntlets.generate({ levers: mkLevers('Easy', 4, { timeBudget: 'quick' }), rng: seededRandom(4) });
+    expect(quick.stages).toBeUndefined();
+    expect(quick.dmBrief).toContain('6 rounds');
+    const set = gauntlets.generate({ levers: mkLevers('Hard', 4, { timeBudget: 'set-piece' }), rng: seededRandom(4) });
+    expect(set.stages).toHaveLength(3);
+    expect(set.dmBrief).toContain('4 rounds');
   });
 });
