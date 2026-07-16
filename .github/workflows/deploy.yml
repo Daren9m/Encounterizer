@@ -13,7 +13,7 @@ name: Deploy
 
 on:
   push:
-    branches: [claude/dnd-encounter-tool-dVBiA]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -42,4 +42,3 @@ jobs:
           action: upload
           app_location: out
           skip_app_build: true
-          skip_api_build: true
