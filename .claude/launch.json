@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "encounterizer-static",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "out", "-l", "4173"],
+      "port": 4173
     }
   ]
 }
