@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "images": {
+    "aboleth": {
+      "src": "/images/monsters/aboleth.webp",
+      "alt": "A huge blue-gray aboleth with three eyes and four tentacles glides through a dark underwater cavern."
+    },
+    "animated-armor": {
+      "src": "/images/monsters/animated-armor.webp",
+      "alt": "An empty dark-steel suit of animated plate armor advances through a castle corridor with raised fists."
+    },
+    "awakened-shrub": {
+      "src": "/images/monsters/awakened-shrub.webp",
+      "alt": "A small awakened shrub scuttles across a woodland floor on tangled roots with thorny branches raised."
+    },
+    "bandit": {
+      "src": "/images/monsters/bandit.webp",
+      "alt": "A small hooded bandit waits beside a lonely road with scimitar drawn and crossbow on their back."
+    },
+    "bat": {
+      "src": "/images/monsters/bat.webp",
+      "alt": "A small charcoal-brown bat banks through the moonlit mouth of a limestone cave."
+    },
+    "couatl": {
+      "src": "/images/monsters/couatl.webp",
+      "alt": "An iridescent feathered couatl coils in the air with broad wings spread above a misty temple clearing."
+    },
+    "fire-elemental": {
+      "src": "/images/monsters/fire-elemental.webp",
+      "alt": "A towering humanoid-shaped fire elemental surges across blackened ground in a shower of embers."
+    },
+    "fire-giant": {
+      "src": "/images/monsters/fire-giant.webp",
+      "alt": "A colossal charcoal-skinned fire giant in black plate stands in a volcanic forge with a flaming sword."
+    },
+    "gelatinous-cube": {
+      "src": "/images/monsters/gelatinous-cube.webp",
+      "alt": "A transparent gelatinous cube fills a stone corridor, with bubbles and corroded scraps suspended inside."
+    },
+    "ghost": {
+      "src": "/images/monsters/ghost.webp",
+      "alt": "A pale translucent ghost in tattered garments reaches forward while drifting through a moonlit ruin."
+    },
+    "goblin-warrior": {
+      "src": "/images/monsters/goblin-warrior.webp",
+      "alt": "A small green-skinned goblin warrior crouches on a forest path with scimitar drawn and shortbow ready."
+    },
+    "imp": {
+      "src": "/images/monsters/imp.webp",
+      "alt": "A tiny red imp hovers in a dark stone alcove with leathery wings spread and barbed tail raised."
+    },
+    "owlbear": {
+      "src": "/images/monsters/owlbear.webp",
+      "alt": "A huge brown owlbear lunges through a forest, its owl face and feathered mantle rising from a bear body."
+    },
+    "red-dragon-wyrmling": {
+      "src": "/images/monsters/red-dragon-wyrmling.webp",
+      "alt": "A juvenile red dragon crouches on volcanic rock, wings spread and smoke curling from its jaws."
+    }
+  }
+}

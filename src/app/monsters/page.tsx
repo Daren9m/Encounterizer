@@ -8,6 +8,7 @@ import FilterPanel from '@/components/FilterPanel';
 import MonsterStatBlock from '@/components/MonsterStatBlock';
 import CustomMonsterPanel from '@/components/CustomMonsterPanel';
 import PrintButton from '@/components/PrintButton';
+import MonsterPortrait from '@/components/MonsterPortrait';
 import { useMonsters } from '@/app/hooks/useMonsters';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import { getMonsterPhysicalDescription } from '@/data/monster-description-index';
@@ -161,6 +162,11 @@ export default function BestiaryPage() {
         <div className="lg:col-span-1 print:col-span-3">
           {selectedMonster ? (
             <div className="sticky top-4">
+              <MonsterPortrait
+                monsterId={selectedMonster.id}
+                sizes="(min-width: 1024px) 33vw, 100vw"
+                className="mb-3 aspect-[4/5] rounded border border-[var(--steel-800)] shadow-lg print:hidden"
+              />
               <div className="mb-2 flex justify-end">
                 <PrintButton label="Print Stat Block" />
               </div>
@@ -213,6 +219,11 @@ function MonsterCard({
         isSelected ? 'border-[var(--bronze)] ring-1 ring-[var(--bronze)]' : ''
       }`}
     >
+      <MonsterPortrait
+        monsterId={monster.id}
+        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+        className="-mx-4 -mt-4 mb-3 aspect-[5/3] rounded-t"
+      />
       <div className="flex items-start justify-between">
         <div>
           <h3 className="">{monster.name}</h3>
