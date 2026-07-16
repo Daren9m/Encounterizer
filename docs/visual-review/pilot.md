@@ -6,8 +6,8 @@
 
 - **ID:** `aboleth`
 - **Stat profile:** CR 10; Large Aberration
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -73,8 +73,8 @@ A huge blue-gray aboleth with three eyes and four tentacles glides through a dar
 
 - **ID:** `bat`
 - **Stat profile:** CR 0; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -137,8 +137,8 @@ A small charcoal-brown bat banks through the moonlit mouth of a limestone cave.
 
 - **ID:** `couatl`
 - **Stat profile:** CR 4; Medium Celestial
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -205,8 +205,8 @@ An iridescent feathered couatl coils in the air with broad wings spread above a 
 
 - **ID:** `animated-armor`
 - **Stat profile:** CR 1; Medium Construct
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -272,8 +272,8 @@ An empty dark-steel suit of animated plate armor advances through a castle corri
 
 - **ID:** `red-dragon-wyrmling`
 - **Stat profile:** CR 4; Medium Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -340,8 +340,8 @@ A juvenile red dragon crouches on volcanic rock, wings spread and smoke curling 
 
 - **ID:** `fire-elemental`
 - **Stat profile:** CR 5; Large Elemental
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -409,8 +409,8 @@ A towering humanoid-shaped fire elemental surges across blackened ground in a sh
 
 - **ID:** `goblin-warrior`
 - **Stat profile:** CR 0.25; Small Fey (goblinoid)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -479,8 +479,8 @@ A small green-skinned goblin warrior crouches on a forest path with scimitar dra
 
 - **ID:** `imp`
 - **Stat profile:** CR 1; Tiny Fiend (devil)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -546,8 +546,8 @@ A tiny red imp hovers in a dark stone alcove with leathery wings spread and barb
 
 - **ID:** `fire-giant`
 - **Stat profile:** CR 9; Huge Giant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -616,8 +616,8 @@ A colossal charcoal-skinned fire giant in black plate stands in a volcanic forge
 
 - **ID:** `bandit`
 - **Stat profile:** CR 0.125; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -686,8 +686,8 @@ A small hooded bandit waits beside a lonely road with scimitar drawn and crossbo
 
 - **ID:** `owlbear`
 - **Stat profile:** CR 3; Large Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -755,8 +755,8 @@ A huge brown owlbear lunges through a forest, its owl face and feathered mantle 
 
 - **ID:** `gelatinous-cube`
 - **Stat profile:** CR 2; Large Ooze
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -823,8 +823,8 @@ A transparent gelatinous cube fills a stone corridor, with bubbles and corroded 
 
 - **ID:** `awakened-shrub`
 - **Stat profile:** CR 0; Small Plant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -892,8 +892,8 @@ A small awakened shrub scuttles across a woodland floor on tangled roots with th
 
 - **ID:** `ghost`
 - **Stat profile:** CR 4; Medium Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
