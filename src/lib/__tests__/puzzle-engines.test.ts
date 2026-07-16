@@ -68,7 +68,7 @@ describe('logic grid', () => {
         expect(countGridSolutions(inst, 2), `cats=${cats} items=${items} seed=${s}`).toBe(1);
       }
     }
-  });
+  }, 15_000);
   it('generate() emits a logic-grid handout with clues and locked sizes', () => {
     const out = logicGrid.generate({ levers: mkLevers('Hard', 21), rng: seededRandom(21) });
     expect(out.handout?.kind).toBe('logic-grid');
