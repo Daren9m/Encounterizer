@@ -6,6 +6,7 @@ import { knightsKnaves, buildKkInstance, consistentAssignments } from '../puzzle
 import { logicGrid, buildGridInstance, countGridSolutions } from '../puzzle-engines/logic-grid';
 import { runeLock, buildRuneLockInstance, consistentCandidates } from '../puzzle-engines/rune-lock';
 import { riverCrossing, buildRiverInstance, solveRiver, drawPassengerNames } from '../puzzle-engines/river-crossing';
+import { sequenceLock, buildSequenceInstance, matchingPredictions } from '../puzzle-engines/sequence';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
   return {
@@ -137,6 +138,32 @@ describe('river crossing', () => {
           expect(new Set(names).size, `${pack.id} m=${m} seed=${s}`).toBe(m);
         }
       }
+    }
+  });
+});
+
+describe('sequence lock', () => {
+  const SETS = [['Sun', 'Moon', 'Star', 'Comet', 'Cloud', 'Storm'], ['Ox', 'Ram', 'Crane', 'Wolf', 'Boar', 'Hart']];
+  it('all grammar rules matching the visible terms agree on the blank (200 seeds × 3)', () => {
+    for (const diff of DIFFS) {
+      for (let s = 0; s < 200; s++) {
+        const inst = buildSequenceInstance(diff, SETS, seededRandom(s));
+        const preds = matchingPredictions(inst);
+        expect(preds.size, `diff=${diff} seed=${s}`).toBe(1);
+        expect([...preds][0]).toBe(inst.answer);
+        // options = the answer + 3 distractors (spec: distractors differ
+        // from the predicted blank).
+        expect(inst.options).toContain(inst.answer);
+        expect(inst.options.filter(o => o !== inst.answer)).toHaveLength(3);
+      }
+    }
+  });
+  it('generate() emits a symbol-sequence handout with options', () => {
+    const out = sequenceLock.generate({ levers: mkLevers('Easy', 3), rng: seededRandom(3) });
+    expect(out.handout?.kind).toBe('symbol-sequence');
+    if (out.handout?.kind === 'symbol-sequence') {
+      expect(out.handout.blanks).toHaveLength(1);
+      expect(out.handout.options?.length).toBeGreaterThanOrEqual(3);
     }
   });
 });
