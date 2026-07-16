@@ -4,6 +4,8 @@ import { THEME_PACKS } from '../../data/noncombat-themes';
 import { successesNeeded, phaseSplit, groupCheckThreshold, dcFor } from '../noncombat/levers';
 import type { Difficulty, ResolvedLevers, TimeBudget } from '../noncombat/types';
 import { skillChallenge, buildChallengeStructure } from '../challenge-frameworks/skill-challenge';
+import { social, buildAttitudeTrack } from '../challenge-frameworks/social';
+import { LEVERAGE } from '../../data/noncombat-cast';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
   return {
@@ -57,5 +59,36 @@ describe('skill challenge structure (spec §6.3/§8.1)', () => {
     const a = skillChallenge.generate({ levers: mkLevers('Medium', 5), rng: seededRandom(5) });
     const b = skillChallenge.generate({ levers: mkLevers('Medium', 5), rng: seededRandom(5) });
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+  });
+});
+
+describe('social framework (spec §8.2)', () => {
+  it('attitude track: three ordered stages with locked DC offsets (100 seeds)', () => {
+    for (let s = 0; s < 100; s++) {
+      const levers = mkLevers('Medium', s);
+      const track = buildAttitudeTrack(levers, LEVERAGE[s % LEVERAGE.length], seededRandom(s));
+      expect(track.stages.map(t => t.attitude)).toEqual(['Hostile', 'Indifferent', 'Friendly']);
+      const dc = dcFor(levers.partyLevel, levers.difficulty);
+      expect(track.stages.map(t => t.influenceDc)).toEqual([dc + 2, dc, dc - 2]);
+      expect(['Hostile', 'Indifferent', 'Friendly']).toContain(track.start);
+      for (const st of track.stages) {
+        expect(st.unlocks.length).toBeGreaterThan(0);
+        expect(st.shiftUp.length).toBeGreaterThan(0);
+        expect(st.shiftDown.length).toBeGreaterThan(0);
+      }
+    }
+  });
+  it('side NPCs scale with party size (capped at 3) and appear in the situation', () => {
+    const solo = social.generate({ levers: mkLevers('Medium', 9, { partySize: 1 }), rng: seededRandom(9) });
+    const six = social.generate({ levers: mkLevers('Medium', 9, { partySize: 6 }), rng: seededRandom(9) });
+    expect(solo.situation.match(/Side NPC/g)).toBeNull();
+    expect(six.situation.match(/Side NPC/g)?.length).toBe(3);
+    expect(six.attitudeTrack).toBeDefined();
+  });
+  it('deterministic and carries persona texture into the read-aloud', () => {
+    const a = social.generate({ levers: mkLevers('Hard', 21), rng: seededRandom(21) });
+    const b = social.generate({ levers: mkLevers('Hard', 21), rng: seededRandom(21) });
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+    expect(a.readAloud.length).toBeGreaterThan(40);
   });
 });
