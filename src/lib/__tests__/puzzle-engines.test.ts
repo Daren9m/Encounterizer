@@ -5,7 +5,7 @@ import type { ResolvedLevers, Difficulty } from '../noncombat/types';
 import { knightsKnaves, buildKkInstance, consistentAssignments } from '../puzzle-engines/knights-knaves';
 import { logicGrid, buildGridInstance, countGridSolutions } from '../puzzle-engines/logic-grid';
 import { runeLock, buildRuneLockInstance, consistentCandidates } from '../puzzle-engines/rune-lock';
-import { riverCrossing, buildRiverInstance, solveRiver } from '../puzzle-engines/river-crossing';
+import { riverCrossing, buildRiverInstance, solveRiver, drawPassengerNames } from '../puzzle-engines/river-crossing';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
   return {
@@ -128,5 +128,15 @@ describe('river crossing', () => {
     const out = riverCrossing.generate({ levers: mkLevers('Medium', 9), rng: seededRandom(9) });
     expect(out.dmBrief).toContain('crossings');
     expect(out.solution.length).toBeGreaterThan(0);
+  });
+  it('passenger names are always distinct (all packs × sizes × 100 seeds)', () => {
+    for (const pack of THEME_PACKS) {
+      for (const m of [2, 3, 4, 5]) {
+        for (let s = 0; s < 100; s++) {
+          const names = drawPassengerNames(pack, m, seededRandom(s));
+          expect(new Set(names).size, `${pack.id} m=${m} seed=${s}`).toBe(m);
+        }
+      }
+    }
   });
 });

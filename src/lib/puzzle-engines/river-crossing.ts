@@ -6,7 +6,7 @@
 
 import { pickRandom as pick, shuffleArray } from '../random';
 import type { Rng } from '../random';
-import type { Difficulty } from '../noncombat/types';
+import type { Difficulty, ThemePack } from '../noncombat/types';
 import { estimatedMinutes, hintCount } from '../noncombat/levers';
 import { failureText, rewardText, cap, withArticle } from '../noncombat/theming';
 import type { EngineInput, EngineOutput, PuzzleFamily } from './family';
@@ -19,14 +19,14 @@ function sideSafe(mask: number, constraints: [number, number][]): boolean {
   return constraints.every(([a, b]) => !((mask & (1 << a)) && (mask & (1 << b))));
 }
 
-function subsetsUpTo(mask: number, m: number, cap: number): number[] {
-  // All non-empty cargo subsets of `mask` with ≤cap items, plus the empty trip.
+function subsetsUpTo(mask: number, m: number, maxCargo: number): number[] {
+  // All non-empty cargo subsets of `mask` with ≤maxCargo items, plus the empty trip.
   const items: number[] = [];
   for (let i = 0; i < m; i++) if (mask & (1 << i)) items.push(i);
   const out: number[] = [0];
   const recurse = (idx: number, chosen: number, count: number) => {
     if (count > 0) out.push(chosen);
-    if (count === cap) return;
+    if (count === maxCargo) return;
     for (let i = idx; i < items.length; i++) recurse(i + 1, chosen | (1 << items[i]), count + 1);
   };
   recurse(0, 0, 0);
@@ -118,6 +118,13 @@ export function buildRiverInstance(diff: Difficulty, rng: Rng): RiverInstance {
   );
 }
 
+/** Distinct, theme-flavored passenger names — pools may overlap across a pack. */
+export function drawPassengerNames(pack: ThemePack, m: number, rng: Rng): string[] {
+  return shuffleArray([...new Set([...pack.creatures, ...pack.symbolSets[0]])], rng)
+    .slice(0, m)
+    .map(n => `the ${n}`);
+}
+
 export const riverCrossing: PuzzleFamily = {
   key: 'river-crossing',
   label: 'The Ferry Dilemma',
@@ -126,7 +133,7 @@ export const riverCrossing: PuzzleFamily = {
     const inst = buildRiverInstance(levers.difficulty, rng);
     const sol = solveRiver(inst.m, inst.capacity, inst.constraints)!;
     const pack = levers.theme;
-    const names = shuffleArray([...pack.creatures, ...pack.symbolSets[0]], rng).slice(0, inst.m).map(n => `the ${n}`);
+    const names = drawPassengerNames(pack, inst.m, rng);
     const conText = inst.constraints.map(([a, b]) => `${names[a]} cannot be left alone with ${names[b]}`);
     const planText = sol.plan.map((cargo, i) =>
       cargo.length === 0
