@@ -1,35 +1,59 @@
 import {
-  Monster, Encounter, EncounterMonster, Party, Difficulty, Environment,
-  MonsterFilter, XP_THRESHOLDS, getEncounterMultiplier,
+  Monster, Encounter, EncounterMonster, Party, Difficulty, EncounterAssessment,
+  Environment, MonsterFilter, XP_BUDGET_PER_CHARACTER,
 } from './types';
+import { seededRandom, shuffleArray, pickRandom, randomSeed } from './random';
 
-// ─── XP Budget Calculation ───────────────────────────────────────
+// ─── XP Budgets (2024 DMG) ───────────────────────────────────────
 
-export function getPartyXpThreshold(party: Party, difficulty: Difficulty): number {
+/** Party-wide XP budget: the sum of each member's per-level budget row. */
+export function getPartyXpBudget(party: Party, difficulty: Difficulty): number {
   return party.members.reduce((total, member) => {
     const level = Math.min(Math.max(member.level, 1), 20);
-    return total + (XP_THRESHOLDS[level]?.[difficulty] ?? 0);
+    return total + (XP_BUDGET_PER_CHARACTER[level]?.[difficulty] ?? 0);
   }, 0);
 }
 
-export function getEncounterDifficulty(
+/**
+ * Classify an encounter against the party's 2024 budgets. Budgets are caps:
+ * an encounter belongs to the cheapest tier whose budget still contains it.
+ * Raw monster XP is compared directly — 2024 has no monster-count multiplier.
+ */
+export function assessEncounterDifficulty(
   totalXp: number,
-  monsterCount: number,
-  party: Party
-): Difficulty {
-  const partySize = party.members.length;
-  const multiplier = getEncounterMultiplier(monsterCount, partySize);
-  const adjustedXp = totalXp * multiplier;
+  party: Party,
+): EncounterAssessment {
+  if (totalXp <= getPartyXpBudget(party, 'Low')) return 'Low';
+  if (totalXp <= getPartyXpBudget(party, 'Moderate')) return 'Moderate';
+  if (totalXp <= getPartyXpBudget(party, 'High')) return 'High';
+  return 'Extreme';
+}
 
-  const easy = getPartyXpThreshold(party, 'Easy');
-  const medium = getPartyXpThreshold(party, 'Medium');
-  const hard = getPartyXpThreshold(party, 'Hard');
-  const deadly = getPartyXpThreshold(party, 'Deadly');
+export interface EncounterXpSummary {
+  totalXp: number;
+  monsterCount: number;
+  budgets: Record<Difficulty, number>;
+  /** null when the encounter has no monsters yet */
+  assessment: EncounterAssessment | null;
+}
 
-  if (adjustedXp >= deadly) return 'Deadly';
-  if (adjustedXp >= hard) return 'Hard';
-  if (adjustedXp >= medium) return 'Medium';
-  return 'Easy';
+/** Everything the Encounter Builder UI needs about a monster list, in one call. */
+export function summarizeEncounter(
+  monsters: EncounterMonster[],
+  party: Party,
+): EncounterXpSummary {
+  const totalXp = monsters.reduce((sum, em) => sum + em.monster.xp * em.count, 0);
+  const monsterCount = monsters.reduce((sum, em) => sum + em.count, 0);
+  return {
+    totalXp,
+    monsterCount,
+    budgets: {
+      Low: getPartyXpBudget(party, 'Low'),
+      Moderate: getPartyXpBudget(party, 'Moderate'),
+      High: getPartyXpBudget(party, 'High'),
+    },
+    assessment: monsterCount === 0 ? null : assessEncounterDifficulty(totalXp, party),
+  };
 }
 
 // ─── Monster Selection (XP-budget knapsack) ──────────────────────
@@ -42,29 +66,12 @@ interface GenerateOptions {
   preferMixed?: boolean;   // prefer multiple monster types vs homogeneous
   maxMonsterTypes?: number; // max distinct monster stat blocks
   maxTotalMonsters?: number;
-}
-
-function seededRandom(seed: number): () => number {
-  let s = seed;
-  return () => {
-    s = (s * 1664525 + 1013904223) & 0x7fffffff;
-    return s / 0x7fffffff;
-  };
-}
-
-function shuffleArray<T>(arr: T[], rng: () => number): T[] {
-  const result = [...arr];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
+  seed?: number;           // replay a seed to reproduce an encounter exactly
 }
 
 export function selectMonstersForBudget(
   available: Monster[],
   xpBudget: number,
-  partySize: number,
   options: {
     preferMixed?: boolean;
     maxMonsterTypes?: number;
@@ -132,11 +139,10 @@ export function selectMonstersForBudget(
       if (remaining < xpBudget * 0.05) break;
     }
 
-    // Score this composition: closer to budget = better, some variety bonus
+    // Score this composition: budget utilization (usedXp never exceeds the
+    // budget by construction) plus a small variety bonus.
     const usedXp = xpBudget - remaining;
-    const multiplier = getEncounterMultiplier(totalCount, partySize);
-    const adjustedXp = usedXp * multiplier;
-    const budgetFit = 1 - Math.abs(adjustedXp - xpBudget) / xpBudget;
+    const budgetFit = usedXp / xpBudget;
     const varietyBonus = preferMixed ? typeCount * 0.05 : 0;
     const score = budgetFit + varietyBonus;
 
@@ -281,10 +287,6 @@ function formatMonsterList(monsters: EncounterMonster[]): string {
     .replace(/, ([^,]*)$/, ' and $1');  // Oxford-comma-ish join
 }
 
-function pickRandom<T>(arr: T[], rng: () => number): T {
-  return arr[Math.floor(rng() * arr.length)];
-}
-
 function generateScenarioHook(
   monsters: EncounterMonster[],
   environment: Environment,
@@ -337,13 +339,13 @@ export function generateEncounter(
     preferMixed = true,
     maxMonsterTypes = 4,
     maxTotalMonsters = 12,
+    seed = randomSeed(),
   } = options;
 
-  const seed = Date.now() + Math.floor(Math.random() * 100000);
   const rng = seededRandom(seed);
 
   // Calculate XP budget for the desired difficulty
-  const xpBudget = getPartyXpThreshold(party, difficulty);
+  const xpBudget = getPartyXpBudget(party, difficulty);
 
   // Filter available monsters by environment and any user filters
   let available = allMonsters;
@@ -360,18 +362,15 @@ export function generateEncounter(
   }
 
   // Select monsters to fill the XP budget
-  const selectedMonsters = selectMonstersForBudget(available, xpBudget, party.members.length, {
+  const selectedMonsters = selectMonstersForBudget(available, xpBudget, {
     preferMixed,
     maxMonsterTypes,
     maxTotalMonsters,
     seed,
   });
 
-  // Calculate actual XP
+  // Calculate actual XP (raw sum — no multiplier in the 2024 rules)
   const totalXp = selectedMonsters.reduce((sum, em) => sum + em.monster.xp * em.count, 0);
-  const totalCount = selectedMonsters.reduce((sum, em) => sum + em.count, 0);
-  const multiplier = getEncounterMultiplier(totalCount, party.members.length);
-  const adjustedXp = Math.round(totalXp * multiplier);
 
   // Determine the highest CR for treasure generation
   const maxCr = selectedMonsters.reduce((max, em) => Math.max(max, em.monster.challengeRating), 0);
@@ -385,10 +384,10 @@ export function generateEncounter(
     name: encounterName,
     description: generateScenarioHook(selectedMonsters, env, rng),
     environment: env,
-    difficulty: getEncounterDifficulty(totalXp, totalCount, party),
+    difficulty: assessEncounterDifficulty(totalXp, party),
     monsters: selectedMonsters,
     totalXp,
-    adjustedXp,
+    seed,
     scenarioHook: generateScenarioHook(selectedMonsters, env, rng),
     tactics: generateTactics(selectedMonsters, rng),
     treasure: generateTreasure(maxCr, rng),
@@ -406,6 +405,11 @@ function generateEncounterName(
   ];
   const prefix = pickRandom(prefixes, rng);
   const envName = environment === 'Any' ? 'the Wilds' : `the ${environment}`;
+
+  // An over-filtered pool can produce zero monsters — never crash on it.
+  if (monsters.length === 0) {
+    return `No Encounter — ${envName}`;
+  }
 
   if (monsters.length === 1) {
     return `${prefix} — ${monsters[0].monster.name} in ${envName}`;
@@ -425,7 +429,8 @@ export function generateQuickEncounter(
   partySize: number,
   difficulty: Difficulty,
   environment?: Environment,
-  filterFn?: (monsters: Monster[], filter: MonsterFilter) => Monster[]
+  filterFn?: (monsters: Monster[], filter: MonsterFilter) => Monster[],
+  seed?: number,
 ): Encounter {
   const party: Party = {
     id: 'quick-party',
@@ -437,5 +442,5 @@ export function generateQuickEncounter(
     })),
   };
 
-  return generateEncounter(allMonsters, { party, difficulty, environment }, filterFn);
+  return generateEncounter(allMonsters, { party, difficulty, environment, seed }, filterFn);
 }

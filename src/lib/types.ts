@@ -32,7 +32,11 @@ export type MovementMode = 'Walk' | 'Fly' | 'Swim' | 'Burrow' | 'Climb' | 'Hover
 export type AttackDelivery = 'Melee' | 'Ranged';
 export type AttackType = 'Weapon' | 'Spell';
 
-export type Difficulty = 'Easy' | 'Medium' | 'Hard' | 'Deadly';
+// 2024 DMG encounter difficulty tiers. These are the *build targets* a DM
+// selects; 'Extreme' below is an assessment-only label for encounters that
+// exceed the High budget (the 2024 DMG defines nothing above High).
+export type Difficulty = 'Low' | 'Moderate' | 'High';
+export type EncounterAssessment = Difficulty | 'Extreme';
 
 export type Alignment =
   | 'Lawful Good' | 'Neutral Good' | 'Chaotic Good'
@@ -44,6 +48,7 @@ export type Alignment =
   | 'Typically Chaotic Good' | 'Typically Neutral Good';
 
 export type SourceBook =
+  | 'SRD52'
   | 'MM2024' | 'MM2014' | 'PHB2024' | 'DMG2024'
   | 'VGM' | 'MTF' | 'FTD' | 'MPMM'
   | 'Custom';
@@ -236,11 +241,13 @@ export interface Encounter {
   name: string;
   description: string;
   environment: Environment;
-  difficulty: Difficulty;
+  difficulty: EncounterAssessment;
   monsters: EncounterMonster[];
   map?: EncounterMap;
   totalXp: number;
-  adjustedXp: number;
+  /** RNG seed that produced this encounter — replaying it (with the same
+   *  monster pool) reproduces the encounter exactly. 0 = built manually. */
+  seed: number;
   scenarioHook?: string;
   tactics?: string;
   treasure?: string;
@@ -260,29 +267,34 @@ export interface Party {
   members: PartyMember[];
 }
 
-// ─── XP Thresholds per character level (2024 rules) ──────────────
+// ─── XP Budget per character level (2024 DMG) ────────────────────
+// "XP Budget per Character" from the 2024 Dungeon Master's Guide,
+// chapter 4 (Creating Adventures → Combat Encounters). Multiply each
+// character's row by their level and sum across the party. Unlike the
+// 2014 thresholds, these are spending CAPS — an encounter's raw monster
+// XP is compared directly against the budget with NO count multiplier.
 
-export const XP_THRESHOLDS: Record<number, Record<Difficulty, number>> = {
-  1:  { Easy: 25,   Medium: 50,   Hard: 75,    Deadly: 100   },
-  2:  { Easy: 50,   Medium: 100,  Hard: 150,   Deadly: 200   },
-  3:  { Easy: 75,   Medium: 150,  Hard: 225,   Deadly: 400   },
-  4:  { Easy: 125,  Medium: 250,  Hard: 375,   Deadly: 500   },
-  5:  { Easy: 250,  Medium: 500,  Hard: 750,   Deadly: 1100  },
-  6:  { Easy: 300,  Medium: 600,  Hard: 900,   Deadly: 1400  },
-  7:  { Easy: 350,  Medium: 750,  Hard: 1100,  Deadly: 1700  },
-  8:  { Easy: 450,  Medium: 900,  Hard: 1400,  Deadly: 2100  },
-  9:  { Easy: 550,  Medium: 1100, Hard: 1600,  Deadly: 2400  },
-  10: { Easy: 600,  Medium: 1200, Hard: 1900,  Deadly: 2800  },
-  11: { Easy: 800,  Medium: 1600, Hard: 2400,  Deadly: 3600  },
-  12: { Easy: 1000, Medium: 2000, Hard: 3000,  Deadly: 4500  },
-  13: { Easy: 1100, Medium: 2200, Hard: 3400,  Deadly: 5100  },
-  14: { Easy: 1250, Medium: 2500, Hard: 3800,  Deadly: 5700  },
-  15: { Easy: 1400, Medium: 2800, Hard: 4300,  Deadly: 6400  },
-  16: { Easy: 1600, Medium: 3200, Hard: 4800,  Deadly: 7200  },
-  17: { Easy: 2000, Medium: 3900, Hard: 5900,  Deadly: 8800  },
-  18: { Easy: 2100, Medium: 4200, Hard: 6300,  Deadly: 9500  },
-  19: { Easy: 2400, Medium: 4900, Hard: 7300,  Deadly: 10900 },
-  20: { Easy: 2800, Medium: 5700, Hard: 8500,  Deadly: 12700 },
+export const XP_BUDGET_PER_CHARACTER: Record<number, Record<Difficulty, number>> = {
+  1:  { Low: 50,   Moderate: 75,    High: 100   },
+  2:  { Low: 100,  Moderate: 150,   High: 200   },
+  3:  { Low: 150,  Moderate: 225,   High: 400   },
+  4:  { Low: 250,  Moderate: 375,   High: 500   },
+  5:  { Low: 500,  Moderate: 750,   High: 1100  },
+  6:  { Low: 600,  Moderate: 1000,  High: 1400  },
+  7:  { Low: 750,  Moderate: 1300,  High: 1700  },
+  8:  { Low: 1000, Moderate: 1700,  High: 2100  },
+  9:  { Low: 1300, Moderate: 2000,  High: 2600  },
+  10: { Low: 1600, Moderate: 2300,  High: 3100  },
+  11: { Low: 1900, Moderate: 2900,  High: 4100  },
+  12: { Low: 2200, Moderate: 3700,  High: 4700  },
+  13: { Low: 2600, Moderate: 4200,  High: 5400  },
+  14: { Low: 2900, Moderate: 4900,  High: 6200  },
+  15: { Low: 3300, Moderate: 5400,  High: 7800  },
+  16: { Low: 3800, Moderate: 6100,  High: 9800  },
+  17: { Low: 4500, Moderate: 7200,  High: 11700 },
+  18: { Low: 5000, Moderate: 8700,  High: 14200 },
+  19: { Low: 5500, Moderate: 10700, High: 17200 },
+  20: { Low: 6400, Moderate: 13200, High: 22000 },
 };
 
 // CR to XP mapping (official table)
@@ -309,47 +321,49 @@ export const CR_PROF: Record<number, number> = {
   29: 9, 30: 9,
 };
 
-// Encounter multipliers based on number of monsters (2024 rules)
-export function getEncounterMultiplier(monsterCount: number, partySize: number): number {
-  let bracket: number;
-  if (monsterCount === 1) bracket = 0;
-  else if (monsterCount === 2) bracket = 1;
-  else if (monsterCount <= 6) bracket = 2;
-  else if (monsterCount <= 10) bracket = 3;
-  else if (monsterCount <= 14) bracket = 4;
-  else bracket = 5;
-
-  const multipliers = [1, 1.5, 2, 2.5, 3, 4];
-
-  if (partySize < 3) bracket = Math.min(bracket + 1, 5);
-  else if (partySize >= 6) bracket = Math.max(bracket - 1, 0);
-
-  return multipliers[bracket];
-}
-
 // ─── 5etools Import Types ────────────────────────────────────────
 
 export interface FiveEToolsMonster {
   name: string;
   source: string;
+  /** true = included in SRD 5.2.1 verbatim; a string = the SRD rename */
+  srd52?: boolean | string;
   size?: string[];
-  type?: string | { type: string; tags?: string[] };
+  type?: string | { type: string; tags?: Array<string | { tag: string; prefix?: string }> };
   alignment?: Array<string | { alignment: string[] }>;
   ac?: Array<number | { ac: number; from?: string[] }>;
   hp?: { average?: number; formula?: string };
   speed?: Record<string, number | boolean | { number: number; condition: string }>;
+  initiative?: { proficiency?: number } | number;
   str?: number;
   dex?: number;
   con?: number;
   int?: number;
   wis?: number;
   cha?: number;
-  cr?: string | { cr: string; lair?: string };
-  trait?: Array<{ name: string; entries: string[] }>;
-  action?: Array<{ name: string; entries: string[] }>;
-  bonus?: Array<{ name: string; entries: string[] }>;
-  reaction?: Array<{ name: string; entries: string[] }>;
-  legendary?: Array<{ name: string; entries: string[] }>;
+  /** e.g. { dex: "+3" } */
+  save?: Partial<Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', string>>;
+  /** e.g. { stealth: "+6" } — values can also be nested objects (ignored) */
+  skill?: Record<string, unknown>;
+  senses?: string[] | string;
+  passive?: number | string;
+  languages?: string[] | string;
+  /** 2024 data uses xpLair; older data used a lair CR string */
+  cr?: string | { cr: string; lair?: string; xpLair?: number };
+  trait?: Array<{ name?: string; entries?: unknown }>;
+  action?: Array<{ name?: string; entries?: unknown }>;
+  bonus?: Array<{ name?: string; entries?: unknown }>;
+  reaction?: Array<{ name?: string; entries?: unknown }>;
+  legendary?: Array<{ name?: string; entries?: unknown }>;
+  mythic?: Array<{ name?: string; entries?: unknown }>;
+  lair?: unknown[];
+  /** Structured spellcasting blocks (2024 format) */
+  spellcasting?: unknown[];
+  vulnerable?: unknown[];
+  resist?: unknown[];
+  immune?: unknown[];
+  conditionImmune?: unknown[];
+  gear?: unknown[];
   environment?: string[];
   [key: string]: unknown;
 }

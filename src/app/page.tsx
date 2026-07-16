@@ -1,6 +1,11 @@
 import Link from 'next/link';
+import { ALL_MONSTERS } from '@/data';
+import { SRD_SPELLS } from '@/data/spells';
+import { TOOL_ROUTES } from '@/lib/site';
 
 export default function HomePage() {
+  const creatureTypes = new Set(ALL_MONSTERS.map((m) => m.type)).size;
+
   return (
     <div className="animate-fade-in">
       {/* Hero */}
@@ -9,45 +14,46 @@ export default function HomePage() {
           Encounterizer
         </h1>
         <p className="text-xl text-[var(--parchment-dark)] max-w-2xl mx-auto mb-8">
-          Generate balanced encounters, browse monsters, and create battle maps
-          for your D&amp;D 5.5e campaigns — all in one tool.
+          Build balanced encounters, forecast the battle, and run the whole session —
+          monsters, maps, puzzles, and spells in one free DM toolkit for D&amp;D 5.5e.
         </p>
-        <Link href="/encounters" className="btn-gold text-lg px-8 py-3 inline-block rounded">
-          Build an Encounter
-        </Link>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link href="/encounters" className="btn-gold text-lg px-8 py-3 inline-block rounded">
+            Build an Encounter
+          </Link>
+          <Link href="/monsters" className="btn-secondary text-lg px-8 py-3 inline-block rounded">
+            Browse the Bestiary
+          </Link>
+        </div>
       </section>
 
-      {/* Feature Cards */}
-      <section className="grid md:grid-cols-3 gap-6 mt-8">
-        <FeatureCard
-          href="/encounters"
-          icon="⚔️"
-          title="Encounter Generator"
-          description="Set your party size, level, and desired difficulty — get a balanced encounter with monsters, scenario hook, tactics, and treasure in one click."
-        />
-        <FeatureCard
-          href="/monsters"
-          icon="🐉"
-          title="Monster Bestiary"
-          description="Browse 80+ monsters with rich filtering: search by CR, type, movement mode, damage types, resistances, and more."
-        />
-        <FeatureCard
-          href="/maps"
-          icon="🗺️"
-          title="Map Generator"
-          description="Procedurally generated battle maps — dungeons, caves, forests, and more. Each map is unique and tailored to the environment."
-        />
+      {/* Feature Cards — all six tools */}
+      <section className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mt-8" aria-label="Tools">
+        {TOOL_ROUTES.map((route) => (
+          <FeatureCard
+            key={route.path}
+            href={route.path}
+            icon={route.icon}
+            title={route.title}
+            description={route.description}
+          />
+        ))}
       </section>
 
-      {/* Quick Stats */}
+      {/* Quick Stats — computed from the data modules, so they never drift */}
       <section className="mt-16 text-center">
         <h2 className="text-2xl font-bold text-[var(--gold)] mb-6">Powered by the Rules</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatBox value="80+" label="Monsters" />
-          <StatBox value="5.5e" label="2024 Rules" />
-          <StatBox value="14" label="Creature Types" />
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <StatBox value={String(ALL_MONSTERS.length)} label="SRD Monsters" />
+          <StatBox value={String(SRD_SPELLS.length)} label="Spells" />
+          <StatBox value={String(creatureTypes)} label="Creature Types" />
+          <StatBox value="2024" label="Rules Edition" />
           <StatBox value="∞" label="Unique Maps" />
         </div>
+        <p className="mt-6 text-sm text-[var(--parchment-dark)] max-w-xl mx-auto">
+          Everything runs in your browser — no accounts, no server, no tracking.
+          Encounters are shareable by link, and your data never leaves your device.
+        </p>
       </section>
     </div>
   );
@@ -60,7 +66,7 @@ function FeatureCard({
 }) {
   return (
     <Link href={href} className="card block group">
-      <div className="text-3xl mb-3">{icon}</div>
+      <div className="text-3xl mb-3" aria-hidden="true">{icon}</div>
       <h3 className="text-lg font-bold text-[var(--gold)] group-hover:text-[var(--gold-light)] mb-2">
         {title}
       </h3>

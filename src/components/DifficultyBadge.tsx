@@ -1,17 +1,24 @@
 'use client';
 
-import { Difficulty } from '@/lib/types';
+import { EncounterAssessment } from '@/lib/types';
 
-const CLASSES: Record<Difficulty, string> = {
-  Easy: 'badge-easy',
-  Medium: 'badge-medium',
-  Hard: 'badge-hard',
-  Deadly: 'badge-deadly',
+const CLASSES: Record<EncounterAssessment, string> = {
+  Low: 'badge-low',
+  Moderate: 'badge-moderate',
+  High: 'badge-high',
+  Extreme: 'badge-extreme',
 };
 
-export default function DifficultyBadge({ difficulty }: { difficulty: Difficulty }) {
+const TOOLTIPS: Partial<Record<EncounterAssessment, string>> = {
+  Extreme: 'Beyond the 2024 DMG High budget — the rules define nothing past High. Here be TPKs.',
+};
+
+export default function DifficultyBadge({ difficulty }: { difficulty: EncounterAssessment }) {
   return (
-    <span className={`${CLASSES[difficulty]} px-3 py-1 rounded-full text-sm font-bold`}>
+    <span
+      className={`${CLASSES[difficulty]} px-3 py-1 rounded-full text-sm font-bold`}
+      title={TOOLTIPS[difficulty]}
+    >
       {difficulty}
     </span>
   );

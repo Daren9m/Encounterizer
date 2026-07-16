@@ -1,4 +1,5 @@
 import { EncounterMap, MapCell, TerrainType, Environment } from './types';
+import { seededRandom } from './random';
 
 // ─── Procedural Map Generator ────────────────────────────────────
 // Uses BSP (Binary Space Partition) for dungeon rooms and
@@ -10,14 +11,6 @@ interface MapOptions {
   environment: Environment;
   roomCount?: number;
   seed?: number;
-}
-
-function seededRandom(seed: number): () => number {
-  let s = seed;
-  return () => {
-    s = (s * 1664525 + 1013904223) & 0x7fffffff;
-    return s / 0x7fffffff;
-  };
 }
 
 function createGrid(w: number, h: number, fill: TerrainType): MapCell[][] {

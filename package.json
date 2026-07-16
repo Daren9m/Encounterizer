@@ -1,38 +1,53 @@
 {
   "name": "encounterizer",
   "version": "1.0.0",
-  "description": "D&D Encounter Management Tool — generate monsters, maps, and scenarios",
+  "private": true,
+  "description": "Free D&D 5.5e encounter toolkit — balanced encounters, battle forecasts, bestiary, maps, puzzles, and spells",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "import:bestiary": "tsx scripts/import-bestiary.ts"
   },
   "repository": {
     "type": "git",
-    "url": "http://local_proxy@127.0.0.1:34228/git/Daren9m/Encounterizer-"
+    "url": "https://github.com/Daren9m/Encounterizer.git"
+  },
+  "homepage": "https://github.com/Daren9m/Encounterizer",
+  "bugs": {
+    "url": "https://github.com/Daren9m/Encounterizer/issues"
   },
   "keywords": [
     "dnd",
+    "5e",
     "encounter",
     "dungeons-and-dragons",
-    "tabletop"
+    "tabletop",
+    "srd",
+    "dm-tools"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Daren9m",
+  "license": "MIT",
   "dependencies": {
     "next": "^14.2.35",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "uuid": "^9.0.1"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@types/node": "^25.5.2",
-    "@types/react": "^19.2.14",
-    "@types/uuid": "^9.0.0",
+    "@types/node": "^24.10.9",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
     "autoprefixer": "^10.4.27",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
     "postcss": "^8.5.9",
     "tailwindcss": "^3.4.0",
-    "typescript": "^5.6.0"
+    "tsx": "^4.23.1",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.7"
   }
 }

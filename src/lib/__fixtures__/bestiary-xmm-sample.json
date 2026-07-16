@@ -1,0 +1,1298 @@
+{
+	"monster": [
+		{
+			"name": "Goblin Warrior",
+			"group": [
+				"Goblinoids"
+			],
+			"source": "XMM",
+			"page": 142,
+			"srd52": true,
+			"basicRules2024": true,
+			"referenceSources": [
+				"BQGT",
+				"DrDe",
+				"DrDe-BD",
+				"FRAiF",
+				"HotB",
+				"RHW"
+			],
+			"size": [
+				"S"
+			],
+			"type": {
+				"type": "fey",
+				"tags": [
+					"goblinoid"
+				]
+			},
+			"alignment": [
+				"C",
+				"N"
+			],
+			"ac": [
+				15
+			],
+			"hp": {
+				"average": 10,
+				"formula": "3d6"
+			},
+			"speed": {
+				"walk": 30
+			},
+			"str": 8,
+			"dex": 15,
+			"con": 10,
+			"int": 10,
+			"wis": 8,
+			"cha": 8,
+			"skill": {
+				"stealth": "+6"
+			},
+			"senses": [
+				"Darkvision 60 ft."
+			],
+			"passive": 9,
+			"languages": [
+				"Common",
+				"Goblin"
+			],
+			"cr": "1/4",
+			"gear": [
+				"leather armor|xphb",
+				"scimitar|xphb",
+				"shield|xphb",
+				"shortbow|xphb"
+			],
+			"action": [
+				{
+					"name": "Scimitar",
+					"entries": [
+						"{@atkr m} {@hit 4}, reach 5 ft. {@h}5 ({@damage 1d6 + 2}) Slashing damage, plus 2 ({@damage 1d4}) Slashing damage if the attack roll had {@variantrule Advantage|XPHB}."
+					]
+				},
+				{
+					"name": "Shortbow",
+					"entries": [
+						"{@atkr r} {@hit 4}, range 80/320 ft. {@h}5 ({@damage 1d6 + 2}) Piercing damage, plus 2 ({@damage 1d4}) Piercing damage if the attack roll had {@variantrule Advantage|XPHB}."
+					]
+				}
+			],
+			"bonus": [
+				{
+					"name": "Nimble Escape",
+					"entries": [
+						"The goblin takes the {@action Disengage|XPHB} or {@action Hide|XPHB} action."
+					]
+				}
+			],
+			"environment": [
+				"forest",
+				"grassland",
+				"hill",
+				"planar, acheron",
+				"planar, feywild",
+				"underdark"
+			],
+			"treasure": [
+				"implements",
+				"individual"
+			],
+			"senseTags": [
+				"D"
+			],
+			"languageTags": [
+				"C",
+				"GO"
+			],
+			"damageTags": [
+				"P",
+				"S"
+			],
+			"miscTags": [
+				"MA",
+				"MLW",
+				"RA",
+				"RNG"
+			],
+			"hasToken": true,
+			"hasFluff": true,
+			"hasFluffImages": true
+		},
+		{
+			"name": "Aboleth",
+			"source": "XMM",
+			"page": 12,
+			"srd52": true,
+			"basicRules2024": true,
+			"referenceSources": [
+				"RHW"
+			],
+			"size": [
+				"L"
+			],
+			"type": "aberration",
+			"alignment": [
+				"L",
+				"E"
+			],
+			"ac": [
+				17
+			],
+			"hp": {
+				"average": 150,
+				"formula": "20d10 + 40"
+			},
+			"speed": {
+				"walk": 10,
+				"swim": 40
+			},
+			"initiative": {
+				"proficiency": 2
+			},
+			"str": 21,
+			"dex": 9,
+			"con": 15,
+			"int": 18,
+			"wis": 15,
+			"cha": 18,
+			"save": {
+				"dex": "+3",
+				"con": "+6",
+				"int": "+8",
+				"wis": "+6"
+			},
+			"skill": {
+				"history": "+12",
+				"perception": "+10"
+			},
+			"senses": [
+				"Darkvision 120 ft."
+			],
+			"passive": 20,
+			"languages": [
+				"Deep Speech; telepathy 120 ft."
+			],
+			"cr": {
+				"cr": "10",
+				"xpLair": 7200
+			},
+			"trait": [
+				{
+					"name": "Amphibious",
+					"entries": [
+						"The aboleth can breathe air and water."
+					]
+				},
+				{
+					"name": "Eldritch Restoration",
+					"entries": [
+						"If destroyed, the aboleth gains a new body in {@dice 5d10} days, reviving with all its {@variantrule Hit Points|XPHB} in the Far Realm or another location chosen by the DM."
+					]
+				},
+				{
+					"name": "Legendary Resistance (3/Day, or 4/Day in Lair)",
+					"entries": [
+						"If the aboleth fails a saving throw, it can choose to succeed instead."
+					]
+				},
+				{
+					"name": "Mucus Cloud",
+					"entries": [
+						"While underwater, the aboleth is surrounded by mucus. {@actSave con} {@dc 14}, each creature in a 5-foot {@variantrule Emanation [Area of Effect]|XPHB|Emanation} originating from the aboleth at the end of the aboleth's turn. {@actSaveFail} The target is cursed. Until the curse ends, the target's skin becomes slimy, the target can breathe air and water, and it can't regain {@variantrule Hit Points|XPHB} unless it is underwater.",
+						"While the cursed creature is outside a body of water, the creature takes 6 ({@damage 1d12}) Acid damage at the end of every 10 minutes unless moisture is applied to its skin before those minutes have passed."
+					]
+				},
+				{
+					"name": "Probing Telepathy",
+					"entries": [
+						"If a creature the aboleth can see communicates telepathically with the aboleth, the aboleth learns the creature's greatest desires."
+					]
+				}
+			],
+			"action": [
+				{
+					"name": "Multiattack",
+					"entries": [
+						"The aboleth makes two Tentacle attacks and uses either Consume Memories or Dominate Mind if available."
+					]
+				},
+				{
+					"name": "Tentacle",
+					"entries": [
+						"{@atkr m} {@hit 9}, reach 15 ft. {@h}12 ({@damage 2d6 + 5}) Bludgeoning damage. If the target is a Large or smaller creature, it has the {@condition Grappled|XPHB} condition (escape {@dc 14}) from one of four tentacles."
+					]
+				},
+				{
+					"name": "Consume Memories",
+					"entries": [
+						"{@actSave int} {@dc 16}, one creature within 30 feet that is {@condition Charmed|XPHB} or {@condition Grappled|XPHB} by the aboleth. {@actSaveFail} 10 ({@damage 3d6}) Psychic damage. {@actSaveSuccess} Half damage. {@actSaveSuccessOrFail} The aboleth gains the target's memories if the target is a Humanoid and is reduced to 0 {@variantrule Hit Points|XPHB} by this action."
+					]
+				},
+				{
+					"name": "Dominate Mind (2/Day)",
+					"entries": [
+						"{@actSave wis} {@dc 16}, one creature the aboleth can see within 30 feet. {@actSaveFail} The target has the {@condition Charmed|XPHB} condition until the aboleth dies or is on a different plane of existence from the target. While {@condition Charmed|XPHB}, the target acts as an ally to the aboleth and is under its control while within 60 feet of it. In addition, the aboleth and the target can communicate telepathically with each other over any distance.",
+						"The target repeats the save whenever it takes damage as well as after every 24 hours it spends at least 1 mile away from the aboleth, ending the effect on itself on a success."
+					]
+				}
+			],
+			"legendaryActionsLair": 4,
+			"legendary": [
+				{
+					"name": "Lash",
+					"entries": [
+						"The aboleth makes one Tentacle attack."
+					]
+				},
+				{
+					"name": "Psychic Drain",
+					"entries": [
+						"If the aboleth has at least one creature {@condition Charmed|XPHB} or {@condition Grappled|XPHB}, it uses Consume Memories and regains 5 ({@dice 1d10}) {@variantrule Hit Points|XPHB}."
+					]
+				}
+			],
+			"legendaryGroup": {
+				"name": "Aboleth",
+				"source": "XMM"
+			},
+			"environment": [
+				"underdark",
+				"underwater"
+			],
+			"treasure": [
+				"relics"
+			],
+			"soundClip": {
+				"type": "internal",
+				"path": "bestiary/aboleth.opus"
+			},
+			"traitTags": [
+				"Amphibious",
+				"Legendary Resistances"
+			],
+			"senseTags": [
+				"SD"
+			],
+			"actionTags": [
+				"Multiattack",
+				"Tentacles"
+			],
+			"languageTags": [
+				"DS",
+				"TP"
+			],
+			"damageTags": [
+				"A",
+				"B",
+				"Y"
+			],
+			"miscTags": [
+				"CUR",
+				"MA",
+				"RCH"
+			],
+			"conditionInflict": [
+				"charmed",
+				"grappled"
+			],
+			"savingThrowForced": [
+				"constitution",
+				"intelligence",
+				"wisdom"
+			],
+			"savingThrowForcedLegendary": [
+				"constitution"
+			],
+			"hasToken": true,
+			"hasFluff": true,
+			"hasFluffImages": true
+		},
+		{
+			"name": "Adult Black Dragon",
+			"group": [
+				"Chromatic Dragons"
+			],
+			"source": "XMM",
+			"page": 39,
+			"srd52": true,
+			"basicRules2024": true,
+			"referenceSources": [
+				"DrDe",
+				"DrDe-BtS",
+				"FRAiF"
+			],
+			"size": [
+				"H"
+			],
+			"type": {
+				"type": "dragon",
+				"tags": [
+					"chromatic"
+				]
+			},
+			"alignment": [
+				"C",
+				"E"
+			],
+			"ac": [
+				19
+			],
+			"hp": {
+				"average": 195,
+				"formula": "17d12 + 85"
+			},
+			"speed": {
+				"walk": 40,
+				"fly": 80,
+				"swim": 40
+			},
+			"initiative": {
+				"proficiency": 2
+			},
+			"str": 23,
+			"dex": 14,
+			"con": 21,
+			"int": 14,
+			"wis": 13,
+			"cha": 19,
+			"save": {
+				"dex": "+7",
+				"wis": "+6"
+			},
+			"skill": {
+				"perception": "+11",
+				"stealth": "+7"
+			},
+			"senses": [
+				"Blindsight 60 ft.",
+				"Darkvision 120 ft."
+			],
+			"passive": 21,
+			"immune": [
+				"acid"
+			],
+			"languages": [
+				"Common",
+				"Draconic"
+			],
+			"cr": {
+				"cr": "14",
+				"xpLair": 13000
+			},
+			"spellcasting": [
+				{
+					"name": "Spellcasting",
+					"type": "spellcasting",
+					"headerEntries": [
+						"The dragon casts one of the following spells, requiring no Material components and using Charisma as the spellcasting ability (spell save {@dc 17}, {@hit 9} to hit with spell attacks):"
+					],
+					"will": [
+						"{@spell Detect Magic|XPHB}",
+						"{@spell Fear|XPHB}",
+						"{@spell Melf's Acid Arrow|XPHB} (level 3 version)"
+					],
+					"daily": {
+						"1e": [
+							"{@spell Speak with Dead|XPHB}",
+							"{@spell Vitriolic Sphere|XPHB}"
+						]
+					},
+					"ability": "cha",
+					"displayAs": "action"
+				}
+			],
+			"trait": [
+				{
+					"name": "Amphibious",
+					"entries": [
+						"The dragon can breathe air and water."
+					]
+				},
+				{
+					"name": "Legendary Resistance (3/Day, or 4/Day in Lair)",
+					"entries": [
+						"If the dragon fails a saving throw, it can choose to succeed instead."
+					]
+				}
+			],
+			"action": [
+				{
+					"name": "Multiattack",
+					"entries": [
+						"The dragon makes three Rend attacks. It can replace one attack with a use of Spellcasting to cast {@spell Melf's Acid Arrow|XPHB} (level 3 version)."
+					]
+				},
+				{
+					"name": "Rend",
+					"entries": [
+						"{@atkr m} {@hit 11}, reach 10 ft. {@h}13 ({@damage 2d6 + 6}) Slashing damage plus 4 ({@damage 1d8}) Acid damage."
+					]
+				},
+				{
+					"name": "Acid Breath {@recharge 5}",
+					"entries": [
+						"{@actSave dex} {@dc 18}, each creature in a 60-foot-long, 5-foot-wide {@variantrule Line [Area of Effect]|XPHB|Line}. {@actSaveFail} 54 ({@damage 12d8}) Acid damage. {@actSaveSuccess} Half damage."
+					]
+				}
+			],
+			"legendaryActionsLair": 4,
+			"legendary": [
+				{
+					"name": "Cloud of Insects",
+					"entries": [
+						"{@actSave dex} {@dc 17}, one creature the dragon can see within 120 feet. {@actSaveFail} 22 ({@damage 4d10}) Poison damage, and the target has {@variantrule Disadvantage|XPHB} on saving throws to maintain {@status Concentration|XPHB} until the end of its next turn. {@actSaveSuccessOrFail} The dragon can't take this action again until the start of its next turn."
+					]
+				},
+				{
+					"name": "Frightful Presence",
+					"entries": [
+						"The dragon uses Spellcasting to cast {@spell Fear|XPHB}. The dragon can't take this action again until the start of its next turn."
+					]
+				},
+				{
+					"name": "Pounce",
+					"entries": [
+						"The dragon can move up to half its {@variantrule Speed|XPHB}, and it makes one Rend attack."
+					]
+				}
+			],
+			"legendaryGroup": {
+				"name": "Black Dragon",
+				"source": "XMM"
+			},
+			"environment": [
+				"swamp"
+			],
+			"treasure": [
+				"relics"
+			],
+			"dragonAge": "adult",
+			"soundClip": {
+				"type": "internal",
+				"path": "bestiary/black-dragon.opus"
+			},
+			"traitTags": [
+				"Amphibious",
+				"Legendary Resistances"
+			],
+			"senseTags": [
+				"B",
+				"SD"
+			],
+			"actionTags": [
+				"Breath Weapon",
+				"Multiattack"
+			],
+			"languageTags": [
+				"C",
+				"DR"
+			],
+			"damageTags": [
+				"A",
+				"I",
+				"S"
+			],
+			"damageTagsSpell": [
+				"A"
+			],
+			"spellcastingTags": [
+				"O"
+			],
+			"miscTags": [
+				"MA",
+				"RCH"
+			],
+			"conditionInflictSpell": [
+				"frightened"
+			],
+			"savingThrowForced": [
+				"dexterity"
+			],
+			"savingThrowForcedLegendary": [
+				"constitution"
+			],
+			"savingThrowForcedSpell": [
+				"dexterity",
+				"wisdom"
+			],
+			"hasToken": true,
+			"hasFluff": true,
+			"hasFluffImages": true
+		},
+		{
+			"name": "Gibbering Mouther",
+			"source": "XMM",
+			"page": 133,
+			"srd52": true,
+			"basicRules2024": true,
+			"referenceSources": [
+				"FRAiF",
+				"RHW"
+			],
+			"size": [
+				"M"
+			],
+			"type": "aberration",
+			"alignment": [
+				"C",
+				"N"
+			],
+			"ac": [
+				9
+			],
+			"hp": {
+				"average": 52,
+				"formula": "7d8 + 21"
+			},
+			"speed": {
+				"walk": 20,
+				"swim": 20
+			},
+			"str": 10,
+			"dex": 8,
+			"con": 16,
+			"int": 3,
+			"wis": 10,
+			"cha": 6,
+			"senses": [
+				"Darkvision 60 ft."
+			],
+			"passive": 10,
+			"conditionImmune": [
+				"prone"
+			],
+			"cr": "2",
+			"trait": [
+				{
+					"name": "Aberrant Ground",
+					"entries": [
+						"The ground in a 10-foot {@variantrule Emanation [Area of Effect]|XPHB|Emanation} originating from the mouther is {@variantrule Difficult Terrain|XPHB}."
+					]
+				},
+				{
+					"name": "Gibbering",
+					"entries": [
+						"The mouther babbles incoherently while it doesn't have the {@condition Incapacitated|XPHB} condition. {@actSave wis} {@dc 10}, any creature that starts its turn within 20 feet of the mouther while it is babbling. {@actSaveFail} The target rolls {@dice 1d8} to determine what it does during the current turn:",
+						{
+							"type": "list",
+							"style": "list-hang-notitle",
+							"items": [
+								{
+									"type": "item",
+									"name": "1-4",
+									"entry": "The target does nothing."
+								},
+								{
+									"type": "item",
+									"name": "5-6",
+									"entry": "The target takes no action or {@variantrule Bonus Action|XPHB} and uses all its movement to move in a random direction."
+								},
+								{
+									"type": "item",
+									"name": "7-8",
+									"entry": "The target makes a melee attack against a randomly determined creature within its reach or does nothing if it can't make such an attack."
+								}
+							]
+						}
+					]
+				}
+			],
+			"action": [
+				{
+					"name": "Bite",
+					"entries": [
+						"{@atkr m} {@hit 2}, reach 5 ft. {@h}7 ({@damage 2d6}) Piercing damage. If the target is a Medium or smaller creature, it has the {@condition Prone|XPHB} condition. The target dies if it is reduced to 0 {@variantrule Hit Points|XPHB} by this attack. Its body is then absorbed into the mouther, leaving only equipment behind."
+					]
+				},
+				{
+					"name": "Blinding Spittle {@recharge 5}",
+					"entries": [
+						"{@actSave dex} {@dc 10}, each creature in a 10-foot-radius {@variantrule Sphere [Area of Effect]|XPHB|Sphere} centered on a point within 30 feet. {@actSaveFail} 7 ({@damage 2d6}) Radiant damage, and the target has the {@condition Blinded|XPHB} condition until the end of the mouther's next turn."
+					]
+				}
+			],
+			"environment": [
+				"underdark"
+			],
+			"soundClip": {
+				"type": "internal",
+				"path": "bestiary/gibbering-mouther.opus"
+			},
+			"senseTags": [
+				"D"
+			],
+			"damageTags": [
+				"P",
+				"R"
+			],
+			"miscTags": [
+				"AOE",
+				"MA"
+			],
+			"conditionInflict": [
+				"blinded",
+				"prone"
+			],
+			"savingThrowForced": [
+				"dexterity",
+				"wisdom"
+			],
+			"hasToken": true,
+			"hasFluff": true,
+			"hasFluffImages": true
+		},
+		{
+			"name": "Frog",
+			"source": "XMM",
+			"page": 354,
+			"srd52": true,
+			"basicRules2024": true,
+			"otherSources": [
+				{
+					"source": "XPHB",
+					"page": 349
+				}
+			],
+			"size": [
+				"T"
+			],
+			"type": "beast",
+			"alignment": [
+				"U"
+			],
+			"ac": [
+				11
+			],
+			"hp": {
+				"average": 1,
+				"formula": "1d4 - 1"
+			},
+			"speed": {
+				"walk": 20,
+				"swim": 20
+			},
+			"str": 1,
+			"dex": 13,
+			"con": 8,
+			"int": 1,
+			"wis": 8,
+			"cha": 3,
+			"skill": {
+				"perception": "+1",
+				"stealth": "+3"
+			},
+			"senses": [
+				"Darkvision 30 ft."
+			],
+			"passive": 11,
+			"cr": "0",
+			"trait": [
+				{
+					"name": "Amphibious",
+					"entries": [
+						"The frog can breathe air and water."
+					]
+				},
+				{
+					"name": "Standing Leap",
+					"entries": [
+						"The frog's {@variantrule Long Jump|XPHB} is up to 10 feet and its {@variantrule High Jump|XPHB} is up to 5 feet with or without a running start."
+					]
+				}
+			],
+			"action": [
+				{
+					"name": "Bite",
+					"entries": [
+						"{@atkr m} {@hit 3}, reach 5 ft. {@h}1 Piercing damage."
+					]
+				}
+			],
+			"environment": [
+				"forest",
+				"swamp"
+			],
+			"familiar": true,
+			"soundClip": {
+				"type": "internal",
+				"path": "bestiary/frog.opus"
+			},
+			"traitTags": [
+				"Amphibious"
+			],
+			"senseTags": [
+				"D"
+			],
+			"damageTags": [
+				"P"
+			],
+			"miscTags": [
+				"MA"
+			],
+			"hasToken": true,
+			"hasFluff": true,
+			"hasFluffImages": true
+		},
+		{
+			"name": "Ettercap",
+			"source": "XMM",
+			"page": 115,
+			"srd52": true,
+			"basicRules2024": true,
+			"referenceSources": [
+				"FRAiF"
+			],
+			"size": [
+				"M"
+			],
+			"type": "monstrosity",
+			"alignment": [
+				"N",
+				"E"
+			],
+			"ac": [
+				13
+			],
+			"hp": {
+				"average": 44,
+				"formula": "8d8 + 8"
+			},
+			"speed": {
+				"walk": 30,
+				"climb": 30
+			},
+			"str": 14,
+			"dex": 15,
+			"con": 13,
+			"int": 7,
+			"wis": 12,
+			"cha": 8,
+			"skill": {
+				"perception": "+3",
+				"stealth": "+4",
+				"survival": "+3"
+			},
+			"senses": [
+				"Darkvision 60 ft."
+			],
+			"passive": 13,
+			"cr": "2",
+			"trait": [
+				{
+					"name": "Spider Climb",
+					"entries": [
+						"The ettercap can climb difficult surfaces, including along ceilings, without needing to make an ability check."
+					]
+				},
+				{
+					"name": "Web Walker",
+					"entries": [
+						"The ettercap ignores movement restrictions caused by webs, and the ettercap knows the location of any other creature in contact with the same web."
+					]
+				}
+			],
+			"action": [
+				{
+					"name": "Multiattack",
+					"entries": [
+						"The ettercap makes one Bite attack and one Claw attack."
+					]
+				},
+				{
+					"name": "Bite",
+					"entries": [
+						"{@atkr m} {@hit 4}, reach 5 ft. {@h}5 ({@damage 1d6 + 2}) Piercing damage plus 2 ({@damage 1d4}) Poison damage, and the target has the {@condition Poisoned|XPHB} condition until the start of the ettercap's next turn."
+					]
+				},
+				{
+					"name": "Claw",
+					"entries": [
+						"{@atkr m} {@hit 4}, reach 5 ft. {@h}7 ({@damage 2d4 + 2}) Slashing damage."
+					]
+				},
+				{
+					"name": "Web Strand {@recharge 5}",
+					"entries": [
+						"{@actSave dex} {@dc 12}, one Large or smaller creature the ettercap can see within 30 feet. {@actSaveFail} The target has the {@condition Restrained|XPHB} condition until the web is destroyed (AC 10; HP 5; {@variantrule Vulnerability|XPHB} to Fire damage; {@variantrule Immunity|XPHB} to Bludgeoning, Poison, and Psychic damage)."
+					]
+				}
+			],
+			"bonus": [
+				{
+					"name": "Reel",
+					"entries": [
+						"The ettercap pulls one creature within 30 feet of itself that is {@condition Restrained|XPHB} by its Web Strand up to 25 feet straight toward itself."
+					]
+				}
+			],
+			"environment": [
+				"forest"
+			],
+			"treasure": [
+				"implements"
+			],
+			"soundClip": {
+				"type": "internal",
+				"path": "bestiary/ettercap.opus"
+			},
+			"traitTags": [
+				"Spider Climb",
+				"Web Walker"
+			],
+			"senseTags": [
+				"D"
+			],
+			"actionTags": [
+				"Multiattack"
+			],
+			"damageTags": [
+				"I",
+				"P",
+				"S"
+			],
+			"miscTags": [
+				"MA"
+			],
+			"conditionInflict": [
+				"poisoned",
+				"restrained"
+			],
+			"savingThrowForced": [
+				"dexterity"
+			],
+			"hasToken": true,
+			"hasFluff": true,
+			"hasFluffImages": true
+		},
+		{
+			"name": "Balor",
+			"group": [
+				"Demons"
+			],
+			"source": "XMM",
+			"page": 26,
+			"srd52": true,
+			"basicRules2024": true,
+			"size": [
+				"H"
+			],
+			"type": {
+				"type": "fiend",
+				"tags": [
+					"demon"
+				]
+			},
+			"alignment": [
+				"C",
+				"E"
+			],
+			"ac": [
+				19
+			],
+			"hp": {
+				"average": 287,
+				"formula": "23d12 + 138"
+			},
+			"speed": {
+				"walk": 40,
+				"fly": 80
+			},
+			"initiative": {
+				"proficiency": 2
+			},
+			"str": 26,
+			"dex": 15,
+			"con": 22,
+			"int": 20,
+			"wis": 16,
+			"cha": 22,
+			"save": {
+				"con": "+12",
+				"wis": "+9"
+			},
+			"skill": {
+				"perception": "+9"
+			},
+			"senses": [
+				"Truesight 120 ft."
+			],
+			"passive": 19,
+			"resist": [
+				"cold",
+				"lightning"
+			],
+			"immune": [
+				"fire",
+				"poison"
+			],
+			"conditionImmune": [
+				"charmed",
+				"frightened",
+				"poisoned"
+			],
+			"languages": [
+				"Abyssal; telepathy 120 ft."
+			],
+			"cr": "19",
+			"trait": [
+				{
+					"name": "Death Throes",
+					"entries": [
+						"The balor explodes when it dies. {@actSave dex} {@dc 20}, each creature in a 30-foot {@variantrule Emanation [Area of Effect]|XPHB|Emanation} originating from the balor. {@actSaveFail} 31 ({@damage 9d6}) Fire damage plus 31 ({@damage 9d6}) Force damage. {@actSaveSuccess} Half damage. {@actSaveSuccessOrFail} If the balor dies outside the Abyss, it gains a new body instantly, reviving with all its {@variantrule Hit Points|XPHB} somewhere in the Abyss."
+					]
+				},
+				{
+					"name": "Fire Aura",
+					"entries": [
+						"At the end of each of the balor's turns, each creature in a 5-foot {@variantrule Emanation [Area of Effect]|XPHB|Emanation} originating from the balor takes 13 ({@damage 3d8}) Fire damage."
+					]
+				},
+				{
+					"name": "Legendary Resistance (3/Day)",
+					"entries": [
+						"If the balor fails a saving throw, it can choose to succeed instead."
+					]
+				},
+				{
+					"name": "Magic Resistance",
+					"entries": [
+						"The balor has {@variantrule Advantage|XPHB} on saving throws against spells and other magical effects."
+					]
+				}
+			],
+			"action": [
+				{
+					"name": "Multiattack",
+					"entries": [
+						"The balor makes one Flame Whip attack and one Lightning Blade attack."
+					]
+				},
+				{
+					"name": "Flame Whip",
+					"entries": [
+						"{@atkr m} {@hit 14}, reach 30 ft. {@h}18 ({@damage 3d6 + 8}) Force damage plus 17 ({@damage 5d6}) Fire damage. If the target is a Huge or smaller creature, the balor pulls the target up to 25 feet straight toward itself, and the target has the {@condition Prone|XPHB} condition."
+					]
+				},
+				{
+					"name": "Lightning Blade",
+					"entries": [
+						"{@atkr m} {@hit 14}, reach 10 ft. {@h}21 ({@damage 3d8 + 8}) Force damage plus 22 ({@damage 4d10}) Lightning damage, and the target can't take Reactions until the start of the balor's next turn."
+					]
+				}
+			],
+			"bonus": [
+				{
+					"name": "Teleport",
+					"entries": [
+						"The balor teleports itself or a willing demon within 10 feet of itself up to 60 feet to an unoccupied space the balor can see."
+					]
+				}
+			],
+			"environment": [
+				"planar, abyss"
+			],
+			"treasure": [
+				"armaments"
+			],
+			"soundClip": {
+				"type": "internal",
+				"path": "bestiary/balor.opus"
+			},
+			"traitTags": [
+				"Death Burst",
+				"Legendary Resistances",
+				"Magic Resistance"
+			],
+			"senseTags": [
+				"U"
+			],
+			"actionTags": [
+				"Multiattack",
+				"Teleport"
+			],
+			"languageTags": [
+				"AB",
+				"TP"
+			],
+			"damageTags": [
+				"F",
+				"L",
+				"O"
+			],
+			"miscTags": [
+				"MA",
+				"MLW",
+				"RCH"
+			],
+			"conditionInflict": [
+				"prone"
+			],
+			"savingThrowForced": [
+				"dexterity"
+			],
+			"hasToken": true,
+			"hasFluff": true,
+			"hasFluffImages": true
+		},
+		{
+			"name": "Half-Dragon",
+			"source": "XMM",
+			"page": 163,
+			"srd52": true,
+			"basicRules2024": true,
+			"referenceSources": [
+				"FRAiF"
+			],
+			"size": [
+				"M"
+			],
+			"type": "dragon",
+			"alignment": [
+				"N"
+			],
+			"ac": [
+				18
+			],
+			"hp": {
+				"average": 105,
+				"formula": "14d8 + 42"
+			},
+			"speed": {
+				"walk": 40
+			},
+			"initiative": {
+				"proficiency": 1
+			},
+			"str": 19,
+			"dex": 14,
+			"con": 16,
+			"int": 10,
+			"wis": 15,
+			"cha": 14,
+			"save": {
+				"dex": "+5",
+				"wis": "+5"
+			},
+			"skill": {
+				"athletics": "+7",
+				"perception": "+5",
+				"stealth": "+5"
+			},
+			"senses": [
+				"Blindsight 10 ft.",
+				"Darkvision 60 ft."
+			],
+			"passive": 15,
+			"resist": [
+				{
+					"special": "Damage type chosen for the Draconic Origin trait below"
+				}
+			],
+			"languages": [
+				"Common",
+				"Draconic"
+			],
+			"cr": "5",
+			"trait": [
+				{
+					"name": "Draconic Origin",
+					"entries": [
+						"The half-dragon is related to a type of dragon associated with one of the following damage types (DM's choice): Acid, Cold, Fire, Lightning, or Poison. This choice affects other aspects of the stat block."
+					]
+				}
+			],
+			"action": [
+				{
+					"name": "Multiattack",
+					"entries": [
+						"The half-dragon makes two Claw attacks."
+					]
+				},
+				{
+					"name": "Claw",
+					"entries": [
+						"{@atkr m} {@hit 7}, reach 10 ft. {@h}6 ({@damage 1d4 + 4}) Slashing damage plus 7 ({@damage 2d6}) damage of the type chosen for the Draconic Origin trait."
+					]
+				},
+				{
+					"name": "Dragon's Breath {@recharge 5}",
+					"entries": [
+						"{@actSave dex} {@dc 14}, each creature in a 30-foot {@variantrule Cone [Area of Effect]|XPHB|Cone}. {@actSaveFail} 28 ({@damage 8d6}) damage of the type chosen for the Draconic Origin trait. {@actSaveSuccess} Half damage."
+					]
+				}
+			],
+			"bonus": [
+				{
+					"name": "Leap",
+					"entries": [
+						"The half-dragon jumps up to 30 feet by spending 10 feet of movement."
+					]
+				}
+			],
+			"environment": [
+				"any"
+			],
+			"treasure": [
+				"armaments"
+			],
+			"senseTags": [
+				"B",
+				"D"
+			],
+			"actionTags": [
+				"Breath Weapon",
+				"Multiattack"
+			],
+			"languageTags": [
+				"C",
+				"DR"
+			],
+			"damageTags": [
+				"S"
+			],
+			"miscTags": [
+				"MA",
+				"RCH"
+			],
+			"savingThrowForced": [
+				"dexterity"
+			],
+			"hasToken": true,
+			"hasFluff": true,
+			"hasFluffImages": true
+		},
+		{
+			"name": "Air Elemental",
+			"source": "XMM",
+			"page": 13,
+			"srd52": true,
+			"basicRules2024": true,
+			"referenceSources": [
+				"EFA",
+				"FFotR",
+				"FRAiF",
+				"FRHoF"
+			],
+			"size": [
+				"L"
+			],
+			"type": "elemental",
+			"alignment": [
+				"N"
+			],
+			"ac": [
+				15
+			],
+			"hp": {
+				"average": 90,
+				"formula": "12d10 + 24"
+			},
+			"speed": {
+				"walk": 10,
+				"fly": {
+					"number": 90,
+					"condition": "(hover)"
+				},
+				"canHover": true
+			},
+			"str": 14,
+			"dex": 20,
+			"con": 14,
+			"int": 6,
+			"wis": 10,
+			"cha": 6,
+			"senses": [
+				"Darkvision 60 ft."
+			],
+			"passive": 10,
+			"resist": [
+				"bludgeoning",
+				"lightning",
+				"piercing",
+				"slashing"
+			],
+			"immune": [
+				"poison",
+				"thunder"
+			],
+			"conditionImmune": [
+				"exhaustion",
+				"grappled",
+				"paralyzed",
+				"petrified",
+				"poisoned",
+				"prone",
+				"restrained",
+				"unconscious"
+			],
+			"languages": [
+				"Primordial (Auran)"
+			],
+			"cr": "5",
+			"trait": [
+				{
+					"name": "Air Form",
+					"entries": [
+						"The elemental can enter a creature's space and stop there. It can move through a space as narrow as 1 inch without expending extra movement to do so."
+					]
+				}
+			],
+			"action": [
+				{
+					"name": "Multiattack",
+					"entries": [
+						"The elemental makes two Thunderous Slam attacks."
+					]
+				},
+				{
+					"name": "Thunderous Slam",
+					"entries": [
+						"{@atkr m} {@hit 8}, reach 10 ft. {@h}14 ({@damage 2d8 + 5}) Thunder damage."
+					]
+				},
+				{
+					"name": "Whirlwind {@recharge 4}",
+					"entries": [
+						"{@actSave str} {@dc 13}, one Medium or smaller creature in the elemental's space. {@actSaveFail} 24 ({@damage 4d10 + 2}) Thunder damage, and the target is pushed up to 20 feet straight away from the elemental and has the {@condition Prone|XPHB} condition. {@actSaveSuccess} Half damage only."
+					]
+				}
+			],
+			"environment": [
+				"desert",
+				"mountain",
+				"planar, air"
+			],
+			"soundClip": {
+				"type": "internal",
+				"path": "bestiary/air-elemental.opus"
+			},
+			"senseTags": [
+				"D"
+			],
+			"actionTags": [
+				"Multiattack"
+			],
+			"languageTags": [
+				"AU",
+				"P"
+			],
+			"damageTags": [
+				"T"
+			],
+			"miscTags": [
+				"MA",
+				"RCH"
+			],
+			"conditionInflict": [
+				"prone"
+			],
+			"savingThrowForced": [
+				"strength"
+			],
+			"hasToken": true,
+			"hasFluff": true,
+			"hasFluffImages": true
+		}
+	]
+}

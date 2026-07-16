@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { ALL_MONSTERS } from '@/data';
 import { filterMonsters, getMonsterSummaryStats } from '@/lib/monster-filter';
 import type { Monster, MonsterFilter } from '@/lib/types';
 import FilterPanel from '@/components/FilterPanel';
 import MonsterStatBlock from '@/components/MonsterStatBlock';
+import CustomMonsterPanel from '@/components/CustomMonsterPanel';
+import PrintButton from '@/components/PrintButton';
+import { useMonsters } from '@/app/hooks/useMonsters';
+import { usePersistentState } from '@/lib/use-persistent-state';
 
 function crDisplay(cr: number): string {
   if (cr === 0.125) return '1/8';
@@ -19,9 +22,12 @@ type ViewMode = 'grid' | 'list';
 export default function BestiaryPage() {
   const [filter, setFilter] = useState<MonsterFilter>({});
   const [selectedMonster, setSelectedMonster] = useState<Monster | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [viewMode, setViewMode] = usePersistentState<ViewMode>(
+    'bestiaryViewMode', 'grid', (v): v is ViewMode => v === 'grid' || v === 'list',
+  );
 
-  const results = useMemo(() => filterMonsters(ALL_MONSTERS, filter), [filter]);
+  const { all: allMonsters, custom } = useMonsters();
+  const results = useMemo(() => filterMonsters(allMonsters, filter), [allMonsters, filter]);
   const stats = useMemo(() => getMonsterSummaryStats(results), [results]);
 
   const handleSelect = useCallback((monster: Monster) => {
@@ -34,12 +40,14 @@ export default function BestiaryPage() {
         <h1 className="text-3xl font-bold text-[var(--gold)]">Monster Bestiary</h1>
         <div className="flex items-center gap-2 text-sm">
           <span className="text-[var(--parchment-dark)]">
-            {results.length} of {ALL_MONSTERS.length} monsters
+            {results.length} of {allMonsters.length} monsters
+            {custom.length > 0 && ` (${custom.length} custom)`}
           </span>
-          <div className="flex border border-[var(--dungeon-accent)] rounded overflow-hidden ml-2">
+          <div className="flex border border-[var(--dungeon-accent)] rounded overflow-hidden ml-2 print:hidden">
             <button
               type="button"
               onClick={() => setViewMode('grid')}
+              aria-pressed={viewMode === 'grid'}
               className={`px-3 py-1 text-xs ${viewMode === 'grid' ? 'bg-[var(--gold)] text-[var(--dungeon-dark)] font-bold' : 'bg-[var(--dungeon-mid)] text-[var(--parchment-dark)]'}`}
             >
               Grid
@@ -47,6 +55,7 @@ export default function BestiaryPage() {
             <button
               type="button"
               onClick={() => setViewMode('list')}
+              aria-pressed={viewMode === 'list'}
               className={`px-3 py-1 text-xs ${viewMode === 'list' ? 'bg-[var(--gold)] text-[var(--dungeon-dark)] font-bold' : 'bg-[var(--dungeon-mid)] text-[var(--parchment-dark)]'}`}
             >
               List
@@ -55,11 +64,13 @@ export default function BestiaryPage() {
         </div>
       </div>
 
+      <CustomMonsterPanel allMonsters={allMonsters} />
+
       <FilterPanel filter={filter} onChange={setFilter} resultCount={results.length} />
 
       {/* Summary bar */}
       {Object.keys(stats.typeDistribution).length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4 text-xs">
+        <div className="flex flex-wrap gap-2 mb-4 text-xs print:hidden">
           {Object.entries(stats.typeDistribution)
             .sort(([, a], [, b]) => b - a)
             .map(([type, count]) => (
@@ -72,7 +83,7 @@ export default function BestiaryPage() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Monster List */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 print:hidden">
           {viewMode === 'grid' ? (
             <div className="grid sm:grid-cols-2 gap-3">
               {results.map(monster => (
@@ -134,14 +145,17 @@ export default function BestiaryPage() {
         </div>
 
         {/* Stat Block Detail */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 print:col-span-3">
           {selectedMonster ? (
             <div className="sticky top-4">
+              <div className="mb-2 flex justify-end">
+                <PrintButton label="Print Stat Block" />
+              </div>
               <MonsterStatBlock monster={selectedMonster} />
             </div>
           ) : (
             <div className="card text-center py-12 text-[var(--parchment-dark)]">
-              <div className="text-4xl mb-3">🐉</div>
+              <div className="text-4xl mb-3" aria-hidden="true">🐉</div>
               <p>Select a monster to view its full stat block</p>
               <p className="text-xs mt-2 opacity-60">Click any monster card or row</p>
             </div>

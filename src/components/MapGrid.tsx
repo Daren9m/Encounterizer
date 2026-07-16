@@ -22,6 +22,8 @@ export default function MapGrid({ map }: { map: EncounterMap }) {
 
       {/* Grid */}
       <div
+        role="img"
+        aria-label={`Battle map: ${map.name}, ${map.width} by ${map.height} cells, ${map.environment}`}
         className="inline-grid border border-[var(--dungeon-accent)] rounded overflow-hidden"
         style={{
           gridTemplateColumns: `repeat(${map.width}, 24px)`,
@@ -47,7 +49,7 @@ export default function MapGrid({ map }: { map: EncounterMap }) {
       </div>
 
       {/* Hover info */}
-      <div className="mt-2 h-6 text-sm text-[var(--parchment-dark)]">
+      <div className="mt-2 h-6 text-sm text-[var(--parchment-dark)] print:hidden">
         {hoveredTerrain && (
           <span>
             ({hoveredCell!.x}, {hoveredCell!.y}) — {TERRAIN_INFO[hoveredTerrain.terrain].label}
