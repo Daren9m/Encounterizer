@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ALL_MONSTERS } from '@/data';
 import batchManifestJson from '@/data/monster-visual-batches.json';
+import physicalDescriptionJson from '@/data/monster-physical-descriptions.json';
 import visualDatasetJson from '@/data/monster-visuals.json';
 import {
   PILOT_MONSTER_IDS,
@@ -12,6 +13,7 @@ import {
   visualInputHash,
   type MonsterVisualBatchManifest,
   type MonsterVisualDataset,
+  type MonsterPhysicalDescriptionDataset,
 } from '@/lib/monster-visuals';
 import { makeMonster } from './test-helpers';
 
@@ -61,6 +63,17 @@ describe('monster visual pipeline', () => {
       if (record.reviewStatus === 'pending') {
         expect(record.imageStatus, record.monsterId).toBe('blocked');
       }
+    }
+  });
+
+  it('keeps the slim runtime description index aligned with the visual sidecar', () => {
+    const dataset = visualDatasetJson as MonsterVisualDataset;
+    const runtimeIndex = physicalDescriptionJson as MonsterPhysicalDescriptionDataset;
+
+    expect(Object.keys(runtimeIndex.descriptions)).toHaveLength(331);
+    expect(runtimeIndex.sourceCommit).toBe(dataset.source.sourceCommit);
+    for (const record of dataset.records) {
+      expect(runtimeIndex.descriptions[record.monsterId], record.monsterId).toBe(record.appearance);
     }
   });
 

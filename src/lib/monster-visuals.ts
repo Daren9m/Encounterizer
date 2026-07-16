@@ -81,6 +81,12 @@ export interface MonsterVisualDataset {
   records: MonsterVisualRecord[];
 }
 
+export interface MonsterPhysicalDescriptionDataset {
+  schemaVersion: number;
+  sourceCommit: string;
+  descriptions: Record<string, string>;
+}
+
 export interface MonsterVisualBatch {
   id: string;
   label: string;
