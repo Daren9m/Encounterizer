@@ -39,7 +39,7 @@ export function failureText(
 ): string {
   const themed = pick(levers.theme.consequences, rng);
   if (levers.tone === 'whimsical') {
-    return `${opts.context} ${capitalize(pick(WHIMSY_SETBACKS, rng))}. Also: ${themed}.`;
+    return `${opts.context} ${cap(pick(WHIMSY_SETBACKS, rng))}. Also: ${themed}.`;
   }
   const dice = damageDice(levers.partyLevel, levers.difficulty, opts.kind);
   const save = opts.save
@@ -57,8 +57,14 @@ export function rewardText(levers: ResolvedLevers, rng: Rng): string {
   return themed;
 }
 
-function capitalize(s: string): string {
+/** Capitalize the first letter of a prose fragment. */
+export function cap(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/** Prefix a noun phrase with the agreeing indefinite article. */
+export function withArticle(phrase: string): string {
+  return `${/^[aeiou]/i.test(phrase) ? 'an' : 'a'} ${phrase}`;
 }
 
 export const THEME_OPTIONS: { value: ThemeChoice; label: string }[] = [

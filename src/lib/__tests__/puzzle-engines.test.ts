@@ -66,4 +66,13 @@ describe('logic grid', () => {
       expect(out.handout.clues.length).toBeGreaterThan(0);
     }
   });
+  it('readAloud prose is table-ready (capitalized, article agreement) across 100 seeds', () => {
+    for (let s = 0; s < 100; s++) {
+      for (const diff of DIFFS) {
+        const out = logicGrid.generate({ levers: mkLevers(diff, s), rng: seededRandom(s) });
+        expect(out.readAloud[0]).toBe(out.readAloud[0].toUpperCase());
+        expect(out.readAloud).not.toMatch(/\bA [aeiou]/);
+      }
+    }
+  });
 });

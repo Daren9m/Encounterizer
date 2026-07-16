@@ -6,7 +6,7 @@
 import { pickRandom as pick } from '../random';
 import type { Rng } from '../random';
 import { dcFor, estimatedMinutes, hintCount } from '../noncombat/levers';
-import { failureText, rewardText } from '../noncombat/theming';
+import { failureText, rewardText, cap } from '../noncombat/theming';
 import type { EngineInput, EngineOutput, PuzzleFamily } from './family';
 import { verified } from './family';
 
@@ -97,7 +97,6 @@ export const knightsKnaves: PuzzleFamily = {
     const pack = levers.theme;
     const material = (i: number) => pack.materials[i % pack.materials.length];
     const names = Array.from({ length: inst.n }, (_, i) => `the ${material(i)} guardian`);
-    const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
     const lines = inst.statements.map(s => `${cap(names[s.speaker])} intones: ${STATEMENT_TEXT[s.kind](names[s.speaker], names[s.target])}`);
     const verdict = inst.solution.map((t, i) => `${cap(names[i])} ${t ? 'tells the truth' : 'lies'}`).join('; ');
     const dc = dcFor(levers.partyLevel, levers.difficulty);

@@ -6,7 +6,7 @@
 import { pickRandom as pick, shuffleArray } from '../random';
 import type { Rng } from '../random';
 import { dcFor, estimatedMinutes, hintCount } from '../noncombat/levers';
-import { failureText, rewardText } from '../noncombat/theming';
+import { failureText, rewardText, cap, withArticle } from '../noncombat/theming';
 import type { EngineInput, EngineOutput, PuzzleFamily } from './family';
 import { verified } from './family';
 
@@ -134,7 +134,7 @@ export const logicGrid: PuzzleFamily = {
       name: 'The Grid of Correspondences',
       estimatedMinutes: estimatedMinutes(levers.timeBudget),
       dmBrief: `A matching puzzle: ${nItems} ${catNames[0].toLowerCase()}s each bind one item per category (${catNames.join(', ')}). The clue set admits exactly one arrangement. Full answer:\n${answerLines.join('\n')}`,
-      readAloud: `${pack.sensory[1] ?? pack.sensory[0]}. A ${pick(pack.descriptors, rng)} wall of ${pick(pack.materials, rng)} bears ${nItems * nCats} inlaid sockets in a grid, and beneath them, an inscription lists what goes with what — almost.`,
+      readAloud: `${cap(pack.sensory[1] ?? pack.sensory[0])}. ${cap(withArticle(`${pick(pack.descriptors, rng)} wall of ${pick(pack.materials, rng)}`))} bears ${nItems * nCats} inlaid sockets in a grid, and beneath them, an inscription lists what goes with what — almost.`,
       handout: { kind: 'logic-grid', categories: catNames, items: inst.items, clues },
       hints: allHints.slice(0, hintCount(levers.timeBudget)),
       solution: `The unique arrangement:\n${answerLines.join('\n')}\nSetting every socket correctly unseals the way.`,
