@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { SRD_SPELLS, searchSpells, filterSpells, levelLabel } from '@/data/spells';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import type { Spell, SpellSchool } from '@/data/spells';
@@ -154,8 +154,6 @@ export default function SpellsPage() {
 }
 
 function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (s: Spell) => void; isPinned: boolean; compact?: boolean }) {
-  const [expanded, setExpanded] = useState(false);
-
   return (
     <div className="card">
       {/* Header */}
@@ -207,20 +205,9 @@ function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (
         <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--steel-950)] text-[var(--text-2)] opacity-60">{spell.source}</span>
       </div>
 
-      {/* Full description (expandable) */}
+      {/* Full description */}
       {!compact && (
-        <div className="mt-2">
-          <button type="button" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}
-            className="text-xs text-[var(--text-2)] hover:text-[var(--bronze)] transition-colors inline-flex items-center gap-1">
-            {expanded
-              ? <ChevronDown size={14} aria-hidden="true" />
-              : <ChevronRight size={14} aria-hidden="true" />}
-            {expanded ? 'Hide full text' : 'Full description'}
-          </button>
-          {expanded && (
-            <p className="text-sm text-[var(--text-2)] mt-2 italic animate-fade-in">{spell.description}</p>
-          )}
-        </div>
+        <p className="text-sm text-[var(--text-2)] mt-3 italic">{spell.description}</p>
       )}
     </div>
   );
