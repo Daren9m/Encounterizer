@@ -1,6 +1,6 @@
 'use client';
 
-import { Monster } from '@/lib/types';
+import type { Monster } from '@/lib/types';
 
 function abilityMod(score: number): string {
   const mod = Math.floor((score - 10) / 2);
@@ -24,7 +24,13 @@ function crDisplay(cr: number): string {
   return cr.toString();
 }
 
-export default function MonsterStatBlock({ monster }: { monster: Monster }) {
+export default function MonsterStatBlock({
+  monster,
+  physicalDescription,
+}: {
+  monster: Monster;
+  physicalDescription?: string;
+}) {
   return (
     <div className="stat-block animate-fade-in">
       {/* Header */}
@@ -33,6 +39,16 @@ export default function MonsterStatBlock({ monster }: { monster: Monster }) {
         {monster.size} {monster.type}
         {monster.subtype ? ` (${monster.subtype})` : ''}, {monster.alignment}
       </p>
+
+      {physicalDescription && (
+        <section
+          aria-label="Physical description"
+          className="mb-3 border-l-2 border-[var(--bronze)] bg-[var(--steel-900)] px-3 py-2"
+        >
+          <h4 className="micro-label mb-1">Physical Description</h4>
+          <p className="text-sm leading-relaxed text-[var(--text-2)]">{physicalDescription}</p>
+        </section>
+      )}
 
       <hr className="border-[var(--steel-800)] mb-2" />
 

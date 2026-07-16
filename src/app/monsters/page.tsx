@@ -10,6 +10,7 @@ import CustomMonsterPanel from '@/components/CustomMonsterPanel';
 import PrintButton from '@/components/PrintButton';
 import { useMonsters } from '@/app/hooks/useMonsters';
 import { usePersistentState } from '@/lib/use-persistent-state';
+import { getMonsterPhysicalDescription } from '@/data/monster-description-index';
 
 function crDisplay(cr: number): string {
   if (cr === 0.125) return '1/8';
@@ -93,6 +94,7 @@ export default function BestiaryPage() {
                   monster={monster}
                   isSelected={selectedMonster?.id === monster.id}
                   onSelect={handleSelect}
+                  physicalDescription={getMonsterPhysicalDescription(monster.id)}
                 />
               ))}
             </div>
@@ -107,8 +109,10 @@ export default function BestiaryPage() {
                 <div className="col-span-1 text-center">HP</div>
                 <div className="col-span-3">Movement</div>
               </div>
-              {results.map(monster => (
-                <button
+              {results.map(monster => {
+                const physicalDescription = getMonsterPhysicalDescription(monster.id);
+                return (
+                  <button
                   key={monster.id}
                   type="button"
                   onClick={() => handleSelect(monster)}
@@ -118,9 +122,16 @@ export default function BestiaryPage() {
                       : 'hover:bg-[var(--steel-900)] border border-transparent'
                   }`}
                 >
-                  <div className="col-span-4 font-bold truncate">
-                    {monster.name}
-                    {monster.isLegendary && <span className="ml-1 text-[var(--bronze)]" title="Legendary">*</span>}
+                  <div className="col-span-4 min-w-0">
+                    <div className="font-bold truncate">
+                      {monster.name}
+                      {monster.isLegendary && <span className="ml-1 text-[var(--bronze)]" title="Legendary">*</span>}
+                    </div>
+                    {physicalDescription && (
+                      <div className="mt-0.5 truncate text-[10px] text-[var(--text-3)]">
+                        {physicalDescription}
+                      </div>
+                    )}
                   </div>
                   <div className="col-span-2 text-[var(--text-2)] truncate">
                     {monster.size} {monster.type}
@@ -133,8 +144,9 @@ export default function BestiaryPage() {
                   <div className="col-span-3 text-xs text-[var(--text-2)] truncate">
                     {formatSpeedShort(monster)}
                   </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -152,7 +164,10 @@ export default function BestiaryPage() {
               <div className="mb-2 flex justify-end">
                 <PrintButton label="Print Stat Block" />
               </div>
-              <MonsterStatBlock monster={selectedMonster} />
+              <MonsterStatBlock
+                monster={selectedMonster}
+                physicalDescription={getMonsterPhysicalDescription(selectedMonster.id)}
+              />
             </div>
           ) : (
             <div className="card text-center py-12 text-[var(--text-2)]">
@@ -183,10 +198,12 @@ function MonsterCard({
   monster,
   isSelected,
   onSelect,
+  physicalDescription,
 }: {
   monster: Monster;
   isSelected: boolean;
   onSelect: (m: Monster) => void;
+  physicalDescription?: string;
 }) {
   return (
     <button
@@ -208,6 +225,12 @@ function MonsterCard({
           CR {crDisplay(monster.challengeRating)}
         </span>
       </div>
+
+      {physicalDescription && (
+        <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-[var(--text-2)]">
+          {physicalDescription}
+        </p>
+      )}
 
       {/* Badges */}
       <div className="flex flex-wrap gap-1 mt-2">

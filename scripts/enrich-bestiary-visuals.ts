@@ -14,12 +14,14 @@ import {
   validateMonsterVisualCoverage,
   visualInputHash,
   type MonsterVisualDataset,
+  type MonsterPhysicalDescriptionDataset,
   type MonsterVisualRecord,
 } from '../src/lib/monster-visuals';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const datasetPath = path.join(projectRoot, 'src', 'data', 'monster-visuals.json');
 const manifestPath = path.join(projectRoot, 'src', 'data', 'monster-visual-batches.json');
+const descriptionIndexPath = path.join(projectRoot, 'src', 'data', 'monster-physical-descriptions.json');
 const checkOnly = process.argv.includes('--check');
 
 function readExistingDataset(): MonsterVisualDataset | undefined {
@@ -101,18 +103,27 @@ const dataset: MonsterVisualDataset = {
   records,
 };
 
+const descriptionIndex: MonsterPhysicalDescriptionDataset = {
+  schemaVersion: MONSTER_VISUAL_SCHEMA_VERSION,
+  sourceCommit: BESTIARY_META.sourceCommit,
+  descriptions: Object.fromEntries(records.map((record) => [record.monsterId, record.appearance])),
+};
+
 const coverageErrors = validateMonsterVisualCoverage(ALL_MONSTERS, records);
 if (coverageErrors.length > 0) throw new Error(coverageErrors.join('\n'));
 
 const datasetJson = serialize(dataset);
 const manifestJson = serialize(createBatchManifest(ALL_MONSTERS));
+const descriptionIndexJson = serialize(descriptionIndex);
 
 if (checkOnly) {
   checkFile(datasetPath, datasetJson);
   checkFile(manifestPath, manifestJson);
-  console.log(`Visual artifacts are current: ${records.length} monsters across 12 batches.`);
+  checkFile(descriptionIndexPath, descriptionIndexJson);
+  console.log(`Visual and runtime description artifacts are current: ${records.length} monsters across 12 batches.`);
 } else {
   writeFileSync(datasetPath, datasetJson, 'utf8');
   writeFileSync(manifestPath, manifestJson, 'utf8');
-  console.log(`Synchronized ${records.length} monster visual records and 12 deterministic batches.`);
+  writeFileSync(descriptionIndexPath, descriptionIndexJson, 'utf8');
+  console.log(`Synchronized ${records.length} monster visual records, runtime descriptions, and 12 deterministic batches.`);
 }
