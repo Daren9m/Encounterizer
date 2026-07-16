@@ -6,7 +6,7 @@ import { knightsKnaves, buildKkInstance, consistentAssignments } from '../puzzle
 import { logicGrid, buildGridInstance, countGridSolutions } from '../puzzle-engines/logic-grid';
 import { runeLock, buildRuneLockInstance, consistentCandidates } from '../puzzle-engines/rune-lock';
 import { riverCrossing, buildRiverInstance, solveRiver, drawPassengerNames } from '../puzzle-engines/river-crossing';
-import { sequenceLock, buildSequenceInstance, matchingPredictions } from '../puzzle-engines/sequence';
+import { sequenceLock, buildSequenceInstance, matchingPredictions, canonicalSequence } from '../puzzle-engines/sequence';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
   return {
@@ -156,6 +156,20 @@ describe('sequence lock', () => {
         expect(inst.options).toContain(inst.answer);
         expect(inst.options.filter(o => o !== inst.answer)).toHaveLength(3);
       }
+    }
+  });
+  it('canonical fallbacks are structurally honest and uniquely solvable per difficulty', () => {
+    for (const diff of DIFFS) {
+      const inst = canonicalSequence(diff, SETS);
+      expect(inst.interleaved).toBe(diff === 'Hard');
+      const preds = matchingPredictions(inst);
+      expect(preds.size, diff).toBe(1);
+      expect([...preds][0]).toBe(inst.answer);
+      expect(inst.options).toContain(inst.answer);
+      const distractors = inst.options.filter(o => o !== inst.answer);
+      expect(distractors).toHaveLength(3);
+      for (const o of distractors) expect(o).not.toMatch(/^\d+$/); // domain-consistent: symbols only
+      expect(new Set(inst.options).size).toBe(4);
     }
   });
   it('generate() emits a symbol-sequence handout with options', () => {

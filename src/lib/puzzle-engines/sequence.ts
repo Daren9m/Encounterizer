@@ -91,6 +91,32 @@ export function matchingPredictions(inst: SequenceInstance): Set<string> {
 
 const SHOWN = { Easy: 4, Medium: 5, Hard: 6 } as const;
 
+/** Deterministic fallback instances — structurally honest per difficulty
+ *  and domain-consistent, though the construct path virtually never fails. */
+export function canonicalSequence(diff: Difficulty, symbolSets: string[][]): SequenceInstance {
+  const shown = SHOWN[diff];
+  const total = shown + 1;
+  const set = symbolSets[0];
+  if (diff === 'Hard') {
+    // Interleaved: even strand set[0]/set[1], odd strand set[2]/set[3].
+    const terms = Array.from({ length: total }, (_, i) =>
+      i % 2 === 0 ? set[(i / 2) % 2] : set[2 + (((i - 1) / 2) % 2)]);
+    return {
+      terms, shown, answer: terms[total - 1],
+      options: [terms[total - 1], set[2], set[3], set[4 % set.length]],
+      ruleText: `two interleaved patterns — even positions repeat ${set[0]} → ${set[1]}; odd positions repeat ${set[2]} → ${set[3]}`,
+      interleaved: true, symbolSets,
+    };
+  }
+  const terms = Array.from({ length: total }, (_, i) => set[i % 2]);
+  return {
+    terms, shown, answer: terms[total - 1],
+    options: [terms[total - 1], set[2 % set.length], set[3 % set.length], set[4 % set.length]],
+    ruleText: `repeats ${set[0]} → ${set[1]}`,
+    interleaved: false, symbolSets,
+  };
+}
+
 export function buildSequenceInstance(diff: Difficulty, symbolSets: string[][], rng: Rng): SequenceInstance {
   const shown = SHOWN[diff];
   const total = shown + 1;
@@ -142,18 +168,7 @@ export function buildSequenceInstance(diff: Difficulty, symbolSets: string[][], 
       const preds = matchingPredictions(inst);
       return preds.size === 1 && [...preds][0] === inst.answer;
     },
-    () => {
-      // Canonical: strict 2-cycle over the first set — unique because any
-      // matching cycle/arithmetic rule reproduces the same alternation.
-      const set = symbolSets[0];
-      const terms = Array.from({ length: total }, (_, i) => set[i % 2]);
-      return {
-        terms, shown, answer: terms[total - 1],
-        options: [terms[total - 1], set[2 % set.length], set[3 % set.length], '7'],
-        ruleText: `repeats ${set[0]} → ${set[1]}`,
-        interleaved: false, symbolSets,
-      };
-    },
+    () => canonicalSequence(diff, symbolSets),
   );
 }
 
