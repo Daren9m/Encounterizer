@@ -5,10 +5,12 @@ import { getMonsterImage } from '@/data/monster-visual-index';
 export default function MonsterPortrait({
   monsterId,
   sizes,
+  fit = 'cover',
   className = '',
 }: {
   monsterId: string;
   sizes: string;
+  fit?: 'cover' | 'contain';
   className?: string;
 }) {
   const image = getMonsterImage(monsterId);
@@ -24,7 +26,7 @@ export default function MonsterPortrait({
         alt={image.alt}
         fill
         sizes={sizes}
-        className="object-cover object-top"
+        className={fit === 'contain' ? 'object-contain' : 'object-cover object-top'}
       />
       <div
         aria-hidden="true"
