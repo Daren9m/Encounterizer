@@ -72,7 +72,7 @@ export const TOOL_ROUTES: RouteInfo[] = [
     label: 'Challenges',
     title: 'Non-Combat Challenges',
     description:
-      'Social encounters, exploration hazards, skill challenges, and traps — complete with stakes, complications, and outcomes.',
+      'Skill challenges, social encounters, journeys, complex traps, chases, and investigations — levered, themed, seeded, and shareable.',
     icon: 'drama',
   },
   {
