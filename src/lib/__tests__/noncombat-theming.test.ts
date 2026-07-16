@@ -27,6 +27,7 @@ describe('theme pack corpus lint', () => {
     expect(p.cast.length).toBeGreaterThanOrEqual(6);
     expect(p.rewards.length).toBeGreaterThanOrEqual(6);
     expect(p.consequences.length).toBeGreaterThanOrEqual(6);
+    expect(new Set(p.consequences).size).toBe(p.consequences.length); // the ladder relies on distinct picks
     expect(p.creatures.length).toBeGreaterThanOrEqual(4);
   });
 });

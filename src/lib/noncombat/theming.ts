@@ -17,17 +17,17 @@ export function resolveTheme(choice: ThemeChoice, rng: Rng): ThemePack {
 const WHIMSY_SETBACKS = [
   'the mechanism douses the offender in harmless but vivid dye that lasts a tenday',
   'a chorus of tiny enchanted voices loudly mocks the attempt',
-  "the offender's boots are magically swapped to the wrong feet until the puzzle is solved",
+  "the offender's boots are magically swapped to the wrong feet until the ordeal is overcome",
   'a puff of glitter marks the culprit — locals will recognize it and grin',
   'the room applauds sarcastically; morale, not hit points, takes the hit',
-  'the offender must speak in rhyme until the next dawn (or until the party solves it)',
+  'the offender must speak in rhyme until the next dawn (or until the party sets things right)',
 ];
 
 const GRIM_RIDERS = [
   'and the victim gains 1 level of exhaustion',
   'and the wound refuses magical healing until the next dawn',
   "and a black mark appears on the victim's hand — something now knows their name",
-  "and the victim's next long rest grants no benefit unless the puzzle is solved",
+  "and the victim's next long rest grants no benefit unless the wrong is set right",
   'and something in the dark marks the sound, and begins to move closer',
   'and the victim owes the place a debt it will collect at the worst moment',
 ];
