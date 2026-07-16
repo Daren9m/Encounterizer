@@ -84,11 +84,11 @@ export default function BestiaryPage() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid gap-6 lg:grid-cols-12">
         {/* Monster List */}
-        <div className="lg:col-span-2 print:hidden">
+        <div className="print:hidden lg:col-span-7">
           {viewMode === 'grid' ? (
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid items-start gap-3 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               {results.map(monster => (
                 <MonsterCard
                   key={monster.id}
@@ -159,12 +159,12 @@ export default function BestiaryPage() {
         </div>
 
         {/* Stat Block Detail */}
-        <div className="lg:col-span-1 print:col-span-3">
+        <div className="print:col-span-12 lg:col-span-5">
           {selectedMonster ? (
-            <div className="sticky top-4">
+            <div className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:pr-2">
               <MonsterPortrait
                 monsterId={selectedMonster.id}
-                sizes="(min-width: 1024px) 33vw, 100vw"
+                sizes="(min-width: 1024px) 42vw, 100vw"
                 className="mb-3 aspect-[4/5] rounded border border-[var(--steel-800)] shadow-lg print:hidden"
               />
               <div className="mb-2 flex justify-end">
@@ -219,12 +219,14 @@ function MonsterCard({
         isSelected ? 'border-[var(--bronze)] ring-1 ring-[var(--bronze)]' : ''
       }`}
     >
-      <MonsterPortrait
-        monsterId={monster.id}
-        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-        className="-mx-4 -mt-4 mb-3 aspect-[5/3] rounded-t"
-      />
-      <div className="flex items-start justify-between">
+      <div className="flex items-start gap-4">
+        <MonsterPortrait
+          monsterId={monster.id}
+          sizes="128px"
+          className="aspect-[4/5] w-28 shrink-0 rounded-md sm:w-32"
+        />
+        <div className="min-w-0 flex-1">
+      <div className="flex items-start justify-between gap-2">
         <div>
           <h3 className="">{monster.name}</h3>
           <p className="text-xs text-[var(--text-2)]">
@@ -290,6 +292,8 @@ function MonsterCard({
       {/* Environments */}
       <div className="mt-1 text-[10px] text-[var(--text-2)] opacity-60 truncate">
         {monster.environments.join(' · ')}
+      </div>
+        </div>
       </div>
     </button>
   );
