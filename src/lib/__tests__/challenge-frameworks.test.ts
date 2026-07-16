@@ -1,12 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { seededRandom } from '../random';
 import { THEME_PACKS } from '../../data/noncombat-themes';
-import { successesNeeded, phaseSplit, groupCheckThreshold, dcFor, damageDice } from '../noncombat/levers';
+import { successesNeeded, phaseSplit, groupCheckThreshold, dcFor, damageDice, contestRounds } from '../noncombat/levers';
 import type { Difficulty, ResolvedLevers, TimeBudget } from '../noncombat/types';
 import { skillChallenge, buildChallengeStructure } from '../challenge-frameworks/skill-challenge';
 import { social, buildAttitudeTrack } from '../challenge-frameworks/social';
 import { exploration, TIER_GUIDANCE } from '../challenge-frameworks/exploration';
 import { trap, COUNTERMEASURE_STEPS } from '../challenge-frameworks/trap';
+import { chase, buildChase } from '../challenge-frameworks/chase';
 import { LEVERAGE } from '../../data/noncombat-cast';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
@@ -152,5 +153,40 @@ describe('trap framework (spec §8.4)', () => {
     const out = trap.generate({ levers: mkLevers('Medium', 19), rng: seededRandom(19) });
     expect(out.situation).toMatch(/Clue/i);
     expect(out.complication).toMatch(/^Twist: .+\.$/);
+  });
+});
+
+describe('chase framework (spec §8.5)', () => {
+  it('rounds follow the time budget; one complication per round with check math', () => {
+    for (const budget of ['quick', 'standard', 'set-piece'] as const) {
+      const levers = mkLevers('Medium', 23, { timeBudget: budget });
+      const { plan } = buildChase(levers, seededRandom(23));
+      expect(plan.rounds).toBe(contestRounds(budget));
+      expect(plan.complications).toHaveLength(plan.rounds);
+      plan.complications.forEach((c, i) => {
+        expect(c.round).toBe(i + 1);
+        expect(c.check).toMatch(/DC \d+/);
+      });
+      expect(new Set(plan.complications.map(c => c.text)).size).toBe(plan.rounds); // distinct waypoints
+    }
+  });
+  it('carries lead-counter catch/escape conditions; the plan quarry matches the situation quarry', () => {
+    const { quarry, plan } = buildChase(mkLevers('Hard', 29), seededRandom(29));
+    expect(plan.catchCondition).toMatch(/lead/i);
+    expect(plan.escapeCondition).toMatch(/lead/i);
+    expect(plan.escapeCondition).toContain(quarry.desperation);
+    // generate() must build situation and plan from ONE quarry draw:
+    // the trick named in the situation appears in a plan complication.
+    const out = chase.generate({ levers: mkLevers('Hard', 29), rng: seededRandom(29) });
+    const trick = out.situation.match(/Known trick: (.+?)\./)?.[1];
+    expect(trick).toBeTruthy();
+    expect(out.chase!.complications.some(c => c.text.toLowerCase().includes(trick!.toLowerCase()))).toBe(true);
+  });
+  it('generate() attaches the plan and the quarry profile', () => {
+    const out = chase.generate({ levers: mkLevers('Medium', 31, { partySize: 5 }), rng: seededRandom(31) });
+    expect(out.chase).toBeDefined();
+    expect(out.chase!.rounds).toBe(5);
+    expect(out.situation).toMatch(/Quarry/i);
+    expect(out.situation).toContain('3 of 5'); // groupCheckThreshold lane note
   });
 });
