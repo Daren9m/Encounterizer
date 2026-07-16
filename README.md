@@ -55,7 +55,7 @@ localStorage between visits.
 |-------|-----------|
 | Framework | Next.js 14 (App Router, static export) |
 | Language | TypeScript (strict) |
-| Styling | Tailwind CSS + CSS custom properties (D&D palette), Cinzel display font |
+| Styling | Tailwind CSS + CSS custom properties (Dusksteel tokens), Spectral + IBM Plex Sans via next/font, Lucide icons |
 | Data | Generated TypeScript bestiary from SRD 5.2.1 + client-side 5etools importer |
 | Testing | Vitest (140+ tests: rules math, importer, Monte Carlo statistics) |
 | CI/CD | GitHub Actions → Azure Static Web Apps (free tier) |

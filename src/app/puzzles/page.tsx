@@ -144,9 +144,9 @@ export default function PuzzlesPage() {
 
           {/* Player Handout */}
           {puzzle.playerHandout && (
-            <div className="card bg-[var(--text-1)] text-[var(--steel-950)]">
-              <h3 className="text-lg mb-2">Player Handout</h3>
-              <pre className="text-sm whitespace-pre-wrap font-[Georgia]">{puzzle.playerHandout}</pre>
+            <div className="card light-island">
+              <h3 className="text-lg mb-2 text-[var(--statblock-light-accent)]">Player Handout</h3>
+              <pre className="text-sm whitespace-pre-wrap font-display">{puzzle.playerHandout}</pre>
             </div>
           )}
 
