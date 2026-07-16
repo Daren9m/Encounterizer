@@ -7,8 +7,8 @@ import { usePersistentState } from '@/lib/use-persistent-state';
 import type { Spell, SpellSchool } from '@/data/spells';
 
 const SCHOOLS: SpellSchool[] = ['Abjuration', 'Conjuration', 'Divination', 'Enchantment', 'Evocation', 'Illusion', 'Necromancy', 'Transmutation'];
-const CLASSES = ['Bard', 'Cleric', 'Druid', 'Paladin', 'Ranger', 'Sorcerer', 'Warlock', 'Wizard', 'Artificer'];
-const CASTING_TIMES = ['Action', 'Bonus Action', 'Reaction', '1 Minute', '10 Minutes', '1 Hour'];
+// SRD 5.2.1 class spell lists only — Artificer's list comes from a non-SRD source.
+const CLASSES = ['Bard', 'Cleric', 'Druid', 'Paladin', 'Ranger', 'Sorcerer', 'Warlock', 'Wizard'];
 
 export default function SpellsPage() {
   const [query, setQuery] = useState('');
@@ -205,10 +205,13 @@ function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (
         </p>
       )}
 
-      {/* Full description */}
-      {!compact && (
-        <p className="text-sm mt-3 leading-relaxed">{spell.description}</p>
-      )}
+      {/* Full description — SRD text; \n inside a paragraph block is a
+          list/table line break, preserved via whitespace-pre-line */}
+      {!compact && spell.description.split('\n\n').map((paragraph, i) => (
+        <p key={i} className={`text-sm leading-relaxed whitespace-pre-line ${i === 0 ? 'mt-3' : 'mt-2'}`}>
+          {paragraph}
+        </p>
+      ))}
     </div>
   );
 }
