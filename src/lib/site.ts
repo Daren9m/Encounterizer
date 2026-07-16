@@ -10,9 +10,12 @@ export const SITE_DESCRIPTION =
   + 'a 331-monster SRD bestiary, battle maps, puzzles, and spells. '
   + 'No accounts, no server, no cost.';
 
-/** Set the SITE_URL repo variable once the Azure Static Web App exists. */
+/** Set the SITE_URL repo variable once the Azure Static Web App exists.
+ *  `||` (not `??`) on purpose: when the repo variable is unset, GitHub
+ *  Actions passes an EMPTY string, which must also fall back — new URL('')
+ *  throws and kills the build. */
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://encounterizer.azurestaticapps.net';
+  process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://encounterizer.azurestaticapps.net';
 
 export interface RouteInfo {
   path: string;
