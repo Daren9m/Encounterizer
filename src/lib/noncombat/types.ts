@@ -51,3 +51,27 @@ export interface ResolvedLevers {
   timeBudget: TimeBudget;
   seed: number;
 }
+
+// ─── §11 Challenge Framework Shapes ──────────────────────────────
+export interface SkillChallengeStructure {
+  phases: { title: string; successes: number; primarySkills: string[] }[];
+  successesNeeded: number;
+  failuresAllowed: number;
+}
+export type Attitude = 'Hostile' | 'Indifferent' | 'Friendly';
+export interface AttitudeTrack {
+  start: Attitude;
+  stages: { attitude: Attitude; influenceDc: number; unlocks: string; shiftUp: string; shiftDown: string }[];
+}
+export type ClueVector = 'scene' | 'npc' | 'document' | 'observation';
+export interface ClueWeb {
+  truth: { culprit: string; method: string; motive: string };
+  nodes: { revelation: string; clues: { text: string; vector: ClueVector; pointsTo: string }[] }[];
+  redHerring: { text: string; disconfirmedBy: string };
+}
+export interface ChasePlan {
+  rounds: number;
+  complications: { round: number; text: string; check: string }[];
+  catchCondition: string;
+  escapeCondition: string;
+}
