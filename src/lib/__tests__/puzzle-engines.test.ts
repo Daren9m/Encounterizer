@@ -4,6 +4,7 @@ import { THEME_PACKS } from '../../data/noncombat-themes';
 import type { ResolvedLevers, Difficulty } from '../noncombat/types';
 import { knightsKnaves, buildKkInstance, consistentAssignments } from '../puzzle-engines/knights-knaves';
 import { logicGrid, buildGridInstance, countGridSolutions } from '../puzzle-engines/logic-grid';
+import { runeLock, buildRuneLockInstance, consistentCandidates } from '../puzzle-engines/rune-lock';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
   return {
@@ -73,6 +74,29 @@ describe('logic grid', () => {
         expect(out.readAloud[0]).toBe(out.readAloud[0].toUpperCase());
         expect(out.readAloud).not.toMatch(/\bA [aeiou]/);
       }
+    }
+  });
+});
+
+describe('rune lock', () => {
+  const PARAMS: Record<Difficulty, [number, number, number]> = { Easy: [4, 3, 3], Medium: [5, 3, 4], Hard: [6, 4, 4] };
+  it('exactly one candidate is consistent with the attempts (200 seeds × 3 difficulties)', () => {
+    for (const diff of DIFFS) {
+      const [n, k, a] = PARAMS[diff];
+      for (let s = 0; s < 200; s++) {
+        const inst = buildRuneLockInstance(n, k, a, seededRandom(s));
+        const cands = consistentCandidates(inst);
+        expect(cands, `diff=${diff} seed=${s}`).toHaveLength(1);
+        expect(cands[0]).toEqual(inst.secret);
+      }
+    }
+  });
+  it('generate() emits an attempts-ledger handout', () => {
+    const out = runeLock.generate({ levers: mkLevers('Medium', 5), rng: seededRandom(5) });
+    expect(out.handout?.kind).toBe('attempts-ledger');
+    if (out.handout?.kind === 'attempts-ledger') {
+      expect(out.handout.attempts.length).toBeGreaterThanOrEqual(4);
+      expect(out.handout.runeSet).toHaveLength(5);
     }
   });
 });
