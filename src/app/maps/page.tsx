@@ -1,7 +1,12 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { generateMap, TERRAIN_INFO } from '@/lib/map-generator';
+import {
+  generateMap,
+  TERRAIN_INFO,
+  type MapFeatureDensity,
+  type MapTerrainVariety,
+} from '@/lib/map-generator';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import type { EncounterMap, Environment } from '@/lib/types';
 import MapGrid from '@/components/MapGrid';
@@ -15,6 +20,10 @@ const isMapEnvironment = (v: unknown): v is Environment =>
   typeof v === 'string' && (ENVIRONMENTS as string[]).includes(v);
 const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const isMapArray = (v: unknown): v is EncounterMap[] => Array.isArray(v);
+const isFeatureDensity = (v: unknown): v is MapFeatureDensity =>
+  v === 'Sparse' || v === 'Balanced' || v === 'Dense';
+const isTerrainVariety = (v: unknown): v is MapTerrainVariety =>
+  v === 'Focused' || v === 'Varied' || v === 'Wild';
 
 const ENV_DESCRIPTIONS: Partial<Record<Environment, string>> = {
   Underdark: 'Cellular automata caverns with organic tunnels',
@@ -35,6 +44,12 @@ export default function MapsPage() {
   const [environment, setEnvironment] = usePersistentState<Environment>('mapEnvironment', 'Underdark', isMapEnvironment);
   const [width, setWidth] = usePersistentState<number>('mapWidth', 24, isNumber);
   const [height, setHeight] = usePersistentState<number>('mapHeight', 18, isNumber);
+  const [featureDensity, setFeatureDensity] = usePersistentState<MapFeatureDensity>(
+    'mapFeatureDensity', 'Balanced', isFeatureDensity,
+  );
+  const [terrainVariety, setTerrainVariety] = usePersistentState<MapTerrainVariety>(
+    'mapTerrainVariety', 'Varied', isTerrainVariety,
+  );
   const [map, setMap] = useState<EncounterMap | null>(null);
   const [history, setHistory] = usePersistentState<EncounterMap[]>('mapHistory', [], isMapArray);
 
@@ -43,11 +58,13 @@ export default function MapsPage() {
       environment,
       width,
       height,
+      featureDensity,
+      terrainVariety,
       seed: Date.now(),
     });
     setMap(result);
     setHistory(prev => [result, ...prev.slice(0, 9)]);
-  }, [environment, width, height, setHistory]);
+  }, [environment, width, height, featureDensity, terrainVariety, setHistory]);
 
   const handleExport = useCallback(() => {
     if (!map) return;
@@ -81,7 +98,7 @@ export default function MapsPage() {
       <h1 className="text-3xl mb-6">Map Generator</h1>
 
       <div className="card mb-6 print:hidden">
-        <div className="grid sm:grid-cols-3 gap-4 mb-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
           <div>
             <label htmlFor="map-environment" className="micro-label block mb-1">
               Environment
@@ -141,6 +158,42 @@ export default function MapsPage() {
                 >{h}</button>
               ))}
             </div>
+          </div>
+          <div>
+            <label htmlFor="map-density" className="micro-label block mb-1">
+              Object Density
+            </label>
+            <select
+              id="map-density"
+              value={featureDensity}
+              onChange={e => setFeatureDensity(e.target.value as MapFeatureDensity)}
+              className="w-full"
+            >
+              {(['Sparse', 'Balanced', 'Dense'] as MapFeatureDensity[]).map(value => (
+                <option key={value} value={value}>{value}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-[var(--text-2)] opacity-60">
+              Controls cover, obstacles, traps, and features.
+            </p>
+          </div>
+          <div>
+            <label htmlFor="map-variety" className="micro-label block mb-1">
+              Terrain Mix
+            </label>
+            <select
+              id="map-variety"
+              value={terrainVariety}
+              onChange={e => setTerrainVariety(e.target.value as MapTerrainVariety)}
+              className="w-full"
+            >
+              {(['Focused', 'Varied', 'Wild'] as MapTerrainVariety[]).map(value => (
+                <option key={value} value={value}>{value}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-[var(--text-2)] opacity-60">
+              Controls how many terrain types appear.
+            </p>
           </div>
         </div>
 

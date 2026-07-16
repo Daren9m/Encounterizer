@@ -127,6 +127,7 @@ h1, h2, h3, .font-display {
 }
 
 /* Encounter difficulty badges (2024 tiers + Extreme assessment) */
+.badge-trivial { background-color: #6f7785; color: #ffffff; font-weight: 700; }
 .badge-low { background-color: var(--difficulty-easy); color: #0d1a12; font-weight: 700; }
 .badge-moderate { background-color: var(--difficulty-medium); color: #1c1808; font-weight: 700; }
 .badge-high { background-color: var(--difficulty-hard); color: #1d1105; font-weight: 700; }
@@ -303,7 +304,7 @@ select:focus, input:focus {
     color: var(--statblock-light-accent);
   }
 
-  .badge-low, .badge-moderate, .badge-high, .badge-extreme,
+  .badge-trivial, .badge-low, .badge-moderate, .badge-high, .badge-extreme,
   .badge-easy, .badge-medium, .badge-hard {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
