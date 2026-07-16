@@ -31,7 +31,7 @@ export const trap: ChallengeFramework = {
       name: cap(frame.name),
       readAloud: `${cap(pack.sensory[2] ?? pack.sensory[0])}. Nothing about the way ahead looks wrong — which is exactly what feels wrong.`,
       situation: `Clues (visible before the trigger): ${frame.clues.join('; ')}. Trigger: ${frame.trigger}. Reset: ${frame.reset}.`,
-      stakes: `On trigger: ${frame.effect} — ${triggerDice} damage (DC ${dc} DEX save for half). Each round after: ${frame.escalation} — ${tickDice} damage, no save, until a countermeasure step succeeds.`,
+      stakes: `On trigger: ${frame.effect} — ${triggerDice} damage (DC ${dc} DEX save for half). Escalation: ${frame.escalation} — ${tickDice} damage per round, no save, until a countermeasure step succeeds.`,
       skillChecks: [
         { skill: 'Perception', dc, onSuccess: `You notice: ${frame.clues[0]}.`, onFailure: 'Nothing seems out of place.' },
         { skill: 'Investigation', dc: dc - 2, onSuccess: 'You deduce the mechanism and where to interrupt it.', onFailure: 'You suspect something but cannot pinpoint it.' },
