@@ -73,7 +73,7 @@ Do not run `npm run build` while `npm run dev` is running — they share
 `.next/` and the build corrupts the dev server's chunks.
 
 ## Branch & Process
-The primary development branch is `claude/dnd-encounter-tool-dVBiA`; work
+The primary development branch is `main`; work
 happens on feature branches with PRs. Conventional commits; push after every
 commit; align work with GitHub milestones/issues. CI (typecheck, lint, test,
 build) runs on every PR; the Deploy workflow ships `out/` to Azure Static

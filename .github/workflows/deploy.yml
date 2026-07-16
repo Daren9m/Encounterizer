@@ -13,7 +13,7 @@ name: Deploy
 
 on:
   push:
-    branches: [claude/dnd-encounter-tool-dVBiA]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
