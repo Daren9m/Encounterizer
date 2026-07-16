@@ -11,7 +11,13 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "import:bestiary": "tsx scripts/import-bestiary.ts"
+    "import:bestiary": "tsx scripts/import-bestiary.ts",
+    "visuals:sync": "tsx scripts/enrich-bestiary-visuals.ts",
+    "visuals:check": "tsx scripts/enrich-bestiary-visuals.ts --check",
+    "visuals:seed-pilot": "tsx scripts/seed-pilot-visuals.ts",
+    "visuals:seed-production": "tsx scripts/seed-production-visuals.ts",
+    "visuals:export-review": "tsx scripts/export-visual-review.ts",
+    "visuals:audit": "tsx scripts/audit-visual-descriptions.ts"
   },
   "repository": {
     "type": "git",
