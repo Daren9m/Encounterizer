@@ -6,8 +6,8 @@
 
 - **ID:** `baboon`
 - **Stat profile:** CR 0; Small Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -73,8 +73,8 @@ A lean gray-brown baboon bounds over a rocky woodland ledge with its long tail a
 
 - **ID:** `badger`
 - **Stat profile:** CR 0; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -140,8 +140,8 @@ A striped badger braces at the mouth of a forest burrow with soil clinging to it
 
 - **ID:** `cat`
 - **Stat profile:** CR 0; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -207,8 +207,8 @@ A lean gray tabby cat pauses on a garden wall with one paw raised and green-gold
 
 - **ID:** `commoner`
 - **Stat profile:** CR 0; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -274,8 +274,8 @@ A compact adult commoner in patched work clothes holds a plain wooden club defen
 
 - **ID:** `crab`
 - **Stat profile:** CR 0; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -341,8 +341,8 @@ A mottled shore crab scuttles sideways over a wet tide-pool rock with one pincer
 
 - **ID:** `deer`
 - **Stat profile:** CR 0; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -408,8 +408,8 @@ A russet deer pauses mid-step in a dawn forest glade, antlered head turned towar
 
 - **ID:** `eagle`
 - **Stat profile:** CR 0; Small Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -474,8 +474,8 @@ A brown-and-cream eagle banks toward a coastal cliff with its broad wings cupped
 
 - **ID:** `frog`
 - **Stat profile:** CR 0; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -541,8 +541,8 @@ A tiny moss-green frog crouches on a rain-wet leaf beside a forest pool, ready t
 
 - **ID:** `giant-fire-beetle`
 - **Stat profile:** CR 0; Small Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -608,8 +608,8 @@ A large dark fire beetle climbs through a cavern, two orange glands above its ey
 
 - **ID:** `goat`
 - **Stat profile:** CR 0; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -675,8 +675,8 @@ A cream-and-brown goat picks its way down a rocky hill with curved horns and clo
 
 - **ID:** `hawk`
 - **Stat profile:** CR 0; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -742,8 +742,8 @@ A small rust-and-cream hawk turns sharply above a grassland with its barred tail
 
 - **ID:** `homunculus`
 - **Stat profile:** CR 0; Tiny Construct
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -809,8 +809,8 @@ A tiny clay homunculus hovers over an arcane worktable on broad leathery wings.
 
 - **ID:** `hyena`
 - **Stat profile:** CR 0; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -876,8 +876,8 @@ A spotted hyena with heavy shoulders trots through dry grass with its blunt muzz
 
 - **ID:** `jackal`
 - **Stat profile:** CR 0; Small Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -943,8 +943,8 @@ A tawny jackal pauses on a dune crest with one paw lifted and tall ears alert.
 
 - **ID:** `lemure`
 - **Stat profile:** CR 0; Medium Fiend (devil)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1010,8 +1010,8 @@ A sagging pale lemure drags its shapeless body across cracked infernal stone, le
 
 - **ID:** `lizard`
 - **Stat profile:** CR 0; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1077,8 +1077,8 @@ A mottled olive lizard clings head-down to a sunlit stone wall on widely spread 
 
 - **ID:** `octopus`
 - **Stat profile:** CR 0; Small Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1144,8 +1144,8 @@ A rust-and-gray octopus crawls over a reef stone on eight sucker-lined arms.
 
 - **ID:** `owl`
 - **Stat profile:** CR 0; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1211,8 +1211,8 @@ A small mottled owl glides silently above a branch with broad wings spread and d
 
 - **ID:** `piranha`
 - **Stat profile:** CR 0; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1278,8 +1278,8 @@ A silver piranha with a red belly turns through dark river water, triangular tee
 
 - **ID:** `rat`
 - **Stat profile:** CR 0; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1345,8 +1345,8 @@ A small brown rat sniffs the air beside a cellar crack with its long tail curved
 
 - **ID:** `raven`
 - **Stat profile:** CR 0; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1412,8 +1412,8 @@ A glossy black raven lands on a weathered signpost with its broad wings open and
 
 - **ID:** `scorpion`
 - **Stat profile:** CR 0; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1479,8 +1479,8 @@ A sand-colored scorpion raises its segmented tail and spreads two pincers on a d
 
 - **ID:** `seahorse`
 - **Stat profile:** CR 0; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1545,8 +1545,8 @@ A tiny ochre seahorse anchors its curled tail to sea grass while hovering uprigh
 
 - **ID:** `shrieker-fungus`
 - **Stat profile:** CR 0; Medium Plant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1611,8 +1611,8 @@ A pale shrieker fungus opens its quivering purple-gray cap in a damp subterranea
 
 - **ID:** `spider`
 - **Stat profile:** CR 0; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1678,8 +1678,8 @@ A tiny brown spider hangs beneath a silver web strand with eight legs spread tow
 
 - **ID:** `vulture`
 - **Stat profile:** CR 0; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1745,8 +1745,8 @@ A dark vulture lands on a dry ridge with broad wings raised around its bare gray
 
 - **ID:** `weasel`
 - **Stat profile:** CR 0; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1812,8 +1812,8 @@ A slender chestnut weasel rises beside a tree root with forepaws tucked and nose
 
 - **ID:** `blood-hawk`
 - **Stat profile:** CR 0.125; Small Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1879,8 +1879,8 @@ A rust-breasted blood hawk dives above a pine slope with slate wings tucked and 
 
 - **ID:** `camel`
 - **Stat profile:** CR 0.125; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts

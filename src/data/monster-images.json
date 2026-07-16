@@ -13,6 +13,14 @@
       "src": "/images/monsters/awakened-shrub.webp",
       "alt": "A small awakened shrub scuttles across a woodland floor on tangled roots with thorny branches raised."
     },
+    "baboon": {
+      "src": "/images/monsters/baboon.webp",
+      "alt": "A lean gray-brown baboon bounds over a rocky woodland ledge with its long tail arched behind it."
+    },
+    "badger": {
+      "src": "/images/monsters/badger.webp",
+      "alt": "A striped badger braces at the mouth of a forest burrow with soil clinging to its digging claws."
+    },
     "bandit": {
       "src": "/images/monsters/bandit.webp",
       "alt": "A small hooded bandit waits beside a lonely road with scimitar drawn and crossbow on their back."
@@ -21,9 +29,37 @@
       "src": "/images/monsters/bat.webp",
       "alt": "A small charcoal-brown bat banks through the moonlit mouth of a limestone cave."
     },
+    "blood-hawk": {
+      "src": "/images/monsters/blood-hawk.webp",
+      "alt": "A rust-breasted blood hawk dives above a pine slope with slate wings tucked and talons extended."
+    },
+    "camel": {
+      "src": "/images/monsters/camel.webp",
+      "alt": "A one-humped sand-colored camel strides across a desert track on broad padded feet."
+    },
+    "cat": {
+      "src": "/images/monsters/cat.webp",
+      "alt": "A lean gray tabby cat pauses on a garden wall with one paw raised and green-gold eyes alert."
+    },
+    "commoner": {
+      "src": "/images/monsters/commoner.webp",
+      "alt": "A compact adult commoner in patched work clothes holds a plain wooden club defensively in a farmyard."
+    },
     "couatl": {
       "src": "/images/monsters/couatl.webp",
       "alt": "An iridescent feathered couatl coils in the air with broad wings spread above a misty temple clearing."
+    },
+    "crab": {
+      "src": "/images/monsters/crab.webp",
+      "alt": "A mottled shore crab scuttles sideways over a wet tide-pool rock with one pincer raised."
+    },
+    "deer": {
+      "src": "/images/monsters/deer.webp",
+      "alt": "A russet deer pauses mid-step in a dawn forest glade, antlered head turned toward a sound."
+    },
+    "eagle": {
+      "src": "/images/monsters/eagle.webp",
+      "alt": "A brown-and-cream eagle banks toward a coastal cliff with its broad wings cupped and talons extended."
     },
     "fire-elemental": {
       "src": "/images/monsters/fire-elemental.webp",
@@ -33,6 +69,10 @@
       "src": "/images/monsters/fire-giant.webp",
       "alt": "A colossal charcoal-skinned fire giant in black plate stands in a volcanic forge with a flaming sword."
     },
+    "frog": {
+      "src": "/images/monsters/frog.webp",
+      "alt": "A tiny moss-green frog crouches on a rain-wet leaf beside a forest pool, ready to leap."
+    },
     "gelatinous-cube": {
       "src": "/images/monsters/gelatinous-cube.webp",
       "alt": "A transparent gelatinous cube fills a stone corridor, with bubbles and corroded scraps suspended inside."
@@ -41,21 +81,97 @@
       "src": "/images/monsters/ghost.webp",
       "alt": "A pale translucent ghost in tattered garments reaches forward while drifting through a moonlit ruin."
     },
+    "giant-fire-beetle": {
+      "src": "/images/monsters/giant-fire-beetle.webp",
+      "alt": "A large dark fire beetle climbs through a cavern, two orange glands above its eyes lighting the shell."
+    },
+    "goat": {
+      "src": "/images/monsters/goat.webp",
+      "alt": "A cream-and-brown goat picks its way down a rocky hill with curved horns and cloven hooves."
+    },
     "goblin-warrior": {
       "src": "/images/monsters/goblin-warrior.webp",
       "alt": "A small green-skinned goblin warrior crouches on a forest path with scimitar drawn and shortbow ready."
+    },
+    "hawk": {
+      "src": "/images/monsters/hawk.webp",
+      "alt": "A small rust-and-cream hawk turns sharply above a grassland with its barred tail fanned."
+    },
+    "homunculus": {
+      "src": "/images/monsters/homunculus.webp",
+      "alt": "A tiny clay homunculus hovers over an arcane worktable on broad leathery wings."
+    },
+    "hyena": {
+      "src": "/images/monsters/hyena.webp",
+      "alt": "A spotted hyena with heavy shoulders trots through dry grass with its blunt muzzle held low."
     },
     "imp": {
       "src": "/images/monsters/imp.webp",
       "alt": "A tiny red imp hovers in a dark stone alcove with leathery wings spread and barbed tail raised."
     },
+    "jackal": {
+      "src": "/images/monsters/jackal.webp",
+      "alt": "A tawny jackal pauses on a dune crest with one paw lifted and tall ears alert."
+    },
+    "lemure": {
+      "src": "/images/monsters/lemure.webp",
+      "alt": "A sagging pale lemure drags its shapeless body across cracked infernal stone, leaving oily slime."
+    },
+    "lizard": {
+      "src": "/images/monsters/lizard.webp",
+      "alt": "A mottled olive lizard clings head-down to a sunlit stone wall on widely spread toes."
+    },
+    "octopus": {
+      "src": "/images/monsters/octopus.webp",
+      "alt": "A rust-and-gray octopus crawls over a reef stone on eight sucker-lined arms."
+    },
+    "owl": {
+      "src": "/images/monsters/owl.webp",
+      "alt": "A small mottled owl glides silently above a branch with broad wings spread and dark eyes forward."
+    },
     "owlbear": {
       "src": "/images/monsters/owlbear.webp",
       "alt": "A huge brown owlbear lunges through a forest, its owl face and feathered mantle rising from a bear body."
     },
+    "piranha": {
+      "src": "/images/monsters/piranha.webp",
+      "alt": "A silver piranha with a red belly turns through dark river water, triangular teeth visible."
+    },
+    "rat": {
+      "src": "/images/monsters/rat.webp",
+      "alt": "A small brown rat sniffs the air beside a cellar crack with its long tail curved behind it."
+    },
+    "raven": {
+      "src": "/images/monsters/raven.webp",
+      "alt": "A glossy black raven lands on a weathered signpost with its broad wings open and beak parted."
+    },
     "red-dragon-wyrmling": {
       "src": "/images/monsters/red-dragon-wyrmling.webp",
       "alt": "A juvenile red dragon crouches on volcanic rock, wings spread and smoke curling from its jaws."
+    },
+    "scorpion": {
+      "src": "/images/monsters/scorpion.webp",
+      "alt": "A sand-colored scorpion raises its segmented tail and spreads two pincers on a desert stone."
+    },
+    "seahorse": {
+      "src": "/images/monsters/seahorse.webp",
+      "alt": "A tiny ochre seahorse anchors its curled tail to sea grass while hovering upright in clear water."
+    },
+    "shrieker-fungus": {
+      "src": "/images/monsters/shrieker-fungus.webp",
+      "alt": "A pale shrieker fungus opens its quivering purple-gray cap in a damp subterranean cavern."
+    },
+    "spider": {
+      "src": "/images/monsters/spider.webp",
+      "alt": "A tiny brown spider hangs beneath a silver web strand with eight legs spread toward a vibration."
+    },
+    "vulture": {
+      "src": "/images/monsters/vulture.webp",
+      "alt": "A dark vulture lands on a dry ridge with broad wings raised around its bare gray-pink head."
+    },
+    "weasel": {
+      "src": "/images/monsters/weasel.webp",
+      "alt": "A slender chestnut weasel rises beside a tree root with forepaws tucked and nose lifted."
     }
   }
 }

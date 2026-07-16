@@ -27,7 +27,7 @@ The monster index includes material from the *System Reference Document 5.2.1* b
 
 Draft and approved website assets use the stable path `public/images/monsters/<monsterId>.webp`. Production files are 1024×1280 WebP portraits; keep model-native PNG files outside the repository as generation sources. Run `npm run visuals:audit-images` to verify that every tracked draft has exactly one optimized asset, that dimensions and filenames follow the contract, and that no source PNGs remain in the public bundle.
 
-The style-pilot comparison grid is stored at `docs/visual-review/pilot-contact-sheet.webp` for batch-level review.
+Batch comparison grids are stored beside their review packets as `docs/visual-review/<batch-id>-contact-sheet.webp`. The current grids are `pilot-contact-sheet.webp` and `production-01-contact-sheet.webp`.
 
 If a monster's visual-relevant inputs or the prompt version changes, synchronization preserves its authored text but marks approved work `needs-revision`. Duplicate or orphaned records stop synchronization rather than being silently discarded.
 
