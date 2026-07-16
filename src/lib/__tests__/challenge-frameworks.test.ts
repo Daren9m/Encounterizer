@@ -230,4 +230,16 @@ describe('investigation framework (spec §8.6)', () => {
     expect(easy.redHerring.text).not.toBe(hard.redHerring.text);
     expect(hard.redHerring.disconfirmedBy).toMatch(/right question/i);
   });
+  it('non-final node clues never leak the placeholder phrase "the culprit"', () => {
+    for (let s = 0; s < 100; s++) {
+      for (const diff of DIFFS) {
+        const web = buildClueWeb(mkLevers(diff, s), seededRandom(s));
+        for (const node of web.nodes.slice(0, -1)) {
+          for (const clue of node.clues) {
+            expect(clue.text.toLowerCase()).not.toContain('the culprit');
+          }
+        }
+      }
+    }
+  });
 });

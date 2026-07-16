@@ -15,28 +15,28 @@ import type { ChallengeFramework, FrameworkInput, FrameworkOutput } from './fram
 const NODE_COUNT = { quick: 2, standard: 3, 'set-piece': 4 } as const;
 const VECTORS: ClueVector[] = ['scene', 'npc', 'document', 'observation'];
 
-// Vector template × difficulty register. Easy names things plainly;
-// Hard gestures at them.
+// Vector template × difficulty register. Direct clues state the node's own
+// revelation payload (focus); oblique clues gesture at it without naming it.
 const CLUE_TEXT: Record<ClueVector, { direct: (d: ClueDetail) => string; oblique: (d: ClueDetail) => string }> = {
   scene: {
-    direct: d => `At the scene: ${d.material} residue that traces straight to ${d.subject}.`,
+    direct: d => `At the scene: ${d.material} residue that fits only one explanation — ${d.focus}.`,
     oblique: d => `At the scene: a smear of ${d.material} where no ${d.material} belongs.`,
   },
   npc: {
-    direct: d => `${cap(d.witness)} saw it and will say so: it points to ${d.subject}.`,
+    direct: d => `${cap(d.witness)} saw enough to swear to it: ${d.focus}.`,
     oblique: d => `${cap(d.witness)} keeps changing one detail of their story — the same detail every time.`,
   },
   document: {
-    direct: d => `A ledger entry in a hurried hand names ${d.subject} outright.`,
+    direct: d => `A hurried ledger entry all but spells it out: ${d.focus}.`,
     oblique: d => `A page has been razored from the ledger — the stub still shows half a word.`,
   },
   observation: {
-    direct: d => `Watch ${d.subject} for an hour and the routine breaks exactly where the crime needed it to.`,
+    direct: d => `An hour's patient watching confirms it: ${d.focus}.`,
     oblique: d => `Someone's routine changed the day it happened — small, but it never changed before.`,
   },
 };
 
-interface ClueDetail { material: string; witness: string; subject: string }
+interface ClueDetail { material: string; witness: string; focus: string }
 
 export function buildClueWeb(levers: ResolvedLevers, rng: Rng): ClueWeb {
   const pack = levers.theme;
@@ -50,27 +50,27 @@ export function buildClueWeb(levers: ResolvedLevers, rng: Rng): ClueWeb {
   const register = levers.difficulty === 'Easy' ? 'direct' as const
     : levers.difficulty === 'Hard' ? 'oblique' as const
     : undefined; // Medium mixes per clue
-  const revelations = [
-    `What happened: ${frame.crime}.`,
-    `How: ${method}.`,
-    `Why: ${motive}.`,
-    `Who: ${culprit} did it.`,
+  const nodeSeeds = [
+    { revelation: `What happened: ${frame.crime}.`, focus: frame.crime },
+    { revelation: `How: ${method}.`, focus: method },
+    { revelation: `Why: ${motive}.`, focus: motive },
+    { revelation: `Who: ${culprit} did it.`, focus: `${culprit} was the hand behind it` },
   ];
   const count = NODE_COUNT[levers.timeBudget];
-  // Culprit node is always last: take the first (count-1) revelations + the final one.
-  const chosen = [...revelations.slice(0, count - 1), revelations[3]];
-  const nodes = chosen.map(revelation => {
+  // Culprit node is always last: first (count-1) seeds + the final one.
+  const chosen = [...nodeSeeds.slice(0, count - 1), nodeSeeds[3]];
+  const nodes = chosen.map(seed => {
     const vectors = shuffleArray(VECTORS, rng).slice(0, 3);
     return {
-      revelation,
+      revelation: seed.revelation,
       clues: vectors.map(vector => {
         const detail: ClueDetail = {
           material: pick(pack.materials, rng),
           witness: pick(witnessPool, rng),
-          subject: revelation.startsWith('Who:') ? culprit : 'the culprit',
+          focus: seed.focus,
         };
         const reg = register ?? pick(['direct', 'oblique'] as const, rng);
-        return { text: CLUE_TEXT[vector][reg](detail), vector, pointsTo: revelation };
+        return { text: CLUE_TEXT[vector][reg](detail), vector, pointsTo: seed.revelation };
       }),
     };
   });
