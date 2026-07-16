@@ -7,7 +7,7 @@ export const SITE_NAME = 'Encounterizer';
 
 export const SITE_DESCRIPTION =
   'Free D&D 5.5e encounter toolkit — balanced encounters, battle forecasts, '
-  + 'a 331-monster SRD bestiary, battle maps, puzzles, and spells. '
+  + 'a 331-monster SRD bestiary, battle maps, puzzles & challenges, and spells. '
   + 'No accounts, no server, no cost.';
 
 /** Set the SITE_URL repo variable once the Azure Static Web App exists.
@@ -58,22 +58,6 @@ export const TOOL_ROUTES: RouteInfo[] = [
     description:
       'Procedural battle maps for D&D — BSP dungeons, cellular-automata caves, and outdoor terrain, tuned per environment.',
     icon: 'map',
-  },
-  {
-    path: '/puzzles',
-    label: 'Puzzles',
-    title: 'Puzzle Generator',
-    description:
-      'Verified logic puzzles, riddles, ciphers, and contests — themed, seeded, and shareable, with print-ready player handouts.',
-    icon: 'puzzle',
-  },
-  {
-    path: '/challenges',
-    label: 'Challenges',
-    title: 'Non-Combat Challenges',
-    description:
-      'Skill challenges, social encounters, journeys, complex traps, chases, and investigations — levered, themed, seeded, and shareable.',
-    icon: 'drama',
   },
   {
     path: '/noncombat',
