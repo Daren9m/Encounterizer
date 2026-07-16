@@ -3,18 +3,21 @@
 ## What This Is
 A D&D 5.5e (2024 rules) toolkit for Dungeon Masters: encounter building with
 2024 XP budgets, a Monte Carlo Battle Forecast, an SRD 5.2.1 bestiary with
-client-side custom imports, plus map/puzzle/challenge generators and a spell
-reference. Built with Next.js 14 (App Router, **static export**), TypeScript
-strict, and Tailwind CSS. Deployed to Azure Static Web Apps free tier.
+client-side custom imports, a map generator, a unified non-combat generator
+(puzzles & challenges), and a spell reference. Built with Next.js 14 (App
+Router, **static export**), TypeScript strict, and Tailwind CSS. Deployed to
+Azure Static Web Apps free tier.
 
 ## Architecture
 - **Static export** — `output: 'export'` in next.config.js. **No server
   code**: API routes and middleware are forbidden; everything runs in the
   browser.
-- **Six tool pages** (`'use client'`): `encounters` (builder + Battle
-  Forecast), `monsters` (bestiary + custom import), `maps`, `puzzles`,
-  `challenges`, `spells`. Per-page metadata lives in each route's
-  `layout.tsx`. Plus server-rendered `/` and `/credits`.
+- **Five tool pages** (`'use client'`): `encounters` (builder + Battle
+  Forecast), `monsters` (bestiary + custom import), `maps`, `noncombat`
+  (unified puzzles & challenges — 12 verified puzzle families + 6 challenge
+  frameworks behind one seeded orchestrator in `src/lib/noncombat/generate.ts`),
+  `spells`. Per-page metadata lives in each route's `layout.tsx`. Plus
+  server-rendered `/` and `/credits`.
 - **Pure engine layer** — `src/lib/` functions have no side effects (no DOM,
   storage, or network). Browser concerns (localStorage, FileReader) live in
   `src/app/` hooks and `src/components/`.
