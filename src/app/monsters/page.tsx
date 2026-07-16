@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import { Skull } from 'lucide-react';
 import { filterMonsters, getMonsterSummaryStats } from '@/lib/monster-filter';
 import type { Monster, MonsterFilter } from '@/lib/types';
 import FilterPanel from '@/components/FilterPanel';
@@ -155,7 +156,9 @@ export default function BestiaryPage() {
             </div>
           ) : (
             <div className="card text-center py-12 text-[var(--text-2)]">
-              <div className="text-4xl mb-3" aria-hidden="true">🐉</div>
+              <div className="mb-3 flex justify-center" aria-hidden="true">
+                <Skull size={40} className="text-[var(--text-3)]" />
+              </div>
               <p>Select a monster to view its full stat block</p>
               <p className="text-xs mt-2 opacity-60">Click any monster card or row</p>
             </div>

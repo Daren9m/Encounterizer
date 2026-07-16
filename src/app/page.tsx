@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { ALL_MONSTERS } from '@/data';
 import { SRD_SPELLS } from '@/data/spells';
-import { TOOL_ROUTES } from '@/lib/site';
+import RouteIcon from '@/components/RouteIcon';
+import { TOOL_ROUTES, type RouteIconName } from '@/lib/site';
 
 export default function HomePage() {
   const creatureTypes = new Set(ALL_MONSTERS.map((m) => m.type)).size;
@@ -62,11 +63,13 @@ export default function HomePage() {
 function FeatureCard({
   href, icon, title, description,
 }: {
-  href: string; icon: string; title: string; description: string;
+  href: string; icon: RouteIconName; title: string; description: string;
 }) {
   return (
     <Link href={href} className="card block group">
-      <div className="text-3xl mb-3" aria-hidden="true">{icon}</div>
+      <div className="mb-3">
+        <RouteIcon name={icon} size={28} className="text-[var(--bronze)]" />
+      </div>
       <h3 className="text-lg font-bold text-[var(--bronze)] group-hover:text-[var(--bronze-light)] mb-2">
         {title}
       </h3>

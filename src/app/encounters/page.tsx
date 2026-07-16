@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Check, Minus, Plus, Swords, X } from 'lucide-react';
 import { filterMonsters } from '@/lib/monster-filter';
 import { useMonsters } from '@/app/hooks/useMonsters';
 import {
@@ -478,20 +479,21 @@ function EncounterBuilder() {
             type="button"
             onClick={handleForecastClick}
             disabled={!encounter || encounter.monsters.length === 0 || simRunning}
-            className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
+            className="btn-secondary inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
             title={
               !encounter || encounter.monsters.length === 0
                 ? 'Generate or build an encounter first'
                 : 'Simulate this battle 1,000 times'
             }
           >
-            ⚔ Battle Forecast
+            <Swords size={16} className="text-[var(--bronze)]" aria-hidden="true" />
+            Battle Forecast
           </button>
           <button
             type="button"
             onClick={() => setShowManualAdd(!showManualAdd)}
             aria-expanded={showManualAdd}
-            className="btn-primary"
+            className="btn-ghost"
           >
             {showManualAdd ? 'Hide' : 'Add Monsters Manually'}
           </button>
@@ -507,7 +509,7 @@ function EncounterBuilder() {
             type="button"
             onClick={() => setShowFilters(!showFilters)}
             aria-expanded={showFilters}
-            className="btn-secondary text-sm"
+            className="btn-ghost text-sm"
           >
             {showFilters ? 'Hide' : 'Show'} Monster Filters
           </button>
@@ -543,16 +545,21 @@ function EncounterBuilder() {
                     if (e.key === 'Escape') setSavingName(null);
                   }}
                 />
-                <button type="button" onClick={handleSaveEncounter} className="btn-primary text-sm">
-                  ✓
+                <button
+                  type="button"
+                  onClick={handleSaveEncounter}
+                  className="btn-primary text-sm inline-flex items-center"
+                  aria-label="Save encounter"
+                >
+                  <Check size={16} aria-hidden="true" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setSavingName(null)}
-                  className="btn-secondary text-sm"
+                  className="btn-secondary text-sm inline-flex items-center"
                   aria-label="Cancel saving"
                 >
-                  ✕
+                  <X size={16} aria-hidden="true" />
                 </button>
               </span>
             )
@@ -605,9 +612,9 @@ function EncounterBuilder() {
                     type="button"
                     onClick={() => setSavedEncounters((prev) => prev.filter((s) => s.id !== saved.id))}
                     aria-label={`Delete saved encounter ${saved.name}`}
-                    className="text-red-400 hover:text-red-300 px-1"
+                    className="text-[var(--accent-danger)] hover:opacity-80 px-1 inline-flex items-center"
                   >
-                    ✕
+                    <X size={16} aria-hidden="true" />
                   </button>
                 </div>
               </li>
@@ -749,17 +756,17 @@ function EncounterBuilder() {
                       <button
                         type="button"
                         onClick={() => handleAddMonster(em.monster)}
-                        className="w-7 h-7 rounded bg-green-800 hover:bg-green-700 text-white font-bold text-sm print:hidden"
+                        className="w-7 h-7 rounded-md bg-[var(--steel-800)] hover:bg-[var(--steel-700)] text-[var(--bronze)] print:hidden inline-flex items-center justify-center transition-colors"
                         title="Add one more"
                         aria-label={`Add one more ${em.monster.name}`}
-                      >+</button>
+                      ><Plus size={16} aria-hidden="true" /></button>
                       <button
                         type="button"
                         onClick={() => handleRemoveMonster(em.monster.id)}
-                        className="w-7 h-7 rounded bg-red-800 hover:bg-red-700 text-white font-bold text-sm print:hidden"
+                        className="w-7 h-7 rounded-md bg-[var(--steel-800)] hover:bg-[var(--steel-700)] text-[var(--accent-danger)] print:hidden inline-flex items-center justify-center transition-colors"
                         title="Remove one"
                         aria-label={`Remove one ${em.monster.name}`}
-                      >-</button>
+                      ><Minus size={16} aria-hidden="true" /></button>
                     </div>
                   </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Plus, X } from 'lucide-react';
 import type { PartyMemberConfig } from '@/lib/battle-sim-types';
 import {
   buildSimPlayer,
@@ -158,11 +159,11 @@ export default function PartySetupPanel({
                 </button>
                 <button
                   type="button"
-                  className="text-red-400 hover:text-red-300 px-2 text-sm"
+                  className="text-[var(--accent-danger)] hover:opacity-80 px-2 text-sm inline-flex items-center"
                   aria-label={`Remove ${member.name || `player ${index + 1}`}`}
                   onClick={() => setDraft((prev) => prev.filter((_, i) => i !== index))}
                 >
-                  ✕
+                  <X size={16} aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -186,7 +187,7 @@ export default function PartySetupPanel({
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
-          className="btn-secondary text-sm"
+          className="btn-secondary text-sm inline-flex items-center gap-1.5"
           onClick={() =>
             setDraft((prev) => [
               ...prev,
@@ -194,7 +195,8 @@ export default function PartySetupPanel({
             ])
           }
         >
-          + Add Player
+          <Plus size={16} aria-hidden="true" />
+          Add Player
         </button>
         <div className="flex-1" />
         <button type="button" className="btn-secondary text-sm" onClick={onCancel}>

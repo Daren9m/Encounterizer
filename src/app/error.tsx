@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { TriangleAlert } from 'lucide-react';
 
 export default function Error({
   error,
@@ -17,7 +18,9 @@ export default function Error({
 
   return (
     <div className="animate-fade-in max-w-2xl mx-auto text-center py-16">
-      <div className="text-6xl mb-4" aria-hidden="true">💥</div>
+      <div className="mb-4 flex justify-center" aria-hidden="true">
+        <TriangleAlert size={48} className="text-[var(--accent-danger)]" />
+      </div>
       <h1 className="text-4xl font-bold text-[var(--accent-danger)] mb-3">
         A wild error appeared!
       </h1>

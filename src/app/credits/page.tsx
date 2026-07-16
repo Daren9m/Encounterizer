@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import { BESTIARY_META } from '@/data/bestiary-meta';
 
 export const metadata: Metadata = {
@@ -84,8 +85,9 @@ export default function CreditsPage() {
       </section>
 
       <p className="text-center">
-        <Link href="/" className="text-[var(--bronze)] underline">
-          ← Back to Encounterizer
+        <Link href="/" className="inline-flex items-center gap-1.5 text-[var(--bronze)] underline hover:text-[var(--bronze-light)]">
+          <ArrowLeft size={16} aria-hidden="true" />
+          Back to Encounterizer
         </Link>
       </p>
     </div>

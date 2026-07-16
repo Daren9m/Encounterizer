@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { generatePuzzle, getPuzzleCategories } from '@/lib/puzzle-generator';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import type { Puzzle, PuzzleCategory, PuzzleDifficulty } from '@/lib/puzzle-generator';
@@ -167,7 +168,9 @@ export default function PuzzlesPage() {
               aria-expanded={showSolution}
               className="flex items-center gap-2 text-lg font-bold text-[var(--bronze)]"
             >
-              {showSolution ? '▼' : '▶'} Solution
+              {showSolution
+                ? <ChevronDown size={18} aria-hidden="true" />
+                : <ChevronRight size={18} aria-hidden="true" />} Solution
             </button>
             {showSolution && (
               <div className="mt-3 space-y-3 animate-fade-in">

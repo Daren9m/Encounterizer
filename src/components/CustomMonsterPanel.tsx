@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { ChevronDown, ChevronRight, X } from 'lucide-react';
 import { parseCustomMonsterJson, type CustomImportEntryError } from '@/lib/custom-monster-import';
 import type { Monster } from '@/lib/types';
 import { useCustomMonsters } from '@/app/hooks/useCustomMonsters';
@@ -69,7 +70,7 @@ export default function CustomMonsterPanel({ allMonsters }: { allMonsters: Monst
           Custom Monsters{customMonsters.length > 0 ? ` (${customMonsters.length})` : ''}
         </span>
         <span aria-hidden="true" className="text-[var(--text-2)]">
-          {open ? '▾' : '▸'}
+          {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </span>
       </button>
 
@@ -167,9 +168,9 @@ export default function CustomMonsterPanel({ allMonsters }: { allMonsters: Monst
                     type="button"
                     onClick={() => removeMonster(m.id)}
                     aria-label={`Remove ${m.name}`}
-                    className="text-red-400 hover:text-red-300 px-2"
+                    className="text-[var(--accent-danger)] hover:opacity-80 px-2 inline-flex items-center"
                   >
-                    ✕
+                    <X size={16} aria-hidden="true" />
                   </button>
                 </li>
               ))}
