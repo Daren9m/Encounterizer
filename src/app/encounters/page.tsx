@@ -826,12 +826,12 @@ function DifficultyMeter({
 
   const gradient =
     totalXp > budgets.High
-      ? 'linear-gradient(90deg, #2e7d32, #f57f17, #d84315, #b71c1c)'
+      ? 'linear-gradient(90deg, #7acb9a, #e3c567, #e69c55, #d05a59)'
       : totalXp > budgets.Moderate
-      ? 'linear-gradient(90deg, #2e7d32, #f57f17, #d84315)'
+      ? 'linear-gradient(90deg, #7acb9a, #e3c567, #e69c55)'
       : totalXp > budgets.Low
-      ? 'linear-gradient(90deg, #2e7d32, #f57f17)'
-      : '#2e7d32';
+      ? 'linear-gradient(90deg, #7acb9a, #e3c567)'
+      : '#7acb9a';
 
   return (
     <div className="mt-3">
@@ -839,13 +839,13 @@ function DifficultyMeter({
         <span>Low ({budgets.Low.toLocaleString()})</span>
         <span>Moderate ({budgets.Moderate.toLocaleString()})</span>
         <span>High ({budgets.High.toLocaleString()})</span>
-        <span className="text-[#b71c1c] font-bold">Extreme</span>
+        <span className="text-[var(--difficulty-deadly)] font-bold">Extreme</span>
       </div>
       <div className="relative h-6 bg-[var(--steel-950)] rounded overflow-hidden border border-[var(--steel-800)]">
         {/* Budget markers */}
-        <div className="absolute top-0 bottom-0 border-r border-green-600" style={{ left: `${pct(budgets.Low)}%` }} />
-        <div className="absolute top-0 bottom-0 border-r border-yellow-600" style={{ left: `${pct(budgets.Moderate)}%` }} />
-        <div className="absolute top-0 bottom-0 border-r border-red-600" style={{ left: `${pct(budgets.High)}%` }} />
+        <div className="absolute top-0 bottom-0 border-r" style={{ left: `${pct(budgets.Low)}%`, borderColor: 'var(--difficulty-easy)' }} />
+        <div className="absolute top-0 bottom-0 border-r" style={{ left: `${pct(budgets.Moderate)}%`, borderColor: 'var(--difficulty-medium)' }} />
+        <div className="absolute top-0 bottom-0 border-r" style={{ left: `${pct(budgets.High)}%`, borderColor: 'var(--difficulty-hard)' }} />
 
         {/* Current XP bar */}
         {totalXp > 0 && (

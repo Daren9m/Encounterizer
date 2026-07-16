@@ -222,12 +222,12 @@ function MonsterCard({
           </span>
         )}
         {monster.hasSpellcasting && (
-          <span className="text-xs bg-purple-800 px-2 py-0.5 rounded">
+          <span className="text-xs bg-[var(--steel-800)] text-[var(--bronze)] px-2 py-0.5 rounded">
             Spellcaster
           </span>
         )}
         {monster.hasLair && (
-          <span className="text-xs bg-green-800 px-2 py-0.5 rounded">
+          <span className="text-xs bg-[var(--steel-800)] text-[var(--text-2)] px-2 py-0.5 rounded">
             Lair
           </span>
         )}

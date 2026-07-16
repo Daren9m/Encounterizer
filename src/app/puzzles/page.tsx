@@ -116,7 +116,7 @@ export default function PuzzlesPage() {
             <div className="flex items-start justify-between mb-2">
               <h2 className="text-2xl">{puzzle.name}</h2>
               <div className="flex gap-2">
-                <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                <span className={`px-3 py-1 rounded-full text-xs self-center ${
                   puzzle.difficulty === 'Easy' ? 'badge-easy' :
                   puzzle.difficulty === 'Medium' ? 'badge-medium' : 'badge-hard'
                 }`}>{puzzle.difficulty}</span>

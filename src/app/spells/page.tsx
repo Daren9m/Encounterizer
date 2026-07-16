@@ -111,8 +111,8 @@ export default function SpellsPage() {
               </div>
               <div className="text-xs text-[var(--text-2)]">
                 {spell.school} · {spell.castingTime} · {spell.range}
-                {spell.concentration && <span className="ml-1 text-yellow-500">C</span>}
-                {spell.ritual && <span className="ml-1 text-blue-400">R</span>}
+                {spell.concentration && <span className="ml-1 text-[var(--bronze)]">C</span>}
+                {spell.ritual && <span className="ml-1 text-[var(--text-3)]">R</span>}
               </div>
             </button>
           ))}
@@ -173,8 +173,8 @@ function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (
       {/* One-line summary */}
       <div className="text-xs text-[var(--text-2)] mb-2">
         {spell.school} · {spell.components}
-        {spell.concentration && <span className="ml-1 text-yellow-500 font-bold">[C]</span>}
-        {spell.ritual && <span className="ml-1 text-blue-400 font-bold">[R]</span>}
+        {spell.concentration && <span className="ml-1 text-[var(--bronze)] font-bold">[C]</span>}
+        {spell.ritual && <span className="ml-1 text-[var(--text-3)] font-bold">[R]</span>}
       </div>
 
       {/* Key mechanics row */}

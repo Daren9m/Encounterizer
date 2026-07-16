@@ -3,19 +3,21 @@
 import type { BattleReport } from '@/lib/battle-sim-types';
 import { buildAssessment } from '@/lib/battle-sim';
 
+// Dusksteel difficulty scale. Trivial sits below the scale (neutral faint);
+// Lethal shares deadly-red — the label text carries the distinction.
 const LABEL_COLORS: Record<BattleReport['simLabel'], string> = {
-  Trivial: '#4caf50',
-  Low: '#2e7d32',
-  Moderate: '#f0c040',
-  High: '#d84315',
-  Deadly: '#b71c1c',
-  Lethal: '#7b1fa2',
+  Trivial: '#9494a2',
+  Low: '#7acb9a',
+  Moderate: '#e3c567',
+  High: '#e69c55',
+  Deadly: '#d05a59',
+  Lethal: '#d05a59',
 };
 
 function WinRateDonut({ winRate, label }: { winRate: number; label: BattleReport['simLabel'] }) {
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
-  const color = winRate >= 0.9 ? '#4caf50' : winRate >= 0.65 ? '#f0c040' : winRate >= 0.35 ? '#d84315' : '#b71c1c';
+  const color = winRate >= 0.9 ? '#7acb9a' : winRate >= 0.65 ? '#e3c567' : winRate >= 0.35 ? '#e69c55' : '#d05a59';
   return (
     <svg viewBox="0 0 140 140" className="w-32 h-32" role="img" aria-label={`Party wins ${Math.round(winRate * 100)}% of simulated battles`}>
       <circle cx="70" cy="70" r={radius} fill="none" stroke="var(--steel-950)" strokeWidth="12" />
@@ -28,7 +30,7 @@ function WinRateDonut({ winRate, label }: { winRate: number; label: BattleReport
       <text x="70" y="66" textAnchor="middle" fill="var(--text-1)" fontSize="26" fontWeight="bold">
         {Math.round(winRate * 100)}%
       </text>
-      <text x="70" y="86" textAnchor="middle" fill="var(--text-2)" fontSize="11">
+      <text x="70" y="86" textAnchor="middle" fill="var(--text-3)" fontSize="11">
         win rate
       </text>
       <text x="70" y="102" textAnchor="middle" fill={LABEL_COLORS[label]} fontSize="12" fontWeight="bold">
@@ -113,7 +115,7 @@ export default function BattleReportCard({
       </div>
 
       {stale && (
-        <div className="text-sm rounded border border-yellow-600 bg-yellow-900/30 px-3 py-2" role="status">
+        <div className="text-sm rounded-md border border-[rgba(227,197,103,0.4)] bg-[rgba(227,197,103,0.08)] px-3 py-2" role="status">
           The encounter changed since this forecast ran — re-run it for current numbers.
         </div>
       )}
@@ -172,7 +174,7 @@ export default function BattleReportCard({
                   className="h-full rounded"
                   style={{
                     width: `${Math.max(2, d.dropRate * 100)}%`,
-                    background: d.dropRate > 0.5 ? '#b71c1c' : d.dropRate > 0.25 ? '#d84315' : '#f0c040',
+                    background: d.dropRate > 0.5 ? '#d05a59' : d.dropRate > 0.25 ? '#e69c55' : '#e3c567',
                   }}
                 />
               </div>

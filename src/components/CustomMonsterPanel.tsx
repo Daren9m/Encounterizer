@@ -127,12 +127,12 @@ export default function CustomMonsterPanel({ allMonsters }: { allMonsters: Monst
           {feedback && (
             <div className="text-sm space-y-1" role="status">
               {feedback.storageError ? (
-                <p className="text-red-400">{feedback.storageError}</p>
+                <p className="text-[var(--accent-danger)]">{feedback.storageError}</p>
               ) : (
                 <p>
                   <span className="text-[var(--bronze)] font-bold">{feedback.imported} imported</span>
                   {feedback.skipped > 0 && (
-                    <span className="text-red-400">, {feedback.skipped} skipped</span>
+                    <span className="text-[var(--accent-danger)]">, {feedback.skipped} skipped</span>
                   )}{' '}
                   <span className="text-[var(--text-2)]">
                     ({feedback.format === 'unknown' ? 'unrecognized format' : `${feedback.format} format`})
@@ -140,7 +140,7 @@ export default function CustomMonsterPanel({ allMonsters }: { allMonsters: Monst
                 </p>
               )}
               {feedback.errors.length > 0 && (
-                <ul className="text-xs text-red-400 space-y-0.5 max-h-32 overflow-y-auto">
+                <ul className="text-xs text-[var(--accent-danger)] space-y-0.5 max-h-32 overflow-y-auto">
                   {feedback.errors.slice(0, 10).map((err) => (
                     <li key={err.index}>
                       #{err.index + 1}{err.name ? ` "${err.name}"` : ''}: {err.messages.join('; ')}

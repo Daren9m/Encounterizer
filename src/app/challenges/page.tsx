@@ -105,7 +105,7 @@ export default function ChallengesPage() {
             <div className="flex items-start justify-between mb-2">
               <h2 className="text-2xl">{encounter.name}</h2>
               <div className="flex gap-2">
-                <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                <span className={`px-3 py-1 rounded-full text-xs self-center ${
                   encounter.difficulty === 'Easy' ? 'badge-easy' : encounter.difficulty === 'Medium' ? 'badge-medium' : 'badge-hard'
                 }`}>{encounter.difficulty}</span>
                 <span className="px-3 py-1 rounded-full text-sm bg-[var(--steel-800)] text-[var(--text-2)]">
@@ -144,8 +144,8 @@ export default function ChallengesPage() {
                     <span className="text-sm font-bold text-[var(--bronze)]">DC {sc.dc}</span>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-2 text-xs">
-                    <div><span className="text-green-400 font-bold">Success:</span> {sc.onSuccess}</div>
-                    <div><span className="text-red-400 font-bold">Failure:</span> {sc.onFailure}</div>
+                    <div><span className="text-[var(--difficulty-easy)] font-bold">Success:</span> {sc.onSuccess}</div>
+                    <div><span className="text-[var(--accent-danger)] font-bold">Failure:</span> {sc.onFailure}</div>
                   </div>
                 </div>
               ))}
@@ -172,7 +172,7 @@ export default function ChallengesPage() {
           </div>
 
           {/* Reward */}
-          <div className="card border-l-4 border-l-green-600">
+          <div className="card border-l-4 border-l-[var(--difficulty-easy)]">
             <h3 className="text-lg mb-2">Reward</h3>
             <p className="text-sm">{encounter.reward}</p>
           </div>
