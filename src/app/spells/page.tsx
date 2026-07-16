@@ -175,6 +175,14 @@ function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (
         {spell.ritual && <span className="ml-1 text-[var(--text-3)] font-bold">[R]</span>}
       </div>
 
+      {/* Classes */}
+      <div className="flex flex-wrap gap-1 mb-2">
+        {spell.classes.map(c => (
+          <span key={c} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--steel-800)] text-[var(--text-2)]">{c}</span>
+        ))}
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--steel-950)] text-[var(--text-2)] opacity-60">{spell.source}</span>
+      </div>
+
       {/* Key mechanics row */}
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm mb-2">
         <span><span className="text-[var(--bronze)] font-bold">Cast:</span> {spell.castingTime}</span>
@@ -197,17 +205,9 @@ function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (
         </p>
       )}
 
-      {/* Classes */}
-      <div className="flex flex-wrap gap-1 mt-2">
-        {spell.classes.map(c => (
-          <span key={c} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--steel-800)] text-[var(--text-2)]">{c}</span>
-        ))}
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--steel-950)] text-[var(--text-2)] opacity-60">{spell.source}</span>
-      </div>
-
       {/* Full description */}
       {!compact && (
-        <p className="text-sm text-[var(--text-2)] mt-3 italic">{spell.description}</p>
+        <p className="text-sm mt-3 leading-relaxed">{spell.description}</p>
       )}
     </div>
   );
