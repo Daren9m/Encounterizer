@@ -10,6 +10,7 @@ The monster index includes material from the *System Reference Document 5.2.1* b
 
 - `src/data/monster-visuals.json` is the editable sidecar keyed by `monsterId`. It contains source facts, description fields, review/image status, prompt version, and a hash of visual-relevant monster inputs.
 - `src/data/monster-visual-batches.json` assigns every monster exactly once to the pilot or one of 11 production batches.
+- `src/data/monster-images.json` is the generated, client-safe image index. It includes only draft or later website assets and their accessible alt text, keeping prompt and review metadata out of the browser bundle.
 - `src/lib/monster-visuals.ts` defines the schema, art bible, validation, hashing, batching, and prompt compiler.
 - `scripts/enrich-bestiary-visuals.ts` synchronizes records after a bestiary import without replacing authored descriptions.
 
@@ -21,6 +22,8 @@ The monster index includes material from the *System Reference Document 5.2.1* b
 4. Review against the licensed source and set `reviewStatus` to `approved`. Set `imageStatus` to `ready` only when the description is ready for generation.
 5. Compile the prompt through `compileMonsterImagePrompt`, generate candidate images, and track review through `draft` and `approved`.
 6. Run `npm run visuals:audit`, `npm run visuals:check`, `npm test`, and `npm run typecheck` before merging.
+
+`npm run visuals:sync` updates the runtime image index whenever an image status changes. The bestiary automatically displays indexed portraits in cards and the selected-monster panel; blocked and ready records retain the text-only fallback.
 
 Draft and approved website assets use the stable path `public/images/monsters/<monsterId>.webp`. Production files are 1024×1280 WebP portraits; keep model-native PNG files outside the repository as generation sources. Run `npm run visuals:audit-images` to verify that every tracked draft has exactly one optimized asset, that dimensions and filenames follow the contract, and that no source PNGs remain in the public bundle.
 

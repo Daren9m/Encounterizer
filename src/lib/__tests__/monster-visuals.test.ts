@@ -4,6 +4,7 @@ import { ALL_MONSTERS } from '@/data';
 import batchManifestJson from '@/data/monster-visual-batches.json';
 import physicalDescriptionJson from '@/data/monster-physical-descriptions.json';
 import visualDatasetJson from '@/data/monster-visuals.json';
+import { getMonsterImage } from '@/data/monster-visual-index';
 import {
   PILOT_MONSTER_IDS,
   compileMonsterImagePrompt,
@@ -75,6 +76,28 @@ describe('monster visual pipeline', () => {
     for (const record of dataset.records) {
       expect(runtimeIndex.descriptions[record.monsterId], record.monsterId).toBe(record.appearance);
     }
+  });
+
+  it('publishes stable WebP URLs only for image statuses backed by audited assets', () => {
+    const dataset = visualDatasetJson as MonsterVisualDataset;
+    const published = dataset.records.filter((record) =>
+      ['draft', 'approved', 'needs-revision'].includes(record.imageStatus),
+    );
+
+    expect(published.length).toBeGreaterThan(0);
+    for (const record of published) {
+      expect(getMonsterImage(record.monsterId)).toEqual({
+        src: `/images/monsters/${record.monsterId}.webp`,
+        alt: record.altText,
+      });
+    }
+
+    const unavailable = dataset.records.find((record) =>
+      ['blocked', 'ready'].includes(record.imageStatus),
+    );
+    expect(unavailable).toBeDefined();
+    expect(getMonsterImage(unavailable!.monsterId)).toBeUndefined();
+    expect(getMonsterImage('custom-monster')).toBeUndefined();
   });
 
   it('hashes visual inputs while ignoring combat-only numeric changes', () => {
