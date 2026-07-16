@@ -11,6 +11,8 @@ import { plateGrid, buildPlateInstance, applyPress } from '../puzzle-engines/pla
 import { sumLock, buildSumLockInstance, countSumCompletions } from '../puzzle-engines/sum-lock';
 import { tilePath, buildTilePathInstance, cluePaths } from '../puzzle-engines/tile-path';
 import { cipherSuite, encodeCaesar, decodeCaesar, encodeAtbash, encodeKeyword, decodeKeyword, buildKeywordAlphabet } from '../puzzle-engines/cipher';
+import { riddleFrames, riddlePool } from '../puzzle-engines/riddle-frames';
+import { RIDDLES } from '../../data/riddles';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
   return {
@@ -281,5 +283,30 @@ describe('cipher suite', () => {
       expect(hard.handout.partialKey).toBeUndefined();
       expect(hard.handout.body).toMatch(/[ᚠ-ᛸ]/); // runic glyphs
     }
+  });
+});
+
+describe('riddle frames', () => {
+  it('pools respect the obscurity mapping and never run dry', () => {
+    for (const diff of DIFFS) {
+      const pool = riddlePool(diff, 'ancient-tomb');
+      expect(pool.length).toBeGreaterThanOrEqual(5);
+      const allowed = diff === 'Easy' ? [1] : diff === 'Medium' ? [1, 2] : [2, 3];
+      for (const r of pool) expect(allowed).toContain(r.obscurity);
+    }
+  });
+  it('door frame carries one riddle; duel frame carries three distinct riddles', () => {
+    const door = riddleFrames.generate({ levers: mkLevers('Medium', 31), rng: seededRandom(31), category: 'word' });
+    expect(door.dmAdjudication).toBeTruthy();
+    expect(door.handout?.kind).toBe('text');
+    const duel = riddleFrames.generate({ levers: mkLevers('Medium', 31), rng: seededRandom(31), category: 'minigame' });
+    const answers = RIDDLES.filter(r => duel.dmBrief.includes(r.answer));
+    expect(duel.dmBrief).toContain('best of 3');
+    expect(new Set(answers.map(a => a.id)).size).toBeGreaterThanOrEqual(3);
+  });
+  it('determinism: same seed ⇒ same riddles', () => {
+    const a = riddleFrames.generate({ levers: mkLevers('Easy', 7), rng: seededRandom(7), category: 'word' });
+    const b = riddleFrames.generate({ levers: mkLevers('Easy', 7), rng: seededRandom(7), category: 'word' });
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
   });
 });
