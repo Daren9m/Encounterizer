@@ -7,6 +7,8 @@ import { logicGrid, buildGridInstance, countGridSolutions } from '../puzzle-engi
 import { runeLock, buildRuneLockInstance, consistentCandidates } from '../puzzle-engines/rune-lock';
 import { riverCrossing, buildRiverInstance, solveRiver, drawPassengerNames } from '../puzzle-engines/river-crossing';
 import { sequenceLock, buildSequenceInstance, matchingPredictions, canonicalSequence } from '../puzzle-engines/sequence';
+import { plateGrid, buildPlateInstance, applyPress } from '../puzzle-engines/plate-grid';
+import { sumLock, buildSumLockInstance, countSumCompletions } from '../puzzle-engines/sum-lock';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
   return {
@@ -178,6 +180,43 @@ describe('sequence lock', () => {
     if (out.handout?.kind === 'symbol-sequence') {
       expect(out.handout.blanks).toHaveLength(1);
       expect(out.handout.options?.length).toBeGreaterThanOrEqual(3);
+    }
+  });
+});
+
+describe('plate grid', () => {
+  const PARAMS: Record<Difficulty, [number, number]> = { Easy: [3, 3], Medium: [4, 4], Hard: [5, 5] };
+  it('the recorded presses solve the grid, and presses are distinct (200 seeds × 3)', () => {
+    for (const diff of DIFFS) {
+      const [size, k] = PARAMS[diff];
+      for (let s = 0; s < 200; s++) {
+        const inst = buildPlateInstance(size, k, seededRandom(s));
+        expect(new Set(inst.presses).size).toBe(k);
+        const cells = [...inst.initial];
+        for (const p of inst.presses) applyPress(cells, size, p);
+        expect(cells.every(Boolean), `diff=${diff} seed=${s}`).toBe(true);
+        expect(inst.initial.every(Boolean)).toBe(false); // not pre-solved
+      }
+    }
+  });
+});
+
+describe('sum lock', () => {
+  it('masked squares have exactly one completion (200 seeds × 3 mask counts)', () => {
+    for (const masked of [3, 4, 5]) {
+      for (let s = 0; s < 200; s++) {
+        const inst = buildSumLockInstance(masked, seededRandom(s));
+        expect(inst.masked, `mask count: masked=${masked} seed=${s}`).toHaveLength(masked);
+        expect(countSumCompletions(inst, 2), `masked=${masked} seed=${s}`).toBe(1);
+      }
+    }
+  });
+  it('generate() emits a grid-diagram with masked cells and a legend', () => {
+    const out = sumLock.generate({ levers: mkLevers('Medium', 13), rng: seededRandom(13) });
+    expect(out.handout?.kind).toBe('grid-diagram');
+    if (out.handout?.kind === 'grid-diagram') {
+      expect(out.handout.cells.filter(c => c.state === 'masked')).toHaveLength(4);
+      expect(out.handout.legend?.length).toBeGreaterThan(0);
     }
   });
 });
