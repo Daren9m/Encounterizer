@@ -255,6 +255,18 @@ select:focus, input:focus {
   animation: fadeIn 0.3s ease-out;
 }
 
+/* Runic glyphs for cipher/rune-lock handouts. unicode-range scopes the
+   font to the runic block, so it can sit first in any font stack. */
+@font-face {
+  font-family: 'Noto Sans Runic';
+  src: url('/fonts/noto-sans-runic-subset.woff2') format('woff2');
+  font-display: swap;
+  unicode-range: U+16A0-16F8;
+}
+.font-runic {
+  font-family: 'Noto Sans Runic', var(--font-body, sans-serif);
+}
+
 /* ─── Print styles ────────────────────────────────────────────────
    The whole theme flows from the CSS variables, so remapping them here
    flips every component to a printable light palette at once. Controls

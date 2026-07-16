@@ -82,6 +82,18 @@ export default function CreditsPage() {
           </a>
           .
         </p>
+        <p className="text-sm text-[var(--text-2)]">
+          Noto Sans Runic &mdash; &copy; Google, licensed under the{' '}
+          <a
+            href="https://scripts.sil.org/OFL"
+            className="text-[var(--bronze)] underline"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            SIL Open Font License 1.1
+          </a>{' '}
+          (subset, runic block only).
+        </p>
       </section>
 
       <p className="text-center">
