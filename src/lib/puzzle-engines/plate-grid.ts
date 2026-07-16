@@ -5,7 +5,7 @@
 import { shuffleArray } from '../random';
 import type { Rng } from '../random';
 import { estimatedMinutes, hintCount, operatorCount } from '../noncombat/levers';
-import { failureText, rewardText, cap } from '../noncombat/theming';
+import { failureText, rewardText } from '../noncombat/theming';
 import type { EngineInput, EngineOutput, PuzzleFamily } from './family';
 
 export interface PlateInstance { size: number; initial: boolean[]; presses: number[] }
@@ -22,9 +22,11 @@ export function applyPress(cells: boolean[], size: number, idx: number): void {
 
 export function buildPlateInstance(size: number, k: number, rng: Rng): PlateInstance {
   // Work backward from all-lit. Presses are involutions, so re-applying
-  // the same k distinct presses restores all-lit. No verification loop
-  // needed — correct by construction (all-lit start is never emitted
-  // because k ≥ 1 distinct presses always change at least one cell).
+  // the same k distinct presses restores all-lit. The initial state can
+  // never be all-lit for the locked (size, k) params: a k-press set nets
+  // to zero only if it equals a "quiet pattern" (kernel element of the
+  // toggle matrix), and no 4x4/5x5 quiet pattern has weight 4 or 5 —
+  // verify anew if these params ever change.
   const cells = Array(size * size).fill(true);
   const presses = shuffleArray(Array.from({ length: size * size }, (_, i) => i), rng).slice(0, k);
   for (const p of presses) applyPress(cells, size, p);
@@ -48,13 +50,13 @@ export const plateGrid: PuzzleFamily = {
       `Stepping on a plate flips it AND its four neighbors — corners touch three plates, edges four, the middle five.`,
       `Work on one row at a time: clear the darkness downward like sweeping dust.`,
       `It can be done in ${k} steps.`,
-      `Two people pressing the same plate twice cancels out — waste no steps.`,
+      `Pressing the same plate twice undoes it — never repeat a plate.`,
     ];
     return {
       name: 'The Waking Floor',
       estimatedMinutes: estimatedMinutes(levers.timeBudget),
       dmBrief: `A ${size}×${size} grid of glowing floor plates. Stepping on a plate toggles it and its orthogonal neighbors. All plates lit ⇒ the way opens. One valid solution (${k} presses): ${pressList}. The mechanism wants ${Math.min(levers.partySize, ops)} bodies standing on activated corner sigils to stay open afterward.`,
-      readAloud: `The floor ahead is a grid of ${size} by ${size} plates of ${pack.materials[1] ?? pack.materials[0]}, some glowing softly, some dark — ${cap(pack.sensory[0])}. A carved footprint marks the first plate invitingly.`,
+      readAloud: `The floor ahead is a grid of ${size} by ${size} plates of ${pack.materials[1] ?? pack.materials[0]}, some glowing softly, some dark — ${pack.sensory[0]}. A carved footprint marks the first plate invitingly.`,
       handout: {
         kind: 'grid-diagram', rows: size, cols: size,
         cells: inst.initial.map(on => ({ state: on ? 'on' as const : 'off' as const })),

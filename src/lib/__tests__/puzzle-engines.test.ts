@@ -199,6 +199,17 @@ describe('plate grid', () => {
       }
     }
   });
+  it('generate() emits an on/off grid-diagram and a "one valid solution" solution', () => {
+    for (const diff of DIFFS) {
+      const out = plateGrid.generate({ levers: mkLevers(diff, 19), rng: seededRandom(19) });
+      expect(out.handout?.kind).toBe('grid-diagram');
+      if (out.handout?.kind === 'grid-diagram') {
+        expect(out.handout.cells.every(c => c.state === 'on' || c.state === 'off')).toBe(true);
+      }
+      expect(out.solution).toMatch(/[Oo]ne valid solution/);
+      expect(out.readAloud).not.toMatch(/— [A-Z]/); // em-dash fragments stay lowercase
+    }
+  });
 });
 
 describe('sum lock', () => {
