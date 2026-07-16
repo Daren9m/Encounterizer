@@ -8,6 +8,7 @@ import { social, buildAttitudeTrack } from '../challenge-frameworks/social';
 import { exploration, TIER_GUIDANCE } from '../challenge-frameworks/exploration';
 import { trap, COUNTERMEASURE_STEPS } from '../challenge-frameworks/trap';
 import { chase, buildChase } from '../challenge-frameworks/chase';
+import { investigation, buildClueWeb } from '../challenge-frameworks/investigation';
 import { LEVERAGE } from '../../data/noncombat-cast';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
@@ -188,5 +189,45 @@ describe('chase framework (spec §8.5)', () => {
     expect(out.chase!.rounds).toBe(5);
     expect(out.situation).toMatch(/Quarry/i);
     expect(out.situation).toContain('3 of 5'); // groupCheckThreshold lane note
+  });
+});
+
+describe('investigation framework (spec §8.6)', () => {
+  it('three-clue rule: node counts by budget, 3 clues per node, 3 distinct vectors, culprit last (100 seeds)', () => {
+    const NODES = { quick: 2, standard: 3, 'set-piece': 4 } as const;
+    for (const budget of ['quick', 'standard', 'set-piece'] as const) {
+      for (let s = 0; s < 100; s++) {
+        const web = buildClueWeb(mkLevers('Medium', s, { timeBudget: budget }), seededRandom(s));
+        expect(web.nodes).toHaveLength(NODES[budget]);
+        for (const node of web.nodes) {
+          expect(node.clues).toHaveLength(3);
+          expect(new Set(node.clues.map(c => c.vector)).size).toBe(3);
+          for (const clue of node.clues) expect(clue.pointsTo).toBe(node.revelation);
+        }
+        expect(web.nodes[web.nodes.length - 1].revelation).toContain(web.truth.culprit);
+        expect(web.redHerring.text.length).toBeGreaterThan(0);
+        expect(web.redHerring.disconfirmedBy.length).toBeGreaterThan(0);
+      }
+    }
+  });
+  it('generate() ships a clue-cards handout with every clue plus the red herring', () => {
+    const out = investigation.generate({ levers: mkLevers('Medium', 41), rng: seededRandom(41) });
+    expect(out.clueWeb).toBeDefined();
+    expect(out.handout?.kind).toBe('clue-cards');
+    if (out.handout?.kind === 'clue-cards') {
+      const expected = out.clueWeb!.nodes.length * 3 + 1;
+      expect(out.handout.cards).toHaveLength(expected);
+    }
+  });
+  it('deterministic: same seed ⇒ identical web', () => {
+    const a = buildClueWeb(mkLevers('Hard', 43), seededRandom(43));
+    const b = buildClueWeb(mkLevers('Hard', 43), seededRandom(43));
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+  });
+  it('red-herring subtlety follows difficulty (same seed, different register)', () => {
+    const easy = buildClueWeb(mkLevers('Easy', 47), seededRandom(47));
+    const hard = buildClueWeb(mkLevers('Hard', 47), seededRandom(47));
+    expect(easy.redHerring.text).not.toBe(hard.redHerring.text);
+    expect(hard.redHerring.disconfirmedBy).toMatch(/right question/i);
   });
 });
