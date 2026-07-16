@@ -22,6 +22,10 @@ The monster index includes material from the *System Reference Document 5.2.1* b
 5. Compile the prompt through `compileMonsterImagePrompt`, generate candidate images, and track review through `draft` and `approved`.
 6. Run `npm run visuals:audit`, `npm run visuals:check`, `npm test`, and `npm run typecheck` before merging.
 
+Draft and approved website assets use the stable path `public/images/monsters/<monsterId>.webp`. Production files are 1024×1280 WebP portraits; keep model-native PNG files outside the repository as generation sources. Run `npm run visuals:audit-images` to verify that every tracked draft has exactly one optimized asset, that dimensions and filenames follow the contract, and that no source PNGs remain in the public bundle.
+
+The style-pilot comparison grid is stored at `docs/visual-review/pilot-contact-sheet.webp` for batch-level review.
+
 If a monster's visual-relevant inputs or the prompt version changes, synchronization preserves its authored text but marks approved work `needs-revision`. Duplicate or orphaned records stop synchronization rather than being silently discarded.
 
 Run `npm run visuals:export-review` to create a batch-by-batch Markdown review packet under `docs/visual-review`. Those files are generated views; make corrections in the sidecar or authored seed source and export again.
