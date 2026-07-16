@@ -125,6 +125,7 @@ function PuzzleBuilder() {
     });
     setPuzzle(p);
     setShowSolution(false);
+    setLinkCopied(false);
     setHistory(prev => [p, ...prev.filter(h => h.id !== p.id).slice(0, 9)]);
   }
 

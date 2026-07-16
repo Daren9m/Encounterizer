@@ -92,4 +92,13 @@ describe('frozen draw-order contract (golden pins)', () => {
       '424242=>puzzle-424242-plate-grid|city-streets|Easy|physical',
     ]);
   });
+  it('explicit levers consume no draws before construction (golden pin)', () => {
+    const p = generatePuzzle({
+      seed: 42, category: 'logic', difficulty: 'Hard', theme: 'sacred-temple',
+      tone: 'grim', timeBudget: 'quick', partyLevel: 9, partySize: 6,
+    });
+    expect(`${p.id}|${p.theme}|${p.difficulty}|${p.category}`).toBe(
+      'puzzle-42-rune-lock|sacred-temple|Hard|logic',
+    );
+  });
 });

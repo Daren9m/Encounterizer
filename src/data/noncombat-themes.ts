@@ -60,8 +60,8 @@ export const THEME_PACKS: ThemePack[] = [
       'TURN BACK AT THE RIDGE OF BONES',
     ],
     cast: ['a weathered trail guide with a grudge', 'a homesteader defending a shaky claim', 'a bounty hunter working a cold trail', 'a trading-post keeper who hears everything', 'a wandering preacher with a violent past', 'a scout who trusts tracks over talk'],
-    rewards: ['a deed to land richer than it looks', 'a rifle with a story worth more than the gun', 'a bounty voucher redeemable in any town', 'a map marking a spring no one else knows', 'the trail guide\'s lasting respect', 'a horse trained better than it has any right to be'],
-    consequences: ['the weather turns hard and fast', 'word of you reaches the nearest town by wire and rumor', 'the trail behind you washes out', 'local wildlife grows bold and hostile', 'a bounty hunter takes fresh interest in your party', 'the herd startles and scatters everything in its path'],
+    rewards: ['a deed to land richer than it looks', 'a hunting bow with a story worth more than the bow', 'a bounty voucher redeemable in any town', 'a map marking a spring no one else knows', 'the trail guide\'s lasting respect', 'a horse trained better than it has any right to be'],
+    consequences: ['the weather turns hard and fast', 'word of you reaches the nearest town by rider and rumor', 'the trail behind you washes out', 'local wildlife grows bold and hostile', 'a bounty hunter takes fresh interest in your party', 'the herd startles and scatters everything in its path'],
     creatures: ['Wolf', 'Giant Spider', 'Owlbear', 'Griffon'],
   },
   {
