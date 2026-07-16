@@ -5,6 +5,7 @@ import type { ResolvedLevers, Difficulty } from '../noncombat/types';
 import { knightsKnaves, buildKkInstance, consistentAssignments } from '../puzzle-engines/knights-knaves';
 import { logicGrid, buildGridInstance, countGridSolutions } from '../puzzle-engines/logic-grid';
 import { runeLock, buildRuneLockInstance, consistentCandidates } from '../puzzle-engines/rune-lock';
+import { riverCrossing, buildRiverInstance, solveRiver } from '../puzzle-engines/river-crossing';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
   return {
@@ -98,5 +99,34 @@ describe('rune lock', () => {
       expect(out.handout.attempts.length).toBeGreaterThanOrEqual(4);
       expect(out.handout.runeSet).toHaveLength(5);
     }
+  });
+});
+
+describe('river crossing', () => {
+  it('solves the classic wolf–goat–cabbage in 7 crossings', () => {
+    const sol = solveRiver(3, 1, [[0, 1], [1, 2]]);
+    expect(sol?.moves).toBe(7);
+  });
+  it('instances are solvable with min-moves in the difficulty band (200 seeds × 3)', () => {
+    const BANDS: Record<Difficulty, [number, number]> = { Easy: [3, 5], Medium: [6, 9], Hard: [10, 14] };
+    for (const diff of DIFFS) {
+      for (let s = 0; s < 200; s++) {
+        const inst = buildRiverInstance(diff, seededRandom(s));
+        const sol = solveRiver(inst.m, inst.capacity, inst.constraints);
+        expect(sol, `diff=${diff} seed=${s}`).not.toBeNull();
+        expect(sol!.moves).toBeGreaterThanOrEqual(BANDS[diff][0]);
+        expect(sol!.moves).toBeLessThanOrEqual(BANDS[diff][1]);
+      }
+    }
+  });
+  it('Hard instances vary across seeds (no silent 100%-fallback degeneracy)', () => {
+    const sets = new Set(Array.from({ length: 20 }, (_, s) =>
+      JSON.stringify(buildRiverInstance('Hard', seededRandom(s)).constraints)));
+    expect(sets.size).toBeGreaterThanOrEqual(2);
+  });
+  it('generate() names every passenger and each constraint in the brief', () => {
+    const out = riverCrossing.generate({ levers: mkLevers('Medium', 9), rng: seededRandom(9) });
+    expect(out.dmBrief).toContain('crossings');
+    expect(out.solution.length).toBeGreaterThan(0);
   });
 });
