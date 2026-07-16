@@ -151,6 +151,6 @@ describe('trap framework (spec §8.4)', () => {
   it('surfaces detection clues in the situation and the twist as the complication', () => {
     const out = trap.generate({ levers: mkLevers('Medium', 19), rng: seededRandom(19) });
     expect(out.situation).toMatch(/Clue/i);
-    expect(out.complication.length).toBeGreaterThan(10);
+    expect(out.complication).toMatch(/^Twist: .+\.$/);
   });
 });

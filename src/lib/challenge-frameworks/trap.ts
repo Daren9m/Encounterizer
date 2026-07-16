@@ -37,7 +37,7 @@ export const trap: ChallengeFramework = {
         { skill: 'Investigation', dc: dc - 2, onSuccess: 'You deduce the mechanism and where to interrupt it.', onFailure: 'You suspect something but cannot pinpoint it.' },
         ...stepChecks,
       ],
-      complication: `Twist: ${frame.twist}`,
+      complication: `Twist: ${frame.twist}.`,
       outcomes: [
         { label: 'Detected and disarmed', description: `All ${steps.length} countermeasure steps succeed — no harm done, and the twist may pay off.` },
         { label: 'Detected, bypassed', description: 'The party routes around or triggers it from safety; the twist stays unexplored.' },
