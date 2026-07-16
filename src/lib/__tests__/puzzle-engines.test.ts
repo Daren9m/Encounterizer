@@ -9,6 +9,7 @@ import { riverCrossing, buildRiverInstance, solveRiver, drawPassengerNames } fro
 import { sequenceLock, buildSequenceInstance, matchingPredictions, canonicalSequence } from '../puzzle-engines/sequence';
 import { plateGrid, buildPlateInstance, applyPress } from '../puzzle-engines/plate-grid';
 import { sumLock, buildSumLockInstance, countSumCompletions } from '../puzzle-engines/sum-lock';
+import { tilePath, buildTilePathInstance, cluePaths } from '../puzzle-engines/tile-path';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
   return {
@@ -228,6 +229,30 @@ describe('sum lock', () => {
     if (out.handout?.kind === 'grid-diagram') {
       expect(out.handout.cells.filter(c => c.state === 'masked')).toHaveLength(4);
       expect(out.handout.legend?.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('tile path', () => {
+  const SYM = ['Sun', 'Moon', 'Star', 'Comet', 'Cloud'];
+  const PARAMS: Record<Difficulty, [number, number]> = { Easy: [4, 4], Medium: [5, 5], Hard: [6, 7] };
+  it('exactly one clue-consistent path exists (200 seeds × 3)', () => {
+    for (const diff of DIFFS) {
+      const [size, len] = PARAMS[diff];
+      for (let s = 0; s < 200; s++) {
+        const inst = buildTilePathInstance(size, len, SYM, seededRandom(s));
+        const paths = cluePaths(inst);
+        expect(paths, `diff=${diff} seed=${s}`).toHaveLength(1);
+        expect(paths[0]).toEqual(inst.path);
+      }
+    }
+  });
+  it('generate() emits a labeled grid-diagram whose legend carries the clue', () => {
+    const out = tilePath.generate({ levers: mkLevers('Easy', 17), rng: seededRandom(17) });
+    expect(out.handout?.kind).toBe('grid-diagram');
+    if (out.handout?.kind === 'grid-diagram') {
+      expect(out.handout.cells.every(c => c.label)).toBe(true);
+      expect(out.handout.legend?.some(l => l.includes('→'))).toBe(true);
     }
   });
 });
