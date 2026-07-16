@@ -28,7 +28,7 @@ export default function MonsterStatBlock({ monster }: { monster: Monster }) {
   return (
     <div className="stat-block animate-fade-in">
       {/* Header */}
-      <h3 className="text-xl font-bold">{monster.name}</h3>
+      <h3 className="text-xl">{monster.name}</h3>
       <p className="text-sm italic mb-3">
         {monster.size} {monster.type}
         {monster.subtype ? ` (${monster.subtype})` : ''}, {monster.alignment}
@@ -124,7 +124,7 @@ export default function MonsterStatBlock({ monster }: { monster: Monster }) {
       {monster.actions.length > 0 && (
         <>
           <hr className="border-[var(--steel-800)] my-2" />
-          <h4 className="text-base font-bold text-[var(--bronze)] mb-1">Actions</h4>
+          <h4 className="text-base mb-1">Actions</h4>
           {monster.actions.map((a, i) => (
             <div key={i} className="text-sm mb-2">
               <span className="stat-label italic">{a.name}. </span>
@@ -138,7 +138,7 @@ export default function MonsterStatBlock({ monster }: { monster: Monster }) {
       {monster.bonusActions && monster.bonusActions.length > 0 && (
         <>
           <hr className="border-[var(--steel-800)] my-2" />
-          <h4 className="text-base font-bold text-[var(--bronze)] mb-1">Bonus Actions</h4>
+          <h4 className="text-base mb-1">Bonus Actions</h4>
           {monster.bonusActions.map((a, i) => (
             <div key={i} className="text-sm mb-2">
               <span className="stat-label italic">{a.name}. </span>
@@ -152,7 +152,7 @@ export default function MonsterStatBlock({ monster }: { monster: Monster }) {
       {monster.reactions && monster.reactions.length > 0 && (
         <>
           <hr className="border-[var(--steel-800)] my-2" />
-          <h4 className="text-base font-bold text-[var(--bronze)] mb-1">Reactions</h4>
+          <h4 className="text-base mb-1">Reactions</h4>
           {monster.reactions.map((a, i) => (
             <div key={i} className="text-sm mb-2">
               <span className="stat-label italic">{a.name}. </span>
@@ -166,7 +166,7 @@ export default function MonsterStatBlock({ monster }: { monster: Monster }) {
       {monster.legendary && (
         <>
           <hr className="border-[var(--steel-800)] my-2" />
-          <h4 className="text-base font-bold text-[var(--bronze)] mb-1">Legendary Actions</h4>
+          <h4 className="text-base mb-1">Legendary Actions</h4>
           <p className="text-sm mb-2 italic">{monster.legendary.description}</p>
           {monster.legendary.actions.map((a, i) => (
             <div key={i} className="text-sm mb-2">

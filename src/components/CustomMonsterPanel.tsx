@@ -66,7 +66,7 @@ export default function CustomMonsterPanel({ allMonsters }: { allMonsters: Monst
         aria-controls="custom-monster-panel"
         className="flex items-center justify-between w-full text-left"
       >
-        <span className="font-bold text-[var(--bronze)]">
+        <span className="font-display">
           Custom Monsters{customMonsters.length > 0 ? ` (${customMonsters.length})` : ''}
         </span>
         <span aria-hidden="true" className="text-[var(--text-2)]">

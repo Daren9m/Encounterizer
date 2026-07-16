@@ -50,7 +50,7 @@ export default function ChallengesPage() {
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-3xl font-bold text-[var(--bronze)] mb-2">Non-Combat Encounters</h1>
+      <h1 className="text-3xl mb-2">Non-Combat Encounters</h1>
       <p className="text-[var(--text-2)] mb-6">
         Social encounters, exploration challenges, skill challenges, and traps — ready to run.
       </p>
@@ -59,20 +59,20 @@ export default function ChallengesPage() {
       <div className="card mb-6 print:hidden">
         <div className="grid sm:grid-cols-3 gap-4 mb-4">
           <div>
-            <label htmlFor="challenge-type" className="block text-xs font-bold text-[var(--bronze)] mb-1 uppercase tracking-wider">Type</label>
+            <label htmlFor="challenge-type" className="micro-label block mb-1">Type</label>
             <select id="challenge-type" value={type} onChange={e => setType(e.target.value as ChallengeType | '')} className="w-full">
               <option value="">Any</option>
               {types.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </div>
           <div>
-            <label htmlFor="challenge-difficulty" className="block text-xs font-bold text-[var(--bronze)] mb-1 uppercase tracking-wider">Difficulty</label>
+            <label htmlFor="challenge-difficulty" className="micro-label block mb-1">Difficulty</label>
             <select id="challenge-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value as typeof difficulty)} className="w-full">
               {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
           <div>
-            <label htmlFor="challenge-party-level" className="block text-xs font-bold text-[var(--bronze)] mb-1 uppercase tracking-wider">Party Level</label>
+            <label htmlFor="challenge-party-level" className="micro-label block mb-1">Party Level</label>
             <input id="challenge-party-level" type="number" min={1} max={20} value={partyLevel} onChange={e => setPartyLevel(Math.max(1, Math.min(20, Number(e.target.value))))} className="w-full" />
           </div>
         </div>
@@ -103,7 +103,7 @@ export default function ChallengesPage() {
         <div className="space-y-4 animate-fade-in">
           <div className="card">
             <div className="flex items-start justify-between mb-2">
-              <h2 className="text-2xl font-bold text-[var(--bronze)]">{encounter.name}</h2>
+              <h2 className="text-2xl">{encounter.name}</h2>
               <div className="flex gap-2">
                 <span className={`px-3 py-1 rounded-full text-sm font-bold ${
                   encounter.difficulty === 'Easy' ? 'badge-easy' : encounter.difficulty === 'Medium' ? 'badge-medium' : 'badge-hard'
@@ -117,25 +117,25 @@ export default function ChallengesPage() {
 
           {/* Read Aloud */}
           <div className="card border-l-4 border-l-[var(--bronze)]">
-            <h3 className="text-lg font-bold text-[var(--bronze)] mb-2">Read Aloud</h3>
+            <h3 className="text-lg mb-2">Read Aloud</h3>
             <p className="text-sm italic">{encounter.readAloud}</p>
           </div>
 
           {/* Situation & Stakes */}
           <div className="grid md:grid-cols-2 gap-4">
             <div className="card">
-              <h3 className="text-lg font-bold text-[var(--bronze)] mb-2">Situation</h3>
+              <h3 className="text-lg mb-2">Situation</h3>
               <p className="text-sm">{encounter.situation}</p>
             </div>
             <div className="card">
-              <h3 className="text-lg font-bold text-[var(--accent-danger)] mb-2">Stakes</h3>
+              <h3 className="text-lg mb-2">Stakes</h3>
               <p className="text-sm">{encounter.stakes}</p>
             </div>
           </div>
 
           {/* Skill Checks */}
           <div className="card">
-            <h3 className="text-lg font-bold text-[var(--bronze)] mb-3">Skill Checks</h3>
+            <h3 className="text-lg mb-3">Skill Checks</h3>
             <div className="space-y-3">
               {encounter.skillChecks.map((sc, i) => (
                 <div key={i} className="p-3 rounded bg-[var(--steel-950)]">
@@ -154,13 +154,13 @@ export default function ChallengesPage() {
 
           {/* Complication */}
           <div className="card border-l-4 border-l-[var(--accent-danger)]">
-            <h3 className="text-lg font-bold text-[var(--accent-danger)] mb-2">Complication</h3>
+            <h3 className="text-lg mb-2">Complication</h3>
             <p className="text-sm">{encounter.complication}</p>
           </div>
 
           {/* Outcomes */}
           <div className="card">
-            <h3 className="text-lg font-bold text-[var(--bronze)] mb-3">Possible Outcomes</h3>
+            <h3 className="text-lg mb-3">Possible Outcomes</h3>
             <div className="space-y-2">
               {encounter.outcomes.map((o, i) => (
                 <div key={i} className="p-3 rounded bg-[var(--steel-950)]">
@@ -173,7 +173,7 @@ export default function ChallengesPage() {
 
           {/* Reward */}
           <div className="card border-l-4 border-l-green-600">
-            <h3 className="text-lg font-bold text-green-500 mb-2">Reward</h3>
+            <h3 className="text-lg mb-2">Reward</h3>
             <p className="text-sm">{encounter.reward}</p>
           </div>
         </div>
@@ -182,7 +182,7 @@ export default function ChallengesPage() {
       {/* History (persists across visits) */}
       {history.length > 0 && !(history.length === 1 && encounter?.id === history[0].id) && (
         <div className="mt-6 print:hidden">
-          <h2 className="text-lg font-bold text-[var(--bronze)] mb-3">Recent Encounters</h2>
+          <h2 className="text-lg mb-3">Recent Encounters</h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
             {history.map(h => (
               <button key={h.id} type="button" onClick={() => setEncounter(h)}

@@ -39,7 +39,7 @@ function OverrideField({ label, value, placeholder, onChange }: OverrideFieldPro
   const id = `override-${label.replace(/\W+/g, '-').toLowerCase()}-${placeholder}`;
   return (
     <div>
-      <label htmlFor={id} className="block text-[10px] uppercase tracking-wider text-[var(--text-2)]">
+      <label htmlFor={id} className="micro-label block">
         {label}
       </label>
       <input
@@ -92,7 +92,7 @@ export default function PartySetupPanel({
   return (
     <div className="card mb-6 animate-fade-in space-y-4 print:hidden">
       <div>
-        <h3 className="text-lg font-bold text-[var(--bronze)]">Party Setup</h3>
+        <h3 className="text-lg">Party Setup</h3>
         <p className="text-sm text-[var(--text-2)]">
           Pick a class template and level per player — or open Customize to tweak the numbers.
           The forecast only needs the combat math, not the whole character sheet.
@@ -104,7 +104,7 @@ export default function PartySetupPanel({
           <div key={index} className="p-3 rounded bg-[var(--steel-950)] space-y-2">
             <div className="grid sm:grid-cols-[1fr_1.4fr_5rem_auto] gap-2 items-end">
               <div>
-                <label htmlFor={`member-name-${index}`} className="block text-[10px] uppercase tracking-wider text-[var(--text-2)]">
+                <label htmlFor={`member-name-${index}`} className="micro-label block">
                   Name
                 </label>
                 <input
@@ -116,7 +116,7 @@ export default function PartySetupPanel({
                 />
               </div>
               <div>
-                <label htmlFor={`member-template-${index}`} className="block text-[10px] uppercase tracking-wider text-[var(--text-2)]">
+                <label htmlFor={`member-template-${index}`} className="micro-label block">
                   Class Template
                 </label>
                 <select
@@ -135,7 +135,7 @@ export default function PartySetupPanel({
                 </select>
               </div>
               <div>
-                <label htmlFor={`member-level-${index}`} className="block text-[10px] uppercase tracking-wider text-[var(--text-2)]">
+                <label htmlFor={`member-level-${index}`} className="micro-label block">
                   Level
                 </label>
                 <input

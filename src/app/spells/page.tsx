@@ -49,7 +49,7 @@ export default function SpellsPage() {
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-3xl font-bold text-[var(--bronze)] mb-2">Spell Reference</h1>
+      <h1 className="text-3xl mb-2">Spell Reference</h1>
       <p className="text-[var(--text-2)] mb-4 text-sm">
         Type to search. Results appear instantly. Click a spell for full mechanics.
       </p>
@@ -137,7 +137,7 @@ export default function SpellsPage() {
           {/* Pinned comparison */}
           {pinned.length > 0 && (
             <div>
-              <h3 className="text-sm font-bold text-[var(--bronze)] mb-2 uppercase tracking-wider">
+              <h3 className="micro-label font-sans mb-2">
                 Pinned for Comparison ({pinned.length}/3)
               </h3>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -160,10 +160,10 @@ function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (
     <div className="card">
       {/* Header */}
       <div className="flex items-start justify-between mb-1">
-        <h2 className={`font-bold text-[var(--bronze)] ${compact ? 'text-base' : 'text-xl'}`}>{spell.name}</h2>
+        <h2 className={`${compact ? 'text-base' : 'text-xl'}`}>{spell.name}</h2>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => onPin(spell)} aria-pressed={isPinned} title={isPinned ? 'Unpin' : 'Pin for comparison'}
-            className={`text-sm px-2 py-0.5 rounded ${isPinned ? 'bg-[var(--bronze)] text-[var(--steel-950)]' : 'bg-[var(--steel-800)] text-[var(--text-2)]'}`}>
+            className={`text-sm px-2 py-0.5 rounded ${isPinned ? 'bg-[var(--bronze)] text-[#1d1105]' : 'bg-[var(--steel-800)] text-[var(--text-2)]'}`}>
             {isPinned ? 'Pinned' : 'Pin'}
           </button>
           <span className="text-sm font-bold text-[var(--bronze)]">{levelLabel(spell.level)}</span>

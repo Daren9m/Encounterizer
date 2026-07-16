@@ -11,7 +11,7 @@ export default function HomePage() {
     <div className="animate-fade-in">
       {/* Hero */}
       <section className="text-center py-12">
-        <h1 className="text-4xl md:text-5xl font-bold text-[var(--bronze)] mb-4">
+        <h1 className="text-4xl md:text-5xl mb-4">
           Encounterizer
         </h1>
         <p className="text-xl text-[var(--text-2)] max-w-2xl mx-auto mb-8">
@@ -43,7 +43,7 @@ export default function HomePage() {
 
       {/* Quick Stats — computed from the data modules, so they never drift */}
       <section className="mt-16 text-center">
-        <h2 className="text-2xl font-bold text-[var(--bronze)] mb-6">Powered by the Rules</h2>
+        <h2 className="text-2xl mb-6">Powered by the Rules</h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <StatBox value={String(ALL_MONSTERS.length)} label="SRD Monsters" />
           <StatBox value={String(SRD_SPELLS.length)} label="Spells" />
@@ -70,7 +70,7 @@ function FeatureCard({
       <div className="mb-3">
         <RouteIcon name={icon} size={28} className="text-[var(--bronze)]" />
       </div>
-      <h3 className="text-lg font-bold text-[var(--bronze)] group-hover:text-[var(--bronze-light)] mb-2">
+      <h3 className="text-lg mb-2">
         {title}
       </h3>
       <p className="text-sm text-[var(--text-2)]">{description}</p>

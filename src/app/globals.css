@@ -119,6 +119,13 @@ h1, h2, h3, .font-display {
   color: var(--bronze);
 }
 
+/* Stat block section headings (Actions, Reactions, Legendary Actions …) */
+.stat-block h4 {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 600;
+  color: var(--bronze);
+}
+
 /* Encounter difficulty badges (2024 tiers + Extreme assessment) */
 .badge-low { background-color: var(--difficulty-easy); color: #0d1a12; font-weight: 700; }
 .badge-moderate { background-color: var(--difficulty-medium); color: #1c1808; font-weight: 700; }

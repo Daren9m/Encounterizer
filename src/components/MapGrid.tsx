@@ -14,7 +14,7 @@ export default function MapGrid({ map }: { map: EncounterMap }) {
   return (
     <div className="animate-fade-in">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-bold text-[var(--bronze)]">{map.name}</h3>
+        <h3 className="text-lg">{map.name}</h3>
         <span className="text-sm text-[var(--text-2)]">
           {map.width} × {map.height} — {map.environment}
         </span>

@@ -423,13 +423,13 @@ function EncounterBuilder() {
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-3xl font-bold text-[var(--bronze)] mb-6">Encounter Builder</h1>
+      <h1 className="text-3xl mb-6">Encounter Builder</h1>
 
       {/* Controls */}
       <div className="card mb-6 print:hidden">
         <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div>
-            <label htmlFor="enc-party-size" className="block text-xs font-bold text-[var(--bronze)] mb-1 uppercase tracking-wider">
+            <label htmlFor="enc-party-size" className="micro-label block mb-1">
               Party Size
             </label>
             <input
@@ -440,7 +440,7 @@ function EncounterBuilder() {
             />
           </div>
           <div>
-            <label htmlFor="enc-party-level" className="block text-xs font-bold text-[var(--bronze)] mb-1 uppercase tracking-wider">
+            <label htmlFor="enc-party-level" className="micro-label block mb-1">
               Party Level
             </label>
             <input
@@ -451,7 +451,7 @@ function EncounterBuilder() {
             />
           </div>
           <div>
-            <label htmlFor="enc-difficulty" className="block text-xs font-bold text-[var(--bronze)] mb-1 uppercase tracking-wider">
+            <label htmlFor="enc-difficulty" className="micro-label block mb-1">
               Difficulty
             </label>
             <select id="enc-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value as Difficulty)} className="w-full">
@@ -459,7 +459,7 @@ function EncounterBuilder() {
             </select>
           </div>
           <div>
-            <label htmlFor="enc-environment" className="block text-xs font-bold text-[var(--bronze)] mb-1 uppercase tracking-wider">
+            <label htmlFor="enc-environment" className="micro-label block mb-1">
               Environment
             </label>
             <select id="enc-environment" value={environment} onChange={e => setEnvironment(e.target.value as Environment)} className="w-full">
@@ -586,7 +586,7 @@ function EncounterBuilder() {
       {/* Saved Encounters */}
       {savedHydrated && savedEncounters.length > 0 && (
         <details className="card mb-6 print:hidden">
-          <summary className="cursor-pointer font-bold text-[var(--bronze)]">
+          <summary className="cursor-pointer font-display">
             Saved Encounters ({savedEncounters.length})
           </summary>
           <ul className="mt-3 divide-y divide-[var(--steel-800)]">
@@ -642,7 +642,7 @@ function EncounterBuilder() {
       {/* Manual Monster Add Panel */}
       {showManualAdd && (
         <div className="card mb-6 animate-fade-in print:hidden">
-          <h3 className="text-lg font-bold text-[var(--bronze)] mb-3">Add Monsters</h3>
+          <h3 className="text-lg mb-3">Add Monsters</h3>
           <input
             id="enc-manual-search"
             type="text"
@@ -677,7 +677,7 @@ function EncounterBuilder() {
           {/* Encounter Header */}
           <div className="card">
             <div className="flex items-start justify-between mb-3">
-              <h2 className="text-2xl font-bold text-[var(--bronze)]">{encounter.name}</h2>
+              <h2 className="text-2xl">{encounter.name}</h2>
               {summary.assessment && <DifficultyBadge difficulty={summary.assessment} />}
             </div>
             {encounter.description && (
@@ -707,7 +707,7 @@ function EncounterBuilder() {
           {/* Battle Forecast */}
           {simRunning && (
             <div className="card animate-pulse" role="status" aria-label="Running battle forecast">
-              <h3 className="text-xl font-bold text-[var(--bronze)] mb-2">Battle Forecast</h3>
+              <h3 className="text-xl mb-2">Battle Forecast</h3>
               <p className="text-sm text-[var(--text-2)]">
                 Simulating 1,000 battles…
               </p>
@@ -726,7 +726,7 @@ function EncounterBuilder() {
 
           {/* Monsters */}
           <div className="card">
-            <h3 className="text-xl font-bold text-[var(--bronze)] mb-4">Monsters</h3>
+            <h3 className="text-xl mb-4">Monsters</h3>
             <div className="space-y-3">
               {encounter.monsters.map(em => (
                 <div key={em.monster.id}>
@@ -739,7 +739,7 @@ function EncounterBuilder() {
                       aria-expanded={expandedMonster === em.monster.id}
                       className="flex items-center gap-3 text-left flex-1 hover:opacity-80 transition-opacity"
                     >
-                      <span className="bg-[var(--accent-danger)] text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                      <span className="bg-[var(--steel-800)] text-[var(--bronze)] rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
                         {em.count}x
                       </span>
                       <div>
@@ -750,7 +750,7 @@ function EncounterBuilder() {
                       </div>
                     </button>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-[var(--bronze)]">
+                      <span className="xp-capsule text-xs">
                         {(em.monster.xp * em.count).toLocaleString()} XP
                       </span>
                       <button
@@ -783,7 +783,7 @@ function EncounterBuilder() {
           {/* Tactics */}
           {encounter.tactics && (
             <div className="card">
-              <h3 className="text-xl font-bold text-[var(--bronze)] mb-3">Tactics</h3>
+              <h3 className="text-xl mb-3">Tactics</h3>
               <div className="text-sm text-[var(--text-2)] whitespace-pre-line">
                 {encounter.tactics}
               </div>
@@ -793,7 +793,7 @@ function EncounterBuilder() {
           {/* Treasure */}
           {encounter.treasure && (
             <div className="card">
-              <h3 className="text-xl font-bold text-[var(--bronze)] mb-3">Treasure</h3>
+              <h3 className="text-xl mb-3">Treasure</h3>
               <p className="text-sm text-[var(--text-2)]">{encounter.treasure}</p>
             </div>
           )}
@@ -801,7 +801,7 @@ function EncounterBuilder() {
           {/* Map */}
           {encounter.map && (
             <div className="card overflow-x-auto">
-              <h3 className="text-xl font-bold text-[var(--bronze)] mb-3">Battle Map</h3>
+              <h3 className="text-xl mb-3">Battle Map</h3>
               <MapGrid map={encounter.map} />
             </div>
           )}

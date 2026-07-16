@@ -12,10 +12,10 @@ export const metadata: Metadata = {
 export default function CreditsPage() {
   return (
     <div className="animate-fade-in max-w-3xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold text-[var(--bronze)]">Credits &amp; Licensing</h1>
+      <h1 className="text-3xl">Credits &amp; Licensing</h1>
 
       <section className="card space-y-3">
-        <h2 className="text-xl font-bold text-[var(--bronze)]">Game Content</h2>
+        <h2 className="text-xl">Game Content</h2>
         <p>
           This work includes material from the System Reference Document 5.2.1 (&ldquo;SRD
           5.2.1&rdquo;) by Wizards of the Coast LLC, available at{' '}
@@ -46,7 +46,7 @@ export default function CreditsPage() {
       </section>
 
       <section className="card space-y-3">
-        <h2 className="text-xl font-bold text-[var(--bronze)]">Unofficial Content</h2>
+        <h2 className="text-xl">Unofficial Content</h2>
         <p className="text-sm">
           Encounterizer is unofficial fan content and is not affiliated with, endorsed,
           sponsored, or specifically approved by Wizards of the Coast LLC. Dungeons &amp;
@@ -56,7 +56,7 @@ export default function CreditsPage() {
       </section>
 
       <section className="card space-y-3">
-        <h2 className="text-xl font-bold text-[var(--bronze)]">Application</h2>
+        <h2 className="text-xl">Application</h2>
         <p className="text-sm">
           The Encounterizer application code is open source under the{' '}
           <a

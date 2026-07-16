@@ -21,7 +21,7 @@ export default function Error({
       <div className="mb-4 flex justify-center" aria-hidden="true">
         <TriangleAlert size={48} className="text-[var(--accent-danger)]" />
       </div>
-      <h1 className="text-4xl font-bold text-[var(--accent-danger)] mb-3">
+      <h1 className="text-4xl mb-3">
         A wild error appeared!
       </h1>
       <p className="text-[var(--text-2)] mb-8">

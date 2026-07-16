@@ -38,7 +38,7 @@ export default function BestiaryPage() {
   return (
     <div className="animate-fade-in">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-[var(--bronze)]">Monster Bestiary</h1>
+        <h1 className="text-3xl">Monster Bestiary</h1>
         <div className="flex items-center gap-2 text-sm">
           <span className="text-[var(--text-2)]">
             {results.length} of {allMonsters.length} monsters
@@ -49,7 +49,7 @@ export default function BestiaryPage() {
               type="button"
               onClick={() => setViewMode('grid')}
               aria-pressed={viewMode === 'grid'}
-              className={`px-3 py-1 text-xs ${viewMode === 'grid' ? 'bg-[var(--bronze)] text-[var(--steel-950)] font-bold' : 'bg-[var(--steel-900)] text-[var(--text-2)]'}`}
+              className={`px-3 py-1 text-xs ${viewMode === 'grid' ? 'bg-[var(--bronze)] text-[#1d1105] font-bold' : 'bg-[var(--steel-900)] text-[var(--text-2)]'}`}
             >
               Grid
             </button>
@@ -57,7 +57,7 @@ export default function BestiaryPage() {
               type="button"
               onClick={() => setViewMode('list')}
               aria-pressed={viewMode === 'list'}
-              className={`px-3 py-1 text-xs ${viewMode === 'list' ? 'bg-[var(--bronze)] text-[var(--steel-950)] font-bold' : 'bg-[var(--steel-900)] text-[var(--text-2)]'}`}
+              className={`px-3 py-1 text-xs ${viewMode === 'list' ? 'bg-[var(--bronze)] text-[#1d1105] font-bold' : 'bg-[var(--steel-900)] text-[var(--text-2)]'}`}
             >
               List
             </button>
@@ -99,7 +99,7 @@ export default function BestiaryPage() {
           ) : (
             <div className="space-y-1">
               {/* List header */}
-              <div className="grid grid-cols-12 gap-2 px-3 py-2 text-xs font-bold text-[var(--bronze)] uppercase tracking-wider border-b border-[var(--steel-800)]">
+              <div className="grid grid-cols-12 gap-2 px-3 py-2 micro-label border-b border-[var(--steel-800)]">
                 <div className="col-span-4">Name</div>
                 <div className="col-span-2">Type</div>
                 <div className="col-span-1 text-center">CR</div>
@@ -198,7 +198,7 @@ function MonsterCard({
     >
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="font-bold text-[var(--text-1)]">{monster.name}</h3>
+          <h3 className="">{monster.name}</h3>
           <p className="text-xs text-[var(--text-2)]">
             {monster.size} {monster.type}
             {monster.subtype ? ` (${monster.subtype})` : ''}
@@ -217,7 +217,7 @@ function MonsterCard({
           </span>
         ))}
         {monster.isLegendary && (
-          <span className="text-xs bg-[var(--bronze)] text-[var(--steel-950)] px-2 py-0.5 rounded font-bold">
+          <span className="text-xs bg-[var(--bronze)] text-[#1d1105] px-2 py-0.5 rounded font-bold">
             Legendary
           </span>
         )}

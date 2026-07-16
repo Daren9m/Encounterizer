@@ -102,7 +102,7 @@ export default function BattleReportCard({
     <div className="card space-y-4">
       <div>
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <h3 className="text-xl font-bold text-[var(--bronze)]">Battle Forecast</h3>
+          <h3 className="text-xl">Battle Forecast</h3>
           <span className="text-xs text-[var(--text-2)]">
             {report.iterations.toLocaleString()} simulated battles · seed {report.seed}
           </span>
@@ -163,7 +163,7 @@ export default function BattleReportCard({
 
       {report.dropRanking.some((d) => d.dropRate > 0) && (
         <div className="space-y-1">
-          <h4 className="text-sm font-bold text-[var(--bronze)]">Most likely to drop</h4>
+          <h4 className="text-sm">Most likely to drop</h4>
           {report.dropRanking.filter((d) => d.dropRate > 0).slice(0, 6).map((d) => (
             <div key={d.playerId} className="flex items-center gap-2 text-xs">
               <span className="w-24 truncate">{d.name}</span>
