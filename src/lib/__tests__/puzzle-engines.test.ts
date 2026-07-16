@@ -3,6 +3,7 @@ import { seededRandom } from '../random';
 import { THEME_PACKS } from '../../data/noncombat-themes';
 import type { ResolvedLevers, Difficulty } from '../noncombat/types';
 import { knightsKnaves, buildKkInstance, consistentAssignments } from '../puzzle-engines/knights-knaves';
+import { logicGrid, buildGridInstance, countGridSolutions } from '../puzzle-engines/logic-grid';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
   return {
@@ -36,6 +37,33 @@ describe('knights & knaves', () => {
       expect(out.solution.length).toBeGreaterThan(0);
       expect(out.hints).toHaveLength(3); // standard budget
       expect(out.failureConsequence.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('logic grid', () => {
+  const POOLS = [
+    ['Ox', 'Ram', 'Crane', 'Wolf'],
+    ['Sun', 'Moon', 'Star', 'Comet'],
+    ['Iron', 'Ash', 'Salt', 'Jade'],
+    ['North', 'South', 'East', 'West'],
+  ];
+  it('every instance has a unique solution (200 seeds × 3 sizes)', () => {
+    const sizes: [number, number][] = [[3, 3], [3, 4], [4, 4]];
+    for (const [cats, items] of sizes) {
+      for (let s = 0; s < 200; s++) {
+        const inst = buildGridInstance(cats, items, POOLS, seededRandom(s));
+        expect(countGridSolutions(inst, 2), `cats=${cats} items=${items} seed=${s}`).toBe(1);
+      }
+    }
+  });
+  it('generate() emits a logic-grid handout with clues and locked sizes', () => {
+    const out = logicGrid.generate({ levers: mkLevers('Hard', 21), rng: seededRandom(21) });
+    expect(out.handout?.kind).toBe('logic-grid');
+    if (out.handout?.kind === 'logic-grid') {
+      expect(out.handout.categories).toHaveLength(4);
+      expect(out.handout.items[0]).toHaveLength(4);
+      expect(out.handout.clues.length).toBeGreaterThan(0);
     }
   });
 });
