@@ -12,7 +12,11 @@ export default function PuzzleHandout({ spec }: { spec: HandoutSpec }) {
   );
 }
 
-function HandoutBody({ spec }: { spec: HandoutSpec }) {
+function assertNever(x: never): never {
+  throw new Error(`Unhandled handout kind: ${JSON.stringify(x)}`);
+}
+
+function HandoutBody({ spec }: { spec: HandoutSpec }): JSX.Element {
   switch (spec.kind) {
     case 'text':
       return (
@@ -27,9 +31,9 @@ function HandoutBody({ spec }: { spec: HandoutSpec }) {
           <table className="text-xs border-collapse">
             <thead>
               <tr>
-                <th className="border px-2 py-1 text-left">{spec.categories[0]}</th>
+                <th scope="col" className="border px-2 py-1 text-left">{spec.categories[0]}</th>
                 {spec.categories.slice(1).map(c => (
-                  <th key={c} className="border px-2 py-1 text-left">{c}</th>
+                  <th key={c} scope="col" className="border px-2 py-1 text-left">{c}</th>
                 ))}
               </tr>
             </thead>
@@ -86,6 +90,13 @@ function HandoutBody({ spec }: { spec: HandoutSpec }) {
             {spec.cells.map((c, i) => (
               <div
                 key={i}
+                role="img"
+                aria-label={
+                  c.state === 'on' ? 'lit plate'
+                  : c.state === 'off' ? 'dark plate'
+                  : c.state === 'masked' ? 'empty socket'
+                  : c.label ?? 'tile'
+                }
                 className={`aspect-square flex items-center justify-center rounded border text-sm font-bold ${
                   c.state === 'on' ? 'bg-[var(--bronze)] text-[var(--steel-950)]'
                   : c.state === 'off' ? 'bg-[var(--steel-950)] text-[var(--text-2)]'
@@ -133,5 +144,7 @@ function HandoutBody({ spec }: { spec: HandoutSpec }) {
           ))}
         </div>
       );
+    default:
+      return assertNever(spec);
   }
 }
