@@ -10,15 +10,15 @@ export default function HomePage() {
     <div className="animate-fade-in">
       {/* Hero */}
       <section className="text-center py-12">
-        <h1 className="text-4xl md:text-5xl font-bold text-[var(--gold)] mb-4">
+        <h1 className="text-4xl md:text-5xl font-bold text-[var(--bronze)] mb-4">
           Encounterizer
         </h1>
-        <p className="text-xl text-[var(--parchment-dark)] max-w-2xl mx-auto mb-8">
+        <p className="text-xl text-[var(--text-2)] max-w-2xl mx-auto mb-8">
           Build balanced encounters, forecast the battle, and run the whole session —
           monsters, maps, puzzles, and spells in one free DM toolkit for D&amp;D 5.5e.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
-          <Link href="/encounters" className="btn-gold text-lg px-8 py-3 inline-block rounded">
+          <Link href="/encounters" className="btn-primary text-lg px-8 py-3 inline-block rounded">
             Build an Encounter
           </Link>
           <Link href="/monsters" className="btn-secondary text-lg px-8 py-3 inline-block rounded">
@@ -42,7 +42,7 @@ export default function HomePage() {
 
       {/* Quick Stats — computed from the data modules, so they never drift */}
       <section className="mt-16 text-center">
-        <h2 className="text-2xl font-bold text-[var(--gold)] mb-6">Powered by the Rules</h2>
+        <h2 className="text-2xl font-bold text-[var(--bronze)] mb-6">Powered by the Rules</h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <StatBox value={String(ALL_MONSTERS.length)} label="SRD Monsters" />
           <StatBox value={String(SRD_SPELLS.length)} label="Spells" />
@@ -50,7 +50,7 @@ export default function HomePage() {
           <StatBox value="2024" label="Rules Edition" />
           <StatBox value="∞" label="Unique Maps" />
         </div>
-        <p className="mt-6 text-sm text-[var(--parchment-dark)] max-w-xl mx-auto">
+        <p className="mt-6 text-sm text-[var(--text-2)] max-w-xl mx-auto">
           Everything runs in your browser — no accounts, no server, no tracking.
           Encounters are shareable by link, and your data never leaves your device.
         </p>
@@ -67,10 +67,10 @@ function FeatureCard({
   return (
     <Link href={href} className="card block group">
       <div className="text-3xl mb-3" aria-hidden="true">{icon}</div>
-      <h3 className="text-lg font-bold text-[var(--gold)] group-hover:text-[var(--gold-light)] mb-2">
+      <h3 className="text-lg font-bold text-[var(--bronze)] group-hover:text-[var(--bronze-light)] mb-2">
         {title}
       </h3>
-      <p className="text-sm text-[var(--parchment-dark)]">{description}</p>
+      <p className="text-sm text-[var(--text-2)]">{description}</p>
     </Link>
   );
 }
@@ -78,8 +78,8 @@ function FeatureCard({
 function StatBox({ value, label }: { value: string; label: string }) {
   return (
     <div className="card text-center">
-      <div className="text-2xl font-bold text-[var(--gold)]">{value}</div>
-      <div className="text-sm text-[var(--parchment-dark)]">{label}</div>
+      <div className="text-2xl font-bold text-[var(--bronze)]">{value}</div>
+      <div className="text-sm text-[var(--text-2)]">{label}</div>
     </div>
   );
 }

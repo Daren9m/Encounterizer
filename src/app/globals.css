@@ -2,16 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dusksteel tokens (2026 overhaul) — graphite monochrome, one bronze accent */
 :root {
-  --parchment: #f4e4c1;
-  --parchment-dark: #d4c4a1;
-  --dragon-red: #8b1a1a;
-  --dragon-red-light: #a52a2a;
-  --dungeon-dark: #1a1a2e;
-  --dungeon-mid: #16213e;
-  --dungeon-accent: #0f3460;
-  --gold: #d4a017;
-  --gold-light: #f0c040;
+  /* Graphite base */
+  --steel-950: #16161c;
+  --steel-900: #1f1f27;
+  --steel-800: #32323c;
+  --steel-700: #3f3f4b;
+
+  /* Bronze accent */
+  --bronze: #e69c55;
+  --bronze-light: #f0b06a;
+  --bronze-deep: #b06f33;
+
+  /* Text scale */
+  --text-1: #f2f2f7;
+  --text-2: #c2c2cd;
+  --text-3: #9494a2;
+
+  /* Semantic */
+  --accent-danger: #d05a59;
+  --focus-ring: rgba(230, 156, 85, 0.3);
+
+  /* Difficulty scale (encounter Low/Moderate/High/Extreme + DC Easy/Medium/Hard) */
+  --difficulty-easy: #7acb9a;
+  --difficulty-medium: #e3c567;
+  --difficulty-hard: #e69c55;
+  --difficulty-deadly: #d05a59;
+
+  /* Stat block light island (print/export) */
+  --statblock-light-bg: #f7f4ee;
+  --statblock-light-text: #1c1a16;
+  --statblock-light-accent: #b06f33;
+
+  /* Elevation — one soft shadow, cards only */
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 * {
@@ -19,20 +44,22 @@
 }
 
 body {
-  background-color: var(--dungeon-dark);
-  color: var(--parchment);
-  font-family: Georgia, 'Times New Roman', serif;
+  background-color: var(--steel-950);
+  color: var(--text-1);
+  font-family: var(--font-body), 'IBM Plex Sans', system-ui, sans-serif;
 }
 
-/* Display serif for headings (self-hosted Cinzel via next/font) */
-h1, h2, .font-heading {
-  font-family: var(--font-heading), Georgia, serif;
-  letter-spacing: 0.015em;
+/* Display serif for headings (self-hosted Spectral via next/font).
+   Headings are text-1, never bronze — bronze is reserved for emphasis. */
+h1, h2, h3, .font-display {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 600;
+  color: var(--text-1);
 }
 
 /* Visible keyboard focus everywhere */
 :focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--bronze);
   outline-offset: 2px;
 }
 
@@ -49,9 +76,9 @@ h1, h2, .font-heading {
 
 /* Scrollbar styling */
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--dungeon-dark); }
-::-webkit-scrollbar-thumb { background: var(--dungeon-accent); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+::-webkit-scrollbar-track { background: var(--steel-950); }
+::-webkit-scrollbar-thumb { background: var(--steel-800); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--steel-700); }
 
 /* Map grid cell styling */
 .map-cell {
@@ -66,87 +93,92 @@ h1, h2, .font-heading {
 }
 
 .map-cell:hover {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--bronze);
   z-index: 1;
 }
 
-/* Monster stat block styling */
+/* Monster stat block — dark by default; prints as the light island */
 .stat-block {
-  background: linear-gradient(135deg, #fdf1dc 0%, #f4e4c1 100%);
-  color: #1a1a1a;
-  border-top: 3px solid var(--dragon-red);
-  border-bottom: 3px solid var(--dragon-red);
-  padding: 1rem;
+  background-color: var(--steel-900);
+  color: var(--text-2);
+  border: 1px solid var(--steel-800);
+  border-top: 3px solid var(--bronze);
+  border-radius: 0.625rem;
+  padding: 1.25rem;
+  box-shadow: var(--shadow-card);
 }
 
 .stat-block h3 {
-  color: var(--dragon-red);
-  font-size: 1.25rem;
+  color: var(--bronze);
+  font-size: 1.375rem;
   margin-bottom: 0.25rem;
 }
 
 .stat-block .stat-label {
-  font-weight: bold;
-  color: var(--dragon-red);
+  font-weight: 600;
+  color: var(--bronze);
 }
 
 /* Encounter difficulty badges (2024 tiers + Extreme assessment) */
-.badge-low { background-color: #2e7d32; color: white; }
-.badge-moderate { background-color: #f57f17; color: #1a1a2e; }
-.badge-high { background-color: #d84315; color: white; }
-.badge-extreme { background-color: #b71c1c; color: white; }
+.badge-low { background-color: var(--difficulty-easy); color: #0d1a12; font-weight: 700; }
+.badge-moderate { background-color: var(--difficulty-medium); color: #1c1808; font-weight: 700; }
+.badge-high { background-color: var(--difficulty-hard); color: #1d1105; font-weight: 700; }
+.badge-extreme { background-color: var(--difficulty-deadly); color: #ffffff; font-weight: 700; }
 
 /* Skill-check DC badges (puzzles & challenges — Easy/Medium/Hard is still
    the 2024 vocabulary for check difficulty, unlike encounter tiers) */
-.badge-easy { background-color: #2e7d32; color: white; }
-.badge-medium { background-color: #f57f17; color: #1a1a2e; }
-.badge-hard { background-color: #d84315; color: white; }
+.badge-easy { background-color: var(--difficulty-easy); color: #0d1a12; font-weight: 700; }
+.badge-medium { background-color: var(--difficulty-medium); color: #1c1808; font-weight: 700; }
+.badge-hard { background-color: var(--difficulty-hard); color: #1d1105; font-weight: 700; }
 
 /* Button variants */
 .btn-primary {
-  @apply px-4 py-2 rounded font-bold transition-colors;
-  background-color: var(--dragon-red);
-  color: var(--parchment);
+  @apply px-4 py-2 rounded-md font-semibold transition-colors;
+  background-color: var(--bronze);
+  color: #1d1105;
 }
 .btn-primary:hover {
-  background-color: var(--dragon-red-light);
+  background-color: var(--bronze-light);
 }
 
 .btn-secondary {
-  @apply px-4 py-2 rounded font-bold transition-colors;
-  background-color: var(--dungeon-accent);
-  color: var(--parchment);
+  @apply px-4 py-2 rounded-md font-semibold transition-colors;
+  background-color: var(--steel-800);
+  color: var(--text-1);
 }
 .btn-secondary:hover {
-  background-color: #1a5090;
+  background-color: var(--steel-700);
 }
 
-.btn-gold {
-  @apply px-4 py-2 rounded font-bold transition-colors;
-  background-color: var(--gold);
-  color: var(--dungeon-dark);
+.btn-ghost {
+  @apply px-4 py-2 rounded-md font-semibold transition-colors;
+  background-color: transparent;
+  border: 1px solid var(--steel-800);
+  color: var(--text-2);
 }
-.btn-gold:hover {
-  background-color: var(--gold-light);
+.btn-ghost:hover {
+  border-color: var(--bronze);
+  color: var(--text-1);
 }
 
 /* Card styling */
 .card {
-  background-color: var(--dungeon-mid);
-  border: 1px solid var(--dungeon-accent);
-  border-radius: 0.5rem;
+  background-color: var(--steel-900);
+  border: 1px solid var(--steel-800);
+  border-radius: 0.625rem;
   padding: 1.25rem;
+  box-shadow: var(--shadow-card);
   transition: border-color 0.2s;
 }
 .card:hover {
-  border-color: var(--gold);
+  border-color: var(--bronze);
 }
 
-/* Select / Input styling */
+/* Select / Input styling — steel-950 insets nested inside steel-900 cards */
 select, input[type="text"], input[type="number"] {
-  background-color: var(--dungeon-mid);
-  border: 1px solid var(--dungeon-accent);
-  color: var(--parchment);
+  background-color: var(--steel-950);
+  border: 1px solid var(--steel-800);
+  color: var(--text-1);
   padding: 0.5rem 0.75rem;
   border-radius: 0.375rem;
   font-family: inherit;
@@ -154,26 +186,56 @@ select, input[type="text"], input[type="number"] {
 
 select:focus, input:focus {
   outline: none;
-  border-color: var(--gold);
-  box-shadow: 0 0 0 2px rgba(212, 160, 23, 0.3);
+  border-color: var(--bronze);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
 /* Filter chip styling */
 .filter-chip {
   @apply inline-flex items-center px-3 py-1 rounded-full text-sm cursor-pointer transition-colors;
-  background-color: var(--dungeon-accent);
-  color: var(--parchment-dark);
-  border: 1px solid transparent;
+  background-color: var(--steel-950);
+  color: var(--text-2);
+  border: 1px solid var(--steel-800);
 }
 
 .filter-chip:hover {
-  border-color: var(--gold);
+  border-color: var(--bronze);
 }
 
 .filter-chip.active {
-  background-color: var(--gold);
-  color: var(--dungeon-dark);
-  font-weight: bold;
+  background-color: var(--bronze);
+  color: #1d1105;
+  font-weight: 600;
+  border-color: transparent;
+}
+
+/* Micro-label — tiny field labels: 600 uppercase, wide tracking, faint */
+.micro-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-3);
+}
+
+/* Reward / XP capsule — tinted bronze pill */
+.xp-capsule {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  background-color: rgba(230, 156, 85, 0.15);
+  border: 1px solid var(--bronze);
+  color: var(--bronze);
+  font-weight: 600;
+}
+
+/* Printed-page island — light card for player handouts / print exports */
+.light-island {
+  background-color: var(--statblock-light-bg);
+  color: var(--statblock-light-text);
+  border-color: #ddd6c8;
+  box-shadow: none;
 }
 
 /* Animated fade-in */
@@ -192,15 +254,17 @@ select:focus, input:focus {
    and chrome are hidden with Tailwind's print:hidden on the elements. */
 @media print {
   :root {
-    --parchment: #1a1a1a;
-    --parchment-dark: #3d3d3d;
-    --dragon-red: #7a1616;
-    --dragon-red-light: #7a1616;
-    --dungeon-dark: #ffffff;
-    --dungeon-mid: #ffffff;
-    --dungeon-accent: #bbbbbb;
-    --gold: #705400;
-    --gold-light: #705400;
+    --steel-950: #ffffff;
+    --steel-900: #ffffff;
+    --steel-800: #bbbbbb;
+    --steel-700: #dddddd;
+    --bronze: #b06f33;
+    --bronze-light: #b06f33;
+    --text-1: #1c1a16;
+    --text-2: #1c1a16;
+    --text-3: #4a4740;
+    --accent-danger: #a53f3e;
+    --shadow-card: none;
   }
 
   @page {
@@ -209,7 +273,7 @@ select:focus, input:focus {
 
   body {
     background: #ffffff !important;
-    color: #1a1a1a;
+    color: #1c1a16;
   }
 
   .card {
@@ -219,6 +283,21 @@ select:focus, input:focus {
 
   .stat-block {
     break-inside: avoid;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    background: var(--statblock-light-bg);
+    color: var(--statblock-light-text);
+    border-color: #ddd6c8;
+    border-top-color: var(--statblock-light-accent);
+  }
+
+  .stat-block h3,
+  .stat-block .stat-label {
+    color: var(--statblock-light-accent);
+  }
+
+  .badge-low, .badge-moderate, .badge-high, .badge-extreme,
+  .badge-easy, .badge-medium, .badge-hard {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }

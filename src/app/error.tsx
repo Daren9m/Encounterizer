@@ -18,15 +18,15 @@ export default function Error({
   return (
     <div className="animate-fade-in max-w-2xl mx-auto text-center py-16">
       <div className="text-6xl mb-4" aria-hidden="true">💥</div>
-      <h1 className="text-4xl font-bold text-[var(--dragon-red-light)] mb-3">
+      <h1 className="text-4xl font-bold text-[var(--accent-danger)] mb-3">
         A wild error appeared!
       </h1>
-      <p className="text-[var(--parchment-dark)] mb-8">
+      <p className="text-[var(--text-2)] mb-8">
         Something went wrong rendering this page. It used its surprise round —
         now it&apos;s your turn.
       </p>
       <div className="flex justify-center gap-3">
-        <button type="button" onClick={reset} className="btn-gold">
+        <button type="button" onClick={reset} className="btn-primary">
           Try Again
         </button>
         <Link href="/" className="btn-secondary inline-block">

@@ -65,17 +65,17 @@ export default function CustomMonsterPanel({ allMonsters }: { allMonsters: Monst
         aria-controls="custom-monster-panel"
         className="flex items-center justify-between w-full text-left"
       >
-        <span className="font-bold text-[var(--gold)]">
+        <span className="font-bold text-[var(--bronze)]">
           Custom Monsters{customMonsters.length > 0 ? ` (${customMonsters.length})` : ''}
         </span>
-        <span aria-hidden="true" className="text-[var(--parchment-dark)]">
+        <span aria-hidden="true" className="text-[var(--text-2)]">
           {open ? '▾' : '▸'}
         </span>
       </button>
 
       {open && (
         <div id="custom-monster-panel" className="mt-4 space-y-4 animate-fade-in">
-          <p className="text-sm text-[var(--parchment-dark)]">
+          <p className="text-sm text-[var(--text-2)]">
             Load your own monsters from a <strong>5etools bestiary JSON</strong>{' '}
             (<code className="text-xs">{'{"monster": [...]}'}</code>) or an{' '}
             <strong>Encounterizer export</strong>. They join the bestiary, encounter
@@ -97,7 +97,7 @@ export default function CustomMonsterPanel({ allMonsters }: { allMonsters: Monst
             />
             <button
               type="button"
-              className="btn-gold text-sm"
+              className="btn-primary text-sm"
               onClick={() => fileInputRef.current?.click()}
             >
               Import JSON…
@@ -129,11 +129,11 @@ export default function CustomMonsterPanel({ allMonsters }: { allMonsters: Monst
                 <p className="text-red-400">{feedback.storageError}</p>
               ) : (
                 <p>
-                  <span className="text-[var(--gold)] font-bold">{feedback.imported} imported</span>
+                  <span className="text-[var(--bronze)] font-bold">{feedback.imported} imported</span>
                   {feedback.skipped > 0 && (
                     <span className="text-red-400">, {feedback.skipped} skipped</span>
                   )}{' '}
-                  <span className="text-[var(--parchment-dark)]">
+                  <span className="text-[var(--text-2)]">
                     ({feedback.format === 'unknown' ? 'unrecognized format' : `${feedback.format} format`})
                   </span>
                 </p>
@@ -154,12 +154,12 @@ export default function CustomMonsterPanel({ allMonsters }: { allMonsters: Monst
           )}
 
           {customMonsters.length > 0 && (
-            <ul className="divide-y divide-[var(--dungeon-accent)] max-h-56 overflow-y-auto">
+            <ul className="divide-y divide-[var(--steel-800)] max-h-56 overflow-y-auto">
               {customMonsters.map((m) => (
                 <li key={m.id} className="flex items-center justify-between py-1.5 text-sm">
                   <span>
                     <span className="font-bold">{m.name}</span>
-                    <span className="text-[var(--parchment-dark)] ml-2">
+                    <span className="text-[var(--text-2)] ml-2">
                       CR {crDisplay(m.challengeRating)} · {m.size} {m.type}
                     </span>
                   </span>

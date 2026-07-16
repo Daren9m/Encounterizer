@@ -21,10 +21,10 @@ function NavLink({
       href={href}
       aria-current={active ? 'page' : undefined}
       onClick={onNavigate}
-      className={`px-3 py-2 rounded transition-colors hover:bg-[var(--dungeon-accent)] hover:text-[var(--gold)] ${
+      className={`px-3 py-2 rounded transition-colors hover:bg-[var(--steel-800)] hover:text-[var(--bronze)] ${
         active
-          ? 'text-[var(--gold)] font-bold border-b-2 border-[var(--gold)] rounded-b-none'
-          : 'text-[var(--parchment-dark)]'
+          ? 'text-[var(--bronze)] font-bold border-b-2 border-[var(--bronze)] rounded-b-none'
+          : 'text-[var(--text-2)]'
       }`}
     >
       {children}
@@ -45,12 +45,12 @@ export default function NavBar() {
     pathname === path || pathname.startsWith(`${path}/`);
 
   return (
-    <header className="border-b border-[var(--dungeon-accent)] bg-[var(--dungeon-mid)] print:hidden">
+    <header className="border-b border-[var(--steel-800)] bg-[var(--steel-900)] print:hidden">
       <nav aria-label="Main" className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <span className="text-2xl" aria-hidden="true">⚔️</span>
-            <span className="text-xl font-bold text-[var(--gold)] font-heading">Encounterizer</span>
+            <span className="text-xl font-bold text-[var(--bronze)] font-display">Encounterizer</span>
           </Link>
 
           {/* Desktop links */}
@@ -65,7 +65,7 @@ export default function NavBar() {
           {/* Mobile hamburger */}
           <button
             type="button"
-            className="md:hidden p-2 rounded text-[var(--parchment-dark)] hover:text-[var(--gold)] hover:bg-[var(--dungeon-accent)]"
+            className="md:hidden p-2 rounded text-[var(--text-2)] hover:text-[var(--bronze)] hover:bg-[var(--steel-800)]"
             aria-expanded={menuOpen}
             aria-controls="mobile-nav"
             aria-label="Toggle navigation menu"

@@ -37,18 +37,18 @@ export default function BestiaryPage() {
   return (
     <div className="animate-fade-in">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-[var(--gold)]">Monster Bestiary</h1>
+        <h1 className="text-3xl font-bold text-[var(--bronze)]">Monster Bestiary</h1>
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-[var(--parchment-dark)]">
+          <span className="text-[var(--text-2)]">
             {results.length} of {allMonsters.length} monsters
             {custom.length > 0 && ` (${custom.length} custom)`}
           </span>
-          <div className="flex border border-[var(--dungeon-accent)] rounded overflow-hidden ml-2 print:hidden">
+          <div className="flex border border-[var(--steel-800)] rounded overflow-hidden ml-2 print:hidden">
             <button
               type="button"
               onClick={() => setViewMode('grid')}
               aria-pressed={viewMode === 'grid'}
-              className={`px-3 py-1 text-xs ${viewMode === 'grid' ? 'bg-[var(--gold)] text-[var(--dungeon-dark)] font-bold' : 'bg-[var(--dungeon-mid)] text-[var(--parchment-dark)]'}`}
+              className={`px-3 py-1 text-xs ${viewMode === 'grid' ? 'bg-[var(--bronze)] text-[var(--steel-950)] font-bold' : 'bg-[var(--steel-900)] text-[var(--text-2)]'}`}
             >
               Grid
             </button>
@@ -56,7 +56,7 @@ export default function BestiaryPage() {
               type="button"
               onClick={() => setViewMode('list')}
               aria-pressed={viewMode === 'list'}
-              className={`px-3 py-1 text-xs ${viewMode === 'list' ? 'bg-[var(--gold)] text-[var(--dungeon-dark)] font-bold' : 'bg-[var(--dungeon-mid)] text-[var(--parchment-dark)]'}`}
+              className={`px-3 py-1 text-xs ${viewMode === 'list' ? 'bg-[var(--bronze)] text-[var(--steel-950)] font-bold' : 'bg-[var(--steel-900)] text-[var(--text-2)]'}`}
             >
               List
             </button>
@@ -74,8 +74,8 @@ export default function BestiaryPage() {
           {Object.entries(stats.typeDistribution)
             .sort(([, a], [, b]) => b - a)
             .map(([type, count]) => (
-              <span key={type} className="bg-[var(--dungeon-mid)] border border-[var(--dungeon-accent)] px-2 py-1 rounded">
-                {type} <span className="text-[var(--gold)] font-bold">{count}</span>
+              <span key={type} className="bg-[var(--steel-900)] border border-[var(--steel-800)] px-2 py-1 rounded">
+                {type} <span className="text-[var(--bronze)] font-bold">{count}</span>
               </span>
             ))}
         </div>
@@ -98,7 +98,7 @@ export default function BestiaryPage() {
           ) : (
             <div className="space-y-1">
               {/* List header */}
-              <div className="grid grid-cols-12 gap-2 px-3 py-2 text-xs font-bold text-[var(--gold)] uppercase tracking-wider border-b border-[var(--dungeon-accent)]">
+              <div className="grid grid-cols-12 gap-2 px-3 py-2 text-xs font-bold text-[var(--bronze)] uppercase tracking-wider border-b border-[var(--steel-800)]">
                 <div className="col-span-4">Name</div>
                 <div className="col-span-2">Type</div>
                 <div className="col-span-1 text-center">CR</div>
@@ -113,23 +113,23 @@ export default function BestiaryPage() {
                   onClick={() => handleSelect(monster)}
                   className={`grid grid-cols-12 gap-2 px-3 py-2 w-full text-left text-sm rounded transition-colors ${
                     selectedMonster?.id === monster.id
-                      ? 'bg-[var(--dungeon-accent)] border border-[var(--gold)]'
-                      : 'hover:bg-[var(--dungeon-mid)] border border-transparent'
+                      ? 'bg-[var(--steel-800)] border border-[var(--bronze)]'
+                      : 'hover:bg-[var(--steel-900)] border border-transparent'
                   }`}
                 >
                   <div className="col-span-4 font-bold truncate">
                     {monster.name}
-                    {monster.isLegendary && <span className="ml-1 text-[var(--gold)]" title="Legendary">*</span>}
+                    {monster.isLegendary && <span className="ml-1 text-[var(--bronze)]" title="Legendary">*</span>}
                   </div>
-                  <div className="col-span-2 text-[var(--parchment-dark)] truncate">
+                  <div className="col-span-2 text-[var(--text-2)] truncate">
                     {monster.size} {monster.type}
                   </div>
-                  <div className="col-span-1 text-center text-[var(--gold)] font-bold">
+                  <div className="col-span-1 text-center text-[var(--bronze)] font-bold">
                     {crDisplay(monster.challengeRating)}
                   </div>
                   <div className="col-span-1 text-center">{monster.armor.ac}</div>
                   <div className="col-span-1 text-center">{monster.hitPoints}</div>
-                  <div className="col-span-3 text-xs text-[var(--parchment-dark)] truncate">
+                  <div className="col-span-3 text-xs text-[var(--text-2)] truncate">
                     {formatSpeedShort(monster)}
                   </div>
                 </button>
@@ -138,7 +138,7 @@ export default function BestiaryPage() {
           )}
 
           {results.length === 0 && (
-            <div className="text-center py-12 text-[var(--parchment-dark)]">
+            <div className="text-center py-12 text-[var(--text-2)]">
               No monsters match your filters. Try broadening your search.
             </div>
           )}
@@ -154,7 +154,7 @@ export default function BestiaryPage() {
               <MonsterStatBlock monster={selectedMonster} />
             </div>
           ) : (
-            <div className="card text-center py-12 text-[var(--parchment-dark)]">
+            <div className="card text-center py-12 text-[var(--text-2)]">
               <div className="text-4xl mb-3" aria-hidden="true">🐉</div>
               <p>Select a monster to view its full stat block</p>
               <p className="text-xs mt-2 opacity-60">Click any monster card or row</p>
@@ -190,18 +190,18 @@ function MonsterCard({
       type="button"
       onClick={() => onSelect(monster)}
       className={`card text-left cursor-pointer transition-all ${
-        isSelected ? 'border-[var(--gold)] ring-1 ring-[var(--gold)]' : ''
+        isSelected ? 'border-[var(--bronze)] ring-1 ring-[var(--bronze)]' : ''
       }`}
     >
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="font-bold text-[var(--parchment)]">{monster.name}</h3>
-          <p className="text-xs text-[var(--parchment-dark)]">
+          <h3 className="font-bold text-[var(--text-1)]">{monster.name}</h3>
+          <p className="text-xs text-[var(--text-2)]">
             {monster.size} {monster.type}
             {monster.subtype ? ` (${monster.subtype})` : ''}
           </p>
         </div>
-        <span className="text-sm font-bold text-[var(--gold)] whitespace-nowrap">
+        <span className="text-sm font-bold text-[var(--bronze)] whitespace-nowrap">
           CR {crDisplay(monster.challengeRating)}
         </span>
       </div>
@@ -209,12 +209,12 @@ function MonsterCard({
       {/* Badges */}
       <div className="flex flex-wrap gap-1 mt-2">
         {monster.movementModes.filter(m => m !== 'Walk').map(mode => (
-          <span key={mode} className="text-xs bg-[var(--dungeon-accent)] px-2 py-0.5 rounded">
+          <span key={mode} className="text-xs bg-[var(--steel-800)] px-2 py-0.5 rounded">
             {mode}
           </span>
         ))}
         {monster.isLegendary && (
-          <span className="text-xs bg-[var(--gold)] text-[var(--dungeon-dark)] px-2 py-0.5 rounded font-bold">
+          <span className="text-xs bg-[var(--bronze)] text-[var(--steel-950)] px-2 py-0.5 rounded font-bold">
             Legendary
           </span>
         )}
@@ -236,7 +236,7 @@ function MonsterCard({
           {monster.attackDamageTypes
             .filter(d => !['Piercing', 'Slashing', 'Bludgeoning'].includes(d))
             .map(dt => (
-              <span key={dt} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--dragon-red)] text-[var(--parchment)] opacity-80">
+              <span key={dt} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--steel-800)] text-[var(--text-2)]">
                 {dt}
               </span>
             ))}
@@ -244,14 +244,14 @@ function MonsterCard({
       )}
 
       {/* Stats row */}
-      <div className="flex gap-3 mt-2 text-xs text-[var(--parchment-dark)]">
+      <div className="flex gap-3 mt-2 text-xs text-[var(--text-2)]">
         <span>AC {monster.armor.ac}</span>
         <span>HP {monster.hitPoints}</span>
         <span>{monster.xp.toLocaleString()} XP</span>
       </div>
 
       {/* Environments */}
-      <div className="mt-1 text-[10px] text-[var(--parchment-dark)] opacity-60 truncate">
+      <div className="mt-1 text-[10px] text-[var(--text-2)] opacity-60 truncate">
         {monster.environments.join(' · ')}
       </div>
     </button>
