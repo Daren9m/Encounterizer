@@ -7,7 +7,7 @@ import { pickRandom as pick, shuffleArray } from '../random';
 import type { Rng } from '../random';
 import { INTERRUPTIONS, LEVERAGE, PERSONAS, SECRETS, SOCIAL_COMPLICATIONS, WANTS, type Leverage } from '../../data/noncombat-cast';
 import { dcFor } from '../noncombat/levers';
-import { cap, failureText, rewardText } from '../noncombat/theming';
+import { cap, rewardText } from '../noncombat/theming';
 import type { AttitudeTrack, ResolvedLevers } from '../noncombat/types';
 import type { ChallengeFramework, FrameworkInput, FrameworkOutput } from './frame';
 
@@ -48,14 +48,15 @@ export const social: ChallengeFramework = {
   generate({ levers, rng }: FrameworkInput): FrameworkOutput {
     const pack = levers.theme;
     const persona = pick(PERSONAS, rng);
-    const want = pick(WANTS, rng);
+    const wantPool = shuffleArray(WANTS, rng);
+    const want = wantPool[0];
     const secret = pick(SECRETS, rng);
     const leverage = pick(LEVERAGE, rng);
     const track = buildAttitudeTrack(levers, leverage, rng);
     const dc = dcFor(levers.partyLevel, levers.difficulty);
     const sideCount = Math.min(Math.max(levers.partySize - 1, 0), 3);
     const sides = shuffleArray(pack.cast, rng).slice(0, sideCount)
-      .map(c => `Side NPC: ${c} — wants ${pick(WANTS, rng)}.`);
+      .map((c, i) => `Side NPC: ${c} — wants ${wantPool[i + 1]}.`);
     const complication = pick(SOCIAL_COMPLICATIONS, rng);
     const interruption = pick(INTERRUPTIONS, rng);
     return {
@@ -78,7 +79,7 @@ export const social: ChallengeFramework = {
       outcomes: [
         { label: 'Reach Friendly and deal', description: 'Full cooperation, and the secret surfaces on their own terms.' },
         { label: 'Deal at Indifferent', description: 'Terms as stated — the secret stays buried and may bite later.' },
-        { label: 'Sour to Hostile', description: failureText(levers, rng, { kind: 'climactic', context: 'The exchange collapses and word spreads.', save: undefined }) },
+        { label: 'Sour to Hostile', description: `The exchange collapses and word spreads — ${pick(pack.consequences, rng)}; doors that were open yesterday are barred today.` },
       ],
       reward: rewardText(levers, rng),
       attitudeTrack: track,

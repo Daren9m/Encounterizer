@@ -97,6 +97,20 @@ describe('social framework (spec §8.2)', () => {
     expect(a.readAloud).toMatch(/Their tell: /);
     expect(a.readAloud).not.toMatch(/\bThey [a-z]+s\b/); // no third-person-singular after "They"
   });
+  it('social outcomes never deal hit-point damage', () => {
+    for (const tone of ['whimsical', 'standard', 'grim'] as const) {
+      const out = social.generate({ levers: mkLevers('Hard', 5, { tone }), rng: seededRandom(5) });
+      for (const o of out.outcomes) expect(o.description).not.toMatch(/\d+d\d+/);
+    }
+  });
+  it('principal and side wants are pairwise distinct within one encounter (100 seeds)', () => {
+    for (let s = 0; s < 100; s++) {
+      const out = social.generate({ levers: mkLevers('Medium', s, { partySize: 4 }), rng: seededRandom(s) });
+      const wants = [...out.situation.matchAll(/wants:? (.+?)\./g)].map(m => m[1]);
+      expect(wants.length).toBeGreaterThanOrEqual(2);
+      expect(new Set(wants).size).toBe(wants.length);
+    }
+  });
 });
 
 describe('exploration framework (spec §8.3)', () => {
@@ -154,6 +168,13 @@ describe('trap framework (spec §8.4)', () => {
     const out = trap.generate({ levers: mkLevers('Medium', 19), rng: seededRandom(19) });
     expect(out.situation).toMatch(/Clue/i);
     expect(out.complication).toMatch(/^Twist: .+\.$/);
+  });
+  it('trap stakes honor the tone contract (spec §6.6)', () => {
+    const w = trap.generate({ levers: mkLevers('Hard', 3, { tone: 'whimsical' }), rng: seededRandom(3) });
+    expect(w.stakes).not.toMatch(/\d+d\d+/);
+    const g = trap.generate({ levers: mkLevers('Hard', 3, { tone: 'grim' }), rng: seededRandom(3) });
+    expect(g.stakes).toMatch(/\d+d\d+/);
+    expect(g.stakes).toMatch(/refuses magical healing/);
   });
 });
 
@@ -241,5 +262,18 @@ describe('investigation framework (spec §8.6)', () => {
         }
       }
     }
+  });
+  it('clue cards are mostly distinct within a web (statistical, spec §8.6)', () => {
+    // Oblique clues (Hard difficulty) gesture at the truth through material/
+    // witness alone, so identical draws can render identical card text.
+    // Measured before this fix: 100/100 webs had at least one duplicate
+    // pair; the non-repeating draw pools below cut that to a small tail.
+    let dupWebs = 0;
+    for (let s = 0; s < 100; s++) {
+      const web = buildClueWeb(mkLevers('Hard', s, { timeBudget: 'standard' }), seededRandom(s));
+      const bodies = web.nodes.flatMap(n => n.clues.map(c => c.text));
+      if (new Set(bodies).size !== bodies.length) dupWebs++;
+    }
+    expect(dupWebs).toBeLessThanOrEqual(15);
   });
 });

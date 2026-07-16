@@ -27,12 +27,12 @@ const CLUE_TEXT: Record<ClueVector, { direct: (d: ClueDetail) => string; oblique
     oblique: d => `${cap(d.witness)} keeps changing one detail of their story — the same detail every time.`,
   },
   document: {
-    direct: d => `A hurried ledger entry all but spells it out: ${d.focus}.`,
-    oblique: d => `A page has been razored from the ledger — the stub still shows half a word.`,
+    direct: d => `A hurried entry in the ${d.material}-bound ledger all but spells it out: ${d.focus}.`,
+    oblique: d => `A page has been razored from the ${d.material}-bound ledger — the stub still shows half a word.`,
   },
   observation: {
-    direct: d => `An hour's patient watching confirms it: ${d.focus}.`,
-    oblique: d => `Someone's routine changed the day it happened — small, but it never changed before.`,
+    direct: d => `An hour watching ${d.witness} confirms it: ${d.focus}.`,
+    oblique: d => `${cap(d.witness)}'s routine changed the day it happened — small, but it never changed before.`,
   },
 };
 
@@ -59,14 +59,32 @@ export function buildClueWeb(levers: ResolvedLevers, rng: Rng): ClueWeb {
   const count = NODE_COUNT[levers.timeBudget];
   // Culprit node is always last: first (count-1) seeds + the final one.
   const chosen = [...nodeSeeds.slice(0, count - 1), nodeSeeds[3]];
+  // Oblique clues lean on material/witness alone to gesture at the truth, so
+  // draw both from shuffled, non-repeating pools (wrapping only if a
+  // set-piece web outruns the pool) — independent per-clue picks let two
+  // nodes land on the same material/witness and read as duplicate cards.
+  // The witness-detail pool includes the red-herring suspect (everyone but
+  // the actual culprit is fair game to be spotted acting oddly) — it never
+  // feeds the redHerring.disconfirmedBy alibi line below, so there is no
+  // self-referential "innocent clears innocent" risk.
+  const materialDraws = shuffleArray(pack.materials, rng);
+  const witnessDraws = shuffleArray(cast.slice(1), rng);
+  let materialIdx = 0;
+  let witnessIdx = 0;
+  const nextMaterial = (): string => materialDraws[materialIdx++ % materialDraws.length];
+  const nextWitness = (): string => witnessDraws[witnessIdx++ % witnessDraws.length];
   const nodes = chosen.map(seed => {
     const vectors = shuffleArray(VECTORS, rng).slice(0, 3);
     return {
       revelation: seed.revelation,
       clues: vectors.map(vector => {
+        // Only draw the pool a vector's templates actually render — scene/
+        // document read material, npc/observation read witness — so the
+        // non-repeating pools last across more of the web before wrapping.
+        const usesMaterial = vector === 'scene' || vector === 'document';
         const detail: ClueDetail = {
-          material: pick(pack.materials, rng),
-          witness: pick(witnessPool, rng),
+          material: usesMaterial ? nextMaterial() : '',
+          witness: usesMaterial ? '' : nextWitness(),
           focus: seed.focus,
         };
         const reg = register ?? pick(['direct', 'oblique'] as const, rng);

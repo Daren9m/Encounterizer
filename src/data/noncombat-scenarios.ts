@@ -119,7 +119,7 @@ export const SKILL_OBJECTIVES: SkillObjective[] = [
   },
   {
     name: 'Clear the Stampede Before the Square Floods With Bodies',
-    setup: 'Something has spooked the whole string of draft team waiting outside the granary, and the market square ahead is shoulder to shoulder with festival crowds who have no idea what is about to come around the corner.',
+    setup: 'Something has spooked the whole string of draft teams waiting outside the granary, and the market square ahead is shoulder to shoulder with festival crowds who have no idea what is about to come around the corner.',
     phaseTitles: ['Turn the herd', 'Clear the square', 'Block the alley before they double back'],
     primarySkills: ['Animal Handling', 'Athletics', 'Persuasion', 'Acrobatics'],
     secondarySkills: ['Perception', 'Intimidation', 'Survival'],
