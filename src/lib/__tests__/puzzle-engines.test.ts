@@ -10,6 +10,7 @@ import { sequenceLock, buildSequenceInstance, matchingPredictions, canonicalSequ
 import { plateGrid, buildPlateInstance, applyPress } from '../puzzle-engines/plate-grid';
 import { sumLock, buildSumLockInstance, countSumCompletions } from '../puzzle-engines/sum-lock';
 import { tilePath, buildTilePathInstance, cluePaths } from '../puzzle-engines/tile-path';
+import { cipherSuite, encodeCaesar, decodeCaesar, encodeAtbash, encodeKeyword, decodeKeyword, buildKeywordAlphabet } from '../puzzle-engines/cipher';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
   return {
@@ -253,6 +254,32 @@ describe('tile path', () => {
     if (out.handout?.kind === 'grid-diagram') {
       expect(out.handout.cells.every(c => c.label)).toBe(true);
       expect(out.handout.legend?.some(l => l.includes('→'))).toBe(true);
+    }
+  });
+});
+
+describe('cipher suite', () => {
+  it('caesar round-trips for every shift', () => {
+    for (let shift = 1; shift < 26; shift++) {
+      expect(decodeCaesar(encodeCaesar('THE KEY SLEEPS BELOW', shift), shift)).toBe('THE KEY SLEEPS BELOW');
+    }
+  });
+  it('atbash is an involution and keyword round-trips', () => {
+    expect(encodeAtbash(encodeAtbash('TURN BACK NOW'))).toBe('TURN BACK NOW');
+    expect(decodeKeyword(encodeKeyword('SPEAK THE NAME', 'SERPENT'), 'SERPENT')).toBe('SPEAK THE NAME');
+    expect(buildKeywordAlphabet('SERPENT')).toHaveLength(26);
+    expect(new Set(buildKeywordAlphabet('SERPENT')).size).toBe(26);
+  });
+  it('generate() emits cipher-text handouts; Easy carries a 3-letter partial key', () => {
+    const easy = cipherSuite.generate({ levers: mkLevers('Easy', 8), rng: seededRandom(8) });
+    expect(easy.handout?.kind).toBe('cipher-text');
+    if (easy.handout?.kind === 'cipher-text') {
+      expect(Object.keys(easy.handout.partialKey ?? {})).toHaveLength(3);
+    }
+    const hard = cipherSuite.generate({ levers: mkLevers('Hard', 8), rng: seededRandom(8) });
+    if (hard.handout?.kind === 'cipher-text') {
+      expect(hard.handout.partialKey).toBeUndefined();
+      expect(hard.handout.body).toMatch(/[ᚠ-ᛸ]/); // runic glyphs
     }
   });
 });
