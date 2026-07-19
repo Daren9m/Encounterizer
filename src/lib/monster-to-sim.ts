@@ -154,6 +154,10 @@ function extractRecharge(action: MonsterAction, warnings: string[]): RechargeAct
   const rechargeMin = Number.parseInt(rechargeMatch[1], 10);
 
   const aoe = /each creature/i.test(action.description);
+  const areaTargets = !aoe ? 1
+    : /20-foot radius|30-foot (?:radius|cone)|60-foot cone|90-foot cone/i.test(action.description) ? 4
+    : /15-foot cone|30-foot line|60-foot line|120-foot line/i.test(action.description) ? 3
+    : 2;
   const damage = isAttackAction(action)
     ? { avg: actionAvgDamage(action), dice: parseDice(action.damageDice)! }
     : extractProseDamage(action.description);
@@ -188,7 +192,7 @@ function extractRecharge(action: MonsterAction, warnings: string[]): RechargeAct
     damageDice: damage.dice,
     saveDc: save?.dc ?? 15,
     saveAbility: save?.ability ?? 'dex',
-    maxTargets: aoe ? 2 : 1,
+    maxTargets: areaTargets,
   };
 }
 
@@ -240,7 +244,7 @@ function extractLegendary(
         name: la.name, cost: costN, kind: 'save',
         saveDc: save.dc, saveAbility: save.ability,
         damageDice: damage.dice, avgDamage: damage.avg,
-        maxTargets: /each creature/i.test(la.description) ? 2 : 1,
+        maxTargets: /each creature/i.test(la.description) ? 3 : 1,
       });
       continue;
     }

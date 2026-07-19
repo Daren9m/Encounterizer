@@ -68,10 +68,10 @@ describe('simulateBattle statistics', () => {
     const players = party(STANDARD_PARTY, 8);
     const mirrors = players.map(playerAsMonster);
     const report = simulateBattle(players, mirrors, { seed: 7 });
-    // Players get two deliberate edges: they win initiative ties, and they
-    // focus-fire optimally while monsters spread 30% of their attacks.
+    // Players get deliberate edges: initiative ties, focus fire, and 2024
+    // death saves while monsters spread 30% of their attacks.
     expect(report.partyWinRate).toBeGreaterThan(0.45);
-    expect(report.partyWinRate).toBeLessThan(0.68);
+    expect(report.partyWinRate).toBeLessThan(0.72);
   });
 
   it('overwhelming favorites stomp', () => {
@@ -108,6 +108,51 @@ describe('simulateBattle statistics', () => {
 });
 
 describe('fidelity mechanics (A/B)', () => {
+  it('models death saves and healing-word recovery after a knockout', () => {
+    const players = party(['wizard-evoker', 'cleric-life', 'fighter-champion'], 5);
+    const report = simulateBattle(players, monsterInstances('Ogre', 3), { seed: 101 });
+    expect(report.dropRanking.some((entry) => entry.dropRate > 0)).toBe(true);
+    expect(report.revivalRanking.some((entry) => entry.revivalRate > 0)).toBe(true);
+  });
+
+  it('area spells can damage several clustered targets', () => {
+    const blaster = party(['wizard-evoker'], 8)[0];
+    const singleTarget: SimPlayer = { ...blaster, spellTargets: 1 };
+    const allies = party(['fighter-champion', 'cleric-life', 'rogue-thief'], 8);
+    const monsters = monsterInstances('Ogre', 8);
+    const area = simulateBattle([blaster, ...allies], monsters, { seed: 103 });
+    const single = simulateBattle([singleTarget, ...allies], monsters, { seed: 103 });
+    expect(area.partyWinRate).toBeGreaterThan(single.partyWinRate);
+  });
+
+  it('save-or-suck control removes monster turns', () => {
+    const bard = party(['bard-lore'], 8)[0];
+    const noControl: SimPlayer = { ...bard, control: undefined };
+    const allies = party(['fighter-champion', 'fighter-champion'], 8);
+    const monsters = monsterInstances('Ogre', 4);
+    const controlled = simulateBattle([bard, ...allies], monsters, { seed: 107 });
+    const plain = simulateBattle([noControl, ...allies], monsters, { seed: 107 });
+    expect(controlled.partyWinRate).toBeGreaterThanOrEqual(plain.partyWinRate);
+  });
+
+  it('Shield reactions turn near-miss hits aside', () => {
+    const wizard = party(['wizard-evoker'], 8)[0];
+    const noShield: SimPlayer = { ...wizard, special: { ...wizard.special, shield: false } };
+    const monsters = monsterInstances('Ogre', 2);
+    const shielded = simulateBattle([wizard], monsters, { seed: 109 });
+    const plain = simulateBattle([noShield], monsters, { seed: 109 });
+    expect(shielded.dropRanking[0].dropRate).toBeLessThanOrEqual(plain.dropRanking[0].dropRate);
+  });
+
+  it('failed concentration saves can end sustained spell damage', () => {
+    const cleric = party(['cleric-life'], 8)[0];
+    const unbreakable: SimPlayer = { ...cleric, special: { ...cleric.special, concentration: false } };
+    const monsters = monsterInstances('Ogre', 2);
+    const tracked = simulateBattle([cleric], monsters, { seed: 113 });
+    const ignored = simulateBattle([unbreakable], monsters, { seed: 113 });
+    expect(tracked.partyWinRate).toBeLessThanOrEqual(ignored.partyWinRate);
+  });
+
   it('healing raises the win rate', () => {
     const base = ['fighter-champion', 'fighter-champion', 'ranger-hunter'];
     const monsters = monsterInstances('Ogre', 3);

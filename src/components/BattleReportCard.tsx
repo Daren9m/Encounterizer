@@ -200,6 +200,16 @@ export default function BattleReportCard({
         </div>
       )}
 
+      {report.revivalRanking.some((entry) => entry.revivalRate > 0) && (
+        <p className="text-xs text-[var(--text-2)]">
+          Recovery modeled: {report.revivalRanking
+            .filter((entry) => entry.revivalRate > 0)
+            .slice(0, 3)
+            .map((entry) => `${entry.name} returns after dropping in ${Math.round(entry.revivalRate * 100)}% of runs`)
+            .join(' · ')}
+        </p>
+      )}
+
       <p className="text-sm italic border-l-2 border-[var(--bronze)] pl-3 text-[var(--text-1)]">
         {buildAssessment(report, xpLabel)}
       </p>

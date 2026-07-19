@@ -257,6 +257,11 @@ async function main(): Promise<void> {
     else firstSentence++;
   }
   console.log(`Summaries: ${overridden} curated, ${synthesized} synthesized, ${firstSentence} first-sentence.`);
+  if (firstSentence > 0) {
+    throw new Error(
+      `${firstSentence} spell summaries fell back to opening prose; add curated overrides before committing regenerated data.`,
+    );
+  }
 
   console.log('\nWriting data files:');
   for (const band of BANDS) {

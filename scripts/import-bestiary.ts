@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import { import5eToolsBestiary } from '../src/lib/import-5etools';
 import type { FiveEToolsMonster, Monster } from '../src/lib/types';
 
-const SOURCE_SHA = '974d5bfb7ceae1a13c0213d9b73d9692bd28ca49'; // 5etools-src v2.32.0
+const SOURCE_SHA = '3c5d9d3175ca9637132011c75efd73aad7a2364d'; // 5etools-src v2.32.1
 const SOURCE_URL = `https://raw.githubusercontent.com/5etools-mirror-3/5etools-src/${SOURCE_SHA}/data/bestiary/bestiary-xmm.json`;
 const DATA_DIR = join(__dirname, '..', 'src', 'data');
 
@@ -189,13 +189,14 @@ async function main(): Promise<void> {
   const meta = `${FILE_HEADER}
 export const BESTIARY_META = {
   count: ${converted.length},
+  creatureTypes: ${new Set(converted.map((monster) => monster.type)).size},
   source: 'SRD 5.2.1',
   license: 'CC-BY-4.0',
   sourceCommit: '${SOURCE_SHA}',
 } as const;
 `;
   writeFileSync(join(DATA_DIR, 'bestiary-meta.ts'), meta, 'utf-8');
-  console.log(`  bestiary-meta.ts: count=${converted.length}`);
+  console.log(`  bestiary-meta.ts: count=${converted.length}, creatureTypes=${new Set(converted.map((monster) => monster.type)).size}`);
 
   // CR coverage report
   const byCr = new Map<number, number>();

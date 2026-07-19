@@ -256,17 +256,30 @@ export function fillRecipeSlots(
   partyLevel: number,
   environment?: Environment,
   rng: Rng = Math.random,
+  xpBudget = Number.POSITIVE_INFINITY,
 ): { role: MonsterRole; monster: Monster; count: number }[] {
   const results: { role: MonsterRole; monster: Monster; count: number }[] = [];
+  let remainingXp = xpBudget;
 
-  for (const slot of recipe.slots) {
+  for (let slotIndex = 0; slotIndex < recipe.slots.length; slotIndex += 1) {
+    const slot = recipe.slots[slotIndex];
     const targetCr = Math.max(0, partyLevel + slot.crOffset);
     const crRange = 2;
-
-    let candidates = allMonsters.filter(m =>
-      m.challengeRating >= targetCr - crRange &&
-      m.challengeRating <= targetCr + crRange
+    const futureCreatureCount = recipe.slots
+      .slice(slotIndex + 1)
+      .reduce((total, futureSlot) => total + futureSlot.count, 0);
+    const cheapestXp = allMonsters.reduce(
+      (minimum, monster) => Math.min(minimum, monster.xp),
+      Number.POSITIVE_INFINITY,
     );
+    const reserveXp = Number.isFinite(remainingXp) && Number.isFinite(cheapestXp)
+      ? futureCreatureCount * cheapestXp
+      : 0;
+    const maxXpPerCreature = Number.isFinite(remainingXp)
+      ? Math.floor(Math.max(0, remainingXp - reserveXp) / slot.count)
+      : Number.POSITIVE_INFINITY;
+
+    let candidates = allMonsters.filter(m => m.xp <= maxXpPerCreature);
 
     if (environment && environment !== 'Any') {
       const envFiltered = candidates.filter(m =>
@@ -280,7 +293,14 @@ export function fillRecipeSlots(
       if (typeFiltered.length > 0) candidates = typeFiltered;
     }
 
-    // Sort by proximity to target CR
+    const nearby = candidates.filter(m =>
+      m.challengeRating >= targetCr - crRange &&
+      m.challengeRating <= targetCr + crRange
+    );
+    if (nearby.length > 0) candidates = nearby;
+
+    // Prefer the intended role's CR, but the XP cap is authoritative. Recipes
+    // should shape an encounter without silently changing its difficulty.
     candidates.sort((a, b) =>
       Math.abs(a.challengeRating - targetCr) - Math.abs(b.challengeRating - targetCr)
     );
@@ -288,6 +308,7 @@ export function fillRecipeSlots(
     const pick = candidates[Math.floor(rng() * Math.min(5, candidates.length))];
     if (pick) {
       results.push({ role: slot.role, monster: pick, count: slot.count });
+      remainingXp -= pick.xp * slot.count;
     }
   }
 

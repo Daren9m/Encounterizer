@@ -8,6 +8,7 @@ import { useMonsters } from '@/app/hooks/useMonsters';
 import {
   assessEncounterDifficulty,
   generateEncounter,
+  getPartyXpBudget,
   summarizeEncounter,
 } from '@/lib/encounter-generator';
 import {
@@ -15,7 +16,12 @@ import {
   type MapFeatureDensity,
   type MapTerrainVariety,
 } from '@/lib/map-generator';
-import { randomSeed } from '@/lib/random';
+import { randomSeed, seededRandom } from '@/lib/random';
+import {
+  ENCOUNTER_RECIPES,
+  fillRecipeSlots,
+  getRecipeById,
+} from '@/lib/encounter-recipes';
 import { validateBoundedIntegerInput } from '@/lib/number-input';
 import type {
   Encounter, Difficulty, Environment,
@@ -47,6 +53,12 @@ import {
   type BattleReport,
   type PartyConfig,
 } from '@/lib/battle-sim-types';
+import {
+  encounterExportFilename,
+  encounterPlayerHandoutMarkdown,
+  encounterToFoundry,
+  encounterToMarkdown,
+} from '@/lib/encounter-export';
 
 const DIFFICULTIES: Difficulty[] = ['Trivial', 'Low', 'Moderate', 'High', 'Extreme'];
 const MAP_DENSITIES: MapFeatureDensity[] = ['Sparse', 'Balanced', 'Dense'];
@@ -89,6 +101,7 @@ interface GenerateConfig {
   mapTerrainVariety: MapTerrainVariety;
   filter: MonsterFilter;
   seed: number;
+  recipeId?: string;
 }
 
 function writeUrl(cfg: GenerateConfig): void {
@@ -105,6 +118,7 @@ function writeUrl(cfg: GenerateConfig): void {
     params.set('mv', cfg.mapTerrainVariety);
   }
   params.set('seed', String(cfg.seed));
+  if (cfg.recipeId) params.set('recipe', cfg.recipeId);
   if (Object.keys(cfg.filter).length > 0) params.set('f', JSON.stringify(cfg.filter));
   window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
 }
@@ -184,6 +198,11 @@ interface SavedEncounter {
   encounter: Encounter;
 }
 
+interface WhatIfResult {
+  label: string;
+  report: BattleReport;
+}
+
 const MAX_SAVED_ENCOUNTERS = 20;
 
 /** Stable fingerprint of an encounter's composition for staleness checks. */
@@ -229,6 +248,8 @@ function EncounterBuilder() {
   const [mapTerrainVariety, setMapTerrainVariety] = useState<MapTerrainVariety>('Varied');
   const [showManualAdd, setShowManualAdd] = useState(false);
   const [manualSearch, setManualSearch] = useState('');
+  const [showRecipes, setShowRecipes] = useState(false);
+  const [recipeError, setRecipeError] = useState('');
 
   const partySizeValidation = validateBoundedIntegerInput(
     partySizeInput, 'Party size', 1, 10,
@@ -249,6 +270,7 @@ function EncounterBuilder() {
   const [report, setReport] = useState<BattleReport | null>(null);
   const [reportSignature, setReportSignature] = useState('');
   const [simRunning, setSimRunning] = useState(false);
+  const [whatIfReports, setWhatIfReports] = useState<WhatIfResult[]>([]);
   const partySetupRef = useRef<HTMLDivElement>(null);
 
   // Saved encounters + save-name input
@@ -266,6 +288,7 @@ function EncounterBuilder() {
       (v): v is EncounterSettings | null => v === null || isEncounterSettings(v),
     );
     if (stored) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot localStorage hydration must apply the saved control snapshot together.
       setPartySize(stored.partySize);
       setPartyLevel(stored.partyLevel);
       setPartySizeInput(String(stored.partySize));
@@ -332,6 +355,7 @@ function EncounterBuilder() {
     setReport(null);
     setReportSignature('');
     setSimRunning(false);
+    setWhatIfReports([]);
   }, []);
 
   const openPartySetup = useCallback(() => {
@@ -380,6 +404,66 @@ function EncounterBuilder() {
     writeUrl(cfg);
   }, [allMonsters, invalidateForecast]);
 
+  const runRecipe = useCallback((recipeId: string, cfg: GenerateConfig) => {
+    const recipe = getRecipeById(recipeId);
+    if (!recipe) {
+      setRecipeError('That recipe is not available.');
+      return;
+    }
+    const filteredPool = filterMonsters(allMonsters, cfg.filter);
+    const filled = fillRecipeSlots(
+      recipe,
+      filteredPool,
+      cfg.partyLevel,
+      cfg.environment,
+      seededRandom(cfg.seed),
+      getPartyXpBudget(buildParty(cfg.partySize, cfg.partyLevel), cfg.difficulty),
+    );
+    if (filled.length === 0) {
+      setRecipeError('No monsters match this recipe and the current filters. Broaden the filters and try again.');
+      return;
+    }
+    const byMonster = new Map<string, { monster: Monster; count: number }>();
+    for (const slot of filled) {
+      const existing = byMonster.get(slot.monster.id);
+      byMonster.set(slot.monster.id, {
+        monster: slot.monster,
+        count: (existing?.count ?? 0) + slot.count,
+      });
+    }
+    const monsters = [...byMonster.values()];
+    const totalXp = monsters.reduce((sum, entry) => sum + entry.monster.xp * entry.count, 0);
+    const next: Encounter = {
+      id: `recipe-${recipe.id}-${cfg.seed}`,
+      name: recipe.name,
+      description: `${recipe.description}\n\nHook: ${recipe.narrativeHook}`,
+      environment: cfg.environment,
+      difficulty: assessEncounterDifficulty(totalXp, buildParty(cfg.partySize, cfg.partyLevel)),
+      monsters,
+      totalXp,
+      seed: cfg.seed,
+      tactics: `${recipe.tactics}\n\nScaling: ${recipe.scaling}\n\nTerrain: ${recipe.terrainSuggestions.join('; ')}`,
+    };
+    if (cfg.includeMap) {
+      next.map = generateMap({
+        environment: cfg.environment,
+        width: cfg.mapWidth,
+        height: cfg.mapHeight,
+        featureDensity: cfg.mapFeatureDensity,
+        terrainVariety: cfg.mapTerrainVariety,
+        seed: cfg.seed,
+      });
+    }
+    setEncounter(next);
+    setRecipeError('');
+    setIsSeeded(true);
+    setLinkCopied(false);
+    setExpandedMonster(null);
+    setEditingDetails(false);
+    invalidateForecast();
+    writeUrl({ ...cfg, recipeId });
+  }, [allMonsters, invalidateForecast]);
+
   // One-shot hydration from a shared link (?seed=...)
   const didInit = useRef(false);
   useEffect(() => {
@@ -391,6 +475,7 @@ function EncounterBuilder() {
     const diff = searchParams.get('diff');
     const env = searchParams.get('env');
     const seed = clampInt(searchParams.get('seed'), 0, 0x7fffffff);
+    const recipeId = searchParams.get('recipe');
     const withMap = searchParams.get('map') === '1';
     const sharedMapWidth = clampInt(searchParams.get('mw'), 10, 40) ?? 24;
     const sharedMapHeight = clampInt(searchParams.get('mh'), 10, 30) ?? 18;
@@ -413,6 +498,7 @@ function EncounterBuilder() {
     }
 
     if (size !== null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot share-link hydration preserves the seeded replay contract.
       setPartySize(size);
       setPartySizeInput(String(size));
     }
@@ -432,7 +518,7 @@ function EncounterBuilder() {
     }
 
     if (seed !== null && size !== null && level !== null && isDifficulty(diff) && isEnvironment(env)) {
-      runGenerate({
+      const sharedConfig: GenerateConfig = {
         partySize: size,
         partyLevel: level,
         difficulty: diff,
@@ -444,9 +530,11 @@ function EncounterBuilder() {
         mapTerrainVariety: sharedMapVariety,
         filter,
         seed,
-      });
+      };
+      if (recipeId && getRecipeById(recipeId)) runRecipe(recipeId, sharedConfig);
+      else runGenerate(sharedConfig);
     }
-  }, [searchParams, runGenerate]);
+  }, [searchParams, runGenerate, runRecipe]);
 
   function handleGenerate() {
     if (!partyInputsValid) {
@@ -461,6 +549,15 @@ function EncounterBuilder() {
       partySize, partyLevel, difficulty, environment,
       includeMap, mapWidth, mapHeight, mapFeatureDensity, mapTerrainVariety,
       filter: monsterFilter, seed: randomSeed(),
+    });
+  }
+
+  function handleRecipe(recipeId: string) {
+    if (!partyInputsValid) return;
+    runRecipe(recipeId, {
+      partySize, partyLevel, difficulty, environment,
+      includeMap, mapWidth, mapHeight, mapFeatureDensity, mapTerrainVariety,
+      filter: monsterFilter, seed: randomSeed(), recipeId,
     });
   }
 
@@ -516,6 +613,8 @@ function EncounterBuilder() {
     setExpandedMonster(null);
     setShowManualAdd(false);
     setManualSearch('');
+    setShowRecipes(false);
+    setRecipeError('');
     setShowPartySetup(false);
     setPartyConfig({ version: 1, members: defaultPartyConfig(4, 3) });
     setSavingName(null);
@@ -549,6 +648,7 @@ function EncounterBuilder() {
 
   const runForecast = useCallback((config: PartyConfig, enc: Encounter) => {
     setSimRunning(true);
+    setWhatIfReports([]);
     // Let the skeleton paint before the (fast but synchronous) simulation.
     setTimeout(() => {
       const players = config.members.map((m, i) => buildSimPlayer(m, i));
@@ -639,17 +739,65 @@ function EncounterBuilder() {
     setEncounter(prev => prev ? { ...prev, [field]: value } : prev);
   }
 
-  const handleExport = useCallback(() => {
-    if (!encounter) return;
-    const json = JSON.stringify(encounter, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
+  const downloadEncounter = useCallback((contents: string, mime: string, filename: string) => {
+    const blob = new Blob([contents], { type: mime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `encounter-${encounter.id}.json`;
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-  }, [encounter]);
+  }, []);
+
+  const runWhatIf = useCallback((monsterId: string, delta: 1 | -1) => {
+    if (!encounter || !partyConfig || !report) return;
+    const current = encounter.monsters.find((entry) => entry.monster.id === monsterId);
+    if (!current || (delta < 0 && current.count <= 0)) return;
+    const roster = encounter.monsters
+      .map((entry) => entry.monster.id === monsterId ? { ...entry, count: entry.count + delta } : entry)
+      .filter((entry) => entry.count > 0);
+    if (roster.length === 0) return;
+    const players = partyConfig.members.map((member, index) => buildSimPlayer(member, index));
+    const monsters = roster.flatMap((entry) =>
+      Array.from({ length: entry.count }, (_, index) => monsterToSimMonster(entry.monster, index, entry.count))
+    );
+    const battlefield = encounter.map
+      ? battlefieldFromMap(
+          encounter.map,
+          placeTokens(encounter.map, roster, partyConfig.members.length, encounter.map.seed ?? encounter.seed),
+        )
+      : undefined;
+    const nextReport = simulateBattle(players, monsters, {
+      seed: report.seed,
+      iterations: 500,
+      ...(battlefield ? { battlefield } : {}),
+    });
+    setWhatIfReports((previous) => [
+      ...previous.filter((entry) => !entry.label.endsWith(current.monster.name)),
+      { label: `${delta > 0 ? '+1' : '-1'} ${current.monster.name}`, report: nextReport },
+    ].slice(-3));
+  }, [encounter, partyConfig, report]);
+
+  const handleExport = useCallback((format: 'json' | 'markdown' | 'foundry' | 'player') => {
+    if (!encounter) return;
+    if (format === 'json') {
+      downloadEncounter(JSON.stringify(encounter, null, 2), 'application/json', encounterExportFilename(encounter, 'json'));
+    } else if (format === 'markdown') {
+      downloadEncounter(encounterToMarkdown(encounter), 'text/markdown', encounterExportFilename(encounter, 'md'));
+    } else if (format === 'foundry') {
+      downloadEncounter(JSON.stringify(encounterToFoundry(encounter), null, 2), 'application/json', encounterExportFilename(encounter, 'foundry.json'));
+    } else {
+      downloadEncounter(encounterPlayerHandoutMarkdown(encounter), 'text/markdown', encounterExportFilename(encounter, 'player-handout.md'));
+    }
+  }, [downloadEncounter, encounter]);
+
+  const handlePrintPlayerHandout = useCallback(() => {
+    document.body.classList.add('player-handout-print');
+    const cleanup = () => document.body.classList.remove('player-handout-print');
+    window.addEventListener('afterprint', cleanup, { once: true });
+    window.print();
+    window.setTimeout(cleanup, 1000);
+  }, []);
 
   const handleSaveEncounter = useCallback(() => {
     if (!encounter || savingName === null) return;
@@ -794,6 +942,47 @@ function EncounterBuilder() {
           </fieldset>
         )}
 
+        <div className="mb-4 rounded-md border border-[var(--steel-800)]">
+          <button
+            type="button"
+            className="flex min-h-11 w-full items-center justify-between gap-3 px-3 py-2 text-left"
+            onClick={() => setShowRecipes((value) => !value)}
+            aria-expanded={showRecipes}
+          >
+            <span>
+              <span className="micro-label block">Encounter Recipes</span>
+              <span className="text-sm text-[var(--text-2)]">Start from a proven combat or narrative pattern.</span>
+            </span>
+            <span className="text-[var(--bronze)]" aria-hidden="true">{showRecipes ? '−' : '+'}</span>
+          </button>
+          {showRecipes && (
+            <div className="grid gap-4 border-t border-[var(--steel-800)] p-3 lg:grid-cols-2">
+              {(['combat', 'narrative'] as const).map((category) => (
+                <section key={category} aria-labelledby={`recipe-${category}-heading`}>
+                  <h3 id={`recipe-${category}-heading`} className="mb-2 text-base capitalize">{category} recipes</h3>
+                  <div className="space-y-2">
+                    {ENCOUNTER_RECIPES.filter((recipe) => recipe.category === category).map((recipe) => (
+                      <button
+                        key={recipe.id}
+                        type="button"
+                        className="w-full rounded-lg border border-[var(--steel-800)] bg-[var(--steel-950)] p-3 text-left transition-colors hover:border-[var(--bronze)]"
+                        onClick={() => handleRecipe(recipe.id)}
+                      >
+                        <span className="block font-semibold text-[var(--text-1)]">{recipe.name}</span>
+                        <span className="mt-1 block text-xs leading-relaxed text-[var(--text-2)]">{recipe.description}</span>
+                        <span className="mt-2 block text-[10px] uppercase tracking-wide text-[var(--bronze)]">
+                          {recipe.slots.map((slot) => `${slot.count}× ${slot.role}`).join(' · ')}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
+        </div>
+        {recipeError && <p className="mb-4 text-sm text-[var(--accent-danger)]" role="alert">{recipeError}</p>}
+
         {/* Difficulty Meter */}
         <DifficultyMeter
           assessment={summary.assessment}
@@ -839,10 +1028,22 @@ function EncounterBuilder() {
           <div className="mt-4 flex flex-col gap-3 border-t border-[var(--line-subtle)] pt-4 sm:flex-row sm:items-center">
             <span className="micro-label shrink-0">Current encounter</span>
             <div className="flex flex-wrap items-center gap-2">
-              <button type="button" onClick={handleExport} className="btn-secondary text-sm">
+              <button type="button" onClick={() => handleExport('json')} className="btn-secondary text-sm">
                 Export JSON
               </button>
-              <PrintButton label="Print Encounter" />
+              <button type="button" onClick={() => handleExport('markdown')} className="btn-secondary text-sm">
+                Export Markdown
+              </button>
+              <button type="button" onClick={() => handleExport('foundry')} className="btn-secondary text-sm">
+                Export Foundry
+              </button>
+              <button type="button" onClick={() => handleExport('player')} className="btn-secondary text-sm">
+                Player Handout
+              </button>
+              <button type="button" onClick={handlePrintPlayerHandout} className="btn-secondary text-sm">
+                Print Player View
+              </button>
+              <PrintButton label="Print / Save PDF" />
               {encounter.monsters.length > 0 && (
                 savingName === null ? (
                   <button
@@ -1048,7 +1249,7 @@ function EncounterBuilder() {
               <p className="text-[var(--text-2)] mb-4 italic">{encounter.description}</p>
             )}
 
-            <div className="grid sm:grid-cols-4 gap-4 text-sm">
+            <div className="player-handout-hidden grid sm:grid-cols-4 gap-4 text-sm">
               <div>
                 <span className="text-[var(--bronze)] font-bold">Monster HP: </span>
                 {summary.totalMonsterHp.toLocaleString()}
@@ -1072,7 +1273,7 @@ function EncounterBuilder() {
           </div>
 
           {/* Battle Forecast */}
-          <section className="relative overflow-hidden rounded-lg border-2 border-[var(--bronze)] bg-[linear-gradient(135deg,rgba(188,138,67,0.18),rgba(49,57,72,0.92))] p-5 shadow-lg print:hidden">
+          <section className="player-handout-hidden relative overflow-hidden rounded-lg border-2 border-[var(--bronze)] bg-[linear-gradient(135deg,rgba(188,138,67,0.18),rgba(49,57,72,0.92))] p-5 shadow-lg print:hidden">
             <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[rgba(188,138,67,0.14)]" aria-hidden="true" />
             <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-start gap-3">
@@ -1135,9 +1336,45 @@ function EncounterBuilder() {
               onEditParty={openPartySetup}
             />
           )}
+          {!simRunning && report && (
+            <section className="card player-handout-hidden space-y-4 print:hidden" aria-labelledby="what-if-heading">
+              <div>
+                <p className="micro-label">Smart insights</p>
+                <h3 id="what-if-heading" className="mt-1 text-xl">What-if lab</h3>
+                <p className="mt-1 text-sm text-[var(--text-2)]">
+                  {report.partyWinRate > 0.9
+                    ? 'The party is heavily favored. Try adding one creature and compare the same seeded forecast.'
+                    : report.partyWinRate < 0.5
+                      ? 'The monsters are favored. Try removing one creature before changing the whole encounter.'
+                      : 'The result is competitive. Test one roster change at a time to protect the encounter concept.'}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {encounter.monsters.map((entry) => (
+                  <span key={entry.monster.id} className="inline-flex items-center rounded-lg border border-[var(--steel-800)] bg-[var(--steel-950)] p-1">
+                    <span className="px-2 text-xs text-[var(--text-2)]">{entry.count}× {entry.monster.name}</span>
+                    <button type="button" className="btn-ghost text-xs" onClick={() => runWhatIf(entry.monster.id, 1)}>
+                      +1
+                    </button>
+                    <button type="button" className="btn-ghost text-xs" onClick={() => runWhatIf(entry.monster.id, -1)} disabled={encounter.monsters.length === 1 && entry.count === 1}>
+                      −1
+                    </button>
+                  </span>
+                ))}
+              </div>
+              {whatIfReports.length > 0 && (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <ForecastComparison label="Current roster" report={report} />
+                  {whatIfReports.map((entry) => (
+                    <ForecastComparison key={entry.label} label={entry.label} report={entry.report} />
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Monsters */}
-          <div className="card">
+          <div className="card player-handout-hidden">
             <h3 className="text-xl mb-4">Monsters</h3>
             <div className="space-y-3">
               {encounter.monsters.map(em => (
@@ -1187,7 +1424,7 @@ function EncounterBuilder() {
                       <MonsterStatBlock monster={em.monster} />
                     </div>
                   )}
-                  <div className="hidden print:block mt-4 break-inside-avoid">
+                  <div className="encounter-stat-block-page hidden print:block mt-4 break-inside-avoid">
                     <MonsterStatBlock monster={em.monster} />
                   </div>
                 </div>
@@ -1197,7 +1434,7 @@ function EncounterBuilder() {
 
           {/* Tactics */}
           {(encounter.tactics || editingDetails) && (
-            <div className={`card ${!encounter.tactics ? 'print:hidden' : ''}`}>
+            <div className={`card player-handout-hidden ${!encounter.tactics ? 'print:hidden' : ''}`}>
               <h3 className="text-xl mb-3">Tactics</h3>
               {editingDetails ? (
                 <>
@@ -1223,7 +1460,7 @@ function EncounterBuilder() {
 
           {/* Treasure */}
           {encounter.treasure && (
-            <div className="card">
+            <div className="card player-handout-hidden">
               <h3 className="text-xl mb-3">Treasure</h3>
               <p className="text-sm text-[var(--text-2)]">{encounter.treasure}</p>
             </div>
@@ -1252,11 +1489,22 @@ function EncounterBuilder() {
                   {placement.notes.join(' ')}
                 </p>
               )}
-              {encounter.map.rooms && <RoomKeyPanel rooms={encounter.map.rooms} />}
+              {encounter.map.rooms && <div className="player-handout-hidden"><RoomKeyPanel rooms={encounter.map.rooms} /></div>}
             </div>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function ForecastComparison({ label, report }: { label: string; report: BattleReport }) {
+  return (
+    <div className="rounded-lg border border-[var(--steel-800)] bg-[var(--steel-950)] p-3">
+      <p className="text-sm font-semibold text-[var(--text-1)]">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-[var(--bronze)]">{Math.round(report.partyWinRate * 100)}%</p>
+      <p className="text-xs text-[var(--text-2)]">party win rate · {report.simLabel}</p>
+      <p className="mt-1 text-xs text-[var(--text-3)]">{report.avgRounds.toFixed(1)} rounds · {Math.round(report.avgPartyHpRemainingPct * 100)}% party HP</p>
     </div>
   );
 }

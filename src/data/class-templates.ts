@@ -33,7 +33,7 @@ export interface TemplateTierStats {
   spellDc?: number;
   avgSpellDamagePerRound?: number;
   healingPerRound?: number;
-  special?: { rage?: boolean; evasion?: boolean; sneakDamage?: number };
+  special?: SimPlayer['special'];
 }
 
 export interface ClassTemplate {
@@ -313,6 +313,22 @@ export function buildSimPlayer(
   if (tier.avgSpellDamagePerRound) player.avgSpellDamagePerRound = tier.avgSpellDamagePerRound;
   if (tier.healingPerRound) player.healingPerRound = tier.healingPerRound;
   if (tier.special) player.special = { ...tier.special };
+
+  // Phase-2 forecast features are modeled from class chassis rather than
+  // pretending every spell or feat is configured individually.
+  if (template.id === 'wizard-evoker' || template.id === 'sorcerer-draconic') {
+    player.spellTargets = level >= 11 ? 3 : level >= 5 ? 2 : 1;
+    player.special = { ...player.special, shield: true };
+  }
+  if (['cleric-life', 'druid-moon', 'warlock-fiend'].includes(template.id)) {
+    player.special = { ...player.special, concentration: true };
+  }
+  if (template.id === 'bard-lore' && player.spellDc) {
+    player.control = { saveDc: player.spellDc, saveAbility: 'wis', chance: 0.35 };
+  }
+  if (template.id === 'fighter-battlemaster') {
+    player.special = { ...player.special, sentinel: true };
+  }
 
   if (config.overrides) {
     Object.assign(player, config.overrides);

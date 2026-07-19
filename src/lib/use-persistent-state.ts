@@ -28,7 +28,9 @@ export function usePersistentState<T>(
   const [hydrated, setHydrated] = useState(false);
 
   const validateRef = useRef(validate);
-  validateRef.current = validate;
+  useEffect(() => {
+    validateRef.current = validate;
+  }, [validate]);
 
   useEffect(() => {
     const guard = validateRef.current;
