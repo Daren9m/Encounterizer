@@ -192,12 +192,23 @@ approximations it made.
 ## Map Generation
 
 Three procedural algorithms:
-- **BSP (Binary Space Partition)** — dungeon rooms connected by L-shaped corridors, with doors, traps, treasure, pillars
-- **Cellular Automata** — organic cave systems (Underdark, mountain caves)
+- **BSP (Binary Space Partition)** — dungeon rooms connected by L-shaped corridors, with doors, stairs, traps, treasure, pillars
+- **Cellular Automata** — organic cave systems (Underdark, mountain caves, planar rifts) with guaranteed connectivity
 - **Outdoor Scatter** — environment-specific terrain (forest vegetation, swamp water, desert dunes, arctic ice, rivers with bridges)
 
-18 terrain types with distinct symbols and colors. Maps generated alongside
-encounters share the encounter's seed, so shared links reproduce both.
+Every map comes with **keyed rooms** — names, DM purposes, and read-aloud
+text — rendered as a clean-tactical SVG battle map with coordinate rulers
+and room-number chips. Exports: PNG, Markdown (grid + room key), JSON,
+ASCII text, and **UVTT (.dd2vtt)** with line-of-sight walls and door
+portals for Foundry-style importers.
+
+Maps are seeded and shareable (`/maps?seed=…`). Maps generated alongside
+encounters share the encounter's seed, so shared links reproduce the map,
+the room key, AND the suggested token placement (party spawns, monster
+zones, boss room). With a map attached, the Battle Forecast runs **on the
+grid**: movement, weapon ranges, difficult terrain, and chokepoints all
+shape the outcome, and the report shows rounds-to-contact alongside its
+usual statistics.
 
 ## Deployment
 
@@ -232,7 +243,7 @@ the [milestones](https://github.com/Daren9m/Encounterizer/milestones) for
 the full backlog. Highlights:
 
 - **Character Import** (#10) — Parse D&D Beyond links, PDFs, or sheet images into Battle Forecast parties
-- **Enhanced Export** (#15) — PDF stat blocks and VTT (Foundry/Roll20) formats
+- **Enhanced Export** (#15) — PDF stat blocks (map VTT export shipped with the Map Generator Overhaul)
 - **Battle Forecast Phase 2/3** — death saves, AoE modeling, save-or-suck conditions, "what if?" suggestions
 
 ## Licensing

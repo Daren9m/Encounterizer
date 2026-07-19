@@ -303,12 +303,18 @@ export function monsterToSimMonster(monster: Monster, instanceIndex: number, ins
     attacks = Array.from(distribution.entries())
       .map(([name, count]) => {
         const action = attackActions.find((a) => a.name === name)!;
+        // Spatial mode: feet → cells (5 ft each). Unparsed melee reach
+        // defaults to 1 cell; unparsed ranged spans default to 60 ft.
+        const spatialReach = action.attackDelivery === 'Ranged'
+          ? { rangeCells: Math.max(2, Math.round((action.range ?? 60) / 5)) }
+          : { reachCells: Math.max(1, Math.round((action.reach ?? 5) / 5)) };
         return {
           name,
           attackBonus: action.attackBonus!,
           damageDice: parseDice(action.damageDice)!,
           avgDamage: actionAvgDamage(action),
           count,
+          ...spatialReach,
         };
       })
       .filter((a) => a.count > 0);
@@ -329,6 +335,7 @@ export function monsterToSimMonster(monster: Monster, instanceIndex: number, ins
       damageDice: { n: 1, d: 6, mod: Math.max(0, Math.round(midpoint * 0.7) - 4) },
       avgDamage: Math.max(1, Math.round(midpoint * 0.7)),
       count: 1,
+      reachCells: 1,
     }];
   }
 
@@ -356,6 +363,7 @@ export function monsterToSimMonster(monster: Monster, instanceIndex: number, ins
         damageDice: { n: 1, d: 10, mod: Math.max(0, supplement - 5) },
         avgDamage: supplement,
         count: 1,
+        rangeCells: 12, // approximated spell damage fires at 60 ft
       });
       threat = computeThreat(attacks, recharge, legendary);
     }
@@ -384,5 +392,8 @@ export function monsterToSimMonster(monster: Monster, instanceIndex: number, ins
     threat,
     synthesizedAttack,
     parseWarnings: warnings,
+    // Spatial mode: cells per round, flying approximated as ground
+    // movement. Structured Speed — no text parsing needed.
+    speedCells: Math.round(Math.max(monster.speed.walk ?? 0, monster.speed.fly ?? 0) / 5) || 6,
   };
 }

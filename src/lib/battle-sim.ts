@@ -5,7 +5,9 @@
 // fully reproducible from its seed.
 
 import { seededRandom, type Rng } from './random';
+import { chebyshev, DistanceFieldCache, stepAway, stepToward } from './sim/movement';
 import type {
+  Battlefield,
   BattleReport,
   LegendaryAttack,
   RechargeAction,
@@ -17,7 +19,24 @@ export interface SimulateOptions {
   iterations?: number;
   seed: number;
   maxRounds?: number;
+  /** Simulate on a battle map: movement, range, and chokepoints.
+   *  Absent → the abstract engine, bit-identical to pre-spatial runs. */
+  battlefield?: Battlefield;
 }
+
+/** Shared across ALL iterations — fields depend only on the cost grid. */
+interface SpatialContext {
+  bf: Battlefield;
+  cache: DistanceFieldCache;
+  fallbackCell: number;
+}
+
+const SPATIAL_NOTES = [
+  'Spatial mode: opportunity attacks simplified to a single reaction strike.',
+  'Flying and burrowing movement approximated as ground speed.',
+  'Breath weapons, legendary actions, spell surplus, and healing ignore positioning.',
+  'Large and larger creatures move as single-cell tokens.',
+];
 
 interface PlayerState {
   kind: 'player';
@@ -26,6 +45,8 @@ interface PlayerState {
   down: boolean;
   initiative: number;
   sneakUsedThisRound: boolean;
+  /** Grid cell in spatial mode; -1 in the abstract engine. */
+  cell: number;
 }
 
 interface MonsterState {
@@ -36,6 +57,8 @@ interface MonsterState {
   initiative: number;
   rechargeReady: boolean;
   legendaryLeft: number;
+  /** Grid cell in spatial mode; -1 in the abstract engine. */
+  cell: number;
 }
 
 function d20(rng: Rng): number {
@@ -86,6 +109,51 @@ function highestThreatAlive(monsters: MonsterState[]): MonsterState | undefined 
   return best;
 }
 
+/** Spatial targeting: the scariest living monster inside `range`. */
+function highestThreatInRange(
+  monsters: MonsterState[], fromCell: number, range: number, width: number,
+): MonsterState | undefined {
+  let best: MonsterState | undefined;
+  for (const m of monsters) {
+    if (m.down || chebyshev(fromCell, m.cell, width) > range) continue;
+    if (!best || m.ref.threat > best.ref.threat
+      || (m.ref.threat === best.ref.threat && m.hp < best.hp)) {
+      best = m;
+    }
+  }
+  return best;
+}
+
+function nearestLivingPlayer(
+  players: PlayerState[], fromCell: number, width: number,
+): PlayerState | undefined {
+  let best: PlayerState | undefined;
+  let bestDist = Infinity;
+  for (const p of players) {
+    if (p.down) continue;
+    const d = chebyshev(fromCell, p.cell, width);
+    if (d < bestDist) { bestDist = d; best = p; }
+  }
+  return best;
+}
+
+/** Max range (cells) across a monster's attack routine. */
+function monsterEngageRange(monster: SimMonster): number {
+  let max = 1;
+  for (const attack of monster.attacks) {
+    max = Math.max(max, attack.reachCells ?? attack.rangeCells ?? 1);
+  }
+  return max;
+}
+
+const livingCells = (units: Array<{ down: boolean; cell: number }>, except?: { cell: number }) => {
+  const cells = new Set<number>();
+  for (const u of units) {
+    if (!u.down && u !== except) cells.add(u.cell);
+  }
+  return cells;
+};
+
 function applyDamageToPlayer(target: PlayerState, amount: number, isWeaponAttack: boolean): number {
   let dealt = amount;
   if (isWeaponAttack && target.ref.special?.rage) {
@@ -131,6 +199,8 @@ interface IterationResult {
   monsterAttempts: number;
   /** Party / monster HP fraction at the end of each round. */
   curve: Array<[number, number]>;
+  /** Spatial mode: round of the first in-range attack attempt. */
+  contactRound: number;
 }
 
 function runIteration(
@@ -138,16 +208,50 @@ function runIteration(
   monsters: SimMonster[],
   maxRounds: number,
   rng: Rng,
+  spatial?: SpatialContext,
 ): IterationResult {
-  const playerStates: PlayerState[] = players.map((p) => ({
+  const playerStates: PlayerState[] = players.map((p, i) => ({
     kind: 'player', ref: p, hp: p.maxHp, down: false,
     initiative: d20(rng) + p.initiativeMod, sneakUsedThisRound: false,
+    cell: spatial ? (spatial.bf.playerSpawns[i] ?? spatial.fallbackCell) : -1,
   }));
   const monsterStates: MonsterState[] = monsters.map((m) => ({
     kind: 'monster', ref: m, hp: m.maxHp, down: false,
     initiative: d20(rng) + m.initiativeMod,
     rechargeReady: true, legendaryLeft: m.legendary?.perRound ?? 0,
+    cell: spatial ? (spatial.bf.monsterSpawns.get(m.id) ?? spatial.fallbackCell) : -1,
   }));
+  const gridW = spatial?.bf.width ?? 0;
+
+  // Simplified opportunity attack: leaving a living enemy's reach eats
+  // ONE basic strike from one such enemy. Spatial mode only.
+  const opportunityStrikeOnPlayer = (player: PlayerState, from: number, to: number): void => {
+    const striker = monsterStates.find((m) =>
+      !m.down && chebyshev(from, m.cell, gridW) <= 1 && chebyshev(to, m.cell, gridW) > 1);
+    if (!striker || striker.ref.attacks.length === 0) return;
+    const attack = striker.ref.attacks[0];
+    monsterAttempts++;
+    const roll = d20(rng);
+    const crit = roll === 20;
+    if (!crit && (roll === 1 || roll + attack.attackBonus < player.ref.ac)) return;
+    monsterHits++;
+    let damage = rollDice(attack.damageDice, rng);
+    if (crit) damage += rollDice({ ...attack.damageDice, mod: 0 }, rng);
+    const dealt = applyDamageToPlayer(player, damage, true);
+    damageBySource.set(striker.ref.sourceId, (damageBySource.get(striker.ref.sourceId) ?? 0) + dealt);
+  };
+  const opportunityStrikeOnMonster = (monster: MonsterState, from: number, to: number): void => {
+    const striker = playerStates.find((p) =>
+      !p.down && chebyshev(from, p.cell, gridW) <= 1 && chebyshev(to, p.cell, gridW) > 1);
+    if (!striker) return;
+    partyAttempts++;
+    const roll = d20(rng);
+    const crit = roll === 20;
+    if (!crit && (roll === 1 || roll + striker.ref.attackBonus < monster.ref.ac)) return;
+    partyHits++;
+    monster.hp -= Math.round(striker.ref.avgDamagePerHit * (crit ? 1.5 : 1));
+    if (monster.hp <= 0) { monster.hp = 0; monster.down = true; }
+  };
 
   // Players win initiative ties (PC-favorable, matches table convention)
   const order: Array<PlayerState | MonsterState> = [...playerStates, ...monsterStates].sort(
@@ -166,6 +270,7 @@ function runIteration(
 
   let round = 0;
   let winner: IterationResult['winner'] = 'stalemate';
+  let contactRound = 0;
 
   outer: for (round = 1; round <= maxRounds; round++) {
     for (const p of playerStates) p.sneakUsedThisRound = false;
@@ -177,47 +282,94 @@ function runIteration(
       if (unit.kind === 'player') {
         const player = unit;
 
-        // Heal the most wounded living ally first
-        if (player.ref.healingPerRound) {
-          let wounded: PlayerState | undefined;
-          for (const ally of playerStates) {
-            if (ally.down || ally.hp >= ally.ref.maxHp) continue;
-            if (!wounded || ally.hp / ally.ref.maxHp < wounded.hp / wounded.ref.maxHp) wounded = ally;
-          }
-          if (wounded) {
-            wounded.hp = Math.min(wounded.ref.maxHp, wounded.hp + player.ref.healingPerRound);
+        // Spatial: move before acting. A Dash (double move) forfeits
+        // the turn's attacks; kiting out of melee eats one simplified
+        // opportunity strike.
+        let dashed = false;
+        let rangedDisadvantage = false;
+        if (spatial) {
+          const speed = player.ref.speedCells ?? 6;
+          const range = player.ref.rangeCells ?? 1;
+          const primary = highestThreatAlive(monsterStates);
+          if (primary) {
+            const enemyCells = livingCells(monsterStates);
+            const allyCells = livingCells(playerStates, player);
+            const adjacent = highestThreatInRange(monsterStates, player.cell, 1, gridW);
+            if (range > 1 && adjacent) {
+              const from = player.cell;
+              const fled = stepAway(
+                from, spatial.cache.fieldTo(adjacent.cell), speed, spatial.bf, enemyCells, allyCells,
+              );
+              if (fled !== from) {
+                player.cell = fled;
+                opportunityStrikeOnPlayer(player, from, fled);
+              }
+              if (!player.down && highestThreatInRange(monsterStates, player.cell, 1, gridW)) {
+                rangedDisadvantage = true; // still stuck in melee
+              }
+            } else if (chebyshev(player.cell, primary.cell, gridW) > range) {
+              const field = spatial.cache.fieldTo(primary.cell);
+              const from = player.cell;
+              const next = stepToward(from, field, speed, spatial.bf, enemyCells, allyCells);
+              if (next !== from) {
+                player.cell = next;
+                opportunityStrikeOnPlayer(player, from, next);
+              }
+              if (!player.down && chebyshev(player.cell, primary.cell, gridW) > range) {
+                player.cell = stepToward(player.cell, field, speed, spatial.bf, enemyCells, allyCells);
+                dashed = true;
+              }
+            }
           }
         }
 
-        // Weapon/cantrip attacks vs the biggest threat
-        for (let i = 0; i < player.ref.attacksPerRound; i++) {
-          const target = highestThreatAlive(monsterStates);
-          if (!target) break;
-          partyAttempts++;
-          const roll = d20(rng);
-          const crit = roll === 20;
-          const hit = crit || (roll !== 1 && roll + player.ref.attackBonus >= target.ref.ac);
-          if (!hit) continue;
-          partyHits++;
-          let damage = player.ref.avgDamagePerHit * (crit ? 1.5 : 1);
-          if (player.ref.special?.sneakDamage && !player.sneakUsedThisRound) {
-            damage += player.ref.special.sneakDamage;
-            player.sneakUsedThisRound = true;
+        if (!player.down && !dashed) {
+          // Heal the most wounded living ally first
+          if (player.ref.healingPerRound) {
+            let wounded: PlayerState | undefined;
+            for (const ally of playerStates) {
+              if (ally.down || ally.hp >= ally.ref.maxHp) continue;
+              if (!wounded || ally.hp / ally.ref.maxHp < wounded.hp / wounded.ref.maxHp) wounded = ally;
+            }
+            if (wounded) {
+              wounded.hp = Math.min(wounded.ref.maxHp, wounded.hp + player.ref.healingPerRound);
+            }
           }
-          target.hp -= Math.round(damage);
-          if (target.hp <= 0) { target.hp = 0; target.down = true; }
-        }
 
-        // Leveled-spell surplus, save-gated vs DEX
-        if (player.ref.spellDc && player.ref.avgSpellDamagePerRound) {
-          const target = highestThreatAlive(monsterStates);
-          if (target) {
-            const saved = d20(rng) + target.ref.saves.dex >= player.ref.spellDc;
-            const damage = saved
-              ? Math.floor(player.ref.avgSpellDamagePerRound / 2)
-              : player.ref.avgSpellDamagePerRound;
-            target.hp -= damage;
+          // Weapon/cantrip attacks vs the biggest threat (in reach,
+          // when fighting on a map)
+          for (let i = 0; i < player.ref.attacksPerRound; i++) {
+            const target = spatial
+              ? highestThreatInRange(monsterStates, player.cell, player.ref.rangeCells ?? 1, gridW)
+              : highestThreatAlive(monsterStates);
+            if (!target) break;
+            partyAttempts++;
+            const roll = rangedDisadvantage ? Math.min(d20(rng), d20(rng)) : d20(rng);
+            const crit = roll === 20;
+            const hit = crit || (roll !== 1 && roll + player.ref.attackBonus >= target.ref.ac);
+            if (!hit) continue;
+            partyHits++;
+            let damage = player.ref.avgDamagePerHit * (crit ? 1.5 : 1);
+            if (player.ref.special?.sneakDamage && !player.sneakUsedThisRound) {
+              damage += player.ref.special.sneakDamage;
+              player.sneakUsedThisRound = true;
+            }
+            target.hp -= Math.round(damage);
             if (target.hp <= 0) { target.hp = 0; target.down = true; }
+          }
+
+          // Leveled-spell surplus, save-gated vs DEX (range-free — see
+          // SPATIAL_NOTES)
+          if (player.ref.spellDc && player.ref.avgSpellDamagePerRound) {
+            const target = highestThreatAlive(monsterStates);
+            if (target) {
+              const saved = d20(rng) + target.ref.saves.dex >= player.ref.spellDc;
+              const damage = saved
+                ? Math.floor(player.ref.avgSpellDamagePerRound / 2)
+                : player.ref.avgSpellDamagePerRound;
+              target.hp -= damage;
+              if (target.hp <= 0) { target.hp = 0; target.down = true; }
+            }
           }
         }
 
@@ -238,23 +390,60 @@ function runIteration(
       } else {
         const monster = unit;
 
+        // Spatial: close on the nearest player before acting.
+        let monsterDashed = false;
+        if (spatial) {
+          const nearest = nearestLivingPlayer(playerStates, monster.cell, gridW);
+          if (nearest) {
+            const speed = monster.ref.speedCells ?? 6;
+            const engage = monsterEngageRange(monster.ref);
+            if (chebyshev(monster.cell, nearest.cell, gridW) > engage) {
+              const field = spatial.cache.fieldTo(nearest.cell);
+              const enemyCells = livingCells(playerStates);
+              const allyCells = livingCells(monsterStates, monster);
+              const from = monster.cell;
+              const next = stepToward(from, field, speed, spatial.bf, enemyCells, allyCells);
+              if (next !== from) {
+                monster.cell = next;
+                opportunityStrikeOnMonster(monster, from, next);
+              }
+              if (!monster.down && chebyshev(monster.cell, nearest.cell, gridW) > engage) {
+                monster.cell = stepToward(monster.cell, field, speed, spatial.bf, enemyCells, allyCells);
+                monsterDashed = true;
+              }
+            }
+          }
+        }
+
         // Recharge check at the start of the turn
         if (monster.ref.recharge && !monster.rechargeReady) {
           monster.rechargeReady = d6(rng) >= monster.ref.recharge.rechargeMin;
         }
 
-        if (monster.ref.recharge && monster.rechargeReady) {
+        if (monster.down || monsterDashed) {
+          // Fell to an opportunity strike, or spent the turn closing.
+        } else if (monster.ref.recharge && monster.rechargeReady) {
           const dealt = resolveRecharge(monster.ref.recharge, playerStates, monster, rng, damageBySource);
           monsterAttempts++;
           if (dealt > 0) monsterHits++;
           monster.rechargeReady = false;
         } else {
           for (const attack of monster.ref.attacks) {
+            const attackRange = attack.reachCells ?? attack.rangeCells ?? 1;
+            // 5e ranged-in-melee: firing with a hostile adjacent is at
+            // disadvantage.
+            const rangedInMelee = spatial
+              && attack.rangeCells !== undefined
+              && attack.reachCells === undefined
+              && playerStates.some((p) => !p.down && chebyshev(monster.cell, p.cell, gridW) <= 1);
             for (let i = 0; i < attack.count; i++) {
-              const target = monsterPickTarget(playerStates, rng);
-              if (!target) break;
+              const candidates = spatial
+                ? playerStates.filter((p) => !p.down && chebyshev(monster.cell, p.cell, gridW) <= attackRange)
+                : playerStates;
+              const target = monsterPickTarget(candidates, rng);
+              if (!target) break; // nobody this attack can reach; try the next attack
               monsterAttempts++;
-              const roll = d20(rng);
+              const roll = rangedInMelee ? Math.min(d20(rng), d20(rng)) : d20(rng);
               const crit = roll === 20;
               const hit = crit || (roll !== 1 && roll + attack.attackBonus >= target.ref.ac);
               if (!hit) continue;
@@ -274,10 +463,16 @@ function runIteration(
       }
     }
 
+    if (contactRound === 0 && partyAttempts + monsterAttempts > 0) contactRound = round;
+
     curve.push([
       playerStates.reduce((s, p) => s + p.hp, 0) / partyMaxHp,
       monsterStates.reduce((s, m) => s + m.hp, 0) / monsterMaxHp,
     ]);
+  }
+
+  if (contactRound === 0 && partyAttempts + monsterAttempts > 0) {
+    contactRound = Math.min(round, maxRounds);
   }
 
   return {
@@ -288,6 +483,7 @@ function runIteration(
     damageBySource,
     partyHits, partyAttempts, monsterHits, monsterAttempts,
     curve,
+    contactRound: contactRound === 0 ? maxRounds : contactRound,
   };
 }
 
@@ -363,6 +559,19 @@ export function simulateBattle(
     ?? (monsters.length > 40 ? 500 : 1000);
   const rng = seededRandom(options.seed);
 
+  let spatialCtx: SpatialContext | undefined;
+  if (options.battlefield) {
+    let fallbackCell = 0;
+    for (let i = 0; i < options.battlefield.cost.length; i++) {
+      if (options.battlefield.cost[i] > 0) { fallbackCell = i; break; }
+    }
+    spatialCtx = {
+      bf: options.battlefield,
+      cache: new DistanceFieldCache(options.battlefield),
+      fallbackCell,
+    };
+  }
+
   let wins = 0;
   let stalemates = 0;
   let decidedRounds = 0;
@@ -373,8 +582,10 @@ export function simulateBattle(
   const damageTotals = new Map<string, number>();
   const curveSums: Array<[number, number]> = Array.from({ length: maxRounds }, () => [0, 0]);
 
+  let contactRoundSum = 0;
   for (let i = 0; i < iterations; i++) {
-    const result = runIteration(players, monsters, maxRounds, rng);
+    const result = runIteration(players, monsters, maxRounds, rng, spatialCtx);
+    contactRoundSum += result.contactRound;
     if (result.winner === 'party') wins++;
     else if (result.winner === 'stalemate') stalemates++;
     if (result.winner !== 'stalemate') decidedRounds += result.rounds;
@@ -437,14 +648,22 @@ export function simulateBattle(
     : partyWinRate >= 0.1 ? 'Deadly'
     : 'Lethal';
 
-  const approximationNotes = Array.from(
-    new Set(monsters.flatMap((m) => m.parseWarnings)),
-  );
+  const approximationNotes = Array.from(new Set([
+    ...monsters.flatMap((m) => m.parseWarnings),
+    ...(spatialCtx ? SPATIAL_NOTES : []),
+  ]));
 
   return {
     iterations,
     seed: options.seed,
     maxRounds,
+    ...(spatialCtx ? {
+      spatial: {
+        gridWidth: spatialCtx.bf.width,
+        gridHeight: spatialCtx.bf.height,
+        avgRoundsToContact: contactRoundSum / iterations,
+      },
+    } : {}),
     partyWinRate,
     stalemateRate: stalemates / iterations,
     avgRounds: decided > 0 ? decidedRounds / decided : maxRounds,

@@ -259,6 +259,32 @@ export function computeHp(hitDie: number, conMod: number, level: number): number
   return hitDie + conMod + (level - 1) * (hitDie / 2 + 1 + conMod);
 }
 
+// ─── Spatial-mode combat profile ─────────────────────────────────
+// Primary attack range per class chassis (feet). Melee chassis fight
+// at 5 ft; casters at their bread-and-butter cantrip's range.
+const TEMPLATE_RANGE_FT: Record<string, number> = {
+  'fighter-champion': 5,
+  'fighter-battlemaster': 5,
+  'barbarian-berserker': 5,
+  'rogue-thief': 5,
+  'monk-open-hand': 5,
+  'paladin-devotion': 5,
+  'paladin-vengeance': 5,
+  'ranger-hunter': 150,      // longbow
+  'wizard-evoker': 120,      // fire bolt
+  'cleric-life': 60,         // sacred flame
+  'sorcerer-draconic': 120,  // fire bolt
+  'warlock-fiend': 120,      // eldritch blast
+  'druid-moon': 5,           // wild shape melee
+  'bard-lore': 60,           // vicious mockery
+  'artificer-armorer': 5,    // thunder gauntlets
+};
+
+/** Walking speed exceptions (feet); everyone else moves 30. */
+const TEMPLATE_SPEED_FT: Record<string, number> = {
+  'monk-open-hand': 45,
+};
+
 export function buildSimPlayer(
   config: PartyMemberConfig,
   index: number,
@@ -279,6 +305,8 @@ export function buildSimPlayer(
     avgDamagePerHit: tier.avgDamagePerHit,
     saveBonuses: { ...tier.saveBonuses },
     initiativeMod: tier.saveBonuses.dex,
+    speedCells: Math.round((TEMPLATE_SPEED_FT[template.id] ?? 30) / 5),
+    rangeCells: Math.max(1, Math.round((TEMPLATE_RANGE_FT[template.id] ?? 5) / 5)),
   };
 
   if (tier.spellDc) player.spellDc = tier.spellDc;
