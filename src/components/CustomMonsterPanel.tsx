@@ -168,7 +168,7 @@ export default function CustomMonsterPanel({ allMonsters }: { allMonsters: Monst
                     type="button"
                     onClick={() => removeMonster(m.id)}
                     aria-label={`Remove ${m.name}`}
-                    className="text-[var(--accent-danger)] hover:text-[var(--accent-danger-light)] px-2 inline-flex items-center"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-[var(--accent-danger)] transition-colors hover:bg-[var(--steel-800)] hover:text-[var(--accent-danger-light)]"
                   >
                     <X size={16} aria-hidden="true" />
                   </button>

@@ -29,14 +29,15 @@ function StatPreview({ member, index }: { member: PartyMemberConfig; index: numb
 }
 
 interface OverrideFieldProps {
+  idSuffix: string;
   label: string;
   value: number | undefined;
   placeholder: number;
   onChange: (value: number | undefined) => void;
 }
 
-function OverrideField({ label, value, placeholder, onChange }: OverrideFieldProps) {
-  const id = `override-${label.replace(/\W+/g, '-').toLowerCase()}-${placeholder}`;
+function OverrideField({ idSuffix, label, value, placeholder, onChange }: OverrideFieldProps) {
+  const id = `override-${idSuffix}-${label.replace(/\W+/g, '-').toLowerCase()}`;
   return (
     <div>
       <label htmlFor={id} className="micro-label block">
@@ -159,7 +160,7 @@ export default function PartySetupPanel({
                 </button>
                 <button
                   type="button"
-                  className="text-[var(--accent-danger)] hover:text-[var(--accent-danger-light)] px-2 text-sm inline-flex items-center"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-sm text-[var(--accent-danger)] transition-colors hover:bg-[var(--steel-800)] hover:text-[var(--accent-danger-light)]"
                   aria-label={`Remove ${member.name || `player ${index + 1}`}`}
                   onClick={() => setDraft((prev) => prev.filter((_, i) => i !== index))}
                 >
@@ -172,12 +173,12 @@ export default function PartySetupPanel({
 
             {customizing === index && (
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-2 border-t border-[var(--steel-800)] animate-fade-in">
-                <OverrideField label="AC" value={member.overrides?.ac} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).ac} onChange={(v) => updateOverride(index, 'ac', v)} />
-                <OverrideField label="Max HP" value={member.overrides?.maxHp} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).maxHp} onChange={(v) => updateOverride(index, 'maxHp', v)} />
-                <OverrideField label="Atk Bonus" value={member.overrides?.attackBonus} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).attackBonus} onChange={(v) => updateOverride(index, 'attackBonus', v)} />
-                <OverrideField label="Attacks" value={member.overrides?.attacksPerRound} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).attacksPerRound} onChange={(v) => updateOverride(index, 'attacksPerRound', v)} />
-                <OverrideField label="Dmg/Hit" value={member.overrides?.avgDamagePerHit} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).avgDamagePerHit} onChange={(v) => updateOverride(index, 'avgDamagePerHit', v)} />
-                <OverrideField label="Heal/Rd" value={member.overrides?.healingPerRound} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).healingPerRound ?? 0} onChange={(v) => updateOverride(index, 'healingPerRound', v)} />
+                <OverrideField idSuffix={`${index}-ac`} label="AC" value={member.overrides?.ac} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).ac} onChange={(v) => updateOverride(index, 'ac', v)} />
+                <OverrideField idSuffix={`${index}-hp`} label="Max HP" value={member.overrides?.maxHp} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).maxHp} onChange={(v) => updateOverride(index, 'maxHp', v)} />
+                <OverrideField idSuffix={`${index}-attack`} label="Atk Bonus" value={member.overrides?.attackBonus} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).attackBonus} onChange={(v) => updateOverride(index, 'attackBonus', v)} />
+                <OverrideField idSuffix={`${index}-attacks`} label="Attacks" value={member.overrides?.attacksPerRound} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).attacksPerRound} onChange={(v) => updateOverride(index, 'attacksPerRound', v)} />
+                <OverrideField idSuffix={`${index}-damage`} label="Dmg/Hit" value={member.overrides?.avgDamagePerHit} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).avgDamagePerHit} onChange={(v) => updateOverride(index, 'avgDamagePerHit', v)} />
+                <OverrideField idSuffix={`${index}-healing`} label="Heal/Rd" value={member.overrides?.healingPerRound} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).healingPerRound ?? 0} onChange={(v) => updateOverride(index, 'healingPerRound', v)} />
               </div>
             )}
           </div>
