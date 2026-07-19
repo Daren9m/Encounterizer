@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { generateMap } from '@/lib/map-generator';
 import { placeTokens, TOKEN_BLOCKING } from '@/lib/token-placement';
 import { makeMonster } from './test-helpers';
-import type { EncounterMonster, MapToken } from '@/lib/types';
+import type { EncounterMap, EncounterMonster, MapToken } from '@/lib/types';
 
 const DUNGEON = generateMap({ environment: 'Urban', seed: 42, width: 32, height: 24 });
 const OUTDOOR = generateMap({ environment: 'Grassland', seed: 42 });
@@ -120,6 +120,63 @@ describe('placeTokens', () => {
     const avgArcher = ['archer#0', 'archer#1']
       .map(id => dist(tokens.find(t => t.id === id)!)).reduce((a, b) => a + b) / 2;
     expect(avgArcher).toBeGreaterThanOrEqual(avgWolf * 0.9);
+  });
+
+  it('places a bodyguard beside the boss and ranged on high ground (#122 doctrine)', () => {
+    // Hand-built 20×12 field: party room west, boss room and a deep
+    // monster zone east. One elevated cell sits in the zone's deep half
+    // but is NOT the deepest cell, so only the high-ground preference
+    // (not plain depth sorting) can put the archer there.
+    const width = 20;
+    const height = 12;
+    const grid = Array.from({ length: height }, () =>
+      Array.from({ length: width }, () => ({ terrain: 'floor' as const })));
+    const map: EncounterMap = {
+      id: 'map-fixture', name: 'Fixture', width, height,
+      environment: 'Grassland',
+      grid: grid.map(row => row.map(cell => ({ ...cell }))),
+      seed: 7,
+      rooms: [
+        {
+          id: 1, name: 'West', purpose: '.', readAloud: '.', kind: 'room',
+          bounds: { x: 0, y: 4, w: 4, h: 4 }, tags: ['entrance', 'spawn:party'],
+        },
+        {
+          id: 2, name: 'Boss', purpose: '.', readAloud: '.', kind: 'room',
+          bounds: { x: 14, y: 4, w: 5, h: 5 }, tags: ['boss', 'spawn:monster'],
+        },
+        {
+          id: 3, name: 'Deep', purpose: '.', readAloud: '.', kind: 'zone',
+          bounds: { x: 14, y: 0, w: 6, h: 3 }, tags: ['spawn:monster'],
+        },
+      ],
+    };
+    map.grid[6][1] = { terrain: 'entrance' };
+    map.grid[1][14] = { terrain: 'elevated' };
+
+    const { tokens } = placeTokens(map, MONSTERS, 4, 7);
+
+    // Bodyguard: the strongest melee instance that is not the boss
+    // (wolf#0) stands adjacent to the ogre's 2×2 footprint.
+    const ogre = tokens.find(t => t.id === 'ogre#0')!;
+    const wolf = tokens.find(t => t.id === 'wolf#0')!;
+    let minDist = Infinity;
+    for (let dy = 0; dy < ogre.sizeCells; dy++) {
+      for (let dx = 0; dx < ogre.sizeCells; dx++) {
+        minDist = Math.min(minDist, Math.max(
+          Math.abs(wolf.x - (ogre.x + dx)),
+          Math.abs(wolf.y - (ogre.y + dy)),
+        ));
+      }
+    }
+    expect(minDist, 'bodyguard wolf#0 should flank the boss').toBe(1);
+
+    // High ground: the ranged-only archer takes the elevated cell.
+    const archer = tokens.find(t => t.id === 'archer#0')!;
+    expect(
+      map.grid[archer.y][archer.x].terrain,
+      `archer at ${archer.x},${archer.y} should hold the high ground`,
+    ).toBe('elevated');
   });
 
   it('reports notes instead of dropping tokens when zones overflow', () => {

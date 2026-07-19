@@ -180,6 +180,23 @@ describe('battlefieldFromMap', () => {
     expect(sawWall && sawFloor).toBe(true);
   });
 
+  it('charges double for elevated ground (#122 tuning)', () => {
+    let checked = 0;
+    for (let seed = 1; seed <= 5; seed++) {
+      const field = generateMap({ environment: 'Grassland', seed });
+      const fieldBf = battlefieldFromMap(field, placeTokens(field, [], 4, seed));
+      for (let y = 0; y < field.height; y++) {
+        for (let x = 0; x < field.width; x++) {
+          if (field.grid[y][x].terrain === 'elevated') {
+            expect(fieldBf.cost[y * field.width + x]).toBe(2);
+            checked++;
+          }
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+
   it('treats water as open ground on underwater maps', () => {
     const sea = generateMap({ environment: 'Underwater', seed: 3 });
     const seaBf = battlefieldFromMap(sea, placeTokens(sea, [], 4, 3));

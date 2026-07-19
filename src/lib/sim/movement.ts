@@ -12,9 +12,11 @@ import { IMPASSABLE_TERRAIN } from '../map-generator';
 // cell) — never on the iteration — so ONE DistanceFieldCache is
 // shared across all Monte Carlo iterations of a simulateBattle call.
 
-/** Terrain that costs 2 movement per cell entered. */
+/** Terrain that costs 2 movement per cell entered. Elevated counts:
+ *  climbing slopes and ledges is difficult terrain in the 2024 rules,
+ *  so high ground costs something to take (#122). */
 const DIFFICULT_TERRAIN: ReadonlySet<TerrainType> = new Set([
-  'difficult', 'water', 'rubble', 'vegetation', 'ice',
+  'difficult', 'water', 'rubble', 'vegetation', 'ice', 'elevated',
 ]);
 
 const UNREACHABLE = 0xffff;

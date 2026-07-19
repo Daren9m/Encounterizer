@@ -12,9 +12,10 @@ import type {
 //
 // Deployment doctrine (tune freely — it only affects new placements):
 // party packs the spawn:party room nearest the entrance; the highest-
-// XP monster claims the boss room; ranged-only instances deploy deep,
-// melee at the zone edge facing the party; everything else scatters
-// across the monster zones.
+// XP monster claims the boss room and the strongest remaining melee
+// instance stands adjacent as a bodyguard; ranged-only instances
+// deploy deep and prefer high ground; melee holds the zone edge facing
+// the party; everything else scatters across the monster zones.
 
 export const PLACEMENT_STREAM_SALT = 0x504c4143; // 'PLAC'
 
@@ -172,10 +173,26 @@ export function placeTokens(
   }
 
   // One seeded shuffle; stable re-sorts on top give each role its
-  // ordering while equal-distance ties stay seed-varied.
+  // ordering while equal-distance ties stay seed-varied. The extra
+  // draw rotates the bodyguard ring so hardened doctrine still varies
+  // between seeds. Draw count is fixed per call — keep it that way.
   const shuffled = shuffleArray(monsterCells, rng);
+  const ringRotation = Math.floor(rng() * 8);
   const deepFirst = [...shuffled].sort((a, b) => distOf(b) - distOf(a));
   const nearFirst = [...shuffled].sort((a, b) => distOf(a) - distOf(b));
+
+  // Ranged prefer high ground (#122): elevated cells in the deep 40%
+  // of the field jump the queue, then normal depth ordering resumes.
+  const maxCellDist = monsterCells.reduce(
+    (max, cell) => (dist[cell] === -1 ? max : Math.max(max, dist[cell])), 0,
+  );
+  const isHighGround = (cell: number) =>
+    grid[Math.floor(cell / w)][cell % w].terrain === 'elevated'
+    && distOf(cell) >= 0.6 * maxCellDist;
+  const rangedFirst = [
+    ...deepFirst.filter(isHighGround),
+    ...deepFirst.filter(cell => !isHighGround(cell)),
+  ];
   const bossCells = bossRoom
     ? standableIn([bossRoom]).sort((a, b) => {
         const center = (bossRoom.bounds.y + Math.floor(bossRoom.bounds.h / 2)) * w
@@ -192,6 +209,7 @@ export function placeTokens(
     sizeCells: 1 | 2 | 3 | 4;
     ranged: boolean;
     melee: boolean;
+    meleeCapable: boolean;
     xp: number;
   }
   const instances: Instance[] = monsters.flatMap(({ monster, count }) =>
@@ -201,12 +219,30 @@ export function placeTokens(
       sizeCells: SIZE_CELLS[monster.size],
       ranged: monster.attackDeliveryModes.includes('Ranged') && !monster.attackDeliveryModes.includes('Melee'),
       melee: monster.attackDeliveryModes.includes('Melee') && !monster.attackDeliveryModes.includes('Ranged'),
+      meleeCapable: monster.attackDeliveryModes.includes('Melee'),
       xp: monster.xp,
     })),
   );
   const bossId = bossRoom && instances.length > 0
     ? instances.reduce((best, inst) => (inst.xp > best.xp ? inst : best), instances[0]).id
     : null;
+
+  // Bodyguard (#122): the strongest remaining melee-capable instance
+  // deploys adjacent to the boss instead of at the zone edge.
+  const bodyguardId = bossId
+    ? instances
+        .filter(inst => inst.id !== bossId && inst.meleeCapable)
+        .reduce<Instance | null>((best, inst) => (!best || inst.xp > best.xp ? inst : best), null)
+        ?.id ?? null
+    : null;
+
+  // Boss first, bodyguard second (it anchors on the boss's placed
+  // footprint), everyone else in encounter order.
+  const placementOrder = [
+    ...instances.filter(inst => inst.id === bossId),
+    ...instances.filter(inst => inst.id === bodyguardId),
+    ...instances.filter(inst => inst.id !== bossId && inst.id !== bodyguardId),
+  ];
 
   const fits = (cell: number, n: number): boolean => {
     const x = cell % w;
@@ -229,14 +265,32 @@ export function placeTokens(
     }
   };
 
-  for (const inst of instances) {
+  // Anchor cells whose footprint would stand flush against the boss's,
+  // rotated by the seeded offset so the flank varies between rolls.
+  const bossRing = (boss: MapToken, n: number): number[] => {
+    const ring: number[] = [];
+    for (let y = boss.y - n; y <= boss.y + boss.sizeCells; y++) {
+      for (let x = boss.x - n; x <= boss.x + boss.sizeCells; x++) {
+        if (x < 0 || y < 0 || x + n > w || y + n > h) continue;
+        ring.push(y * w + x);
+      }
+    }
+    if (ring.length === 0) return ring;
+    const offset = ringRotation % ring.length;
+    return [...ring.slice(offset), ...ring.slice(0, offset)];
+  };
+
+  let bossToken: MapToken | undefined;
+  for (const inst of placementOrder) {
     const preferred = inst.id === bossId && bossCells.length > 0
       ? bossCells
-      : inst.ranged
-        ? deepFirst
-        : inst.melee
-          ? nearFirst
-          : shuffled;
+      : inst.id === bodyguardId && bossToken
+        ? [...bossRing(bossToken, inst.sizeCells), ...nearFirst]
+        : inst.ranged
+          ? rangedFirst
+          : inst.melee
+            ? nearFirst
+            : shuffled;
     let spot = preferred.find(cell => fits(cell, inst.sizeCells));
     if (spot === undefined) {
       spot = allStandable.find(cell => fits(cell, inst.sizeCells));
@@ -247,7 +301,7 @@ export function placeTokens(
       continue;
     }
     claim(spot, inst.sizeCells);
-    tokens.push({
+    const token: MapToken = {
       id: inst.id,
       kind: 'monster',
       name: inst.name,
@@ -255,7 +309,9 @@ export function placeTokens(
       x: spot % w,
       y: Math.floor(spot / w),
       sizeCells: inst.sizeCells,
-    });
+    };
+    tokens.push(token);
+    if (inst.id === bossId) bossToken = token;
   }
 
   return { tokens, notes };
