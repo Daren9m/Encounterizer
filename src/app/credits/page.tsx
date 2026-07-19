@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { BESTIARY_META } from '@/data/bestiary-meta';
+import { SPELLS_META } from '@/data/spells-meta';
 
 export const metadata: Metadata = {
   title: 'Credits & Licensing',
@@ -41,7 +42,8 @@ export default function CreditsPage() {
         </p>
         <p className="text-sm text-[var(--text-2)]">
           The bestiary contains {BESTIARY_META.count} monster stat blocks derived from the SRD
-          5.2.1 ({BESTIARY_META.license}). Spell summaries are likewise derived from SRD content.
+          5.2.1 ({BESTIARY_META.license}). The spell reference contains {SPELLS_META.count} spells
+          with verbatim SRD 5.2.1 descriptions ({SPELLS_META.license}).
         </p>
       </section>
 
@@ -81,6 +83,18 @@ export default function CreditsPage() {
             Source on GitHub
           </a>
           .
+        </p>
+        <p className="text-sm text-[var(--text-2)]">
+          Noto Sans Runic &mdash; &copy; Google, licensed under the{' '}
+          <a
+            href="https://scripts.sil.org/OFL"
+            className="text-[var(--bronze)] underline"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            SIL Open Font License 1.1
+          </a>{' '}
+          (subset, runic block only).
         </p>
       </section>
 

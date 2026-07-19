@@ -53,9 +53,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="border-t border-[var(--steel-800)] bg-[var(--steel-900)] py-4 print:hidden">
           <div className="max-w-7xl mx-auto px-4 text-center text-sm text-[var(--text-3)] space-y-1">
             <div>Encounterizer — Built for Dungeon Masters. Uses 5.5e / 2024 rules.</div>
+            {/* Full SRD 5.2.1 / CC-BY-4.0 attribution lives on /credits; a
+                footer link satisfies the license (CC-BY-4.0 §3(a)(2)). */}
             <div>
-              Includes material from the SRD 5.2.1 by Wizards of the Coast LLC, licensed under
-              CC-BY-4.0. Unofficial fan content.{' '}
+              Unofficial Fan Content ·{' '}
               <Link href="/credits" className="underline hover:text-[var(--bronze)]">
                 Credits &amp; licensing
               </Link>

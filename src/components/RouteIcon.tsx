@@ -1,4 +1,4 @@
-import { Drama, Map, Puzzle, Skull, Sparkles, Swords, type LucideIcon } from 'lucide-react';
+import { Map, Puzzle, Skull, Sparkles, Swords, type LucideIcon } from 'lucide-react';
 import type { RouteIconName } from '@/lib/site';
 
 const ICONS: Record<RouteIconName, LucideIcon> = {
@@ -6,7 +6,6 @@ const ICONS: Record<RouteIconName, LucideIcon> = {
   skull: Skull,
   map: Map,
   puzzle: Puzzle,
-  drama: Drama,
   sparkles: Sparkles,
 };
 

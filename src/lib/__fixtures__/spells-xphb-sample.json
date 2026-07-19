@@ -1,0 +1,840 @@
+{
+  "spell": [
+    {
+      "name": "Fire Bolt",
+      "alias": [
+        "Firebolt"
+      ],
+      "source": "XPHB",
+      "page": 274,
+      "srd52": true,
+      "basicRules2024": true,
+      "referenceSources": [
+        "UtHftLH"
+      ],
+      "level": 0,
+      "school": "V",
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ],
+      "range": {
+        "type": "point",
+        "distance": {
+          "type": "feet",
+          "amount": 120
+        }
+      },
+      "components": {
+        "v": true,
+        "s": true
+      },
+      "duration": [
+        {
+          "type": "instant"
+        }
+      ],
+      "entries": [
+        "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes {@damage 1d10} Fire damage. A flammable object hit by this spell starts {@hazard burning|XPHB} if it isn't being worn or carried."
+      ],
+      "entriesHigherLevel": [
+        {
+          "type": "entries",
+          "name": "Cantrip Upgrade",
+          "entries": [
+            "The damage increases by {@damage 1d10} when you reach levels 5 ({@damage 2d10}), 11 ({@damage 3d10}), and 17 ({@damage 4d10})."
+          ]
+        }
+      ],
+      "scalingLevelDice": {
+        "label": "Fire damage",
+        "scaling": {
+          "1": "1d10",
+          "5": "2d10",
+          "11": "3d10",
+          "17": "4d10"
+        }
+      },
+      "damageInflict": [
+        "fire"
+      ],
+      "spellAttack": [
+        "R"
+      ],
+      "miscTags": [
+        "OBJ",
+        "SCL"
+      ],
+      "areaTags": [
+        "ST"
+      ]
+    },
+    {
+      "name": "Bigby's Hand",
+      "source": "XPHB",
+      "page": 246,
+      "srd52": "Arcane Hand",
+      "basicRules2024": true,
+      "level": 5,
+      "school": "V",
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ],
+      "range": {
+        "type": "point",
+        "distance": {
+          "type": "feet",
+          "amount": 120
+        }
+      },
+      "components": {
+        "v": true,
+        "s": true,
+        "m": "an eggshell and a glove"
+      },
+      "duration": [
+        {
+          "type": "timed",
+          "duration": {
+            "type": "minute",
+            "amount": 1
+          },
+          "concentration": true
+        }
+      ],
+      "entries": [
+        "You create a Large hand of shimmering magical energy in an unoccupied space that you can see within range. The hand lasts for the duration, and it moves at your command, mimicking the movements of your own hand.",
+        "The hand is an object that has AC 20 and {@variantrule Hit Points|XPHB} equal to your {@variantrule Hit Points|XPHB|Hit Point} maximum. If it drops to 0 {@variantrule Hit Points|XPHB}, the spell ends. The hand doesn't occupy its space.",
+        "When you cast the spell and as a {@variantrule Bonus Action|XPHB} on your later turns, you can move the hand up to 60 feet and then cause one of the following effects:",
+        {
+          "type": "list",
+          "style": "list-hang-notitle",
+          "items": [
+            {
+              "type": "item",
+              "name": "Clenched Fist",
+              "entries": [
+                "The hand strikes a target within 5 feet of it. Make a melee spell attack. On a hit, the target takes {@damage 5d8} Force damage."
+              ]
+            },
+            {
+              "type": "item",
+              "name": "Forceful Hand",
+              "entries": [
+                "The hand attempts to push a Huge or smaller creature within 5 feet of it. The target must succeed on a Strength saving throw, or the hand pushes the target up to 5 feet plus a number of feet equal to five times your spellcasting ability modifier. The hand moves with the target, remaining within 5 feet of it."
+              ]
+            },
+            {
+              "type": "item",
+              "name": "Grasping Hand",
+              "entries": [
+                "The hand attempts to grapple a Huge or smaller creature within 5 feet of it. The target must succeed on a Dexterity saving throw, or the target has the {@condition Grappled|XPHB} condition, with an escape DC equal to your spell save DC. While the hand grapples the target, you can take a {@variantrule Bonus Action|XPHB} to cause the hand to crush it, dealing Bludgeoning damage to the target equal to {@damage 4d6} plus your spellcasting ability modifier."
+              ]
+            },
+            {
+              "type": "item",
+              "name": "Interposing Hand",
+              "entries": [
+                "The hand grants you Half {@variantrule Cover|XPHB} against attacks and other effects that originate from its space or that pass through it. In addition, its space counts as {@variantrule Difficult Terrain|XPHB} for your enemies."
+              ]
+            }
+          ]
+        }
+      ],
+      "entriesHigherLevel": [
+        {
+          "type": "entries",
+          "name": "Using a Higher-Level Spell Slot",
+          "entries": [
+            "The damage of the Clenched Fist increases by {@scaledamage 5d8|5-9|2d8} and the damage of the Grasping Hand increases by {@scaledamage 4d6|5-9|2d6} for each spell slot level above 5."
+          ]
+        }
+      ],
+      "damageInflict": [
+        "bludgeoning",
+        "force"
+      ],
+      "conditionInflict": [
+        "grappled"
+      ],
+      "spellAttack": [
+        "M"
+      ],
+      "savingThrow": [
+        "dexterity",
+        "strength"
+      ],
+      "miscTags": [
+        "DFT",
+        "FMV",
+        "OBJ",
+        "SGT",
+        "UBA"
+      ],
+      "hasFluffImages": true
+    },
+    {
+      "name": "Shield",
+      "source": "XPHB",
+      "page": 316,
+      "srd52": true,
+      "basicRules2024": true,
+      "referenceSources": [
+        "UtHftLH"
+      ],
+      "level": 1,
+      "school": "A",
+      "time": [
+        {
+          "number": 1,
+          "unit": "reaction",
+          "condition": "which you take when you are hit by an attack roll or targeted by the Magic Missile spell"
+        }
+      ],
+      "range": {
+        "type": "point",
+        "distance": {
+          "type": "self"
+        }
+      },
+      "components": {
+        "v": true,
+        "s": true
+      },
+      "duration": [
+        {
+          "type": "timed",
+          "duration": {
+            "type": "round",
+            "amount": 1
+          }
+        }
+      ],
+      "entries": [
+        "An imperceptible barrier of magical force protects you. Until the start of your next turn, you have a +5 bonus to AC, including against the triggering attack, and you take no damage from {@spell Magic Missile|XPHB}."
+      ],
+      "miscTags": [
+        "MAC"
+      ]
+    },
+    {
+      "name": "Revivify",
+      "source": "XPHB",
+      "page": 312,
+      "srd52": true,
+      "basicRules2024": true,
+      "level": 3,
+      "school": "N",
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ],
+      "range": {
+        "type": "point",
+        "distance": {
+          "type": "touch"
+        }
+      },
+      "components": {
+        "v": true,
+        "s": true,
+        "m": {
+          "text": "a diamond worth 300+ GP, which the spell consumes",
+          "cost": 30000,
+          "consume": true
+        }
+      },
+      "duration": [
+        {
+          "type": "instant"
+        }
+      ],
+      "entries": [
+        "You touch a creature that has died within the last minute. That creature revives with 1 {@variantrule Hit Points|XPHB|Hit Point}. This spell can't revive a creature that has died of old age, nor does it restore any missing body parts."
+      ],
+      "miscTags": [
+        "HL"
+      ],
+      "areaTags": [
+        "ST"
+      ]
+    },
+    {
+      "name": "Fireball",
+      "source": "XPHB",
+      "page": 274,
+      "srd52": true,
+      "basicRules2024": true,
+      "referenceSources": [
+        "DrDe-SD",
+        "FFotR",
+        "HotB",
+        "UtHftLH"
+      ],
+      "level": 3,
+      "school": "V",
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ],
+      "range": {
+        "type": "point",
+        "distance": {
+          "type": "feet",
+          "amount": 150
+        }
+      },
+      "components": {
+        "v": true,
+        "s": true,
+        "m": "a ball of bat guano and sulfur"
+      },
+      "duration": [
+        {
+          "type": "instant"
+        }
+      ],
+      "entries": [
+        "A bright streak flashes from you to a point you choose within range and then blossoms with a low roar into a fiery explosion. Each creature in a 20-foot-radius {@variantrule Sphere [Area of Effect]|XPHB|Sphere} centered on that point makes a Dexterity saving throw, taking {@damage 8d6} Fire damage on a failed save or half as much damage on a successful one.",
+        "Flammable objects in the area that aren't being worn or carried start {@hazard burning|XPHB}."
+      ],
+      "entriesHigherLevel": [
+        {
+          "type": "entries",
+          "name": "Using a Higher-Level Spell Slot",
+          "entries": [
+            "The damage increases by {@scaledamage 8d6|3-9|1d6} for each spell slot level above 3."
+          ]
+        }
+      ],
+      "damageInflict": [
+        "fire"
+      ],
+      "savingThrow": [
+        "dexterity"
+      ],
+      "miscTags": [
+        "OBJ"
+      ],
+      "areaTags": [
+        "S"
+      ],
+      "hasFluffImages": true
+    },
+    {
+      "name": "Spirit Guardians",
+      "source": "XPHB",
+      "page": 319,
+      "srd52": true,
+      "basicRules2024": true,
+      "referenceSources": [
+        "FFotR"
+      ],
+      "level": 3,
+      "school": "C",
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ],
+      "range": {
+        "type": "emanation",
+        "distance": {
+          "type": "feet",
+          "amount": 15
+        }
+      },
+      "components": {
+        "v": true,
+        "s": true,
+        "m": "a prayer scroll"
+      },
+      "duration": [
+        {
+          "type": "timed",
+          "duration": {
+            "type": "minute",
+            "amount": 10
+          },
+          "concentration": true
+        }
+      ],
+      "entries": [
+        "Protective spirits flit around you in a 15-foot {@variantrule Emanation [Area of Effect]|XPHB|Emanation} for the duration. If you are good or neutral, their spectral form appears angelic or fey (your choice). If you are evil, they appear fiendish.",
+        "When you cast this spell, you can designate creatures to be unaffected by it. Any other creature's {@variantrule Speed|XPHB} is halved in the {@variantrule Emanation [Area of Effect]|XPHB|Emanation}, and whenever the {@variantrule Emanation [Area of Effect]|XPHB|Emanation} enters a creature's space and whenever a creature enters the {@variantrule Emanation [Area of Effect]|XPHB|Emanation} or ends its turn there, the creature must make a Wisdom saving throw. On a failed save, the creature takes {@damage 3d8} Radiant damage (if you are good or neutral) or {@damage 3d8} Necrotic damage (if you are evil). On a successful save, the creature takes half as much damage. A creature makes this save only once per turn."
+      ],
+      "entriesHigherLevel": [
+        {
+          "type": "entries",
+          "name": "Using a Higher-Level Spell Slot",
+          "entries": [
+            "The damage increases by {@scaledamage 3d8|3-9|1d8} for each spell slot level above 3."
+          ]
+        }
+      ],
+      "damageInflict": [
+        "necrotic",
+        "radiant"
+      ],
+      "savingThrow": [
+        "wisdom"
+      ],
+      "areaTags": [
+        "S"
+      ]
+    },
+    {
+      "name": "Confusion",
+      "source": "XPHB",
+      "page": 253,
+      "srd52": true,
+      "basicRules2024": true,
+      "level": 4,
+      "school": "E",
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ],
+      "range": {
+        "type": "point",
+        "distance": {
+          "type": "feet",
+          "amount": 90
+        }
+      },
+      "components": {
+        "v": true,
+        "s": true,
+        "m": "three nut shells"
+      },
+      "duration": [
+        {
+          "type": "timed",
+          "duration": {
+            "type": "minute",
+            "amount": 1
+          },
+          "concentration": true
+        }
+      ],
+      "entries": [
+        "Each creature in a 10-foot-radius {@variantrule Sphere [Area of Effect]|XPHB|Sphere} centered on a point you choose within range must succeed on a Wisdom saving throw, or that target can't take Bonus Actions or Reactions and must roll {@dice 1d10} at the start of each of its turns to determine its behavior for that turn, consulting the table below.",
+        {
+          "type": "table",
+          "colStyles": [
+            "col-2 text-center",
+            "col-10"
+          ],
+          "colLabels": [
+            "1d10",
+            "Behavior for the Turn"
+          ],
+          "rows": [
+            [
+              "1",
+              "The target doesn't take an action, and it uses all its movement to move. Roll {@dice 1d4} for the direction: {@b 1}, north; {@b 2}, east; {@b 3}, south; or {@b 4}, west."
+            ],
+            [
+              "2-6",
+              "The target doesn't move or take actions."
+            ],
+            [
+              "7-8",
+              "The target doesn't move, and it takes the {@action Attack|XPHB} action to make one melee attack against a random creature within reach. If none are within reach, the target takes no action."
+            ],
+            [
+              "9-10",
+              "The target chooses its behavior."
+            ]
+          ]
+        },
+        "At the end of each of its turns, an affected target repeats the save, ending the spell on itself on a success."
+      ],
+      "entriesHigherLevel": [
+        {
+          "type": "entries",
+          "name": "Using a Higher-Level Spell Slot",
+          "entries": [
+            "The {@variantrule Sphere [Area of Effect]|XPHB|Sphere}'s radius increases by 5 feet for each spell slot level above 4."
+          ]
+        }
+      ],
+      "savingThrow": [
+        "wisdom"
+      ],
+      "miscTags": [
+        "RO"
+      ],
+      "areaTags": [
+        "S"
+      ]
+    },
+    {
+      "name": "Detect Magic",
+      "source": "XPHB",
+      "page": 262,
+      "srd52": true,
+      "basicRules2024": true,
+      "referenceSources": [
+        "DrDe-TDoN",
+        "DrDe-TWoO",
+        "UtHftLH"
+      ],
+      "level": 1,
+      "school": "D",
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ],
+      "range": {
+        "type": "sphere",
+        "distance": {
+          "type": "feet",
+          "amount": 30
+        }
+      },
+      "components": {
+        "v": true,
+        "s": true
+      },
+      "duration": [
+        {
+          "type": "timed",
+          "duration": {
+            "type": "minute",
+            "amount": 10
+          },
+          "concentration": true
+        }
+      ],
+      "meta": {
+        "ritual": true
+      },
+      "entries": [
+        "For the duration, you sense the presence of magical effects within 30 feet of yourself. If you sense such effects, you can take the {@action Magic|XPHB} action to see a faint aura around any visible creature or object in the area that bears the magic, and if an effect was created by a spell, you learn the spell's {@book school of magic|XPHB|7|Schools of Magic}.",
+        "The spell is blocked by 1 foot of stone, dirt, or wood; 1 inch of metal; or a thin sheet of lead."
+      ]
+    },
+    {
+      "name": "Continual Flame",
+      "source": "XPHB",
+      "page": 256,
+      "srd52": true,
+      "basicRules2024": true,
+      "referenceSources": [
+        "BQGT"
+      ],
+      "level": 2,
+      "school": "V",
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ],
+      "range": {
+        "type": "point",
+        "distance": {
+          "type": "touch"
+        }
+      },
+      "components": {
+        "v": true,
+        "s": true,
+        "m": {
+          "text": "ruby dust worth 50+ GP, which the spell consumes",
+          "cost": 5000,
+          "consume": true
+        }
+      },
+      "duration": [
+        {
+          "type": "permanent",
+          "ends": [
+            "dispel"
+          ]
+        }
+      ],
+      "entries": [
+        "A flame springs from an object that you touch. The effect casts {@variantrule Bright Light|XPHB} in a 20-foot radius and {@variantrule Dim Light|XPHB} for an additional 20 feet. It looks like a regular flame, but it creates no heat and consumes no fuel. The flame can be covered or hidden but not smothered or quenched."
+      ],
+      "miscTags": [
+        "LGT",
+        "OBJ"
+      ]
+    },
+    {
+      "name": "Command",
+      "source": "XPHB",
+      "page": 251,
+      "srd52": true,
+      "basicRules2024": true,
+      "level": 1,
+      "school": "E",
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ],
+      "range": {
+        "type": "point",
+        "distance": {
+          "type": "feet",
+          "amount": 60
+        }
+      },
+      "components": {
+        "v": true
+      },
+      "duration": [
+        {
+          "type": "instant"
+        }
+      ],
+      "entries": [
+        "You speak a one-word command to a creature you can see within range. The target must succeed on a Wisdom saving throw or follow the command on its next turn. Choose the command from these options:",
+        {
+          "type": "list",
+          "style": "list-hang-notitle",
+          "items": [
+            {
+              "type": "item",
+              "name": "Approach",
+              "entries": [
+                "The target moves toward you by the shortest and most direct route, ending its turn if it moves within 5 feet of you."
+              ]
+            },
+            {
+              "type": "item",
+              "name": "Drop",
+              "entries": [
+                "The target drops whatever it is holding and then ends its turn."
+              ]
+            },
+            {
+              "type": "item",
+              "name": "Flee",
+              "entries": [
+                "The target spends its turn moving away from you by the fastest available means."
+              ]
+            },
+            {
+              "type": "item",
+              "name": "Grovel",
+              "entries": [
+                "The target has the {@condition Prone|XPHB} condition and then ends its turn."
+              ]
+            },
+            {
+              "type": "item",
+              "name": "Halt",
+              "entries": [
+                "On its turn, the target doesn't move and takes no action or {@variantrule Bonus Action|XPHB}."
+              ]
+            }
+          ]
+        }
+      ],
+      "entriesHigherLevel": [
+        {
+          "type": "entries",
+          "name": "Using a Higher-Level Spell Slot",
+          "entries": [
+            "You can affect one additional creature for each spell slot level above 1."
+          ]
+        }
+      ],
+      "conditionInflict": [
+        "prone"
+      ],
+      "savingThrow": [
+        "wisdom"
+      ],
+      "miscTags": [
+        "SCT",
+        "SGT"
+      ],
+      "areaTags": [
+        "ST"
+      ]
+    },
+    {
+      "name": "Earthquake",
+      "source": "XPHB",
+      "page": 267,
+      "srd52": true,
+      "basicRules2024": true,
+      "level": 8,
+      "school": "T",
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ],
+      "range": {
+        "type": "point",
+        "distance": {
+          "type": "feet",
+          "amount": 500
+        }
+      },
+      "components": {
+        "v": true,
+        "s": true,
+        "m": "a fractured rock"
+      },
+      "duration": [
+        {
+          "type": "timed",
+          "duration": {
+            "type": "minute",
+            "amount": 1
+          },
+          "concentration": true
+        }
+      ],
+      "entries": [
+        "Choose a point on the ground that you can see within range. For the duration, an intense tremor rips through the ground in a 100-foot-radius circle centered on that point. The ground there is {@variantrule Difficult Terrain|XPHB}.",
+        "When you cast this spell and at the end of each of your turns for the duration, each creature on the ground in the area makes a Dexterity saving throw. On a failed save, a creature has the {@condition Prone|XPHB} condition, and its {@status Concentration|XPHB} is broken.",
+        "You can also cause the effects below.",
+        {
+          "type": "entries",
+          "name": "Fissures",
+          "entries": [
+            "A total of {@dice 1d6} fissures open in the spell's area at the end of the turn you cast it. You choose the fissures' locations, which can't be under structures. Each fissure is {@dice 1d10 × 10} feet deep and 10 feet wide, and it extends from one edge of the spell's area to another edge. A creature in the same space as a fissure must succeed on a Dexterity saving throw or fall in. A creature that successfully saves moves with the fissure's edge as it opens."
+          ]
+        },
+        {
+          "type": "entries",
+          "name": "Structures",
+          "entries": [
+            "The tremor deals 50 Bludgeoning damage to any structure in contact with the ground in the area when you cast the spell and at the end of each of your turns until the spell ends. If a structure drops to 0 {@variantrule Hit Points|XPHB}, it collapses.",
+            "A creature within a distance from a collapsing structure equal to half the structure's height makes a Dexterity saving throw. On a failed save, the creature takes {@damage 12d6} Bludgeoning damage, has the {@condition Prone|XPHB} condition, and is buried in the rubble, requiring a {@dc 20} Strength ({@skill Athletics|XPHB}) check as an action to escape. On a successful save, the creature takes half as much damage only."
+          ]
+        }
+      ],
+      "damageInflict": [
+        "bludgeoning"
+      ],
+      "conditionInflict": [
+        "prone"
+      ],
+      "savingThrow": [
+        "constitution",
+        "dexterity"
+      ],
+      "abilityCheck": [
+        "strength"
+      ],
+      "miscTags": [
+        "DFT",
+        "SGT"
+      ],
+      "areaTags": [
+        "R"
+      ]
+    },
+    {
+      "name": "Prestidigitation",
+      "source": "XPHB",
+      "page": 307,
+      "srd52": true,
+      "basicRules2024": true,
+      "referenceSources": [
+        "UtHftLH"
+      ],
+      "level": 0,
+      "school": "T",
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ],
+      "range": {
+        "type": "point",
+        "distance": {
+          "type": "feet",
+          "amount": 10
+        }
+      },
+      "components": {
+        "v": true,
+        "s": true
+      },
+      "duration": [
+        {
+          "type": "timed",
+          "duration": {
+            "type": "hour",
+            "amount": 1
+          }
+        }
+      ],
+      "entries": [
+        "You create a magical effect within range. Choose the effect from the options below. If you cast this spell multiple times, you can have up to three of its non-instantaneous effects active at a time.",
+        {
+          "type": "entries",
+          "name": "Sensory Effect",
+          "entries": [
+            "You create an instantaneous, harmless sensory effect, such as a shower of sparks, a puff of wind, faint musical notes, or an odd odor."
+          ]
+        },
+        {
+          "type": "entries",
+          "name": "Fire Play",
+          "entries": [
+            "You instantaneously light or snuff out a candle, a torch, or a small campfire."
+          ]
+        },
+        {
+          "type": "entries",
+          "name": "Clean or Soil",
+          "entries": [
+            "You instantaneously clean or soil an object no larger than 1 cubic foot."
+          ]
+        },
+        {
+          "type": "entries",
+          "name": "Minor Sensation",
+          "entries": [
+            "You chill, warm, or flavor up to 1 cubic foot of nonliving material for 1 hour."
+          ]
+        },
+        {
+          "type": "entries",
+          "name": "Magic Mark",
+          "entries": [
+            "You make a color, a small mark, or a symbol appear on an object or a surface for 1 hour."
+          ]
+        },
+        {
+          "type": "entries",
+          "name": "Minor Creation",
+          "entries": [
+            "You create a nonmagical trinket or an illusory image that can fit in your hand. It lasts until the end of your next turn. A trinket can deal no damage and has no monetary worth."
+          ]
+        }
+      ],
+      "miscTags": [
+        "OBJ"
+      ]
+    }
+  ]
+}

@@ -369,3 +369,56 @@ export interface FiveEToolsMonster {
   environment?: string[];
   [key: string]: unknown;
 }
+
+// Raw 5etools 2024 spell JSON shape (data/spells/spells-xphb.json).
+export interface FiveEToolsSpellTime {
+  number: number;
+  unit: string;
+  /** Reaction trigger, e.g. "which you take when you are hit by an attack roll" */
+  condition?: string;
+}
+
+export interface FiveEToolsSpellRange {
+  /** 'point' or a shape ('emanation', 'cone', 'sphere', 'cube', 'line', ...) */
+  type: string;
+  distance?: { type: string; amount?: number };
+}
+
+export interface FiveEToolsSpellDuration {
+  type: string;
+  duration?: { type: string; amount: number; upTo?: boolean };
+  concentration?: boolean;
+  ends?: string[];
+}
+
+export interface FiveEToolsSpellComponents {
+  v?: boolean;
+  s?: boolean;
+  m?: string | true | { text: string; cost?: number; consume?: boolean | string };
+}
+
+export interface FiveEToolsSpell {
+  name: string;
+  source: string;
+  /** true = included in SRD 5.2.1 verbatim; a string = the SRD rename */
+  srd52?: boolean | string;
+  level: number;
+  /** School code: A/C/D/E/V/I/N/T */
+  school: string;
+  time: FiveEToolsSpellTime[];
+  range: FiveEToolsSpellRange;
+  components: FiveEToolsSpellComponents;
+  duration: FiveEToolsSpellDuration[];
+  entries: unknown[];
+  entriesHigherLevel?: Array<{ name?: string; entries?: unknown }>;
+  scalingLevelDice?:
+    | { label?: string; scaling: Record<string, string> }
+    | Array<{ label?: string; scaling: Record<string, string> }>;
+  savingThrow?: string[];
+  spellAttack?: string[];
+  damageInflict?: string[];
+  conditionInflict?: string[];
+  areaTags?: string[];
+  meta?: { ritual?: boolean };
+  [key: string]: unknown;
+}

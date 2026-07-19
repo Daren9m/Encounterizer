@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ALL_MONSTERS } from '@/data';
-import { SRD_SPELLS } from '@/data/spells';
+import { SPELLS_META } from '@/data/spells-meta';
 import RouteIcon from '@/components/RouteIcon';
 import { TOOL_ROUTES, type RouteIconName } from '@/lib/site';
 
@@ -28,7 +28,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Feature Cards — all six tools */}
+      {/* Feature Cards — all five tools */}
       <section className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mt-8" aria-label="Tools">
         {TOOL_ROUTES.map((route) => (
           <FeatureCard
@@ -46,7 +46,7 @@ export default function HomePage() {
         <h2 className="text-2xl mb-6">Powered by the Rules</h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <StatBox value={String(ALL_MONSTERS.length)} label="SRD Monsters" />
-          <StatBox value={String(SRD_SPELLS.length)} label="Spells" />
+          <StatBox value={String(SPELLS_META.count)} label="SRD Spells" />
           <StatBox value={String(creatureTypes)} label="Creature Types" />
           <StatBox value="2024" label="Rules Edition" />
           <StatBox value="∞" label="Unique Maps" />

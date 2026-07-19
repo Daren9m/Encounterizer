@@ -35,14 +35,12 @@ place. No accounts, no server, no cost. Everything runs in your browser.
 - **🗺️ Map Generator** — Procedural battle maps: BSP room-and-corridor
   dungeons, cellular-automata caves, and environment-specific outdoor
   terrain. Export as JSON or ASCII.
-- **🧩 Puzzle Generator** — Ready-to-run riddles, ciphers, and minigames
-  with DM briefs, read-aloud text, player handouts, progressive hints, and
-  printable solutions.
-- **🎭 Non-Combat Challenges** — Social encounters, exploration hazards,
-  skill challenges, and traps with stakes, complications, and outcomes.
-- **✨ Spell Reference** — Instant search with mechanics-first summaries,
-  filters for level/school/class/concentration/ritual, and side-by-side
-  pinning for comparison.
+- **🧩 Puzzles & Challenges** — One seeded generator: verified logic/word/spatial puzzles, riddles, ciphers, contests, plus social encounters, journeys, traps, chases, and investigations.
+- **✨ Spell Reference** — **All 339 spells from the SRD 5.2.1** (levels
+  0–9, verbatim 2024 rules text) with instant search, mechanics-first
+  summaries, filters for level/school/class/concentration/ritual, and
+  side-by-side pinning. **Import your own spells** from 5etools spell JSON
+  or Encounterizer exports — stored locally in your browser.
 
 Every prep page has a **Print** button with a dedicated print stylesheet —
 clean, ink-friendly handouts straight from the browser. Settings, histories,
@@ -56,7 +54,7 @@ localStorage between visits.
 | Framework | Next.js 14 (App Router, static export) |
 | Language | TypeScript (strict) |
 | Styling | Tailwind CSS + CSS custom properties (Dusksteel tokens), Spectral + IBM Plex Sans via next/font, Lucide icons |
-| Data | Generated TypeScript bestiary from SRD 5.2.1 + client-side 5etools importer |
+| Data | Generated TypeScript bestiary + spell reference from SRD 5.2.1, client-side 5etools importers |
 | Testing | Vitest (140+ tests: rules math, importer, Monte Carlo statistics) |
 | CI/CD | GitHub Actions → Azure Static Web Apps (free tier) |
 | Hosting cost | $0 |
@@ -70,8 +68,7 @@ src/
     encounters/              # Encounter Builder + Battle Forecast
     monsters/                # Bestiary + custom monster import
     maps/                    # Map Generator
-    puzzles/                 # Puzzle Generator
-    challenges/              # Non-Combat Challenges
+    noncombat/               # Puzzles & Challenges
     spells/                  # Spell Reference
     credits/                 # SRD attribution + licensing
     icon.svg, opengraph-image.png, robots.ts, sitemap.ts
@@ -91,8 +88,7 @@ src/
     monster-to-sim.ts        # Stat block → simulator stats extraction
     monster-filter.ts        # Search/filter engine
     map-generator.ts         # BSP + cellular automata + outdoor scatter
-    puzzle-generator.ts      # Puzzles, riddles, ciphers
-    noncombat-generator.ts   # Social/exploration/skill/trap encounters
+    noncombat/generate.ts    # Unified orchestrator: puzzles & challenges (one seeded gen)
     encounter-recipes.ts     # Recipe-based encounter templates (engine)
     import-5etools.ts        # 5etools JSON → Monster converter (2024 format)
     custom-monster-import.ts # Client-side JSON import with validation
@@ -102,9 +98,13 @@ src/
     monsters-*.ts            # AUTO-GENERATED SRD 5.2.1 bestiary (7 CR bands)
     bestiary-meta.ts         # Generated count + source commit
     class-templates.ts       # Battle Forecast class builds (15 × 4 tiers)
-    spells.ts                # SRD spell reference
+    spells.ts                # Spell type + search/filter helpers (aggregates the bands)
+    spells-l*.ts             # AUTO-GENERATED SRD 5.2.1 spells (4 level bands)
+    spells-meta.ts           # Generated count + source commit
+    spell-summaries.ts       # Hand-curated effect summary overrides
 scripts/
-  import-bestiary.ts         # Regenerates src/data from 5etools (npm run import:bestiary)
+  import-bestiary.ts         # Regenerates monster data from 5etools (npm run import:bestiary)
+  import-spells.ts           # Regenerates spell data from 5etools (npm run import:spells)
 ```
 
 ## Getting Started
@@ -133,6 +133,7 @@ npm run typecheck        # tsc --noEmit
 npm run lint             # ESLint (next/core-web-vitals)
 npm test                 # Vitest suite
 npm run import:bestiary  # Regenerate the SRD bestiary from the pinned source
+npm run import:spells    # Regenerate the SRD spell reference from the pinned source
 ```
 
 ## Monster Database
@@ -147,6 +148,20 @@ unstripped formatting tags, lost attacks, or missing XP.
 Want more? The Bestiary page imports additional monsters from **5etools
 bestiary JSON** or Encounterizer's own export format — converted and
 validated entirely in your browser, never uploaded anywhere.
+
+## Spell Reference
+
+**339 spells from the System Reference Document 5.2.1** — every SRD spell
+from cantrips to 9th level, with verbatim 2024 rules text, generated by
+`scripts/import-spells.ts` from a pinned 5etools source commit and never
+edited by hand. An audit gate enforces exact corpus counts, licensing name
+checks, format whitelists, and field-coverage parity on every regeneration.
+The bold one-line effect summaries are layered: hand-curated overrides in
+`src/data/spell-summaries.ts` win over machine-synthesized mechanics lines.
+
+Like the bestiary, the Spells page imports additional spells from **5etools
+spell JSON** or Encounterizer exports — converted and validated entirely in
+your browser, never uploaded anywhere.
 
 ## Encounter Math
 

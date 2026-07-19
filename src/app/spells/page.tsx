@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
-import { SRD_SPELLS, searchSpells, filterSpells, levelLabel } from '@/data/spells';
+import { Sparkles } from 'lucide-react';
+import { searchSpells, filterSpells, levelLabel } from '@/data/spells';
 import { usePersistentState } from '@/lib/use-persistent-state';
+import { useSpells } from '@/app/hooks/useSpells';
+import CustomSpellPanel from '@/components/CustomSpellPanel';
 import type { Spell, SpellSchool } from '@/data/spells';
 
 const SCHOOLS: SpellSchool[] = ['Abjuration', 'Conjuration', 'Divination', 'Enchantment', 'Evocation', 'Illusion', 'Necromancy', 'Transmutation'];
-const CLASSES = ['Bard', 'Cleric', 'Druid', 'Paladin', 'Ranger', 'Sorcerer', 'Warlock', 'Wizard', 'Artificer'];
-const CASTING_TIMES = ['Action', 'Bonus Action', 'Reaction', '1 Minute', '10 Minutes', '1 Hour'];
+// SRD 5.2.1 class spell lists only — Artificer's list comes from a non-SRD source.
+const CLASSES = ['Bard', 'Cleric', 'Druid', 'Paladin', 'Ranger', 'Sorcerer', 'Warlock', 'Wizard'];
 
 export default function SpellsPage() {
   const [query, setQuery] = useState('');
@@ -18,19 +20,20 @@ export default function SpellsPage() {
   const [concFilter, setConcFilter] = useState<'' | 'yes' | 'no'>('');
   const [ritualFilter, setRitualFilter] = useState<'' | 'yes' | 'no'>('');
   const [selected, setSelected] = useState<Spell | null>(null);
+  const allSpells = useSpells();
   // Pins persist as ids so a data update can't strand stale spell objects.
   const [pinnedIds, setPinnedIds] = usePersistentState<string[]>(
     'pinnedSpells', [], (v): v is string[] => Array.isArray(v) && v.every((x) => typeof x === 'string'),
   );
   const pinned = useMemo(
     () => pinnedIds
-      .map((id) => SRD_SPELLS.find((s) => s.id === id))
+      .map((id) => allSpells.find((s) => s.id === id))
       .filter((s): s is Spell => s !== undefined),
-    [pinnedIds],
+    [pinnedIds, allSpells],
   );
 
   const results = useMemo(() => {
-    let spells = searchSpells(query, SRD_SPELLS);
+    let spells = searchSpells(query, allSpells);
     spells = filterSpells(spells, {
       level: levelFilter === '' ? undefined : levelFilter,
       school: schoolFilter || undefined,
@@ -39,7 +42,7 @@ export default function SpellsPage() {
       ritual: ritualFilter === '' ? undefined : ritualFilter === 'yes',
     });
     return spells.sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
-  }, [query, levelFilter, schoolFilter, classFilter, concFilter, ritualFilter]);
+  }, [query, levelFilter, schoolFilter, classFilter, concFilter, ritualFilter, allSpells]);
 
   function togglePin(spell: Spell) {
     setPinnedIds(prev => prev.includes(spell.id)
@@ -92,6 +95,9 @@ export default function SpellsPage() {
           <span className="text-xs text-[var(--text-2)] self-center ml-2">{results.length} spells</span>
         </div>
       </div>
+
+      {/* Custom spell import — client-side only, never uploaded */}
+      <CustomSpellPanel allSpells={allSpells} />
 
       <div className="grid lg:grid-cols-3 gap-4">
         {/* Spell List */}
@@ -154,8 +160,6 @@ export default function SpellsPage() {
 }
 
 function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (s: Spell) => void; isPinned: boolean; compact?: boolean }) {
-  const [expanded, setExpanded] = useState(false);
-
   return (
     <div className="card">
       {/* Header */}
@@ -175,6 +179,14 @@ function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (
         {spell.school} · {spell.components}
         {spell.concentration && <span className="ml-1 text-[var(--bronze)] font-bold">[C]</span>}
         {spell.ritual && <span className="ml-1 text-[var(--text-3)] font-bold">[R]</span>}
+      </div>
+
+      {/* Classes */}
+      <div className="flex flex-wrap gap-1 mb-2">
+        {spell.classes.map(c => (
+          <span key={c} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--steel-800)] text-[var(--text-2)]">{c}</span>
+        ))}
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--steel-950)] text-[var(--text-3)]">{spell.source}</span>
       </div>
 
       {/* Key mechanics row */}
@@ -199,29 +211,13 @@ function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (
         </p>
       )}
 
-      {/* Classes */}
-      <div className="flex flex-wrap gap-1 mt-2">
-        {spell.classes.map(c => (
-          <span key={c} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--steel-800)] text-[var(--text-2)]">{c}</span>
-        ))}
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--steel-950)] text-[var(--text-3)]">{spell.source}</span>
-      </div>
-
-      {/* Full description (expandable) */}
-      {!compact && (
-        <div className="mt-2">
-          <button type="button" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}
-            className="text-xs text-[var(--text-2)] hover:text-[var(--bronze)] transition-colors inline-flex items-center gap-1">
-            {expanded
-              ? <ChevronDown size={14} aria-hidden="true" />
-              : <ChevronRight size={14} aria-hidden="true" />}
-            {expanded ? 'Hide full text' : 'Full description'}
-          </button>
-          {expanded && (
-            <p className="text-sm text-[var(--text-2)] mt-2 italic animate-fade-in">{spell.description}</p>
-          )}
-        </div>
-      )}
+      {/* Full description — SRD text; \n inside a paragraph block is a
+          list/table line break, preserved via whitespace-pre-line */}
+      {!compact && spell.description.split('\n\n').map((paragraph, i) => (
+        <p key={i} className={`text-sm leading-relaxed whitespace-pre-line ${i === 0 ? 'mt-3' : 'mt-2'}`}>
+          {paragraph}
+        </p>
+      ))}
     </div>
   );
 }
