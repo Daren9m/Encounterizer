@@ -6,8 +6,8 @@
 
 - **ID:** `succubus`
 - **Stat profile:** CR 4; Medium Fiend
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -77,8 +77,8 @@ A poised horned succubus with dark wings extends one hand in a shadowed infernal
 
 - **ID:** `tough-boss`
 - **Stat profile:** CR 4; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -147,8 +147,8 @@ A compact armored tough boss commands a barricaded alley with warhammer and heav
 
 - **ID:** `wereboar`
 - **Stat profile:** CR 4; Small Monstrosity (lycanthrope)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -217,8 +217,8 @@ A bristled wereboar in hybrid form charges along a muddy woodland track with a j
 
 - **ID:** `weretiger`
 - **Stat profile:** CR 4; Small Monstrosity (lycanthrope)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -287,8 +287,8 @@ A striped weretiger in agile hybrid form stalks through tall grass with a longbo
 
 - **ID:** `air-elemental`
 - **Stat profile:** CR 5; Large Elemental
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -357,8 +357,8 @@ A large humanoid vortex of pale air surges across a rocky plateau amid spiraling
 
 - **ID:** `barbed-devil`
 - **Stat profile:** CR 5; Medium Fiend (devil)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -428,8 +428,8 @@ A thorn-covered barbed devil clings to basalt while gathering fire in one clawed
 
 - **ID:** `bulette`
 - **Stat profile:** CR 5; Large Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -499,8 +499,8 @@ An armored bulette bursts from a rocky hillside with jaws open and earth scatter
 
 - **ID:** `earth-elemental`
 - **Stat profile:** CR 5; Large Elemental
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -569,8 +569,8 @@ A hulking earth elemental rises through fractured granite with a boulder raised 
 
 - **ID:** `flesh-golem`
 - **Stat profile:** CR 5; Medium Construct
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -640,8 +640,8 @@ A massive stitched flesh golem advances through a ruined workshop as electricity
 
 - **ID:** `giant-crocodile`
 - **Stat profile:** CR 5; Huge Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -711,8 +711,8 @@ A gigantic scarred crocodile surges from a reed-filled swamp channel with its ja
 
 - **ID:** `giant-shark`
 - **Stat profile:** CR 5; Huge Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -782,8 +782,8 @@ A colossal blue-gray shark turns through deep water, rows of teeth visible in it
 
 - **ID:** `gladiator`
 - **Stat profile:** CR 5; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -852,8 +852,8 @@ A compact armored gladiator braces behind a scarred shield with a long spear rea
 
 - **ID:** `gorgon`
 - **Stat profile:** CR 5; Large Construct
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -923,8 +923,8 @@ An iron-plated bull gorgon lowers its horns as pale petrifying vapor pours from 
 
 - **ID:** `half-dragon`
 - **Stat profile:** CR 5; Medium Dragon
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -995,8 +995,8 @@ An armored half-dragon with dark iridescent scales turns to strike as light gath
 
 - **ID:** `hill-giant`
 - **Stat profile:** CR 5; Huge Giant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1067,8 +1067,8 @@ A huge rough-clad hill giant lumbers downhill carrying an uprooted tree as a clu
 
 - **ID:** `night-hag`
 - **Stat profile:** CR 5; Medium Fiend
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1138,8 +1138,8 @@ A gaunt indigo night hag parts nightmare mist while clutching a dark soul bag in
 
 - **ID:** `otyugh`
 - **Stat profile:** CR 5; Large Aberration
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1209,8 +1209,8 @@ A three-legged otyugh opens its central jaws while two long tentacles sweep acro
 
 - **ID:** `roper`
 - **Stat profile:** CR 5; Large Aberration
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1280,8 +1280,8 @@ A stone-colored roper reveals one eye and a vertical maw as six tendrils lash ac
 
 - **ID:** `salamander`
 - **Stat profile:** CR 5; Large Elemental
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1351,8 +1351,8 @@ A copper-scaled salamander coils on volcanic rock and levels a burning spear thr
 
 - **ID:** `shambling-mound`
 - **Stat profile:** CR 5; Large Plant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1423,8 +1423,8 @@ A towering mound of soaked vines and peat shambles through swamp water with tend
 
 - **ID:** `triceratops`
 - **Stat profile:** CR 5; Huge Beast (dinosaur)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1494,8 +1494,8 @@ A huge three-horned triceratops lowers its broad frill and charges across a dust
 
 - **ID:** `troll`
 - **Stat profile:** CR 5; Large Giant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1565,8 +1565,8 @@ A long-armed moss-colored troll twists to rend in a damp ravine, pale regrowth v
 
 - **ID:** `unicorn`
 - **Stat profile:** CR 5; Large Celestial
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1636,8 +1636,8 @@ A radiant white unicorn rears protectively beside a forest spring, its single sp
 
 - **ID:** `vampire-spawn`
 - **Stat profile:** CR 5; Small Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1707,8 +1707,8 @@ A pale vampire spawn clings to a moonlit stone wall, claws spread and fangs visi
 
 - **ID:** `water-elemental`
 - **Stat profile:** CR 5; Large Elemental
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1778,8 +1778,8 @@ A towering water elemental curls like a breaking wave above a stormy rocky shore
 
 - **ID:** `werebear`
 - **Stat profile:** CR 5; Small Monstrosity (lycanthrope)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1849,8 +1849,8 @@ A compact werebear rises into a clawing attack on a cold forest slope with a han
 
 - **ID:** `wraith`
 - **Stat profile:** CR 5; Small Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1920,8 +1920,8 @@ A small hooded wraith glides through a black stone passage with one spectral han
 
 - **ID:** `xorn`
 - **Stat profile:** CR 5; Medium Elemental
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1991,8 +1991,8 @@ A three-armed, three-legged xorn rises through a crystal cavern floor toward a v
 
 - **ID:** `chimera`
 - **Stat profile:** CR 6; Large Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
