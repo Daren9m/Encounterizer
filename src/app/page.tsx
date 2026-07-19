@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ALL_MONSTERS } from '@/data';
-import { SRD_SPELLS } from '@/data/spells';
+import { SPELLS_META } from '@/data/spells-meta';
 import RouteIcon from '@/components/RouteIcon';
 import { TOOL_ROUTES, type RouteIconName } from '@/lib/site';
 
@@ -46,7 +46,7 @@ export default function HomePage() {
         <h2 className="text-2xl mb-6">Powered by the Rules</h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <StatBox value={String(ALL_MONSTERS.length)} label="SRD Monsters" />
-          <StatBox value={String(SRD_SPELLS.length)} label="Spells" />
+          <StatBox value={String(SPELLS_META.count)} label="SRD Spells" />
           <StatBox value={String(creatureTypes)} label="Creature Types" />
           <StatBox value="2024" label="Rules Edition" />
           <StatBox value="∞" label="Unique Maps" />

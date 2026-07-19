@@ -80,7 +80,7 @@ export const TOOL_ROUTES: RouteInfo[] = [
     label: 'Spells',
     title: 'Spell Reference',
     description:
-      'Instant spell lookup with mechanics-first summaries, filters for level, school, class, concentration, and side-by-side pinning.',
+      'Every SRD 5.2.1 spell, levels 0–9, with mechanics-first summaries, full rules text, filters for level, school, class, concentration, and side-by-side pinning.',
     icon: 'sparkles',
   },
 ];
