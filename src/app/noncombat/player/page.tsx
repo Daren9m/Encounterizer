@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { generateNoncombat, getNoncombatKinds } from '@/lib/noncombat/generate';
 import type { NoncombatKind } from '@/lib/noncombat/generate';
@@ -30,44 +30,41 @@ export default function PlayerPage() {
 
 function PlayerScreen() {
   const searchParams = useSearchParams();
-  const [view, setView] = useState<PlayerView | null>(null);
-  const [missing, setMissing] = useState(false);
-  const hydratedRef = useRef(false);
+  const query = searchParams.toString();
 
-  // One-shot hydration — the same param contract as the DM share URL.
-  useEffect(() => {
-    if (hydratedRef.current) return;
-    hydratedRef.current = true;
+  // The player view is a pure projection of the DM share URL. Deriving it
+  // during render avoids a second synchronization render and keeps browser
+  // navigation responsive when the query changes.
+  const { view, missing } = useMemo<{ view: PlayerView | null; missing: boolean }>(() => {
+    const params = new URLSearchParams(query);
     const clampInt = (raw: string | null, lo: number, hi: number): number | null => {
       if (raw === null) return null;
       const n = Number(raw);
       return Number.isInteger(n) ? Math.max(lo, Math.min(hi, n)) : null;
     };
-    const seed = clampInt(searchParams.get('seed'), 0, 0x7fffffff);
+    const seed = clampInt(params.get('seed'), 0, 0x7fffffff);
     if (seed === null) {
-      setMissing(true);
-      return;
+      return { view: null, missing: true };
     }
     const KINDS = getNoncombatKinds().map(k => k.value);
-    const kindP = searchParams.get('kind');
+    const kindP = params.get('kind');
     const kind = KINDS.includes(kindP as NoncombatKind) ? (kindP as NoncombatKind) : undefined;
-    const diffP = searchParams.get('diff');
+    const diffP = params.get('diff');
     const difficulty = DIFFICULTIES.includes(diffP as Difficulty) ? (diffP as Difficulty) : undefined;
-    const themeP = searchParams.get('theme');
+    const themeP = params.get('theme');
     const theme = THEME_OPTIONS.some(o => o.value === themeP) ? (themeP as ThemeChoice) : 'any';
-    const toneP = searchParams.get('tone');
+    const toneP = params.get('tone');
     const tone = TONE_OPTIONS.some(o => o.value === toneP) ? (toneP as Tone) : 'standard';
-    const timeP = searchParams.get('time');
+    const timeP = params.get('time');
     const timeBudget = TIME_OPTIONS.some(o => o.value === timeP) ? (timeP as TimeBudget) : 'standard';
     const r = generateNoncombat({
       kind, difficulty, theme, tone, timeBudget,
-      partyLevel: clampInt(searchParams.get('lvl'), 1, 20) ?? 5,
-      partySize: clampInt(searchParams.get('size'), 1, 8) ?? 4,
+      partyLevel: clampInt(params.get('lvl'), 1, 20) ?? 5,
+      partySize: clampInt(params.get('size'), 1, 8) ?? 4,
       seed,
     });
-    setView(toPlayerView(r));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return { view: toPlayerView(r), missing: false };
+  }, [query]);
 
   if (missing) {
     return (
