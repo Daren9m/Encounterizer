@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Sparkles } from 'lucide-react';
 import { searchSpells, filterSpells, levelLabel } from '@/data/spells';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import { useSpells } from '@/app/hooks/useSpells';
 import CustomSpellPanel from '@/components/CustomSpellPanel';
 import type { Spell, SpellSchool } from '@/data/spells';
+import ToolPageHeader from '@/components/ToolPageHeader';
 
 const SCHOOLS: SpellSchool[] = ['Abjuration', 'Conjuration', 'Divination', 'Enchantment', 'Evocation', 'Illusion', 'Necromancy', 'Transmutation'];
 // SRD 5.2.1 class spell lists only — Artificer's list comes from a non-SRD source.
@@ -21,6 +22,8 @@ export default function SpellsPage() {
   const [ritualFilter, setRitualFilter] = useState<'' | 'yes' | 'no'>('');
   const [selected, setSelected] = useState<Spell | null>(null);
   const allSpells = useSpells();
+  const detailRef = useRef<HTMLDivElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
   // Pins persist as ids so a data update can't strand stale spell objects.
   const [pinnedIds, setPinnedIds] = usePersistentState<string[]>(
     'pinnedSpells', [], (v): v is string[] => Array.isArray(v) && v.every((x) => typeof x === 'string'),
@@ -50,15 +53,31 @@ export default function SpellsPage() {
       : [...prev.slice(-2), spell.id]);
   }
 
+  function handleSelect(spell: Spell) {
+    setSelected(spell);
+    if (window.matchMedia('(max-width: 1023px)').matches) {
+      window.requestAnimationFrame(() => {
+        detailRef.current?.focus({ preventScroll: true });
+        detailRef.current?.scrollIntoView({
+          behavior: 'instant' as ScrollBehavior,
+          block: 'start',
+        });
+      });
+    }
+  }
+
   return (
     <div className="animate-fade-in">
-      <h1 className="text-3xl mb-2">Spell Reference</h1>
-      <p className="text-[var(--text-2)] mb-4 text-sm">
-        Type to search. Results appear instantly. Click a spell for full mechanics.
+      <ToolPageHeader
+        path="/spells"
+        description="Find the mechanic you need fast, open a focused rules summary, and pin up to three spells for side-by-side comparison."
+      />
+      <p className="sr-only" aria-live="polite">
+        {selected ? `${selected.name} selected. Spell details ready.` : ''}
       </p>
 
       {/* Search */}
-      <div className="card mb-4">
+      <div className="card panel-accent mb-5">
         <input
           type="text"
           aria-label="Search spells"
@@ -69,7 +88,7 @@ export default function SpellsPage() {
           autoFocus
         />
         {/* Compact filters */}
-        <div className="flex flex-wrap gap-2 mt-3">
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           <select aria-label="Filter by level" value={levelFilter} onChange={e => setLevelFilter(e.target.value === '' ? '' : Number(e.target.value))} className="text-sm">
             <option value="">All Levels</option>
             {[0,1,2,3,4,5,6,7,8,9].map(l => <option key={l} value={l}>{levelLabel(l)}</option>)}
@@ -92,7 +111,7 @@ export default function SpellsPage() {
             <option value="yes">Ritual</option>
             <option value="no">Not Ritual</option>
           </select>
-          <span className="text-xs text-[var(--text-2)] self-center ml-2">{results.length} spells</span>
+          <span className="col-span-2 self-center text-xs text-[var(--text-2)] sm:ml-2" aria-live="polite">{results.length} spells</span>
         </div>
       </div>
 
@@ -101,13 +120,15 @@ export default function SpellsPage() {
 
       <div className="grid lg:grid-cols-3 gap-4">
         {/* Spell List */}
-        <div className="lg:col-span-1 space-y-1 max-h-[75vh] overflow-y-auto">
+        <div ref={resultsRef} tabIndex={-1} aria-label="Spell results" className="space-y-1 lg:col-span-1 lg:max-h-[75vh] lg:overflow-y-auto lg:pr-2">
           {results.map(spell => (
             <button
               key={spell.id}
               type="button"
-              onClick={() => setSelected(spell)}
-              className={`w-full text-left p-2 rounded text-sm transition-colors ${
+              onClick={() => handleSelect(spell)}
+              aria-pressed={selected?.id === spell.id}
+              aria-label={`View ${spell.name} spell details`}
+              className={`min-h-12 w-full rounded-lg p-3 text-left text-sm transition-colors ${
                 selected?.id === spell.id ? 'bg-[var(--steel-800)] border border-[var(--bronze)]' : 'hover:bg-[var(--steel-900)] border border-transparent'
               }`}
             >
@@ -128,9 +149,21 @@ export default function SpellsPage() {
         </div>
 
         {/* Spell Detail + Pinned */}
-        <div className="lg:col-span-2 space-y-4">
+        <div ref={detailRef} tabIndex={-1} className="scroll-mt-24 space-y-4 lg:col-span-2">
           {selected ? (
-            <SpellCard spell={selected} onPin={togglePin} isPinned={pinned.some(p => p.id === selected.id)} />
+            <div className="lg:sticky lg:top-24">
+              <button
+                type="button"
+                className="btn-ghost mb-3 w-full lg:hidden"
+                onClick={() => {
+                  resultsRef.current?.focus({ preventScroll: true });
+                  resultsRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'start' });
+                }}
+              >
+                Back to spell results
+              </button>
+              <SpellCard spell={selected} onPin={togglePin} isPinned={pinned.some(p => p.id === selected.id)} />
+            </div>
           ) : (
             <div className="card text-center py-12 text-[var(--text-2)]">
               <div className="mb-3 flex justify-center" aria-hidden="true">
@@ -167,7 +200,7 @@ function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (
         <h2 className={`${compact ? 'text-base' : 'text-xl'}`}>{spell.name}</h2>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => onPin(spell)} aria-pressed={isPinned} title={isPinned ? 'Unpin' : 'Pin for comparison'}
-            className={`text-sm px-2 py-0.5 rounded ${isPinned ? 'bg-[var(--bronze)] text-[#1d1105]' : 'bg-[var(--steel-800)] text-[var(--text-2)]'}`}>
+            className={`min-h-11 rounded-lg px-3 text-sm ${isPinned ? 'bg-[var(--bronze)] text-[#1d1105]' : 'bg-[var(--steel-800)] text-[var(--text-2)]'}`}>
             {isPinned ? 'Pinned' : 'Pin'}
           </button>
           <span className="text-sm font-bold text-[var(--bronze)]">{levelLabel(spell.level)}</span>
