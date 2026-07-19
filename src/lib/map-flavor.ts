@@ -9,6 +9,9 @@ import type { Environment, MapRoom, MapRoomTag } from './types';
 // below can grow or change without ever reshuffling the grid behind
 // an existing share link. Edit the prose freely; never move draws
 // into the grid stream.
+//
+// Voice: grim. Dread over wonder — every room remembers something
+// bad, and most of them are still waiting for it to come back.
 
 export const FLAVOR_STREAM_SALT = 0x466c6176; // 'Flav'
 
@@ -22,83 +25,83 @@ interface RoomArchetype {
 // ─── Archetype tables (the tool's voice — tune freely) ───────────
 
 const DUNGEON_ENTRANCE: RoomArchetype[] = [
-  { name: 'Entry Hall', purpose: 'The way in. Whoever holds this room controls the retreat.' },
-  { name: 'Gatehouse', purpose: 'A defensible mouth; murder-holes and old hinges. First blood is often spilled here.' },
-  { name: 'Broken Threshold', purpose: 'The seal on this place failed long ago. Tracks in the dust run both ways.' },
+  { name: 'Entry Hall', purpose: 'The way in, and the way out — if it stays open. Whoever holds this room decides who leaves.' },
+  { name: 'Gatehouse', purpose: 'Murder-holes above, old blood in the drain. The defenders always planned to bleed people here.' },
+  { name: 'Broken Threshold', purpose: 'The seal on this place failed from the inside. The tracks in the dust go in. Fewer come out.' },
 ];
 
 const DUNGEON_EXIT: RoomArchetype[] = [
-  { name: 'Far Passage', purpose: 'The way deeper — or out. Anything fleeing the party comes through here.' },
-  { name: 'Rear Gate', purpose: 'A second way in that the inhabitants know and the party does not.' },
-  { name: 'Deep Landing', purpose: 'Stairs lead on past this point. Sound carries up them.' },
+  { name: 'Far Passage', purpose: 'The way deeper. Anything the party breaks will run this way — toward whatever it serves.' },
+  { name: 'Rear Gate', purpose: 'A second door the inhabitants know well. Assume it has been used tonight.' },
+  { name: 'Deep Landing', purpose: 'Stairs continue down past this point. Cold air rises. Sound carries up — and down.' },
 ];
 
 const DUNGEON_BOSS: RoomArchetype[] = [
-  { name: 'Great Hall', purpose: 'The seat of whatever rules here. Room to maneuver — for both sides.' },
-  { name: 'Ritual Chamber', purpose: 'Something was begun in this room. Interrupting it is the adventure.' },
-  { name: 'Vaulted Sanctum', purpose: 'The inner holding, best defended and worst lit. The leader stands here.' },
+  { name: 'Great Hall', purpose: 'The seat of whatever rules here. It has room to work, and it has been waiting for company.' },
+  { name: 'Ritual Chamber', purpose: 'Something was begun in this room and never finished. Interrupting it may be worse than letting it end.' },
+  { name: 'Vaulted Sanctum', purpose: 'The inner holding: best defended, worst lit, and the last place a scream would matter.' },
 ];
 
 const DUNGEON_ROOMS: RoomArchetype[] = [
-  { name: 'Guard Post', purpose: 'Watch station on the approach. An alarm raised here changes the whole fight.' },
-  { name: 'Collapsed Shrine', purpose: 'Faith outlived the faithful. The altar may still hold a blessing — or a grudge.' },
-  { name: 'Storeroom', purpose: 'Crates, barrels, and cover. Supplies here hint at how many mouths this place feeds.' },
-  { name: 'Flooded Cellar', purpose: 'Knee-deep water slows movement and hides what sleeps beneath it.' },
-  { name: 'Barracks', purpose: 'Bunks for the rank and file. Count the beds to count the garrison.' },
-  { name: 'Crypt Annex', purpose: 'The dead were stored here with more haste than honor.' },
-  { name: 'Well Room', purpose: 'The water source — and a shaft that goes somewhere no map admits.' },
-  { name: 'Long Gallery', purpose: 'A corridor of niches and sightlines. Ranged fighters love it; shields hate it.' },
-  { name: 'Armory', purpose: 'Racks stand half-empty. What was taken, and who is carrying it now?' },
-  { name: 'Refectory', purpose: 'Meals were eaten here recently enough to matter.' },
-  { name: 'Archive', purpose: 'Ledgers, maps, and letters — the room where the plot is written down.' },
-  { name: 'Interrogation Room', purpose: 'Questions were asked here. The furniture remembers the answers.' },
+  { name: 'Guard Post', purpose: 'Watch station on the approach. The last watch left mid-meal, and nobody cleared the plates.' },
+  { name: 'Desecrated Shrine', purpose: 'Faith died here before the faithful did. What the altar answers to now is an open question.' },
+  { name: 'Storeroom', purpose: 'Crates and barrels — count the supplies and know how many mouths this place feeds, and on what.' },
+  { name: 'Flooded Cellar', purpose: 'Knee-deep water, mirror-still. It stopped being a cellar the day something moved in below the surface.' },
+  { name: 'Barracks', purpose: 'Bunks for the rank and file. Some beds are made. The unmade ones are the recent dead.' },
+  { name: 'Crypt Annex', purpose: 'The dead were stored here with haste, not honor. Haste, in the end, was the mistake.' },
+  { name: 'Well Room', purpose: 'The water source, and a shaft no map admits to. Things have been drawn up it. Things have been lowered down.' },
+  { name: 'Long Gallery', purpose: 'Niches and sightlines the length of a bowshot. Whatever hunts here prefers to see its work coming.' },
+  { name: 'Armory', purpose: 'The racks stand half-empty. Whatever was taken is being carried by someone, somewhere in the dark ahead.' },
+  { name: 'Cold Refectory', purpose: 'Meals were eaten here recently enough to matter. Not all the bones on the floor came from the kitchen.' },
+  { name: 'Archive', purpose: 'Ledgers, letters, and names. The plot is written down in here — including, perhaps, what was promised and to whom.' },
+  { name: 'Interrogation Room', purpose: 'Questions were asked here at length. The stains say the answers came slowly.' },
 ];
 
 const CAVE_ENTRANCE: RoomArchetype[] = [
-  { name: 'Cave Mouth', purpose: 'Daylight ends here. Eyes take a minute to adjust — a minute something may use.' },
-  { name: 'Sinkhole Landing', purpose: 'The floor of the way in. Loose scree announces every step.' },
-  { name: 'Cracked Fissure', purpose: 'A squeeze into the dark. Retreat through it is slow and loud.' },
+  { name: 'Cave Mouth', purpose: 'Daylight ends at this line, and everything below knows exactly where that line is.' },
+  { name: 'Sinkhole Landing', purpose: 'The floor of the way in, littered with scree — and with the gear of whoever landed badly.' },
+  { name: 'Cracked Fissure', purpose: 'A squeeze into the dark. Retreat through it will be slow, loud, and single-file.' },
 ];
 
 const CAVE_BOSS: RoomArchetype[] = [
-  { name: 'Great Cavern', purpose: 'The hollow heart of the system. Whatever claims this cave dens here.' },
-  { name: 'Black Lake Shore', purpose: 'Still water, no far bank in torchlight. The lair sits at the waterline.' },
-  { name: 'Deep Hollow', purpose: 'The bottom of the dark. Bones collect here, and so does their owner.' },
+  { name: 'Great Cavern', purpose: 'The hollow heart of the system. The bones collect here because their owner does.' },
+  { name: 'Black Lake Shore', purpose: 'Still water with no far bank in torchlight. The lair sits at the waterline. So does the smell.' },
+  { name: 'Deep Hollow', purpose: 'The bottom of the dark. Everything in these tunnels eventually washes, crawls, or is dragged down here.' },
 ];
 
 const CAVE_CHAMBERS: RoomArchetype[] = [
-  { name: 'Grotto', purpose: 'A pocket of calm stone. Defensible, if the party can reach it first.' },
-  { name: 'Fungal Field', purpose: 'Pale caps ankle to shoulder height. Some glow; some burst.' },
-  { name: 'Bone Pit', purpose: 'A midden of old kills. Reading it tells you what hunts these tunnels.' },
-  { name: 'Sunken Pool', purpose: 'Cold, clear, and deeper than it looks. Things drink here — and wait here.' },
-  { name: 'Crystal Gallery', purpose: 'Facets throw torchlight in all directions. Beautiful, and terrible for stealth.' },
-  { name: 'Bat Roost', purpose: 'The ceiling moves. A loud noise turns it into weather.' },
-  { name: 'Old Camp', purpose: 'Someone sheltered here before. What they left says whether they got out.' },
-  { name: 'Echoing Vault', purpose: 'Sound carries in every direction from this chamber. Fights here draw company.' },
-  { name: 'Flowstone Terrace', purpose: 'Slick stone shelves descend in steps. Bad footing for anyone in a hurry.' },
+  { name: 'Grotto', purpose: 'A pocket of defensible stone. The scratch-marks on the walls say others thought so too.' },
+  { name: 'Fungal Field', purpose: 'Pale caps from ankle to shoulder height. Some glow. Some burst. Some are leaning toward you.' },
+  { name: 'Bone Pit', purpose: 'A midden of old kills. Read it carefully: the newest bones are the freshest warning.' },
+  { name: 'Sunken Pool', purpose: 'Cold, clear, and far deeper than it looks. Things drink here. Things wait here longer.' },
+  { name: 'Crystal Gallery', purpose: 'Facets scatter torchlight in every direction — including yours, to every eye in the dark.' },
+  { name: 'Bat Roost', purpose: 'The ceiling moves. One loud noise turns it into a screaming weather that marks your position for miles.' },
+  { name: 'Abandoned Camp', purpose: 'Someone sheltered here. The bedrolls are still laid out. The fire was never banked.' },
+  { name: 'Echoing Vault', purpose: 'Sound leaves this chamber in every direction and returns wrong. Fights here draw an audience.' },
+  { name: 'Flowstone Terrace', purpose: 'Slick stone shelves descending in steps. Bad footing for the living; the dark below is patient.' },
 ];
 
 const OUTDOOR_APPROACH: RoomArchetype[] = [
-  { name: 'Open Approach', purpose: 'Where the party enters. Little cover until the first terrain feature.' },
-  { name: 'Trailhead', purpose: 'The path the party arrived by — and the line of retreat if it goes wrong.' },
-  { name: 'Low Ground', purpose: 'The starting position, overlooked by everything ahead.' },
+  { name: 'Open Approach', purpose: 'Where the party enters, in full view. There is no cover until the first terrain feature, and everything ahead knows it.' },
+  { name: 'Trailhead', purpose: 'The path the party arrived by — and the line of retreat, if the retreat is fast enough to matter.' },
+  { name: 'Low Ground', purpose: 'The starting position, overlooked by everything ahead. The enemy chose to let you have it.' },
 ];
 
 const OUTDOOR_OPPOSITION: RoomArchetype[] = [
-  { name: 'Far Line', purpose: 'The enemy side of the field. They chose this ground; assume that mattered.' },
-  { name: 'High Ground', purpose: 'The position of advantage. Taking it is half the battle plan.' },
-  { name: 'Ambush Line', purpose: 'Where the opposition waits. Spotting them first is worth a round.' },
+  { name: 'Far Line', purpose: 'The enemy side of the field. They picked this ground before you arrived. Assume that mattered.' },
+  { name: 'High Ground', purpose: 'The position of advantage. Taking it will cost movement, breath, and probably blood.' },
+  { name: 'Ambush Line', purpose: 'Where the opposition waits, already sighted in. Spotting them first is worth a round. Missing them costs one.' },
 ];
 
 const OUTDOOR_LANDMARK: RoomArchetype[] = [
-  { name: 'Broken Ground', purpose: 'A knot of obstacles mid-field. Cover, concealment, and complications.' },
-  { name: 'Standing Stones', purpose: 'Old markers nobody remembers raising. The fight will bend around them.' },
-  { name: 'Ruined Waypost', purpose: 'A collapsed structure with one good wall left. Everyone will want it.' },
+  { name: 'Broken Ground', purpose: 'A knot of obstacles mid-field: cover, concealment, and places a body can lie unseen until stepped on.' },
+  { name: 'Standing Stones', purpose: 'Old markers nobody remembers raising, for a purpose nobody wrote down. The fight will bend around them. It may not be the first.' },
+  { name: 'Ruined Waypost', purpose: 'A collapsed structure with one good wall left. Everyone will want it. Someone may already have it.' },
 ];
 
 const RIVER_LANDMARK: RoomArchetype[] = [
-  { name: 'The Crossing', purpose: 'Moving water splits the field. The bridges are the tactical prize.' },
-  { name: 'The Ford', purpose: 'Shallow enough to wade, slow enough to regret it under fire.' },
+  { name: 'The Crossing', purpose: 'Moving water splits the field, and the bridges are the only dry way over. Chokepoints like this get named after battles.' },
+  { name: 'The Ford', purpose: 'Shallow enough to wade, slow enough to regret it. The water downstream has carried worse than mud.' },
 ];
 
 // ─── Per-environment sensory palettes ────────────────────────────
@@ -110,58 +113,58 @@ interface EnvFlavor {
 
 const ENV_FLAVOR: Partial<Record<Environment, EnvFlavor>> = {
   Forest: {
-    descriptors: ['moss-hung', 'root-buckled', 'shadow-dappled', 'bramble-choked'],
-    sensory: ['birdsong stops as you enter', 'the canopy swallows the light', 'leaf litter muffles every step', 'something small crashes away through the brush'],
+    descriptors: ['moss-smothered', 'root-buckled', 'light-starved', 'bramble-choked'],
+    sensory: ['the birdsong stopped when you entered, and has not resumed', 'the canopy swallows the light a stride above your heads', 'the leaf litter is soft enough to silence anything’s approach', 'something paces you in the brush, patient and unhurried'],
   },
   Grassland: {
-    descriptors: ['wind-combed', 'sun-bleached', 'waist-high', 'trampled'],
-    sensory: ['the grass moves against the wind in one place', 'insects saw away in the heat', 'the horizon feels a mile too close', 'a hawk turns slow circles overhead'],
+    descriptors: ['wind-flattened', 'sun-bleached', 'waist-high', 'trampled'],
+    sensory: ['the grass moves against the wind in one place, then stops', 'the insects here have gone quiet in a wide circle', 'the horizon is close enough to hide anything with patience', 'carrion birds turn slow circles overhead, in no hurry at all'],
   },
   Hill: {
-    descriptors: ['stone-studded', 'wind-scoured', 'terraced', 'gorse-covered'],
-    sensory: ['the wind carries voices farther than it should', 'scree shifts somewhere upslope', 'the valley spreads out below you', 'clouds drag shadows across the slopes'],
+    descriptors: ['stone-studded', 'wind-scoured', 'barrow-ridged', 'gorse-choked'],
+    sensory: ['the wind carries voices farther than it should, in both directions', 'scree shifts somewhere upslope, once, deliberately', 'the valley below is dotted with cairns nobody tends', 'cloud-shadow drags across the slopes like something hunting'],
   },
   Mountain: {
-    descriptors: ['frost-cracked', 'sheer', 'scree-strewn', 'cloud-wrapped'],
-    sensory: ['the air is thin and tastes of stone', 'a distant rockfall echoes twice', 'the cold works through every seam', 'the drop pulls at the edge of your vision'],
+    descriptors: ['frost-split', 'sheer', 'scree-strewn', 'cloud-shrouded'],
+    sensory: ['the air is thin, and tastes of cold iron', 'a rockfall echoes twice — the second one was closer', 'the cold works through every seam and stays', 'the drop beside the path has stopped feeling like a warning and started feeling like an invitation'],
   },
   Desert: {
-    descriptors: ['sun-hammered', 'dune-flanked', 'salt-crusted', 'bone-dry'],
-    sensory: ['heat shimmer bends the distance', 'sand hisses across the hardpan', 'your shadow is the only shade', 'the silence is total between gusts'],
+    descriptors: ['sun-hammered', 'dune-flanked', 'salt-crusted', 'bone-strewn'],
+    sensory: ['heat shimmer bends the distance until nothing out there can be trusted', 'sand hisses across the hardpan like something whispering', 'the only shade within a mile is your own shadow', 'between gusts the silence is total, and it is listening'],
   },
   Arctic: {
-    descriptors: ['ice-sheeted', 'wind-carved', 'snow-blind', 'frozen'],
-    sensory: ['breath freezes in your beard', 'the ice groans underfoot', 'the white steals all sense of distance', 'the wind cuts through fur and cloth alike'],
+    descriptors: ['ice-sheeted', 'wind-flayed', 'white-blind', 'frozen'],
+    sensory: ['your breath freezes to your collar; speech costs warmth', 'the ice underfoot groans like something turning in its sleep', 'the white erases distance, direction, and eventually judgment', 'the wind finds every seam, and it is not going to stop'],
   },
   Coastal: {
-    descriptors: ['salt-streaked', 'tide-worn', 'gull-haunted', 'spray-slick'],
-    sensory: ['surf pounds a slow rhythm below', 'the wind smells of salt and rot', 'gulls scream over something down the strand', 'spray beads cold on your face'],
+    descriptors: ['salt-scoured', 'tide-gnawed', 'gull-picked', 'spray-slick'],
+    sensory: ['the surf beats a slow rhythm below, like something knocking', 'the wind smells of salt, kelp, and old rot', 'down the strand, the gulls are screaming over something large', 'the spray leaves cold beads on your face like a fever breaking'],
   },
   Swamp: {
-    descriptors: ['mist-wrapped', 'black-watered', 'root-tangled', 'sinking'],
-    sensory: ['the mud pulls at every boot', 'something big slides off a log into the water', 'the air is thick enough to chew', 'insects rise in a whining cloud'],
+    descriptors: ['mist-wrapped', 'black-watered', 'root-strangled', 'sinking'],
+    sensory: ['the mud takes each boot and gives it back reluctantly', 'something heavy slides off a log into the water and does not resurface', 'the air is thick enough to taste, and it tastes spoiled', 'the insect whine stops whenever you stop — a beat too late'],
   },
   Underdark: {
     descriptors: ['lightless', 'dripping', 'fungus-veined', 'pressure-cracked'],
-    sensory: ['water drips somewhere it has dripped for a thousand years', 'the dark eats your torchlight whole', 'pale fungi cast a faint corpse-glow', 'the silence has weight down here'],
+    sensory: ['water drips somewhere it has dripped for a thousand years, counting', 'the dark eats your torchlight a pace beyond arm’s reach', 'pale fungi shed a corpse-glow that makes everyone look drowned', 'the silence down here has weight, and it presses'],
   },
   Underwater: {
-    descriptors: ['current-swept', 'kelp-shrouded', 'pressure-dimmed', 'silt-clouded'],
-    sensory: ['bubbles spiral up and vanish', 'the current shoves like a crowd', 'silt blooms with every movement', 'shapes patrol at the edge of the blue'],
+    descriptors: ['current-dragged', 'kelp-shrouded', 'pressure-dimmed', 'silt-blind'],
+    sensory: ['your bubbles spiral up and vanish toward a surface you can no longer see', 'the current shoves like a crowd with somewhere to be', 'silt blooms with every movement and hangs there, marking you', 'shapes patrol the edge of the blue, keeping a distance that feels rehearsed'],
   },
   Urban: {
-    descriptors: ['soot-stained', 'rubble-choked', 'gutted', 'abandoned'],
-    sensory: ['broken glass grits underfoot', 'a shutter bangs in the wind, again and again', 'old smoke still clings to the stone', 'somewhere behind the walls, something knocks once'],
+    descriptors: ['soot-blackened', 'rubble-choked', 'gutted', 'abandoned'],
+    sensory: ['broken glass grits underfoot no matter how carefully you place your feet', 'a shutter bangs in the wind, again and again, like a signal', 'old smoke still clings to the stone — and under it, something sweeter', 'behind the walls, something knocks once, and is answered'],
   },
   Planar: {
-    descriptors: ['unreal', 'gravity-bent', 'star-lit', 'shifting'],
-    sensory: ['the geometry is wrong in ways your eyes keep correcting', 'colors here have no names', 'your heartbeat sounds a half-step behind you', 'the ground remembers being somewhere else'],
+    descriptors: ['unreal', 'gravity-bent', 'star-cold', 'shifting'],
+    sensory: ['the geometry is wrong in ways your eyes keep trying to forgive', 'the colors here have no names, and looking at them feels like owing something', 'your heartbeat arrives a half-step behind you', 'the ground remembers being somewhere else, and would like to go back'],
   },
 };
 
 const FALLBACK_FLAVOR: EnvFlavor = {
-  descriptors: ['dim', 'silent', 'weathered', 'forgotten'],
-  sensory: ['dust hangs motionless in the air', 'your footsteps sound louder than they should', 'the quiet here feels deliberate'],
+  descriptors: ['dim', 'silent', 'ruinous', 'forgotten'],
+  sensory: ['dust hangs motionless in the air, undisturbed for years — until now', 'your footsteps sound louder than they should, and travel farther', 'the quiet here feels deliberate, like held breath'],
 };
 
 // ─── Assembly ────────────────────────────────────────────────────
@@ -212,8 +215,8 @@ function archetypeFor(
 
 function purposeSuffix(room: MapRoom): string {
   const extras: string[] = [];
-  if (hasTag(room, 'treasure')) extras.push('Something of value remains here.');
-  if (hasTag(room, 'trap')) extras.push('The floor is not to be trusted.');
+  if (hasTag(room, 'treasure')) extras.push('Something of value is still here — which means something kept it.');
+  if (hasTag(room, 'trap')) extras.push('The floor was made to be someone’s last mistake.');
   return extras.length > 0 ? ` ${extras.join(' ')}` : '';
 }
 
