@@ -27,9 +27,14 @@ import FilterPanel from '@/components/FilterPanel';
 import PartySetupPanel from '@/components/PartySetupPanel';
 import BattleReportCard from '@/components/BattleReportCard';
 import PrintButton from '@/components/PrintButton';
+import ResetGeneratorButton from '@/components/ResetGeneratorButton';
 import { simulateBattle } from '@/lib/battle-sim';
 import { monsterToSimMonster } from '@/lib/monster-to-sim';
-import { buildSimPlayer, defaultPartyConfig } from '@/data/class-templates';
+import {
+  buildSimPlayer,
+  defaultPartyConfig,
+  syncPartyConfigMembers,
+} from '@/data/class-templates';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import { storageLoad, storageSave } from '@/lib/storage';
 import {
@@ -219,7 +224,7 @@ function EncounterBuilder() {
   const [manualSearch, setManualSearch] = useState('');
 
   // Battle Forecast state
-  const [partyConfig, setPartyConfig] = usePersistentState<PartyConfig | null>(
+  const [partyConfig, setPartyConfig, partyConfigHydrated] = usePersistentState<PartyConfig | null>(
     PARTY_CONFIG_STORAGE_KEY,
     null,
     (v): v is PartyConfig | null => v === null || isPartyConfig(v),
@@ -228,6 +233,7 @@ function EncounterBuilder() {
   const [report, setReport] = useState<BattleReport | null>(null);
   const [reportSignature, setReportSignature] = useState('');
   const [simRunning, setSimRunning] = useState(false);
+  const partySetupRef = useRef<HTMLDivElement>(null);
 
   // Saved encounters + save-name input
   const [savedEncounters, setSavedEncounters, savedHydrated] =
@@ -267,6 +273,18 @@ function EncounterBuilder() {
     mapWidth, mapHeight, mapFeatureDensity, mapTerrainVariety,
   ]);
 
+  // Bring a persisted forecast party up to the builder's current party size
+  // and level once both local-storage sources have hydrated.
+  const didSyncPartyConfig = useRef(false);
+  useEffect(() => {
+    if (didSyncPartyConfig.current || !partyConfigHydrated || !settingsHydrated.current) return;
+    didSyncPartyConfig.current = true;
+    setPartyConfig((current) => ({
+      version: 1,
+      members: syncPartyConfigMembers(current?.members ?? [], partySize, partyLevel),
+    }));
+  }, [partyConfigHydrated, partyLevel, partySize, setPartyConfig]);
+
   // Current party for XP budgets
   const party = useMemo(() => buildParty(partySize, partyLevel), [partySize, partyLevel]);
 
@@ -281,6 +299,22 @@ function EncounterBuilder() {
     if (!manualSearch.trim()) return allMonsters.slice(0, 20);
     return filterMonsters(allMonsters, { search: manualSearch }).slice(0, 20);
   }, [allMonsters, manualSearch]);
+
+  const invalidateForecast = useCallback(() => {
+    setReport(null);
+    setReportSignature('');
+    setSimRunning(false);
+  }, []);
+
+  const openPartySetup = useCallback(() => {
+    setShowPartySetup(true);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        partySetupRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        partySetupRef.current?.focus({ preventScroll: true });
+      });
+    });
+  }, []);
 
   const runGenerate = useCallback((cfg: GenerateConfig) => {
     const enc = generateEncounter(
@@ -308,8 +342,10 @@ function EncounterBuilder() {
     setIsSeeded(true);
     setLinkCopied(false);
     setExpandedMonster(null);
+    setEditingDetails(false);
+    invalidateForecast();
     writeUrl(cfg);
-  }, [allMonsters]);
+  }, [allMonsters, invalidateForecast]);
 
   // One-shot hydration from a shared link (?seed=...)
   const didInit = useRef(false);
@@ -381,6 +417,52 @@ function EncounterBuilder() {
     });
   }
 
+  function handlePartySizeChange(value: number) {
+    const nextSize = Math.max(1, Math.min(10, value));
+    setPartySize(nextSize);
+    setPartyConfig((current) => ({
+      version: 1,
+      members: syncPartyConfigMembers(current?.members ?? [], nextSize, partyLevel),
+    }));
+    invalidateForecast();
+  }
+
+  function handlePartyLevelChange(value: number) {
+    const nextLevel = Math.max(1, Math.min(20, value));
+    setPartyLevel(nextLevel);
+    setPartyConfig((current) => ({
+      version: 1,
+      members: syncPartyConfigMembers(current?.members ?? [], partySize, nextLevel),
+    }));
+    invalidateForecast();
+  }
+
+  function handleReset() {
+    setPartySize(4);
+    setPartyLevel(3);
+    setDifficulty('Moderate');
+    setEnvironment('Forest');
+    setIncludeMap(true);
+    setMapWidth(24);
+    setMapHeight(18);
+    setMapFeatureDensity('Balanced');
+    setMapTerrainVariety('Varied');
+    setMonsterFilter({});
+    setEncounter(null);
+    setIsSeeded(false);
+    setLinkCopied(false);
+    setShowFilters(false);
+    setExpandedMonster(null);
+    setShowManualAdd(false);
+    setManualSearch('');
+    setShowPartySetup(false);
+    setPartyConfig({ version: 1, members: defaultPartyConfig(4, 3) });
+    setSavingName(null);
+    setEditingDetails(false);
+    invalidateForecast();
+    window.history.replaceState(null, '', window.location.pathname);
+  }
+
   function handleRegenerateMap() {
     setEncounter(prev => prev ? {
       ...prev,
@@ -421,7 +503,7 @@ function EncounterBuilder() {
   function handleForecastClick() {
     if (!encounter || encounter.monsters.length === 0) return;
     if (!partyConfig || partyConfig.members.length === 0) {
-      setShowPartySetup(true);
+      openPartySetup();
       return;
     }
     runForecast(partyConfig, encounter);
@@ -457,7 +539,8 @@ function EncounterBuilder() {
     // A manual edit detaches the encounter from its seed — the link would lie.
     setIsSeeded(false);
     clearUrlSeed();
-  }, [environment, party]);
+    invalidateForecast();
+  }, [environment, invalidateForecast, party]);
 
   const handleRemoveMonster = useCallback((monsterId: string) => {
     setEncounter(prev => {
@@ -474,7 +557,8 @@ function EncounterBuilder() {
     });
     setIsSeeded(false);
     clearUrlSeed();
-  }, [party]);
+    invalidateForecast();
+  }, [invalidateForecast, party]);
 
   function updateEncounterNarrative(
     field: 'name' | 'description' | 'tactics',
@@ -528,7 +612,7 @@ function EncounterBuilder() {
             <input
               id="enc-party-size"
               type="number" min={1} max={10} value={partySize}
-              onChange={e => setPartySize(Math.max(1, Math.min(10, Number(e.target.value))))}
+              onChange={e => handlePartySizeChange(Number(e.target.value))}
               className="w-full"
             />
           </div>
@@ -539,7 +623,7 @@ function EncounterBuilder() {
             <input
               id="enc-party-level"
               type="number" min={1} max={20} value={partyLevel}
-              onChange={e => setPartyLevel(Math.max(1, Math.min(20, Number(e.target.value))))}
+              onChange={e => handlePartyLevelChange(Number(e.target.value))}
               className="w-full"
             />
           </div>
@@ -640,6 +724,7 @@ function EncounterBuilder() {
           >
             {showFilters ? 'Hide' : 'Show'} Monster Filters
           </button>
+          <ResetGeneratorButton onReset={handleReset} label="Reset Builder" />
           {encounter && (
             <button type="button" onClick={handleExport} className="btn-secondary text-sm">
               Export JSON
@@ -740,7 +825,7 @@ function EncounterBuilder() {
                     type="button"
                     onClick={() => setSavedEncounters((prev) => prev.filter((s) => s.id !== saved.id))}
                     aria-label={`Delete saved encounter ${saved.name}`}
-                    className="text-[var(--accent-danger)] hover:opacity-80 px-1 inline-flex items-center"
+                    className="text-[var(--accent-danger)] hover:text-[var(--accent-danger-light)] px-1 inline-flex items-center"
                   >
                     <X size={16} aria-hidden="true" />
                   </button>
@@ -749,22 +834,6 @@ function EncounterBuilder() {
             ))}
           </ul>
         </details>
-      )}
-
-      {/* Battle Forecast party setup */}
-      {showPartySetup && (
-        <PartySetupPanel
-          members={partyConfig?.members ?? defaultPartyConfig(partySize, partyLevel)}
-          onSave={(members) => {
-            const config: PartyConfig = { version: 1, members };
-            setPartyConfig(config);
-            setShowPartySetup(false);
-            if (encounter && encounter.monsters.length > 0) {
-              runForecast(config, encounter);
-            }
-          }}
-          onCancel={() => setShowPartySetup(false)}
-        />
       )}
 
       {/* Manual Monster Add Panel */}
@@ -810,6 +879,7 @@ function EncounterBuilder() {
                   <label htmlFor="encounter-name" className="sr-only">Encounter name</label>
                   <input
                     id="encounter-name"
+                    type="text"
                     value={encounter.name}
                     onChange={e => updateEncounterNarrative('name', e.target.value)}
                     className="text-2xl font-bold flex-1 print:hidden"
@@ -896,6 +966,27 @@ function EncounterBuilder() {
               </button>
             </div>
           </section>
+          {showPartySetup && (
+            <div
+              ref={partySetupRef}
+              tabIndex={-1}
+              className="scroll-mt-6"
+              aria-label="Battle forecast party setup"
+            >
+              <PartySetupPanel
+                members={partyConfig?.members ?? defaultPartyConfig(partySize, partyLevel)}
+                onSave={(members) => {
+                  const config: PartyConfig = { version: 1, members };
+                  setPartyConfig(config);
+                  setShowPartySetup(false);
+                  if (encounter && encounter.monsters.length > 0) {
+                    runForecast(config, encounter);
+                  }
+                }}
+                onCancel={() => setShowPartySetup(false)}
+              />
+            </div>
+          )}
           {simRunning && (
             <div className="card animate-pulse" role="status" aria-label="Running battle forecast">
               <h3 className="text-xl mb-2">Battle Forecast</h3>
@@ -911,7 +1002,7 @@ function EncounterBuilder() {
               xpLabel={summary.assessment}
               stale={reportSignature !== encounterSignature(encounter)}
               onRerun={() => encounter && partyConfig && runForecast(partyConfig, encounter)}
-              onEditParty={() => setShowPartySetup(true)}
+              onEditParty={openPartySetup}
             />
           )}
 
@@ -928,7 +1019,7 @@ function EncounterBuilder() {
                         expandedMonster === em.monster.id ? null : em.monster.id
                       )}
                       aria-expanded={expandedMonster === em.monster.id}
-                      className="flex items-center gap-3 text-left flex-1 hover:opacity-80 transition-opacity"
+                      className="flex items-center gap-3 text-left flex-1 hover:text-[var(--bronze-light)] transition-colors"
                     >
                       <span className="bg-[var(--steel-800)] text-[var(--bronze)] rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
                         {em.count}x

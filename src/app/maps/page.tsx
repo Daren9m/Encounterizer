@@ -10,6 +10,7 @@ import {
 import { usePersistentState } from '@/lib/use-persistent-state';
 import type { EncounterMap, Environment } from '@/lib/types';
 import MapGrid from '@/components/MapGrid';
+import ResetGeneratorButton from '@/components/ResetGeneratorButton';
 
 const ENVIRONMENTS: Environment[] = [
   'Arctic', 'Coastal', 'Desert', 'Forest', 'Grassland', 'Hill',
@@ -66,6 +67,15 @@ export default function MapsPage() {
     setHistory(prev => [result, ...prev.slice(0, 9)]);
   }, [environment, width, height, featureDensity, terrainVariety, setHistory]);
 
+  const handleReset = useCallback(() => {
+    setEnvironment('Underdark');
+    setWidth(24);
+    setHeight(18);
+    setFeatureDensity('Balanced');
+    setTerrainVariety('Varied');
+    setMap(null);
+  }, [setEnvironment, setFeatureDensity, setHeight, setTerrainVariety, setWidth]);
+
   const handleExport = useCallback(() => {
     if (!map) return;
     const json = JSON.stringify(map, null, 2);
@@ -111,7 +121,7 @@ export default function MapsPage() {
             >
               {ENVIRONMENTS.map(e => <option key={e} value={e}>{e}</option>)}
             </select>
-            <p className="mt-1 text-xs text-[var(--text-2)] opacity-60">
+            <p className="mt-1 text-xs text-[var(--text-3)]">
               {ENV_DESCRIPTIONS[environment]}
             </p>
           </div>
@@ -173,7 +183,7 @@ export default function MapsPage() {
                 <option key={value} value={value}>{value}</option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-[var(--text-2)] opacity-60">
+            <p className="mt-1 text-xs text-[var(--text-3)]">
               Controls cover, obstacles, traps, and features.
             </p>
           </div>
@@ -191,7 +201,7 @@ export default function MapsPage() {
                 <option key={value} value={value}>{value}</option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-[var(--text-2)] opacity-60">
+            <p className="mt-1 text-xs text-[var(--text-3)]">
               Controls how many terrain types appear.
             </p>
           </div>
@@ -201,6 +211,7 @@ export default function MapsPage() {
           <button type="button" onClick={handleGenerate} className="btn-primary text-lg">
             Generate Map
           </button>
+          <ResetGeneratorButton onReset={handleReset} label="Reset Generator" />
           {map && (
             <>
               <button type="button" onClick={handleGenerate} className="btn-secondary">

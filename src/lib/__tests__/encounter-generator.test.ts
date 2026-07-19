@@ -4,6 +4,7 @@ import {
   generateEncounter,
   generateQuickEncounter,
   generateTreasure,
+  getEncounterTargetXp,
   getPartyXpBudget,
   summarizeEncounter,
 } from '@/lib/encounter-generator';
@@ -138,6 +139,15 @@ describe('generateTreasure', () => {
         expect(treasure).not.toMatch(/\b(?:CP|SP|EP|PP)\b|mixed coinage/i);
       }
     }
+  });
+
+  it('targets the middle of each requested difficulty band', () => {
+    const p = party(6, 8);
+    expect(getEncounterTargetXp(p, 'Trivial')).toBe(1500);
+    expect(getEncounterTargetXp(p, 'Low')).toBe(4500);
+    expect(getEncounterTargetXp(p, 'Moderate')).toBe(8100);
+    expect(getEncounterTargetXp(p, 'High')).toBe(11400);
+    expect(getEncounterTargetXp(p, 'Extreme')).toBe(14490);
   });
 });
 

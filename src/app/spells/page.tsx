@@ -204,7 +204,7 @@ function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (
         {spell.classes.map(c => (
           <span key={c} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--steel-800)] text-[var(--text-2)]">{c}</span>
         ))}
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--steel-950)] text-[var(--text-2)] opacity-60">{spell.source}</span>
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--steel-950)] text-[var(--text-3)]">{spell.source}</span>
       </div>
 
       {/* Full description (expandable) */}

@@ -6,6 +6,7 @@ import { generatePuzzle, getPuzzleCategories } from '@/lib/puzzle-generator';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import type { Puzzle, PuzzleCategory, PuzzleDifficulty } from '@/lib/puzzle-generator';
 import PrintButton from '@/components/PrintButton';
+import ResetGeneratorButton from '@/components/ResetGeneratorButton';
 
 const DIFFICULTIES: PuzzleDifficulty[] = ['Easy', 'Medium', 'Hard'];
 
@@ -29,6 +30,14 @@ export default function PuzzlesPage() {
     setPuzzle(p);
     setShowSolution(false);
     setHistory(prev => [p, ...prev.slice(0, 9)]);
+  }
+
+  function handleReset() {
+    setCategory('');
+    setDifficulty('');
+    setPartyLevel(5);
+    setPuzzle(null);
+    setShowSolution(false);
   }
 
   function handleExport() {
@@ -98,6 +107,7 @@ export default function PuzzlesPage() {
         </div>
         <div className="flex flex-wrap gap-3">
           <button type="button" onClick={handleGenerate} className="btn-primary text-lg">Generate Puzzle</button>
+          <ResetGeneratorButton onReset={handleReset} label="Reset Generator" />
           {puzzle && (
             <>
               <button type="button" onClick={handleGenerate} className="btn-secondary">Regenerate</button>

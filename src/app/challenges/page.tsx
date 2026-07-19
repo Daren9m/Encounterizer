@@ -5,6 +5,7 @@ import { generateNoncombatEncounter, getChallengeTypes } from '@/lib/noncombat-g
 import { usePersistentState } from '@/lib/use-persistent-state';
 import type { NoncombatEncounter, ChallengeType } from '@/lib/noncombat-generator';
 import PrintButton from '@/components/PrintButton';
+import ResetGeneratorButton from '@/components/ResetGeneratorButton';
 
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard'] as const;
 
@@ -25,6 +26,13 @@ export default function ChallengesPage() {
     });
     setEncounter(e);
     setHistory(prev => [e, ...prev.slice(0, 9)]);
+  }
+
+  function handleReset() {
+    setType('');
+    setDifficulty('Medium');
+    setPartyLevel(5);
+    setEncounter(null);
   }
 
   function handleExport() {
@@ -88,6 +96,7 @@ export default function ChallengesPage() {
         </div>
         <div className="flex flex-wrap gap-3">
           <button type="button" onClick={handleGenerate} className="btn-primary text-lg">Generate</button>
+          <ResetGeneratorButton onReset={handleReset} label="Reset Generator" />
           {encounter && (
             <>
               <button type="button" onClick={handleGenerate} className="btn-secondary">Regenerate</button>

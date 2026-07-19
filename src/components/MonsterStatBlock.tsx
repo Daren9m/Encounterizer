@@ -119,7 +119,7 @@ export default function MonsterStatBlock({
         <p>
           <span className="stat-label">Challenge </span>
           {crDisplay(monster.challengeRating)} ({monster.xp.toLocaleString()} XP)
-          <span className="ml-2 text-xs opacity-70">Prof. Bonus +{monster.proficiencyBonus}</span>
+          <span className="ml-2 text-xs text-[var(--text-3)]">Prof. Bonus +{monster.proficiencyBonus}</span>
         </p>
       </div>
 

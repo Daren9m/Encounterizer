@@ -43,14 +43,15 @@ function WinRateDonut({ winRate, label }: { winRate: number; label: BattleReport
 function HpCurve({ curve, maxRounds }: { curve: BattleReport['hpCurve']; maxRounds: number }) {
   if (curve.length === 0) return null;
   const width = 320;
-  const height = 130;
+  const height = 140;
   const padLeft = 8;
+  const padTop = 22;
   const padBottom = 18;
   const plotW = width - padLeft - 8;
-  const plotH = height - padBottom - 8;
+  const plotH = height - padTop - padBottom;
 
   const x = (i: number) => padLeft + (curve.length === 1 ? 0 : (i / (curve.length - 1)) * plotW);
-  const y = (pct: number) => 8 + (1 - Math.max(0, Math.min(1, pct))) * plotH;
+  const y = (pct: number) => padTop + (1 - Math.max(0, Math.min(1, pct))) * plotH;
 
   const partyPoints = curve.map((p, i) => `${x(i)},${y(p.partyPct)}`).join(' ');
   const monsterPoints = curve.map((p, i) => `${x(i)},${y(p.monsterPct)}`).join(' ');
@@ -75,10 +76,10 @@ function HpCurve({ curve, maxRounds }: { curve: BattleReport['hpCurve']; maxRoun
         )
       ))}
       <g fontSize="10">
-        <rect x={padLeft} y={0} width="10" height="3" fill="var(--bronze)" />
-        <text x={padLeft + 14} y={4} fill="var(--text-2)">Party HP</text>
-        <rect x={padLeft + 74} y={0} width="10" height="3" fill="var(--accent-danger)" />
-        <text x={padLeft + 88} y={4} fill="var(--text-2)">Monster HP</text>
+        <rect x={padLeft} y={7} width="10" height="3" fill="var(--bronze)" />
+        <text x={padLeft + 14} y={12} fill="var(--text-2)">Party HP</text>
+        <rect x={padLeft + 74} y={7} width="10" height="3" fill="var(--accent-danger)" />
+        <text x={padLeft + 88} y={12} fill="var(--text-2)">Monster HP</text>
         <text x={width - 8} y={height - 4} textAnchor="end" fontSize="9" fill="var(--text-2)">
           round{curve.length >= maxRounds ? ` (capped at ${maxRounds})` : ''}
         </text>
@@ -195,7 +196,7 @@ export default function BattleReportCard({
           <summary className="cursor-pointer">
             {report.approximationNotes.length} approximation{report.approximationNotes.length > 1 ? 's' : ''} in this forecast
           </summary>
-          <ul className="mt-1 space-y-0.5 list-disc list-inside opacity-80">
+          <ul className="mt-1 space-y-0.5 list-disc list-inside">
             {report.approximationNotes.map((note) => (
               <li key={note}>{note}</li>
             ))}
