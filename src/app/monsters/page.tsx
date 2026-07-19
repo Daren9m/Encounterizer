@@ -3,8 +3,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  ChevronDown,
-  ChevronUp,
   FileJson,
   FileText,
   Maximize2,
@@ -26,7 +24,9 @@ import { getMonsterPhysicalDescription } from '@/data/monster-description-index'
 import { getMonsterImage } from '@/data/monster-visual-index';
 import ToolPageHeader from '@/components/ToolPageHeader';
 import MonsterEditor from '@/components/MonsterEditor';
+import PinnedMonsterTray from '@/components/PinnedMonsterTray';
 import { monsterToMarkdown, safeMonsterFilename } from '@/lib/monster-export';
+import { prioritizePinnedMonsters } from '@/lib/pinned-monsters';
 
 function crDisplay(cr: number): string {
   if (cr === 0.125) return '1/8';
@@ -105,6 +105,10 @@ export default function BestiaryPage() {
     [allMonsters, monsterEdits],
   );
   const results = useMemo(() => filterMonsters(monsters, filter), [monsters, filter]);
+  const orderedResults = useMemo(
+    () => prioritizePinnedMonsters(results, pinnedIds),
+    [pinnedIds, results],
+  );
   const stats = useMemo(() => getMonsterSummaryStats(results), [results]);
   const pinnedMonsters = useMemo(
     () => pinnedIds.map((id) => monsters.find((monster) => monster.id === id)).filter((monster): monster is Monster => Boolean(monster)),
@@ -136,12 +140,13 @@ export default function BestiaryPage() {
   }, [focusDetailOnSmallScreen, selectedMonster]);
 
   const togglePin = useCallback((monsterId: string) => {
+    if (!pinnedIds.includes(monsterId)) setIsPinnedListOpen(true);
     setPinnedIds((current) => (
       current.includes(monsterId)
         ? current.filter((id) => id !== monsterId)
-        : [...current, monsterId]
+        : [monsterId, ...current]
     ));
-  }, [setPinnedIds]);
+  }, [pinnedIds, setPinnedIds]);
 
   const saveMonsterEdit = useCallback((monster: Monster) => {
     setMonsterEdits((current) => ({ ...current, [monster.id]: monster }));
@@ -312,6 +317,19 @@ export default function BestiaryPage() {
         </div>
       )}
 
+      {pinnedMonsters.length > 0 && (
+        <PinnedMonsterTray
+          monsters={pinnedMonsters}
+          isOpen={isPinnedListOpen}
+          onToggleOpen={() => setIsPinnedListOpen((open) => !open)}
+          onSelect={(monster) => {
+            setIsPinnedListOpen(false);
+            openMonster(monster);
+          }}
+          onUnpin={togglePin}
+        />
+      )}
+
       <div className={selectedMonster
         ? 'grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,30rem)]'
         : 'grid gap-6'}>
@@ -319,7 +337,7 @@ export default function BestiaryPage() {
         <div ref={resultsRef} tabIndex={-1} aria-label="Monster results" className="bestiary-results min-w-0 print:hidden">
           {viewMode === 'grid' ? (
             <div className="bestiary-grid items-start gap-3" data-card-size={cardSize} data-columns={columnCount}>
-              {results.map(monster => (
+              {orderedResults.map(monster => (
                 <MonsterCard
                   key={monster.id}
                   monster={monster}
@@ -343,7 +361,7 @@ export default function BestiaryPage() {
                 <div className="col-span-1 text-center">HP</div>
                 <div className="col-span-3">Movement</div>
               </div>
-              {results.map(monster => {
+              {orderedResults.map(monster => {
                 const physicalDescription = getMonsterPhysicalDescription(monster.id);
                 const isPinned = pinnedIds.includes(monster.id);
                 return (
@@ -500,43 +518,6 @@ export default function BestiaryPage() {
         )}
       </div>
 
-      {pinnedMonsters.length > 0 && (
-        <aside className="fixed bottom-4 right-4 z-40 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-[var(--bronze)] bg-[var(--steel-900)] shadow-2xl print:hidden" aria-label="Pinned monsters">
-          <button
-            type="button"
-            onClick={() => setIsPinnedListOpen((open) => !open)}
-            className="flex min-h-11 w-full items-center justify-between gap-3 px-3 py-2 text-left"
-            aria-expanded={isPinnedListOpen}
-          >
-            <span className="inline-flex items-center gap-2 font-semibold">
-              <Pin size={16} className="text-[var(--bronze)]" aria-hidden="true" />
-              Pinned monsters
-              <span className="rounded-full bg-[var(--steel-950)] px-2 py-0.5 text-xs text-[var(--bronze)]">{pinnedMonsters.length}</span>
-            </span>
-            {isPinnedListOpen ? <ChevronDown size={16} aria-hidden="true" /> : <ChevronUp size={16} aria-hidden="true" />}
-          </button>
-          {isPinnedListOpen && (
-            <ul className="max-h-72 overflow-y-auto border-t border-[var(--steel-800)] p-1.5">
-              {pinnedMonsters.map((monster) => (
-                <li key={monster.id} className="flex items-center gap-1 rounded-lg hover:bg-[var(--steel-800)]">
-                  <button type="button" onClick={() => openMonster(monster)} className="min-w-0 flex-1 px-2 py-2 text-left">
-                    <span className="block truncate text-sm font-semibold">{monster.name}</span>
-                    <span className="block text-xs text-[var(--text-3)]">CR {crDisplay(monster.challengeRating)} · AC {monster.armor.ac} · {monster.hitPoints} HP</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => togglePin(monster.id)}
-                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[var(--text-3)] hover:text-[var(--bronze)]"
-                    aria-label={`Unpin ${monster.name}`}
-                  >
-                    <X size={15} aria-hidden="true" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </aside>
-      )}
       </div>
     </div>
   );
