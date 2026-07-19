@@ -54,8 +54,13 @@ export const DEFAULT_BATCH_SIZE = 40;
 export const MIN_BATCH_SIZE = 30;
 export const MAX_BATCH_SIZE = 60;
 
-/** Clamp the per-category item count into the supported [30, 60] band. */
+/**
+ * Clamp the per-category item count into the supported [30, 60] band.
+ * NaN (unreachable via the CLI, which pre-validates with Number.isFinite)
+ * falls back to the default instead of propagating through min/max.
+ */
 export function clampBatchSize(n: number): number {
+  if (Number.isNaN(n)) return DEFAULT_BATCH_SIZE;
   return Math.min(MAX_BATCH_SIZE, Math.max(MIN_BATCH_SIZE, Math.trunc(n)));
 }
 
@@ -96,7 +101,12 @@ function schemaEnum(kind: PoolKind, property: string): string[] {
   return values as string[];
 }
 
-/** One request per category key; the key becomes the custom_id middle segment. */
+/**
+ * One request per category key; the key becomes the custom_id middle
+ * segment. Every key must stay inside the Batches custom_id charset
+ * ([a-zA-Z0-9_-]) — engine vocab does: letters, hyphens, and single
+ * underscores (CONTEST_TYPES et al.) only.
+ */
 function categoryKeysFor(kind: PoolKind): string[] {
   switch (kind) {
     case 'scenario-hook':
@@ -167,9 +177,15 @@ const MAX_TOKENS = 16_000;
 
 /**
  * Build the full Batches request list: one request per category of each
- * selected pool, custom_id `${kind}:${categoryKey}:v${PROMPT_VERSION}`
+ * selected pool, custom_id `${kind}__${categoryKey}__v${PROMPT_VERSION}`
  * (unique across the run — kinds partition the id space and category
  * keys are unique within a kind).
+ *
+ * Separator rationale: the API restricts custom_id to
+ * ^[a-zA-Z0-9_-]{1,64}$, so ':' would 400 every request. '__' is the
+ * shortest legal separator that still splits unambiguously — kinds
+ * contain hyphens and category keys contain single underscores, so
+ * neither '-' nor '_' can be split on.
  */
 export function buildBatchRequests({ pools, model, batchSize }: BuildOptions): BatchRequest[] {
   const size = clampBatchSize(batchSize);
@@ -179,7 +195,7 @@ export function buildBatchRequests({ pools, model, batchSize }: BuildOptions): B
     const system = buildSystemPrompt(kind);
     for (const categoryKey of categoryKeysFor(kind)) {
       requests.push({
-        custom_id: `${kind}:${categoryKey}:v${PROMPT_VERSION}`,
+        custom_id: `${kind}__${categoryKey}__v${PROMPT_VERSION}`,
         params: {
           model,
           max_tokens: MAX_TOKENS,

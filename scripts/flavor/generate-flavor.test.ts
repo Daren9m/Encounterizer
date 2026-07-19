@@ -49,7 +49,7 @@ describe('parseArgs', () => {
     expect(opts.batchSize).toBe(40);
     expect(opts.dryRun).toBe(false);
     expect(opts.localFile).toBeNull();
-    expect(opts.outDir).toContain('out');
+    expect(opts.outDir).toBe(join('scripts', 'flavor', 'out'));
   });
 
   it('accepts every allowed model and rejects everything else', () => {
@@ -66,6 +66,18 @@ describe('parseArgs', () => {
       'treasure',
     ]);
     expect(() => parseArgs(['--pools', 'scenario-hook,bogus'])).toThrow(UsageError);
+  });
+
+  it('rejects an empty --pools list instead of building zero requests', () => {
+    expect(() => parseArgs(['--pools', ''])).toThrow(UsageError);
+    expect(() => parseArgs(['--pools', ' , '])).toThrow(UsageError);
+  });
+
+  it('dedupes repeated --pools entries', () => {
+    expect(parseArgs(['--pools', 'treasure,treasure,persona']).pools).toEqual([
+      'treasure',
+      'persona',
+    ]);
   });
 
   it('clamps --batch-size into [30, 60] and rejects non-numbers', () => {
@@ -133,18 +145,18 @@ describe('runBatch', () => {
   const outOfOrderEntries: FakeResultEntry[] = [
     // Deliberately NOT in request order — keying must be by custom_id.
     {
-      custom_id: `treasure:high:v${PROMPT_VERSION}`,
+      custom_id: `treasure__high__v${PROMPT_VERSION}`,
       result: {
         type: 'succeeded',
         message: textBlock(JSON.stringify({ items: [{ tier: 'high', text: 'a chest of storied relics' }] })),
       },
     },
     {
-      custom_id: `treasure:low:v${PROMPT_VERSION}`,
+      custom_id: `treasure__low__v${PROMPT_VERSION}`,
       result: { type: 'errored', error: { type: 'api_error', message: 'boom' } },
     },
     {
-      custom_id: `treasure:mid:v${PROMPT_VERSION}`,
+      custom_id: `treasure__mid__v${PROMPT_VERSION}`,
       result: {
         type: 'succeeded',
         // Parsed object in the text block, not a JSON string — must be tolerated.
@@ -152,7 +164,7 @@ describe('runBatch', () => {
       },
     },
     {
-      custom_id: `treasure:legendary:v${PROMPT_VERSION}`,
+      custom_id: `treasure__legendary__v${PROMPT_VERSION}`,
       result: { type: 'succeeded', message: textBlock('this is not json {') },
     },
   ];
@@ -177,10 +189,10 @@ describe('runBatch', () => {
 
     expect(summary.batchId).toBe('batch_test_1');
     expect(summary.succeeded.sort()).toEqual(
-      [`treasure:high:v${PROMPT_VERSION}`, `treasure:mid:v${PROMPT_VERSION}`].sort(),
+      [`treasure__high__v${PROMPT_VERSION}`, `treasure__mid__v${PROMPT_VERSION}`].sort(),
     );
-    expect(summary.errored).toEqual([`treasure:low:v${PROMPT_VERSION}`]);
-    expect(summary.parseFailures).toEqual([`treasure:legendary:v${PROMPT_VERSION}`]);
+    expect(summary.errored).toEqual([`treasure__low__v${PROMPT_VERSION}`]);
+    expect(summary.parseFailures).toEqual([`treasure__legendary__v${PROMPT_VERSION}`]);
   });
 
   it('writes the raw results file and per-kind candidate files with provenance', async () => {
@@ -214,7 +226,7 @@ describe('runBatch', () => {
     const byId = new Map(
       candidates.categories.map((c: { custom_id: string }) => [c.custom_id, c]),
     );
-    const high = byId.get(`treasure:high:v${PROMPT_VERSION}`) as {
+    const high = byId.get(`treasure__high__v${PROMPT_VERSION}`) as {
       categoryKey: string;
       items: unknown[];
     };
@@ -270,7 +282,7 @@ describe('main', () => {
         promptVersion: PROMPT_VERSION,
         results: [
           {
-            custom_id: `name-prefix:all:v${PROMPT_VERSION}`,
+            custom_id: `name-prefix__all__v${PROMPT_VERSION}`,
             result: {
               type: 'succeeded',
               message: {
@@ -302,7 +314,7 @@ describe('main', () => {
     expect(candidates.batchId).toBe('batch_prior');
     expect(candidates.categories).toEqual([
       {
-        custom_id: `name-prefix:all:v${PROMPT_VERSION}`,
+        custom_id: `name-prefix__all__v${PROMPT_VERSION}`,
         categoryKey: 'all',
         items: [{ text: 'Vigil' }],
       },

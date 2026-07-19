@@ -13,7 +13,11 @@
 // prompt-spec.test.ts. Spell numbers out.
 
 /** Bump when prompt content changes materially; stamped into every prompt. */
-export const PROMPT_VERSION: number = 1;
+// v2: theme-entry block — dropped the phantom `symbols` bullet (the field
+// enum excludes symbolSets) and aligned the intro with the per-theme
+// request shape (the request names only the theme; entries spread across
+// fields, each tagged with its field).
+export const PROMPT_VERSION: number = 2;
 
 export const POOL_KINDS = [
   'scenario-hook',
@@ -66,11 +70,10 @@ Write treasure descriptions in a gold-and-loot register: coins, gems, trinkets, 
 Write single evocative words or two-word phrases used as encounter-name prefixes, in the register of the existing list: Ambush, Siege, Skirmish, Raid, Assault, Standoff, Hunt, Clash. Title Case, one or two words, combat- or drama-flavored nouns that read naturally in names such as "Ambush at the Ruins". No articles, no punctuation, no slot tokens.`,
 
   'theme-entry': `POOL: theme-entry
-Write entries for a non-combat theme pack's prose fields. The request names the theme and the target field; match that field's semantics exactly:
+Write entries for a non-combat theme pack's prose fields. The request names the theme; spread entries across the fields below, tag each entry with its field, and match that field's semantics exactly:
 - descriptors: short evocative adjectives ("dust-choked", "rain-slicked").
 - materials: physical substances and surfaces ("verdigrised bronze", "cracked marble").
 - sensory: sensations addressed to the players ("grit underfoot", "a draft that should not exist").
-- symbols: single capitalized concrete nouns usable as glyphs ("Scarab", "Lantern").
 - phrases: cipher plaintexts — uppercase letters A through Z and spaces ONLY, short declarative or imperative sentences a table can decode ("THE THIRD DOOR IS THE TRUE DOOR").
 - cast: lowercase noun phrases naming a person of the theme ("a dust-wreathed tomb keeper").
 - rewards and consequences: narrative outcomes only — no dice expressions and no numbers; the tone layer decides whether damage text is appended.

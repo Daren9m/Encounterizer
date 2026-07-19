@@ -51,6 +51,10 @@ describe('clampBatchSize', () => {
     expect(clampBatchSize(45)).toBe(45);
     expect(clampBatchSize(60)).toBe(60);
   });
+
+  it('falls back to the default size for NaN instead of propagating it', () => {
+    expect(clampBatchSize(Number.NaN)).toBe(DEFAULT_BATCH_SIZE);
+  });
 });
 
 describe('buildBatchRequests', () => {
@@ -59,21 +63,29 @@ describe('buildBatchRequests', () => {
     const expectedTotal = Object.values(EXPECTED_CATEGORY_COUNTS).reduce((a, b) => a + b, 0);
     expect(requests).toHaveLength(expectedTotal);
     for (const kind of POOL_KINDS) {
-      const forKind = requests.filter((r) => r.custom_id.startsWith(`${kind}:`));
+      const forKind = requests.filter((r) => r.custom_id.startsWith(`${kind}__`));
       expect(forKind).toHaveLength(EXPECTED_CATEGORY_COUNTS[kind]);
     }
   });
 
-  it('gives every request a unique custom_id in kind:categoryKey:vN form', () => {
+  it('gives every request a unique custom_id in kind__categoryKey__vN form', () => {
     const requests = buildAll();
     const ids = requests.map((r) => r.custom_id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) {
-      const parts = id.split(':');
+      const parts = id.split('__');
       expect(parts).toHaveLength(3);
       expect(POOL_KINDS).toContain(parts[0]);
       expect(parts[1].length).toBeGreaterThan(0);
       expect(parts[2]).toBe(`v${PROMPT_VERSION}`);
+    }
+  });
+
+  it('keeps every custom_id inside the Batches API charset and length limit', () => {
+    // The API rejects the whole batch when any custom_id falls outside
+    // ^[a-zA-Z0-9_-]{1,64}$ (alphanumeric, hyphen, underscore only).
+    for (const r of buildAll()) {
+      expect(r.custom_id).toMatch(/^[a-zA-Z0-9_-]{1,64}$/);
     }
   });
 
@@ -98,7 +110,7 @@ describe('buildBatchRequests', () => {
 
   it("wires each request's structured output to the matching pool schema", () => {
     for (const r of buildAll()) {
-      const kind = r.custom_id.split(':')[0] as PoolKind;
+      const kind = r.custom_id.split('__')[0] as PoolKind;
       expect(r.params.output_config.format.type).toBe('json_schema');
       // Identity, not deep equality: the schema must be the exact exported object.
       expect(r.params.output_config.format.schema).toBe(POOL_ITEM_SCHEMAS[kind]);
@@ -107,7 +119,7 @@ describe('buildBatchRequests', () => {
 
   it('uses buildSystemPrompt(kind) verbatim as the system prompt', () => {
     for (const r of buildAll()) {
-      const kind = r.custom_id.split(':')[0] as PoolKind;
+      const kind = r.custom_id.split('__')[0] as PoolKind;
       expect(r.params.system).toBe(buildSystemPrompt(kind));
     }
   });
@@ -140,7 +152,7 @@ describe('buildBatchRequests', () => {
       model: DEFAULT_MODEL,
       batchSize: 40,
     });
-    const keys = requests.map((r) => r.custom_id.split(':')[1]);
+    const keys = requests.map((r) => r.custom_id.split('__')[1]);
     expect(keys.sort()).toEqual([...ENVIRONMENTS].sort());
   });
 
@@ -163,7 +175,7 @@ describe('buildBatchRequests', () => {
       batchSize: 40,
     });
     expect(requests).toHaveLength(EXPECTED_CATEGORY_COUNTS['scenario-hook']);
-    for (const r of requests) expect(r.custom_id.startsWith('scenario-hook:')).toBe(true);
+    for (const r of requests) expect(r.custom_id.startsWith('scenario-hook__')).toBe(true);
   });
 });
 

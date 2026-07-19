@@ -65,7 +65,16 @@ type _AllThemeIdsCovered = AssertTrue<
 
 /**
  * ThemePack fields safe for LLM extension: exactly the plain string[]
- * prose pools. Excluded, and why:
+ * prose pools.
+ *
+ * Format constraint the audit layer (#88) must enforce: `phrases`
+ * entries are cipher plaintexts consumed by the symbol-substitution
+ * handout — uppercase A–Z and spaces only, roughly twenty to forty
+ * characters. The engine test suite hard-gates this
+ * (src/lib/__tests__/noncombat-theming.test.ts), so LENGTH_LIMITS's
+ * wider theme-entry band alone is NOT sufficient for phrases.
+ *
+ * Excluded, and why:
  * - id, label       — pack identity, not content pools.
  * - symbolSets      — string[][]: structural grid material consumed in
  *                     fixed-size sets by symbol-sequence handouts, not
@@ -88,7 +97,7 @@ type _ThemeProseFieldsAreStringArrays = AssertTrue<
  * The extendable cast pools of src/data/noncombat-cast.ts, named by
  * their exact export names (`satisfies keyof typeof` pins them to real
  * exports). SOCIAL_COMPLICATIONS and INTERRUPTIONS also exist there
- * but are excluded: KIND_INSTRUCTIONS['persona'] (prompt spec v1)
+ * but are excluded: KIND_INSTRUCTIONS['persona'] (prompt spec)
  * defines authoring semantics only for persona/want/secret/leverage —
  * adding pools requires a prompt-spec version bump first.
  */
@@ -99,7 +108,7 @@ const PERSONA_POOLS = [
 /**
  * The extendable beat pools of src/data/noncombat-scenarios.ts, named
  * by their exact export names — the three pools whose authoring
- * semantics KIND_INSTRUCTIONS['scenario-beat'] (prompt spec v1)
+ * semantics KIND_INSTRUCTIONS['scenario-beat'] (prompt spec)
  * defines: contest flavor, side event, hazard. Each contributes prose
  * with no dice/DC coupling (the engines attach skills, round counts,
  * and every number). The file's other exports (SKILL_OBJECTIVES,

@@ -14,7 +14,7 @@ import { describe, expect, it } from 'vitest';
 import { THEME_PACKS } from '../../src/data/noncombat-themes';
 import * as castPools from '../../src/data/noncombat-cast';
 import * as scenarioPools from '../../src/data/noncombat-scenarios';
-import { POOL_KINDS, type PoolKind } from './prompt-spec';
+import { KIND_INSTRUCTIONS, POOL_KINDS, type PoolKind } from './prompt-spec';
 import { LENGTH_LIMITS, POOL_ITEM_SCHEMAS } from './schemas';
 
 // ─── Helpers ─────────────────────────────────────────────────────
@@ -229,6 +229,15 @@ describe('engine vocab cross-checks', () => {
       expect(Array.isArray(value), `noncombat-cast does not export array ${pool}`).toBe(true);
       expect((value as unknown[]).length, `${pool} is empty`).toBeGreaterThan(0);
     }
+  });
+
+  it('theme-entry instructions describe exactly the schema field enum (no phantom fields)', () => {
+    // The model can only emit fields from the schema enum; a bullet for a
+    // field outside it (e.g. the excluded symbolSets material) invites
+    // mislabeled items forced under a wrong field value.
+    const bulletFields = [...KIND_INSTRUCTIONS['theme-entry'].matchAll(/^- ([a-z]+(?: and [a-z]+)?):/gm)]
+      .flatMap((m) => m[1]!.split(' and '));
+    expect(bulletFields.sort()).toEqual([...enumOf('theme-entry', 'field')].sort());
   });
 
   it('scenario-beat pool enum names real exported array pools of noncombat-scenarios', () => {

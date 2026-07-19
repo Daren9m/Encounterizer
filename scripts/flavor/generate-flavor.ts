@@ -72,6 +72,11 @@ export function parseArgs(argv: string[]): CliOptions {
       case '--pools': {
         const raw = takeValue(flag, argv[++i]);
         const pools = raw.split(',').map((p) => p.trim()).filter((p) => p.length > 0);
+        if (pools.length === 0) {
+          throw new UsageError(
+            `--pools requires at least one pool — valid pools: ${POOL_KINDS.join(', ')}`,
+          );
+        }
         for (const pool of pools) {
           if (!isPoolKind(pool)) {
             throw new UsageError(
@@ -79,7 +84,9 @@ export function parseArgs(argv: string[]): CliOptions {
             );
           }
         }
-        options.pools = pools as PoolKind[];
+        // Dedupe (first occurrence wins) so repeated entries cannot
+        // double-print dry-run lines or mislead pool iteration.
+        options.pools = [...new Set(pools)] as PoolKind[];
         break;
       }
       case '--model': {
@@ -233,7 +240,9 @@ function writeCandidateFiles(
   mkdirSync(outDir, { recursive: true });
   const byKind = new Map<string, { custom_id: string; categoryKey: string; items: unknown[] }[]>();
   for (const [customId, items] of collected.succeeded) {
-    const [kind, categoryKey] = customId.split(':');
+    // custom_id format: kind__categoryKey__vN (see buildBatchRequests —
+    // ':' is outside the Batches custom_id charset).
+    const [kind, categoryKey] = customId.split('__');
     const list = byKind.get(kind) ?? [];
     list.push({ custom_id: customId, categoryKey, items });
     byKind.set(kind, list);
@@ -364,8 +373,8 @@ export function runDryRun(options: CliOptions, log: (line: string) => void): voi
   const requests = buildBatchRequests(options);
   log(`Dry run — ${requests.length} batch requests, ${options.batchSize} items each.`);
   for (const kind of options.pools) {
-    const forKind = requests.filter((r) => r.custom_id.startsWith(`${kind}:`));
-    const keys = forKind.map((r) => r.custom_id.split(':')[1]);
+    const forKind = requests.filter((r) => r.custom_id.startsWith(`${kind}__`));
+    const keys = forKind.map((r) => r.custom_id.split('__')[1]);
     log(`  ${kind}: ${forKind.length} categories (${keys.join(', ')})`);
   }
   const chosen = estimateRun(requests, options.model);
