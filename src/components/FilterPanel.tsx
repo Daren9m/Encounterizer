@@ -42,10 +42,10 @@ function ChipGroup<T extends string>({
   onToggle: (value: T) => void;
 }) {
   return (
-    <div>
-      <span className="micro-label block mb-1">
+    <fieldset>
+      <legend className="micro-label mb-1">
         {label}
-      </span>
+      </legend>
       <div className="flex flex-wrap gap-1">
         {options.map(opt => (
           <button
@@ -59,7 +59,7 @@ function ChipGroup<T extends string>({
           </button>
         ))}
       </div>
-    </div>
+    </fieldset>
   );
 }
 
@@ -151,7 +151,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
             <button
               type="button"
               onClick={() => onChange({})}
-              className="text-sm text-[var(--text-2)] hover:text-[var(--bronze)] underline"
+              className="inline-flex min-h-11 items-center text-sm text-[var(--text-2)] underline transition-colors hover:text-[var(--bronze)]"
             >
               Clear
             </button>
@@ -160,7 +160,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
       </div>
 
       {resultCount !== undefined && (
-        <div className="mt-2 text-sm text-[var(--text-2)]">
+        <div className="mt-2 text-sm text-[var(--text-2)]" aria-live="polite">
           {resultCount} monster{resultCount !== 1 ? 's' : ''} found
         </div>
       )}

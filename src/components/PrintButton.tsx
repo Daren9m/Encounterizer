@@ -9,7 +9,7 @@ export default function PrintButton({ label = 'Print' }: { label?: string }) {
       type="button"
       onClick={() => window.print()}
       className="btn-secondary text-sm print:hidden inline-flex items-center gap-1.5"
-      aria-label="Print this page"
+      aria-label={label}
     >
       <Printer size={16} aria-hidden="true" />
       {label}

@@ -17,6 +17,7 @@ import type { EncounterMap, Environment } from '@/lib/types';
 import MapSvg from '@/components/MapSvg';
 import PrintButton from '@/components/PrintButton';
 import ResetGeneratorButton from '@/components/ResetGeneratorButton';
+import ToolPageHeader from '@/components/ToolPageHeader';
 import { downloadBlob, rasterizeSvg } from '@/components/map-export';
 
 const ENVIRONMENTS: Environment[] = [
@@ -27,6 +28,8 @@ const ENVIRONMENTS: Environment[] = [
 const isMapEnvironment = (v: unknown): v is Environment =>
   typeof v === 'string' && (ENVIRONMENTS as string[]).includes(v);
 const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+const isMapWidth = (v: unknown): v is number => isNumber(v) && v >= 10 && v <= 40;
+const isMapHeight = (v: unknown): v is number => isNumber(v) && v >= 10 && v <= 30;
 const isMapArray = (v: unknown): v is EncounterMap[] => Array.isArray(v);
 const isFeatureDensity = (v: unknown): v is MapFeatureDensity =>
   v === 'Sparse' || v === 'Balanced' || v === 'Dense';
@@ -47,6 +50,11 @@ const ENV_DESCRIPTIONS: Partial<Record<Environment, string>> = {
   Underwater: 'Submerged battlefield with water and currents',
   Planar: 'Otherworldly caverns and rifts',
 };
+
+function clampDimension(value: number, min: number, max: number, fallback: number): number {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.max(min, Math.min(max, Math.round(value)));
+}
 
 // ─── Share link ───────────────────────────────────────────────────
 // `?seed&env&mw&mh&md&mv[&mr]` reproduces a map exactly (same param
@@ -82,8 +90,8 @@ export default function MapsPage() {
 
 function MapsBuilder() {
   const [environment, setEnvironment] = usePersistentState<Environment>('mapEnvironment', 'Underdark', isMapEnvironment);
-  const [width, setWidth] = usePersistentState<number>('mapWidth', 24, isNumber);
-  const [height, setHeight] = usePersistentState<number>('mapHeight', 18, isNumber);
+  const [width, setWidth] = usePersistentState<number>('mapWidth', 24, isMapWidth);
+  const [height, setHeight] = usePersistentState<number>('mapHeight', 18, isMapHeight);
   const [featureDensity, setFeatureDensity] = usePersistentState<MapFeatureDensity>(
     'mapFeatureDensity', 'Balanced', isFeatureDensity,
   );
@@ -152,11 +160,16 @@ function MapsBuilder() {
   }, []);
 
   const handleGenerate = useCallback(() => {
+    const safeWidth = clampDimension(width, 10, 40, 24);
+    const safeHeight = clampDimension(height, 10, 30, 18);
+    if (safeWidth !== width) setWidth(safeWidth);
+    if (safeHeight !== height) setHeight(safeHeight);
     runGenerate({
-      environment, width, height, featureDensity, terrainVariety, roomCount,
+      environment, width: safeWidth, height: safeHeight,
+      featureDensity, terrainVariety, roomCount,
       seed: randomSeed(),
     });
-  }, [environment, width, height, featureDensity, terrainVariety, roomCount, runGenerate]);
+  }, [environment, width, height, featureDensity, terrainVariety, roomCount, runGenerate, setHeight, setWidth]);
 
   const handleReset = useCallback(() => {
     setEnvironment('Underdark');
@@ -201,9 +214,19 @@ function MapsBuilder() {
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-3xl mb-6">Map Generator</h1>
+      <ToolPageHeader
+        path="/maps"
+        description="Generate a readable, terrain-aware battle map in seconds, then inspect, share, print, or export it for the table."
+      />
+      <p className="sr-only" aria-live="polite">
+        {map ? `${map.name} generated. ${map.width} by ${map.height} cells.` : ''}
+      </p>
 
-      <div className="card mb-6 print:hidden">
+      <div className="card panel-accent mb-6 print:hidden">
+        <div className="mb-5">
+          <p className="micro-label">Map setup</p>
+          <h2 className="mt-1 text-xl">Frame the battlefield</h2>
+        </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
           <div>
             <label htmlFor="map-environment" className="micro-label block mb-1">
@@ -231,14 +254,14 @@ function MapsBuilder() {
               min={10}
               max={40}
               value={width}
-              onChange={e => setWidth(Number(e.target.value))}
+              onChange={e => setWidth(clampDimension(Number(e.target.value), 10, 40, 24))}
               className="w-full"
             />
-            <div className="flex gap-1 mt-1">
+            <div className="segmented-control mt-2" role="group" aria-label="Common map widths">
               {[16, 24, 32].map(w => (
                 <button key={w} type="button" onClick={() => setWidth(w)}
                   aria-pressed={width === w}
-                  className={`text-xs px-2 py-0.5 rounded ${width === w ? 'bg-[var(--bronze)] text-[#1d1105]' : 'bg-[var(--steel-800)] text-[var(--text-2)]'}`}
+                  className="segmented-option"
                 >{w}</button>
               ))}
             </div>
@@ -253,14 +276,14 @@ function MapsBuilder() {
               min={10}
               max={30}
               value={height}
-              onChange={e => setHeight(Number(e.target.value))}
+              onChange={e => setHeight(clampDimension(Number(e.target.value), 10, 30, 18))}
               className="w-full"
             />
-            <div className="flex gap-1 mt-1">
+            <div className="segmented-control mt-2" role="group" aria-label="Common map heights">
               {[12, 18, 24].map(h => (
                 <button key={h} type="button" onClick={() => setHeight(h)}
                   aria-pressed={height === h}
-                  className={`text-xs px-2 py-0.5 rounded ${height === h ? 'bg-[var(--bronze)] text-[#1d1105]' : 'bg-[var(--steel-800)] text-[var(--text-2)]'}`}
+                  className="segmented-option"
                 >{h}</button>
               ))}
             </div>
@@ -322,16 +345,13 @@ function MapsBuilder() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-3 border-t border-[var(--line-subtle)] pt-4">
           <button type="button" onClick={handleGenerate} className="btn-primary text-lg">
-            Generate Map
+            {map ? 'Generate a New Map' : 'Generate Map'}
           </button>
           <ResetGeneratorButton onReset={handleReset} label="Reset Generator" />
           {map && (
             <>
-              <button type="button" onClick={handleGenerate} className="btn-secondary">
-                Regenerate
-              </button>
               <button type="button" onClick={handleShare} className="btn-secondary">
                 {linkCopied ? 'Copied ✓' : 'Share Link'}
               </button>
@@ -370,6 +390,16 @@ function MapsBuilder() {
         </div>
       )}
 
+      {!map && (
+        <div className="empty-state print:hidden">
+          <p className="micro-label">Battlefield preview</p>
+          <h2 className="mt-2 text-xl">Your next map starts with six choices</h2>
+          <p className="mx-auto mt-2 max-w-lg text-sm text-[var(--text-3)]">
+            Choose an environment and scale above. Terrain, cover, hazards, and routes are generated locally in your browser.
+          </p>
+        </div>
+      )}
+
       {/* Map History (persists across visits) */}
       {history.length > 0 && !(history.length === 1 && map?.id === history[0].id) && (
         <div className="mt-6 print:hidden">
@@ -380,6 +410,7 @@ function MapsBuilder() {
                 key={m.id}
                 type="button"
                 onClick={() => setMap(m)}
+                aria-pressed={map?.id === m.id}
                 className={`card text-left text-sm ${map?.id === m.id ? 'border-[var(--bronze)]' : ''}`}
               >
                 <div className="font-bold text-[var(--text-1)]">{m.name}</div>
