@@ -6,8 +6,8 @@
 
 - **ID:** `cultist`
 - **Stat profile:** CR 0.125; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -73,8 +73,8 @@ A compact hooded cultist advances through a ruined cellar shrine with an iron ri
 
 - **ID:** `flying-snake`
 - **Stat profile:** CR 0.125; Tiny Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -140,8 +140,8 @@ A tiny emerald-and-copper flying snake banks through a jungle gap on two feather
 
 - **ID:** `giant-crab`
 - **Stat profile:** CR 0.125; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -207,8 +207,8 @@ A giant red-brown crab braces in shallow surf with two massive pincers spread wi
 
 - **ID:** `giant-rat`
 - **Stat profile:** CR 0.125; Small Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -274,8 +274,8 @@ A terrier-sized brown giant rat creeps over sewer rubble with its thick naked ta
 
 - **ID:** `giant-weasel`
 - **Stat profile:** CR 0.125; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -341,8 +341,8 @@ A wolf-long chestnut giant weasel flows over a mossy log in a stretched running 
 
 - **ID:** `goblin-minion`
 - **Stat profile:** CR 0.125; Small Fey (goblinoid)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -408,8 +408,8 @@ A wiry green goblin minion darts from behind a ruined stone with a dagger held c
 
 - **ID:** `guard`
 - **Stat profile:** CR 0.125; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -476,8 +476,8 @@ A compact town guard holds a gateway with a round shield forward and a plain spe
 
 - **ID:** `kobold-warrior`
 - **Stat profile:** CR 0.125; Small Dragon
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -544,8 +544,8 @@ A small russet-scaled kobold warrior crouches in a mine passage with dagger pois
 
 - **ID:** `mastiff`
 - **Stat profile:** CR 0.125; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -611,8 +611,8 @@ A powerful brindled mastiff steps forward barking in a lamplit stable courtyard.
 
 - **ID:** `merfolk-skirmisher`
 - **Stat profile:** CR 0.125; Medium Elemental
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -681,8 +681,8 @@ A sea-green merfolk skirmisher turns through a kelp channel with a cold-glowing 
 
 - **ID:** `mule`
 - **Stat profile:** CR 0.125; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -749,8 +749,8 @@ A dun pack mule climbs a rocky hill trail with long ears forward and balanced ca
 
 - **ID:** `noble`
 - **Stat profile:** CR 0.125; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -818,8 +818,8 @@ A compact noble in a navy travel coat holds a slender rapier in a poised manor c
 
 - **ID:** `pony`
 - **Stat profile:** CR 0.125; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -885,8 +885,8 @@ A sturdy chestnut pony trots across a green paddock with its thick cream mane li
 
 - **ID:** `stirge`
 - **Stat profile:** CR 0.125; Tiny Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -953,8 +953,8 @@ A bat-sized stirge approaches on two veined wings with four pincer-tipped legs o
 
 - **ID:** `venomous-snake`
 - **Stat profile:** CR 0.125; Tiny Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1020,8 +1020,8 @@ A small olive viper coils in woodland leaves with its triangular head raised and
 
 - **ID:** `warrior-infantry`
 - **Stat profile:** CR 0.125; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1089,8 +1089,8 @@ A compact infantry warrior braces behind a tall wooden shield with a plain spear
 
 - **ID:** `animated-flying-sword`
 - **Stat profile:** CR 0.25; Small Construct
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1157,8 +1157,8 @@ An unsupported steel sword darts through a dark armory with faint blue runes glo
 
 - **ID:** `axe-beak`
 - **Stat profile:** CR 0.25; Large Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1224,8 +1224,8 @@ A towering rust-black axe beak charges across grassland on two legs with its hug
 
 - **ID:** `blink-dog`
 - **Stat profile:** CR 0.25; Medium Fey
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1291,8 +1291,8 @@ A golden blink dog reappears in a running bound on a forest path with a pale aft
 
 - **ID:** `boar`
 - **Stat profile:** CR 0.25; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1358,8 +1358,8 @@ A dark bristled wild boar charges across wet forest earth with curved tusks lowe
 
 - **ID:** `constrictor-snake`
 - **Stat profile:** CR 0.25; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1425,8 +1425,8 @@ A large olive-and-brown constrictor coils around a mossy trunk with its broad he
 
 - **ID:** `draft-horse`
 - **Stat profile:** CR 0.25; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1493,8 +1493,8 @@ A powerful dark bay draft horse leans into a plain work harness on a muddy villa
 
 - **ID:** `dretch`
 - **Stat profile:** CR 0.25; Small Fiend (demon)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1561,8 +1561,8 @@ A squat gray-green dretch hunches over cracked stone as yellowish fetid vapor ga
 
 - **ID:** `elk`
 - **Stat profile:** CR 0.25; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1628,8 +1628,8 @@ A large russet elk drives through a mountain meadow with its broad antler rack l
 
 - **ID:** `giant-badger`
 - **Stat profile:** CR 0.25; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1695,8 +1695,8 @@ A boar-sized striped giant badger bursts from a forest bank with one massive dig
 
 - **ID:** `giant-bat`
 - **Stat profile:** CR 0.25; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1762,8 +1762,8 @@ A horse-sized charcoal giant bat sweeps through a cavern on broad veined wings w
 
 - **ID:** `giant-centipede`
 - **Stat profile:** CR 0.25; Small Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1829,8 +1829,8 @@ A man-long rust-black giant centipede curves across a wet cave wall on dozens of
 
 - **ID:** `giant-frog`
 - **Stat profile:** CR 0.25; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1896,8 +1896,8 @@ A wolf-sized mottled giant frog leaps from a swamp bank with webbed feet spread 
 
 - **ID:** `giant-lizard`
 - **Stat profile:** CR 0.25; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
