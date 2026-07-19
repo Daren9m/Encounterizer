@@ -222,6 +222,30 @@ export interface MapCell {
   label?: string;
 }
 
+export type MapFeatureDensity = 'Sparse' | 'Balanced' | 'Dense';
+export type MapTerrainVariety = 'Focused' | 'Varied' | 'Wild';
+
+export type MapRoomTag =
+  | 'spawn:party' | 'spawn:monster' | 'boss'
+  | 'entrance' | 'exit' | 'treasure' | 'trap' | 'hazard' | 'landmark';
+
+export interface MapRoom {
+  /** 1-based display number, stable for a given seed. */
+  id: number;
+  name: string;
+  /** One-line DM note on what this space is for. */
+  purpose: string;
+  /** 1–2 sentence boxed text to read to players. */
+  readAloud: string;
+  /** BSP rect | irregular cave region | outdoor band. */
+  kind: 'room' | 'chamber' | 'zone';
+  bounds: { x: number; y: number; w: number; h: number };
+  /** Cell indices (y * width + x) for irregular regions; omitted when the
+   *  bounding box is exact. */
+  cells?: number[];
+  tags: MapRoomTag[];
+}
+
 export interface EncounterMap {
   id: string;
   name: string;
@@ -229,6 +253,15 @@ export interface EncounterMap {
   height: number;
   environment: Environment;
   grid: MapCell[][];
+  // The fields below arrived with the map overhaul — optional so maps
+  // persisted before it (history, saved encounters) keep loading.
+  seed?: number;
+  rooms?: MapRoom[];
+  genOptions?: {
+    featureDensity: MapFeatureDensity;
+    terrainVariety: MapTerrainVariety;
+    roomCount?: number;
+  };
 }
 
 // ─── Encounter ───────────────────────────────────────────────────

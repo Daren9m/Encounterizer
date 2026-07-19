@@ -1,12 +1,29 @@
-import { EncounterMap, MapCell, TerrainType, Environment } from './types';
+import type {
+  EncounterMap, MapCell, MapFeatureDensity, MapRoom, MapRoomTag,
+  MapTerrainVariety, TerrainType, Environment,
+} from './types';
 import { seededRandom } from './random';
+import { FLAVOR_STREAM_SALT, flavorRooms, type MapStructure } from './map-flavor';
 
 // ─── Procedural Map Generator ────────────────────────────────────
-// Uses BSP (Binary Space Partition) for dungeon rooms and
-// cellular automata for organic cave/outdoor maps.
+// BSP (Binary Space Partition) dungeons, cellular-automata caves,
+// and outdoor scatter fields, tuned per environment.
+//
+// FROZEN GRID DRAW ORDER — shareable ?seed= links replay the grid
+// stream, so the rng draw sequence below is a compatibility contract
+// (like the generator registry order in noncombat/generate.ts).
+// Per map: (1) structure coin flip (Mountain only), (2) layout — BSP
+// splits + room carving + corridors / CA fill + smoothing / outdoor
+// scatter + river, (3) feature scatter (caves scatter BEFORE
+// connectivity so hazards can never sever the map), (4) doors
+// (dungeons), (5) entrance/exit/stairs. Connectivity enforcement,
+// chamber detection, zone building, and room tagging draw NOTHING.
+// Room flavor draws from a SEPARATE stream (see map-flavor.ts), and
+// token placement (token-placement.ts) from a third — neither can
+// shift the grid. Change the order above only with a versioning plan
+// for existing links; the grid-hash tests pin it.
 
-export type MapFeatureDensity = 'Sparse' | 'Balanced' | 'Dense';
-export type MapTerrainVariety = 'Focused' | 'Varied' | 'Wild';
+export type { MapFeatureDensity, MapTerrainVariety } from './types';
 
 export interface MapOptions {
   width?: number;
@@ -30,10 +47,53 @@ const DENSITY_MULTIPLIER: Record<MapFeatureDensity, number> = {
   Dense: 1.75,
 };
 
+/** Terrain no creature can occupy or walk through. */
+export const IMPASSABLE_TERRAIN: ReadonlySet<TerrainType> = new Set([
+  'wall', 'pillar', 'chasm', 'lava',
+]);
+
+const isPassable = (t: TerrainType) => !IMPASSABLE_TERRAIN.has(t);
+
 function createGrid(w: number, h: number, fill: TerrainType): MapCell[][] {
   return Array.from({ length: h }, () =>
     Array.from({ length: w }, () => ({ terrain: fill }))
   );
+}
+
+/** Room data before flavor: geometry and tags only. */
+interface ProtoRoom {
+  kind: MapRoom['kind'];
+  bounds: Rect;
+  cells?: number[];
+  tags: MapRoomTag[];
+}
+
+interface GenResult {
+  grid: MapCell[][];
+  rooms: ProtoRoom[];
+}
+
+/** Zone of passable cells within Chebyshev distance 2 of a marker cell —
+ *  the fallback spawn area when no real room exists for a role. */
+function zoneAround(
+  grid: MapCell[][], cx: number, cy: number, w: number, h: number, tags: MapRoomTag[],
+): ProtoRoom {
+  const cells: number[] = [];
+  let minX = cx, minY = cy, maxX = cx, maxY = cy;
+  for (let y = Math.max(0, cy - 2); y <= Math.min(h - 1, cy + 2); y++) {
+    for (let x = Math.max(0, cx - 2); x <= Math.min(w - 1, cx + 2); x++) {
+      if (!isPassable(grid[y][x].terrain)) continue;
+      cells.push(y * w + x);
+      minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+    }
+  }
+  return {
+    kind: 'zone',
+    bounds: { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 },
+    cells,
+    tags,
+  };
 }
 
 // ─── BSP Dungeon Generator ───────────────────────────────────────
@@ -42,26 +102,44 @@ interface Rect {
   x: number; y: number; w: number; h: number;
 }
 
-function splitBSP(rect: Rect, minSize: number, rng: () => number): Rect[] {
-  if (rect.w < minSize * 2 && rect.h < minSize * 2) return [rect];
+/** Split the largest splittable partition until `target` partitions exist
+ *  (or nothing can split at `minSize`). Partition selection is
+ *  deterministic; only split axis ties and positions draw from the rng. */
+function splitBSPTarget(rect: Rect, minSize: number, target: number, rng: () => number): Rect[] {
+  const parts: Rect[] = [rect];
+  while (parts.length < target) {
+    let best = -1;
+    let bestArea = 0;
+    for (let i = 0; i < parts.length; i++) {
+      const p = parts[i];
+      if (p.w < minSize * 2 && p.h < minSize * 2) continue;
+      const area = p.w * p.h;
+      if (area > bestArea) { bestArea = area; best = i; }
+    }
+    if (best < 0) break;
 
-  const splitH = rect.w > rect.h ? false : rect.h > rect.w ? true : rng() > 0.5;
+    const p = parts[best];
+    const canH = p.h >= minSize * 2;
+    const canV = p.w >= minSize * 2;
+    const splitH = canH && canV
+      ? (p.h > p.w ? true : p.w > p.h ? false : rng() > 0.5)
+      : canH;
 
-  if (splitH && rect.h >= minSize * 2) {
-    const split = minSize + Math.floor(rng() * (rect.h - minSize * 2));
-    return [
-      ...splitBSP({ x: rect.x, y: rect.y, w: rect.w, h: split }, minSize, rng),
-      ...splitBSP({ x: rect.x, y: rect.y + split, w: rect.w, h: rect.h - split }, minSize, rng),
-    ];
-  } else if (!splitH && rect.w >= minSize * 2) {
-    const split = minSize + Math.floor(rng() * (rect.w - minSize * 2));
-    return [
-      ...splitBSP({ x: rect.x, y: rect.y, w: split, h: rect.h }, minSize, rng),
-      ...splitBSP({ x: rect.x + split, y: rect.y, w: rect.w - split, h: rect.h }, minSize, rng),
-    ];
+    if (splitH) {
+      const split = minSize + Math.floor(rng() * (p.h - minSize * 2 + 1));
+      parts.splice(best, 1,
+        { x: p.x, y: p.y, w: p.w, h: split },
+        { x: p.x, y: p.y + split, w: p.w, h: p.h - split },
+      );
+    } else {
+      const split = minSize + Math.floor(rng() * (p.w - minSize * 2 + 1));
+      parts.splice(best, 1,
+        { x: p.x, y: p.y, w: split, h: p.h },
+        { x: p.x + split, y: p.y, w: p.w - split, h: p.h },
+      );
+    }
   }
-
-  return [rect];
+  return parts;
 }
 
 function carveRoom(grid: MapCell[][], rect: Rect, rng: () => number): Rect {
@@ -121,20 +199,33 @@ function carveCorridor(grid: MapCell[][], from: Rect, to: Rect, rng: () => numbe
   }
 }
 
+/** Place a stairs cell on the first plain-floor neighbor of a marker. */
+function placeStairsNear(grid: MapCell[][], cx: number, cy: number, label: string) {
+  for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]] as const) {
+    const cell = grid[cy + dy]?.[cx + dx];
+    if (cell?.terrain === 'floor') {
+      cell.terrain = 'stairs';
+      cell.label = label;
+      return;
+    }
+  }
+}
+
 function generateDungeon(
   w: number,
   h: number,
   rng: () => number,
   featureDensity: MapFeatureDensity,
   terrainVariety: MapTerrainVariety,
-): MapCell[][] {
+  roomCount: number,
+): GenResult {
   const grid = createGrid(w, h, 'wall');
-  const partitions = splitBSP({ x: 1, y: 1, w: w - 2, h: h - 2 }, 5, rng);
-  const rooms = partitions.map(p => carveRoom(grid, p, rng));
+  const partitions = splitBSPTarget({ x: 1, y: 1, w: w - 2, h: h - 2 }, 5, roomCount, rng);
+  const rects = partitions.map(p => carveRoom(grid, p, rng));
 
   // Connect adjacent rooms
-  for (let i = 1; i < rooms.length; i++) {
-    carveCorridor(grid, rooms[i - 1], rooms[i], rng);
+  for (let i = 1; i < rects.length; i++) {
+    carveCorridor(grid, rects[i - 1], rects[i], rng);
   }
 
   // Add doors at corridor-room junctions (heuristic)
@@ -154,20 +245,53 @@ function generateDungeon(
     }
   }
 
-  // Place entrance and exit
-  if (rooms.length >= 2) {
-    const entrance = rooms[0];
-    const exit = rooms[rooms.length - 1];
-    grid[Math.floor(entrance.y + entrance.h / 2)][Math.floor(entrance.x + entrance.w / 2)] = {
-      terrain: 'entrance', label: 'Entrance',
-    };
-    grid[Math.floor(exit.y + exit.h / 2)][Math.floor(exit.x + exit.w / 2)] = {
-      terrain: 'exit', label: 'Exit',
-    };
+  // Entrance, exit, and connecting stairs
+  const roomTags: Set<MapRoomTag>[] = rects.map(() => new Set());
+  let entranceX: number, entranceY: number, exitX: number, exitY: number;
+  if (rects.length >= 2) {
+    const entrance = rects[0];
+    const exit = rects[rects.length - 1];
+    entranceX = Math.floor(entrance.x + entrance.w / 2);
+    entranceY = Math.floor(entrance.y + entrance.h / 2);
+    exitX = Math.floor(exit.x + exit.w / 2);
+    exitY = Math.floor(exit.y + exit.h / 2);
+    roomTags[rects.length - 1].add('exit');
+    roomTags[rects.length - 1].add('spawn:monster');
+  } else {
+    // Degenerate single-room map: opposite corners of the one room.
+    const only = rects[0];
+    entranceX = only.x;
+    entranceY = only.y;
+    exitX = Math.min(w - 1, only.x + only.w - 1);
+    exitY = Math.min(h - 1, only.y + only.h - 1);
+  }
+  roomTags[0].add('entrance');
+  roomTags[0].add('spawn:party');
+  grid[entranceY][entranceX] = { terrain: 'entrance', label: 'Entrance' };
+  grid[exitY][exitX] = { terrain: 'exit', label: 'Exit' };
+  placeStairsNear(grid, entranceX, entranceY, 'Stairs Up');
+  placeStairsNear(grid, exitX, exitY, 'Stairs Down');
+
+  // Boss room: largest carved room that is not the entrance; the far
+  // half of the room chain belongs to the defenders.
+  if (rects.length >= 2) {
+    let bossIdx = -1;
+    let bossArea = 0;
+    for (let i = 1; i < rects.length; i++) {
+      const area = rects[i].w * rects[i].h;
+      if (area > bossArea) { bossArea = area; bossIdx = i; }
+    }
+    if (bossIdx >= 0) {
+      roomTags[bossIdx].add('boss');
+      roomTags[bossIdx].add('spawn:monster');
+    }
+    for (let i = Math.ceil(rects.length / 2); i < rects.length; i++) {
+      roomTags[i].add('spawn:monster');
+    }
   }
 
   // Scatter features
-  for (const room of rooms) {
+  rects.forEach((room, i) => {
     if (rng() < 0.3 * DENSITY_MULTIPLIER[featureDensity]) {
       const px = room.x + 1 + Math.floor(rng() * Math.max(1, room.w - 2));
       const py = room.y + 1 + Math.floor(rng() * Math.max(1, room.h - 2));
@@ -183,6 +307,7 @@ function generateDungeon(
       const ty = room.y + Math.floor(rng() * room.h);
       if (ty < h && tx < w && grid[ty][tx].terrain === 'floor') {
         grid[ty][tx] = { terrain: 'trap', label: 'Trap' };
+        roomTags[i].add('trap');
       }
     }
     if (rng() < 0.2 * DENSITY_MULTIPLIER[featureDensity]) {
@@ -190,11 +315,23 @@ function generateDungeon(
       const ty = room.y + Math.floor(rng() * room.h);
       if (ty < h && tx < w && grid[ty][tx].terrain === 'floor') {
         grid[ty][tx] = { terrain: 'treasure', label: 'Treasure' };
+        roomTags[i].add('treasure');
       }
     }
+  });
+
+  const rooms: ProtoRoom[] = rects.map((r, i) => ({
+    kind: 'room',
+    bounds: r,
+    tags: [...roomTags[i]],
+  }));
+
+  // A one-room dungeon still needs somewhere for the opposition.
+  if (!rooms.some(r => r.tags.includes('spawn:monster'))) {
+    rooms.push(zoneAround(grid, exitX, exitY, w, h, ['exit', 'spawn:monster']));
   }
 
-  return grid;
+  return { grid, rooms };
 }
 
 // ─── Cellular Automata (Caves / Organic) ─────────────────────────
@@ -202,10 +339,11 @@ function generateDungeon(
 function generateCave(
   w: number,
   h: number,
+  env: Environment,
   rng: () => number,
   featureDensity: MapFeatureDensity,
   terrainVariety: MapTerrainVariety,
-): MapCell[][] {
+): GenResult {
   let grid = createGrid(w, h, 'wall');
 
   // Random fill (45% floor)
@@ -233,31 +371,202 @@ function generateCave(
     grid = next;
   }
 
-  // Place entrance/exit on floor tiles
+  // Feature scatter BEFORE connectivity: hazards (lava) count as
+  // impassable, so carving connectivity afterwards guarantees the kept
+  // component is traversable no matter where hazards landed.
+  const caveFeatures: TerrainType[] = terrainVariety === 'Focused'
+    ? ['rubble']
+    : terrainVariety === 'Varied'
+      ? ['rubble', 'difficult']
+      : env === 'Planar' || env === 'Mountain'
+        ? ['rubble', 'difficult', 'water', 'lava']
+        : ['rubble', 'difficult', 'water'];
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      if (grid[y][x].terrain !== 'floor') continue;
+      if (rng() < FEATURE_CHANCE[featureDensity] * 0.6) {
+        grid[y][x].terrain = caveFeatures[Math.floor(rng() * caveFeatures.length)];
+      }
+    }
+  }
+
+  // Connectivity: keep only the largest open component (no rng draws).
+  const idx = (x: number, y: number) => y * w + x;
+  const componentOf = new Int32Array(w * h).fill(-1);
+  const componentSizes: number[] = [];
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (componentOf[idx(x, y)] !== -1 || !isPassable(grid[y][x].terrain)) continue;
+      const component = componentSizes.length;
+      let size = 0;
+      const stack = [[x, y]];
+      componentOf[idx(x, y)] = component;
+      while (stack.length > 0) {
+        const [px, py] = stack.pop()!;
+        size++;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+          const nx = px + dx;
+          const ny = py + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+          if (componentOf[idx(nx, ny)] !== -1 || !isPassable(grid[ny][nx].terrain)) continue;
+          componentOf[idx(nx, ny)] = component;
+          stack.push([nx, ny]);
+        }
+      }
+      componentSizes.push(size);
+    }
+  }
+  let largest = 0;
+  for (let i = 1; i < componentSizes.length; i++) {
+    if (componentSizes[i] > componentSizes[largest]) largest = i;
+  }
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const c = componentOf[idx(x, y)];
+      if (c !== -1 && c !== largest) grid[y][x].terrain = 'wall';
+    }
+  }
+
+  // Safety net for degenerate automata output: carve an open block.
+  if (componentSizes.length === 0 || componentSizes[largest] < 4) {
+    const cx = Math.floor(w / 2);
+    const cy = Math.floor(h / 2);
+    for (let y = cy - 2; y <= cy + 2; y++) {
+      for (let x = cx - 2; x <= cx + 2; x++) {
+        grid[y][x].terrain = 'floor';
+      }
+    }
+  }
+
+  // Entrance/exit on the first/last plain floor cells of the component.
   const floors: [number, number][] = [];
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       if (grid[y][x].terrain === 'floor') floors.push([y, x]);
     }
   }
-
   if (floors.length >= 2) {
     const [ey, ex] = floors[0];
     grid[ey][ex] = { terrain: 'entrance', label: 'Entrance' };
     const [xy, xx] = floors[floors.length - 1];
     grid[xy][xx] = { terrain: 'exit', label: 'Exit' };
   }
+  const entranceCell = floors.length >= 2 ? idx(floors[0][1], floors[0][0]) : -1;
+  const exitCell = floors.length >= 2 ? idx(floors[floors.length - 1][1], floors[floors.length - 1][0]) : -1;
 
-  const caveFeatures: TerrainType[] = terrainVariety === 'Focused'
-    ? ['rubble']
-    : terrainVariety === 'Varied' ? ['rubble', 'difficult'] : ['rubble', 'difficult', 'water'];
-  for (const [y, x] of floors.slice(1, -1)) {
-    if (grid[y][x].terrain === 'floor' && rng() < FEATURE_CHANCE[featureDensity] * 0.6) {
-      grid[y][x].terrain = caveFeatures[Math.floor(rng() * caveFeatures.length)];
+  // Chamber detection (no rng draws): cores are open cells whose whole
+  // 3x3 neighborhood is open; core regions of 6+ cells become chambers.
+  const isOpen = (x: number, y: number) =>
+    x >= 0 && y >= 0 && x < w && y < h && isPassable(grid[y][x].terrain);
+  const isCore = (x: number, y: number) => {
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if (!isOpen(x + dx, y + dy)) return false;
+      }
+    }
+    return true;
+  };
+  const chamberOf = new Int32Array(w * h).fill(-1);
+  const chambers: number[][] = [];
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (chamberOf[idx(x, y)] !== -1 || !isCore(x, y)) continue;
+      const cells: number[] = [];
+      const stack = [[x, y]];
+      chamberOf[idx(x, y)] = chambers.length;
+      while (stack.length > 0) {
+        const [px, py] = stack.pop()!;
+        cells.push(idx(px, py));
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+          const nx = px + dx;
+          const ny = py + dy;
+          if (!isCore(nx, ny) || chamberOf[idx(nx, ny)] !== -1) continue;
+          chamberOf[idx(nx, ny)] = chambers.length;
+          stack.push([nx, ny]);
+        }
+      }
+      if (cells.length >= 6) chambers.push(cells.sort((a, b) => a - b));
     }
   }
 
-  return grid;
+  // Tag chambers: entrance chamber hosts the party; distant chambers and
+  // the largest chamber host the opposition.
+  const rooms: ProtoRoom[] = chambers.map(cells => {
+    let minX = w, minY = h, maxX = 0, maxY = 0;
+    for (const cell of cells) {
+      const x = cell % w;
+      const y = Math.floor(cell / w);
+      minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+    }
+    return {
+      kind: 'chamber' as const,
+      bounds: { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 },
+      cells,
+      tags: [] as MapRoomTag[],
+    };
+  });
+
+  const entranceRoom = entranceCell >= 0
+    ? rooms.find(r => r.cells!.includes(entranceCell))
+    : undefined;
+  if (entranceRoom) {
+    entranceRoom.tags.push('entrance', 'spawn:party');
+  } else if (entranceCell >= 0) {
+    rooms.unshift(zoneAround(
+      grid, entranceCell % w, Math.floor(entranceCell / w), w, h, ['entrance', 'spawn:party'],
+    ));
+  }
+
+  // BFS distances from the entrance over passable cells.
+  if (entranceCell >= 0) {
+    const dist = new Int32Array(w * h).fill(-1);
+    dist[entranceCell] = 0;
+    let frontier = [entranceCell];
+    let maxDist = 0;
+    while (frontier.length > 0) {
+      const next: number[] = [];
+      for (const cell of frontier) {
+        const x = cell % w;
+        const y = Math.floor(cell / w);
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if (!isOpen(nx, ny) || dist[idx(nx, ny)] !== -1) continue;
+          dist[idx(nx, ny)] = dist[cell] + 1;
+          maxDist = Math.max(maxDist, dist[cell] + 1);
+          next.push(idx(nx, ny));
+        }
+      }
+      frontier = next;
+    }
+
+    let bossRoom: ProtoRoom | undefined;
+    let bossSize = 0;
+    for (const room of rooms) {
+      if (room === entranceRoom || !room.cells) continue;
+      const roomDist = Math.min(...room.cells.map(c => (dist[c] === -1 ? Infinity : dist[c])));
+      if (roomDist !== Infinity && roomDist >= 0.6 * maxDist) {
+        room.tags.push('spawn:monster');
+      }
+      if (room.cells.length > bossSize) {
+        bossSize = room.cells.length;
+        bossRoom = room;
+      }
+    }
+    if (bossRoom) {
+      if (!bossRoom.tags.includes('spawn:monster')) bossRoom.tags.push('spawn:monster');
+      bossRoom.tags.push('boss');
+    }
+  }
+
+  if (!rooms.some(r => r.tags.includes('spawn:monster')) && exitCell >= 0) {
+    rooms.push(zoneAround(
+      grid, exitCell % w, Math.floor(exitCell / w), w, h, ['exit', 'spawn:monster'],
+    ));
+  }
+
+  return { grid, rooms };
 }
 
 // ─── Outdoor / Arena Maps ────────────────────────────────────────
@@ -269,7 +578,7 @@ function generateOutdoor(
   rng: () => number,
   featureDensity: MapFeatureDensity,
   terrainVariety: MapTerrainVariety,
-): MapCell[][] {
+): GenResult {
   const grid = createGrid(w, h, 'floor');
 
   // Scatter environment-appropriate features
@@ -304,14 +613,21 @@ function generateOutdoor(
   }
 
   // Add a water feature for some environments
+  const riverCells: number[] = [];
   const riverChance = featureDensity === 'Sparse' ? 0.25 : featureDensity === 'Dense' ? 0.85 : 0.6;
   if (['Swamp', 'Coastal', 'Forest'].includes(env) && rng() < riverChance) {
     const riverY = Math.floor(h * 0.3 + rng() * h * 0.4);
     for (let x = 0; x < w; x++) {
       const wobble = Math.floor(Math.sin(x * 0.5) * 2);
       const ry = riverY + wobble;
-      if (ry >= 0 && ry < h) grid[ry][x].terrain = 'water';
-      if (ry + 1 < h) grid[ry + 1][x].terrain = 'water';
+      if (ry >= 0 && ry < h) {
+        grid[ry][x].terrain = 'water';
+        riverCells.push(ry * w + x);
+      }
+      if (ry + 1 < h) {
+        grid[ry + 1][x].terrain = 'water';
+        riverCells.push((ry + 1) * w + x);
+      }
       if (rng() < 0.15 && ry >= 0 && ry < h) {
         grid[ry][x] = { terrain: 'bridge', label: 'Bridge' };
       }
@@ -321,7 +637,53 @@ function generateOutdoor(
   // Place entrance
   grid[h - 1][Math.floor(w / 2)] = { terrain: 'entrance', label: 'Party Start' };
 
-  return grid;
+  // Zones (no rng draws): approach band, opposition band, densest
+  // feature cluster, and the river when one was carved.
+  const rooms: ProtoRoom[] = [
+    { kind: 'zone', bounds: { x: 0, y: h - 3, w, h: 3 }, tags: ['entrance', 'spawn:party'] },
+    { kind: 'zone', bounds: { x: 0, y: 0, w, h: 3 }, tags: ['spawn:monster'] },
+  ];
+
+  let bestCount = 0;
+  let bestX = 0;
+  let bestY = 0;
+  for (let y = 3; y <= h - 8; y++) {
+    for (let x = 0; x <= w - 5; x++) {
+      let count = 0;
+      for (let dy = 0; dy < 5; dy++) {
+        for (let dx = 0; dx < 5; dx++) {
+          const t = grid[y + dy][x + dx].terrain;
+          if (t !== 'floor' && t !== 'entrance') count++;
+        }
+      }
+      if (count > bestCount) { bestCount = count; bestX = x; bestY = y; }
+    }
+  }
+  if (bestCount >= 5) {
+    rooms.push({
+      kind: 'zone',
+      bounds: { x: bestX, y: bestY, w: 5, h: 5 },
+      tags: ['landmark', 'spawn:monster'],
+    });
+  }
+
+  if (riverCells.length > 0) {
+    let minX = w, minY = h, maxX = 0, maxY = 0;
+    for (const cell of riverCells) {
+      const x = cell % w;
+      const y = Math.floor(cell / w);
+      minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+    }
+    rooms.push({
+      kind: 'zone',
+      bounds: { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 },
+      cells: riverCells,
+      tags: ['landmark', 'hazard'],
+    });
+  }
+
+  return { grid, rooms };
 }
 
 // ─── Public API ──────────────────────────────────────────────────
@@ -339,29 +701,45 @@ export function generateMap(options: MapOptions): EncounterMap {
   const rng = seededRandom(seed);
   const w = Math.max(10, Math.min(40, width));
   const h = Math.max(10, Math.min(30, height));
+  const requestedRooms = options.roomCount !== undefined
+    ? Math.max(3, Math.min(14, Math.round(options.roomCount)))
+    : undefined;
+  const roomCount = requestedRooms ?? Math.max(4, Math.min(12, Math.round((w * h) / 55)));
 
-  let grid: MapCell[][];
+  let result: GenResult;
   let name: string;
+  let structure: MapStructure;
 
   // Choose generation strategy based on environment
   switch (environment) {
     case 'Underdark':
-      grid = generateCave(w, h, rng, featureDensity, terrainVariety);
+      result = generateCave(w, h, environment, rng, featureDensity, terrainVariety);
       name = 'Underdark Cavern';
+      structure = 'cave';
       break;
-    case 'Mountain':
-      grid = rng() < 0.5
-        ? generateCave(w, h, rng, featureDensity, terrainVariety)
-        : generateOutdoor(w, h, environment, rng, featureDensity, terrainVariety);
-      name = rng() < 0.5 ? 'Mountain Cave' : 'Mountain Pass';
+    case 'Mountain': {
+      // One draw decides both the grid and the name.
+      const isCave = rng() < 0.5;
+      if (isCave) {
+        result = generateCave(w, h, environment, rng, featureDensity, terrainVariety);
+        name = 'Mountain Cave';
+        structure = 'cave';
+      } else {
+        result = generateOutdoor(w, h, environment, rng, featureDensity, terrainVariety);
+        name = 'Mountain Pass';
+        structure = 'outdoor';
+      }
       break;
+    }
     case 'Urban':
-      grid = generateDungeon(w, h, rng, featureDensity, terrainVariety);
+      result = generateDungeon(w, h, rng, featureDensity, terrainVariety, roomCount);
       name = 'City Ruins';
+      structure = 'dungeon';
       break;
     case 'Planar':
-      grid = generateCave(w, h, rng, featureDensity, terrainVariety);
+      result = generateCave(w, h, environment, rng, featureDensity, terrainVariety);
       name = 'Planar Rift';
+      structure = 'cave';
       break;
     case 'Forest':
     case 'Grassland':
@@ -371,13 +749,28 @@ export function generateMap(options: MapOptions): EncounterMap {
     case 'Coastal':
     case 'Swamp':
     case 'Underwater':
-      grid = generateOutdoor(w, h, environment, rng, featureDensity, terrainVariety);
+      result = generateOutdoor(w, h, environment, rng, featureDensity, terrainVariety);
       name = `${environment} Battlefield`;
+      structure = 'outdoor';
       break;
     default:
-      grid = generateDungeon(w, h, rng, featureDensity, terrainVariety);
+      result = generateDungeon(w, h, rng, featureDensity, terrainVariety, roomCount);
       name = 'Dungeon';
+      structure = 'dungeon';
   }
+
+  const rooms: MapRoom[] = result.rooms.map((proto, i) => ({
+    id: i + 1,
+    name: '',
+    purpose: '',
+    readAloud: '',
+    kind: proto.kind,
+    bounds: proto.bounds,
+    ...(proto.cells ? { cells: proto.cells } : {}),
+    tags: proto.tags,
+  }));
+  const flavorRng = seededRandom((seed ^ FLAVOR_STREAM_SALT) & 0x7fffffff);
+  flavorRooms(rooms, environment, structure, flavorRng);
 
   return {
     id: `map-${seed}`,
@@ -385,7 +778,14 @@ export function generateMap(options: MapOptions): EncounterMap {
     width: w,
     height: h,
     environment,
-    grid,
+    grid: result.grid,
+    seed,
+    rooms,
+    genOptions: {
+      featureDensity,
+      terrainVariety,
+      ...(requestedRooms !== undefined ? { roomCount: requestedRooms } : {}),
+    },
   };
 }
 
