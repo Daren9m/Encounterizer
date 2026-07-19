@@ -9,7 +9,8 @@ import { exploration, TIER_GUIDANCE } from '../challenge-frameworks/exploration'
 import { trap, COUNTERMEASURE_STEPS } from '../challenge-frameworks/trap';
 import { chase, buildChase } from '../challenge-frameworks/chase';
 import { investigation, buildClueWeb } from '../challenge-frameworks/investigation';
-import { LEVERAGE } from '../../data/noncombat-cast';
+import { LEVERAGE, PERSONAS } from '../../data/noncombat-cast';
+import { cap } from '../noncombat/theming';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
   return {
@@ -89,12 +90,12 @@ describe('social framework (spec §8.2)', () => {
     expect(six.situation.match(/Side NPC/g)?.length).toBe(3);
     expect(six.attitudeTrack).toBeDefined();
   });
-  it('deterministic and carries persona texture into the read-aloud', () => {
+  it('deterministic and carries persona texture into the situation', () => {
     const a = social.generate({ levers: mkLevers('Hard', 21), rng: seededRandom(21) });
     const b = social.generate({ levers: mkLevers('Hard', 21), rng: seededRandom(21) });
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
-    expect(a.readAloud).toMatch(/Their speech: /);
-    expect(a.readAloud).toMatch(/Their tell: /);
+    expect(a.situation).toMatch(/Voice: /);
+    expect(a.situation).toMatch(/Tell: /);
     expect(a.readAloud).not.toMatch(/\bThey [a-z]+s\b/); // no third-person-singular after "They"
   });
   it('social outcomes never deal hit-point damage', () => {
@@ -109,6 +110,20 @@ describe('social framework (spec §8.2)', () => {
       const wants = [...out.situation.matchAll(/wants:? (.+?)\./g)].map(m => m[1]);
       expect(wants.length).toBeGreaterThanOrEqual(2);
       expect(new Set(wants).size).toBe(wants.length);
+    }
+  });
+  it('the tell and voice are DM-side only — read-aloud stays in-world', () => {
+    for (const seed of [7, 31, 104729]) {
+      const out = social.generate({ levers: mkLevers('Medium', seed), rng: seededRandom(seed) });
+      const persona = PERSONAS.find(p => out.readAloud.includes(cap(p.archetype).slice(0, 12)));
+      expect(persona).toBeTruthy();
+      expect(out.readAloud).not.toContain(persona!.quirk);
+      expect(out.readAloud).not.toContain(persona!.speech);
+      expect(out.readAloud).not.toMatch(/Their (speech|tell):/);
+      expect(out.situation).toContain(`Voice: ${persona!.speech}`);
+      expect(out.situation).toContain(`Tell: ${persona!.quirk}`);
+      // The Insight check still pays the tell off:
+      expect(out.skillChecks.some(s => s.skill === 'Insight' && s.onSuccess.includes(persona!.quirk))).toBe(true);
     }
   });
 });

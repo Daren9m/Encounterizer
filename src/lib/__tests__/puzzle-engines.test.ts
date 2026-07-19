@@ -335,4 +335,37 @@ describe('contests & gauntlets', () => {
     expect(set.stages).toHaveLength(3);
     expect(set.dmBrief).toContain('4 rounds');
   });
+  it('player surfaces tease, never solve (in-world artifact rule)', () => {
+    for (const seed of [4, 11, 209580]) {
+      const out = gauntlets.generate({ levers: mkLevers('Hard', seed, { timeBudget: 'set-piece' }), rng: seededRandom(seed) });
+      const player = `${out.readAloud}\n${out.handout?.kind === 'text' ? `${out.handout.title}\n${out.handout.body}` : ''}`;
+      // No mechanics or instructions on player surfaces:
+      expect(player).not.toMatch(/Escape:/);
+      expect(player).not.toMatch(/Phase [2-9]/);
+      expect(player).not.toMatch(/\b(Athletics|Acrobatics|Investigation|Perception|Survival|Sleight of Hand|Constitution)\b/);
+      expect(player).not.toMatch(/DC ?\d/);
+      // The handout is a first-hazard-only diegetic warning. NOTE:
+      // filter() returns data order — sort by dmBrief position to
+      // recover the SELECTION order before naming "first" and "later".
+      const hazards = GAUNTLET_HAZARDS.filter(h => out.dmBrief.includes(h.name))
+        .sort((a, b) => out.dmBrief.indexOf(a.name) - out.dmBrief.indexOf(b.name));
+      expect(hazards.length).toBe(3);
+      const later = hazards.slice(1);
+      for (const h of later) expect(out.handout && 'body' in out.handout ? out.handout.body : '').not.toContain(h.name);
+      // The omen gestures at the way out. slice(1) skips the first
+      // character — readAloud embeds cap(omen), so char 0 differs.
+      expect(out.readAloud).toContain(hazards[0].omen.slice(1));
+      // DM brief keeps the full mechanics:
+      expect(out.dmBrief).toMatch(/Escape:/);
+    }
+  });
+  it('every hazard has an omen that is a clean lowercase fragment', () => {
+    for (const h of GAUNTLET_HAZARDS) {
+      expect(h.omen, h.name).toBeTruthy();
+      expect(h.omen, h.name).not.toMatch(/\bDC\b|\d+d\d+/);
+      expect(h.omen[0], h.name).toBe(h.omen[0].toLowerCase());
+      expect(h.omen.endsWith('.'), h.name).toBe(false);
+      expect(h.omen, h.name).not.toMatch(/\b(Athletics|Acrobatics|Investigation|Perception|Survival|Constitution)\b/);
+    }
+  });
 });
