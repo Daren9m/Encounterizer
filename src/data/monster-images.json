@@ -13,6 +13,10 @@
       "src": "/images/monsters/animated-flying-sword.webp",
       "alt": "An unsupported steel sword darts through a dark armory with faint blue runes glowing along its blade."
     },
+    "ape": {
+      "src": "/images/monsters/ape.webp",
+      "alt": "A muscular charcoal ape braces in a forest clearing with one long arm drawn back around a stone."
+    },
     "awakened-shrub": {
       "src": "/images/monsters/awakened-shrub.webp",
       "alt": "A small awakened shrub scuttles across a woodland floor on tangled roots with thorny branches raised."
@@ -37,6 +41,10 @@
       "src": "/images/monsters/bat.webp",
       "alt": "A small charcoal-brown bat banks through the moonlit mouth of a limestone cave."
     },
+    "black-bear": {
+      "src": "/images/monsters/black-bear.webp",
+      "alt": "A glossy black bear climbs headfirst down a broad forest tree with curved foreclaws anchored."
+    },
     "blink-dog": {
       "src": "/images/monsters/blink-dog.webp",
       "alt": "A golden blink dog reappears in a running bound on a forest path with a pale afterimage behind it."
@@ -57,6 +65,10 @@
       "src": "/images/monsters/cat.webp",
       "alt": "A lean gray tabby cat pauses on a garden wall with one paw raised and green-gold eyes alert."
     },
+    "cockatrice": {
+      "src": "/images/monsters/cockatrice.webp",
+      "alt": "A rooster-headed cockatrice flares two leathery wings above its scaled body and long lizard tail."
+    },
     "commoner": {
       "src": "/images/monsters/commoner.webp",
       "alt": "A compact adult commoner in patched work clothes holds a plain wooden club defensively in a farmyard."
@@ -73,9 +85,17 @@
       "src": "/images/monsters/crab.webp",
       "alt": "A mottled shore crab scuttles sideways over a wet tide-pool rock with one pincer raised."
     },
+    "crocodile": {
+      "src": "/images/monsters/crocodile.webp",
+      "alt": "A large olive crocodile surges from a swamp channel with armored back, jaws open, and water spraying."
+    },
     "cultist": {
       "src": "/images/monsters/cultist.webp",
       "alt": "A compact hooded cultist advances through a ruined cellar shrine with an iron ritual sickle."
+    },
+    "darkmantle": {
+      "src": "/images/monsters/darkmantle.webp",
+      "alt": "A charcoal darkmantle drops from a cavern ceiling with its broad mantle spread and eight tentacles open."
     },
     "deer": {
       "src": "/images/monsters/deer.webp",
@@ -88,6 +108,10 @@
     "dretch": {
       "src": "/images/monsters/dretch.webp",
       "alt": "A squat gray-green dretch hunches over cracked stone as yellowish fetid vapor gathers around it."
+    },
+    "dust-mephit": {
+      "src": "/images/monsters/dust-mephit.webp",
+      "alt": "A small gray dust mephit hovers in a ruined hall while blasting a cone of blinding grit."
     },
     "eagle": {
       "src": "/images/monsters/eagle.webp",
@@ -145,17 +169,45 @@
       "src": "/images/monsters/giant-frog.webp",
       "alt": "A wolf-sized mottled giant frog leaps from a swamp bank with webbed feet spread and mouth open."
     },
+    "giant-goat": {
+      "src": "/images/monsters/giant-goat.webp",
+      "alt": "A horse-sized pale giant goat charges down a mountain ledge with huge ridged horns lowered."
+    },
     "giant-lizard": {
       "src": "/images/monsters/giant-lizard.webp",
       "alt": "A massive olive giant lizard clings diagonally to an overgrown ruin wall on four clawed feet."
+    },
+    "giant-owl": {
+      "src": "/images/monsters/giant-owl.webp",
+      "alt": "A great cream-and-tawny celestial owl glides over a snowy forest clearing with silver eyes forward."
     },
     "giant-rat": {
       "src": "/images/monsters/giant-rat.webp",
       "alt": "A terrier-sized brown giant rat creeps over sewer rubble with its thick naked tail curved behind it."
     },
+    "giant-seahorse": {
+      "src": "/images/monsters/giant-seahorse.webp",
+      "alt": "A horse-sized blue-green giant seahorse charges upright through a clear underwater canyon."
+    },
+    "giant-venomous-snake": {
+      "src": "/images/monsters/giant-venomous-snake.webp",
+      "alt": "A man-long emerald giant viper strikes from a jungle-floor coil with two long fangs exposed."
+    },
+    "giant-wasp": {
+      "src": "/images/monsters/giant-wasp.webp",
+      "alt": "A man-sized yellow-and-black giant wasp banks through a clearing on four clear wings with stinger lowered."
+    },
     "giant-weasel": {
       "src": "/images/monsters/giant-weasel.webp",
       "alt": "A wolf-long chestnut giant weasel flows over a mossy log in a stretched running bound."
+    },
+    "giant-wolf-spider": {
+      "src": "/images/monsters/giant-wolf-spider.webp",
+      "alt": "A man-sized hairy wolf spider stalks across a rocky crevice on eight stout legs."
+    },
+    "gnoll-warrior": {
+      "src": "/images/monsters/gnoll-warrior.webp",
+      "alt": "A spotted hyena-headed gnoll warrior braces on a scrubland ridge while drawing a pale bone bow."
     },
     "goat": {
       "src": "/images/monsters/goat.webp",
@@ -168,6 +220,14 @@
     "goblin-warrior": {
       "src": "/images/monsters/goblin-warrior.webp",
       "alt": "A small green-skinned goblin warrior crouches on a forest path with scimitar drawn and shortbow ready."
+    },
+    "gray-ooze": {
+      "src": "/images/monsters/gray-ooze.webp",
+      "alt": "A translucent gray ooze creeps down a cavern wall, extending one pseudopod toward rusted metal."
+    },
+    "grimlock": {
+      "src": "/images/monsters/grimlock.webp",
+      "alt": "An eyeless gray grimlock turns toward a cavern sound with a heavy bone cudgel raised."
     },
     "guard": {
       "src": "/images/monsters/guard.webp",
@@ -233,6 +293,10 @@
       "src": "/images/monsters/owlbear.webp",
       "alt": "A huge brown owlbear lunges through a forest, its owl face and feathered mantle rising from a bear body."
     },
+    "panther": {
+      "src": "/images/monsters/panther.webp",
+      "alt": "A sleek black panther climbs down a mossy branch, faint rosettes visible around its yellow-green eyes."
+    },
     "piranha": {
       "src": "/images/monsters/piranha.webp",
       "alt": "A silver piranha with a red belly turns through dark river water, triangular teeth visible."
@@ -240,6 +304,18 @@
     "pony": {
       "src": "/images/monsters/pony.webp",
       "alt": "A sturdy chestnut pony trots across a green paddock with its thick cream mane lifting."
+    },
+    "priest-acolyte": {
+      "src": "/images/monsters/priest-acolyte.webp",
+      "alt": "A compact priest acolyte in simple vestments holds an iron mace while golden radiance gathers in one hand."
+    },
+    "pseudodragon": {
+      "src": "/images/monsters/pseudodragon.webp",
+      "alt": "A cat-sized russet pseudodragon perches on a stone rail with two wings open and stinger tail arched."
+    },
+    "pteranodon": {
+      "src": "/images/monsters/pteranodon.webp",
+      "alt": "A tawny pteranodon banks beside a sea cliff on immense leathery wings, long crest streaming behind."
     },
     "rat": {
       "src": "/images/monsters/rat.webp",
@@ -253,6 +329,10 @@
       "src": "/images/monsters/red-dragon-wyrmling.webp",
       "alt": "A juvenile red dragon crouches on volcanic rock, wings spread and smoke curling from its jaws."
     },
+    "riding-horse": {
+      "src": "/images/monsters/riding-horse.webp",
+      "alt": "A saddled bay riding horse canters along a grassland trail with black mane and reins lifted."
+    },
     "scorpion": {
       "src": "/images/monsters/scorpion.webp",
       "alt": "A sand-colored scorpion raises its segmented tail and spreads two pincers on a desert stone."
@@ -265,17 +345,45 @@
       "src": "/images/monsters/shrieker-fungus.webp",
       "alt": "A pale shrieker fungus opens its quivering purple-gray cap in a damp subterranean cavern."
     },
+    "skeleton": {
+      "src": "/images/monsters/skeleton.webp",
+      "alt": "An animated humanoid skeleton advances through a ruin with shortsword raised and shortbow on its back."
+    },
     "spider": {
       "src": "/images/monsters/spider.webp",
       "alt": "A tiny brown spider hangs beneath a silver web strand with eight legs spread toward a vibration."
+    },
+    "sprite": {
+      "src": "/images/monsters/sprite.webp",
+      "alt": "A hand-high sprite hovers beside a fern on transparent wings with a needle sword and tiny bow."
+    },
+    "steam-mephit": {
+      "src": "/images/monsters/steam-mephit.webp",
+      "alt": "A small pale steam mephit hovers in a wet grotto with two wings spread and scalding mist at its jaws."
     },
     "stirge": {
       "src": "/images/monsters/stirge.webp",
       "alt": "A bat-sized stirge approaches on two veined wings with four pincer-tipped legs open and a long proboscis forward."
     },
+    "swarm-of-bats": {
+      "src": "/images/monsters/swarm-of-bats.webp",
+      "alt": "Dozens of small brown bats spiral from a cave in a broad coordinated swarm."
+    },
+    "swarm-of-rats": {
+      "src": "/images/monsters/swarm-of-rats.webp",
+      "alt": "Scores of brown and gray rats pour around a damp dungeon corner in a low packed swarm."
+    },
+    "swarm-of-ravens": {
+      "src": "/images/monsters/swarm-of-ravens.webp",
+      "alt": "A loud swarm of glossy black ravens spirals above a marsh ruin with many beaks open."
+    },
     "venomous-snake": {
       "src": "/images/monsters/venomous-snake.webp",
       "alt": "A small olive viper coils in woodland leaves with its triangular head raised and fangs visible."
+    },
+    "violet-fungus": {
+      "src": "/images/monsters/violet-fungus.webp",
+      "alt": "A violet mushroom creature lashes four long tendrils from its rooted base in a damp cavern."
     },
     "vulture": {
       "src": "/images/monsters/vulture.webp",
@@ -288,6 +396,14 @@
     "weasel": {
       "src": "/images/monsters/weasel.webp",
       "alt": "A slender chestnut weasel rises beside a tree root with forepaws tucked and nose lifted."
+    },
+    "wolf": {
+      "src": "/images/monsters/wolf.webp",
+      "alt": "A lean gray wolf trots along a snowy forest edge with amber eyes fixed ahead."
+    },
+    "zombie": {
+      "src": "/images/monsters/zombie.webp",
+      "alt": "A pallid zombie in torn clothes lurches down an abandoned village lane with one rigid hand reaching."
     }
   }
 }
