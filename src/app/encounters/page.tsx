@@ -30,6 +30,7 @@ import PartySetupPanel from '@/components/PartySetupPanel';
 import BattleReportCard from '@/components/BattleReportCard';
 import PrintButton from '@/components/PrintButton';
 import ResetGeneratorButton from '@/components/ResetGeneratorButton';
+import ToolPageHeader from '@/components/ToolPageHeader';
 import { simulateBattle } from '@/lib/battle-sim';
 import { monsterToSimMonster } from '@/lib/monster-to-sim';
 import {
@@ -322,7 +323,12 @@ function EncounterBuilder() {
     setShowPartySetup(true);
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
-        partySetupRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        partySetupRef.current?.scrollIntoView({
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            ? 'instant' as ScrollBehavior
+            : 'smooth',
+          block: 'start',
+        });
         partySetupRef.current?.focus({ preventScroll: true });
       });
     });
@@ -612,10 +618,25 @@ function EncounterBuilder() {
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-3xl mb-6">Encounter Builder</h1>
+      <ToolPageHeader
+        path="/encounters"
+        description="Set the party, shape the battlefield, and generate a balanced encounter using the 2024 rules—then forecast how it is likely to play out."
+      />
+      <p className="sr-only" aria-live="polite">
+        {encounter ? `${encounter.name} ready with ${summary.monsterCount} creatures.` : ''}
+      </p>
 
       {/* Controls */}
-      <div className="card mb-6 print:hidden">
+      <div className="card panel-accent mb-6 print:hidden">
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="micro-label">Encounter setup</p>
+            <h2 className="mt-1 text-xl">Shape the fight</h2>
+          </div>
+          <span className="text-sm text-[var(--text-3)]">
+            {partySize} heroes · level {partyLevel} · {difficulty}
+          </span>
+        </div>
         <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div>
             <label htmlFor="enc-party-size" className="micro-label block mb-1">
@@ -708,97 +729,109 @@ function EncounterBuilder() {
           totalXp={summary.totalXp}
         />
 
-        <div className="flex flex-wrap items-center gap-3 mt-4">
-          <button type="button" onClick={handleGenerate} className="btn-primary text-lg">
-            Auto-Generate
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowManualAdd(!showManualAdd)}
-            aria-expanded={showManualAdd}
-            className="btn-ghost"
-          >
-            {showManualAdd ? 'Hide' : 'Add Monsters Manually'}
-          </button>
-          <label className="flex items-center gap-2 cursor-pointer text-sm">
-            <input
-              type="checkbox" checked={includeMap}
-              onChange={e => setIncludeMap(e.target.checked)}
-              className="accent-[var(--bronze)]"
-            />
-            Include Map
-          </label>
-          <button
-            type="button"
-            onClick={() => setShowFilters(!showFilters)}
-            aria-expanded={showFilters}
-            className="btn-ghost text-sm"
-          >
-            {showFilters ? 'Hide' : 'Show'} Monster Filters
-          </button>
-          <ResetGeneratorButton onReset={handleReset} label="Reset Builder" />
-          {encounter && (
-            <button type="button" onClick={handleExport} className="btn-secondary text-sm">
-              Export JSON
+        <div className="mt-5 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="button" onClick={handleGenerate} className="btn-primary text-base sm:text-lg">
+              {encounter ? 'Generate a New Encounter' : 'Generate Encounter'}
             </button>
-          )}
-          {encounter && <PrintButton label="Print Encounter" />}
-          {encounter && encounter.monsters.length > 0 && (
-            savingName === null ? (
-              <button
-                type="button"
-                onClick={() => setSavingName(encounter.name)}
-                className="btn-secondary text-sm"
-              >
-                Save
-              </button>
-            ) : (
-              <span className="flex items-center gap-1">
-                <label htmlFor="save-encounter-name" className="sr-only">
-                  Name for this saved encounter
-                </label>
-                <input
-                  id="save-encounter-name"
-                  type="text"
-                  className="text-sm w-44"
-                  value={savingName}
-                  autoFocus
-                  onChange={(e) => setSavingName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSaveEncounter();
-                    if (e.key === 'Escape') setSavingName(null);
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handleSaveEncounter}
-                  className="btn-primary text-sm inline-flex items-center"
-                  aria-label="Save encounter"
-                >
-                  <Check size={16} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSavingName(null)}
-                  className="btn-secondary text-sm inline-flex items-center"
-                  aria-label="Cancel saving"
-                >
-                  <X size={16} aria-hidden="true" />
-                </button>
-              </span>
-            )
-          )}
-          {encounter && isSeeded && (
             <button
               type="button"
-              onClick={handleCopyLink}
-              className="btn-secondary text-sm"
-              title="Anyone opening this link regenerates this exact encounter (with the built-in bestiary)"
+              onClick={() => setShowManualAdd(!showManualAdd)}
+              aria-expanded={showManualAdd}
+              className="btn-ghost"
             >
-              {linkCopied ? 'Copied!' : 'Copy Link'}
+              {showManualAdd ? 'Hide Manual Add' : 'Add Monsters Manually'}
             </button>
-          )}
+            <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-2 text-sm text-[var(--text-2)]">
+              <input
+                type="checkbox" checked={includeMap}
+                onChange={e => setIncludeMap(e.target.checked)}
+              />
+              Include battle map
+            </label>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilters(!showFilters)}
+              aria-expanded={showFilters}
+              className="btn-ghost text-sm"
+            >
+              {showFilters ? 'Hide' : 'Show'} Monster Filters
+            </button>
+            <ResetGeneratorButton onReset={handleReset} label="Reset Builder" />
+          </div>
         </div>
+
+        {encounter && (
+          <div className="mt-4 flex flex-col gap-3 border-t border-[var(--line-subtle)] pt-4 sm:flex-row sm:items-center">
+            <span className="micro-label shrink-0">Current encounter</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={handleExport} className="btn-secondary text-sm">
+                Export JSON
+              </button>
+              <PrintButton label="Print Encounter" />
+              {encounter.monsters.length > 0 && (
+                savingName === null ? (
+                  <button
+                    type="button"
+                    onClick={() => setSavingName(encounter.name)}
+                    className="btn-secondary text-sm"
+                  >
+                    Save Encounter
+                  </button>
+                ) : (
+                  <span className="flex flex-wrap items-center gap-1">
+                    <label htmlFor="save-encounter-name" className="sr-only">
+                      Name for this saved encounter
+                    </label>
+                    <input
+                      id="save-encounter-name"
+                      type="text"
+                      className="w-44 text-sm"
+                      value={savingName}
+                      autoFocus
+                      onChange={(e) => setSavingName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveEncounter();
+                        if (e.key === 'Escape') setSavingName(null);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveEncounter}
+                      className="btn-primary text-sm"
+                      aria-label="Save encounter"
+                    >
+                      <Check size={16} aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSavingName(null)}
+                      className="btn-secondary text-sm"
+                      aria-label="Cancel saving"
+                    >
+                      <X size={16} aria-hidden="true" />
+                    </button>
+                  </span>
+                )
+              )}
+              {isSeeded && (
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="btn-secondary text-sm"
+                  aria-describedby="share-link-description"
+                >
+                  {linkCopied ? 'Link Copied' : 'Copy Share Link'}
+                </button>
+              )}
+              <span id="share-link-description" className="sr-only">
+                The link recreates this encounter using the built-in bestiary.
+              </span>
+            </div>
+          </div>
+        )}
 
         {showFilters && (
           <div className="mt-4 animate-fade-in">
@@ -880,12 +913,25 @@ function EncounterBuilder() {
         </div>
       )}
 
+      {!encounter && !showManualAdd && (
+        <div className="empty-state print:hidden">
+          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--bronze-wash)] text-[var(--bronze)]">
+            <Swords size={22} aria-hidden="true" />
+          </div>
+          <p className="micro-label">Encounter workspace</p>
+          <h2 className="mt-2 text-xl">The table is ready for a threat</h2>
+          <p className="mx-auto mt-2 max-w-lg text-sm text-[var(--text-3)]">
+            Generate a balanced roster above, or add monsters manually to tune the fight yourself.
+          </p>
+        </div>
+      )}
+
       {/* Results */}
       {encounter && encounter.monsters.length > 0 && (
         <div className="animate-fade-in space-y-6">
           {/* Encounter Header */}
           <div className="card">
-            <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="mb-3 flex flex-col items-start justify-between gap-3 sm:flex-row">
               {editingDetails ? (
                 <>
                   <label htmlFor="encounter-name" className="sr-only">Encounter name</label>
@@ -901,7 +947,7 @@ function EncounterBuilder() {
               ) : (
                 <h2 className="text-2xl">{encounter.name}</h2>
               )}
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
                 {summary.assessment && <DifficultyBadge difficulty={summary.assessment} />}
                 <button
                   type="button"
@@ -1024,40 +1070,40 @@ function EncounterBuilder() {
             <div className="space-y-3">
               {encounter.monsters.map(em => (
                 <div key={em.monster.id}>
-                  <div className="flex items-center justify-between p-3 rounded bg-[var(--steel-950)]">
+                  <div className="flex flex-col gap-3 rounded-lg bg-[var(--steel-950)] p-3 sm:flex-row sm:items-center sm:justify-between">
                     <button
                       type="button"
                       onClick={() => setExpandedMonster(
                         expandedMonster === em.monster.id ? null : em.monster.id
                       )}
                       aria-expanded={expandedMonster === em.monster.id}
-                      className="flex items-center gap-3 text-left flex-1 hover:text-[var(--bronze-light)] transition-colors"
+                      className="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:text-[var(--bronze-light)]"
                     >
                       <span className="bg-[var(--steel-800)] text-[var(--bronze)] rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
                         {em.count}x
                       </span>
-                      <div>
-                        <span className="font-bold">{em.monster.name}</span>
-                        <span className="text-sm text-[var(--text-2)] ml-2">
+                      <div className="min-w-0">
+                        <span className="block truncate font-bold sm:inline">{em.monster.name}</span>
+                        <span className="block text-sm text-[var(--text-2)] sm:ml-2 sm:inline">
                           CR {crDisplay(em.monster.challengeRating)} | AC {em.monster.armor.ac} | {em.monster.hitPoints} HP each
                         </span>
                       </div>
                     </button>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between gap-2 sm:justify-end">
                       <span className="xp-capsule text-xs" title={`${(em.monster.xp * em.count).toLocaleString()} XP rules value`}>
                         {(em.monster.hitPoints * em.count).toLocaleString()} total HP
                       </span>
                       <button
                         type="button"
                         onClick={() => handleAddMonster(em.monster)}
-                        className="w-7 h-7 rounded-md bg-[var(--steel-800)] hover:bg-[var(--steel-700)] text-[var(--bronze)] print:hidden inline-flex items-center justify-center transition-colors"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--steel-800)] text-[var(--bronze)] transition-colors hover:bg-[var(--steel-700)] print:hidden"
                         title="Add one more"
                         aria-label={`Add one more ${em.monster.name}`}
                       ><Plus size={16} aria-hidden="true" /></button>
                       <button
                         type="button"
                         onClick={() => handleRemoveMonster(em.monster.id)}
-                        className="w-7 h-7 rounded-md bg-[var(--steel-800)] hover:bg-[var(--steel-700)] text-[var(--accent-danger)] print:hidden inline-flex items-center justify-center transition-colors"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--steel-800)] text-[var(--accent-danger)] transition-colors hover:bg-[var(--steel-700)] print:hidden"
                         title="Remove one"
                         aria-label={`Remove one ${em.monster.name}`}
                       ><Minus size={16} aria-hidden="true" /></button>
