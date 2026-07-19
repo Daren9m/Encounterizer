@@ -42,6 +42,11 @@ export const contests: PuzzleFamily = {
       estimatedMinutes: estimatedMinutes(levers.timeBudget),
       dmBrief,
       readAloud: `${cap(pick(pack.sensory, rng))}. On ${withArticle(pick(pack.materials, rng))} floor, the crowd presses in around ${contest.flavor}, ready to watch this round of ${contest.name}. Coin already changes hands.`,
+      handout: {
+        kind: 'text',
+        title: 'The House Rules',
+        body: `${contest.name}. Best of ${rounds} — take ${winThreshold} and the wager is yours.\nTonight's challenger: ${contest.flavor}.\nAll wagers posted before the first round. The house arbitrates; the house is final.`,
+      },
       hints: allHints.slice(0, hintCount(levers.timeBudget)),
       solution: `Roll opposed ${contest.skill} checks each round (challenger +${bonus}); the first side to win ${winThreshold} of ${rounds} rounds takes it. ${sides.length > 0 ? `Successful side events grant advantage on one round each: ${sides.map(s => `${s.role} (${s.skill})`).join('; ')}.` : 'No side events are available this time — it is a straight duel.'}`,
       failureConsequence: failureText(levers, rng, { kind: 'recurring', context: `Losing the ${contest.name.toLowerCase()} costs the wager and standing in front of the whole crowd.` }),
