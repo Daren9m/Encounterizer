@@ -6,8 +6,8 @@
 
 - **ID:** `drider`
 - **Stat profile:** CR 6; Large Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -77,8 +77,8 @@ A pale drider clings to an Underdark wall on eight black spider legs while gathe
 
 - **ID:** `invisible-stalker`
 - **Stat profile:** CR 6; Large Elemental
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -148,8 +148,8 @@ A nearly invisible stalker crosses a rainy rooftop, outlined only by warped air,
 
 - **ID:** `mage`
 - **Stat profile:** CR 6; Small Humanoid (wizard)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -219,8 +219,8 @@ A compact robed mage casts blue-white bolts of force in a ruined observatory.
 
 - **ID:** `mammoth`
 - **Stat profile:** CR 6; Huge Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -291,8 +291,8 @@ A shaggy mammoth charges across an arctic steppe with huge curved tusks and snow
 
 - **ID:** `medusa`
 - **Stat profile:** CR 6; Medium Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -362,8 +362,8 @@ A snake-haired medusa turns in a ruined desert sanctuary while projecting a pale
 
 - **ID:** `pirate-captain`
 - **Stat profile:** CR 6; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -433,8 +433,8 @@ A compact pirate captain braces on a stormy deck with rapier drawn and a flintlo
 
 - **ID:** `vrock`
 - **Stat profile:** CR 6; Large Fiend (demon)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -504,8 +504,8 @@ A ragged-winged vrock lands on a blasted crag, shrieking as dark spores shake fr
 
 - **ID:** `wyvern`
 - **Stat profile:** CR 6; Large Dragon
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -575,8 +575,8 @@ A two-legged wyvern dives through a mountain ravine with wings spread and venomo
 
 - **ID:** `young-brass-dragon`
 - **Stat profile:** CR 6; Large Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -647,8 +647,8 @@ A young brass dragon bursts from a desert dune with broad wings opening and fire
 
 - **ID:** `young-white-dragon`
 - **Stat profile:** CR 6; Large Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -719,8 +719,8 @@ A young white dragon clings to a fractured glacier as frost gathers around its o
 
 - **ID:** `giant-ape`
 - **Stat profile:** CR 7; Huge Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -790,8 +790,8 @@ A colossal dark-furred ape crouches on a forest outcrop with a huge boulder draw
 
 - **ID:** `oni`
 - **Stat profile:** CR 7; Large Fiend
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -862,8 +862,8 @@ A horned blue oni hovers above a moonlit path with indigo nightmare energy curli
 
 - **ID:** `shield-guardian`
 - **Stat profile:** CR 7; Large Construct
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -933,8 +933,8 @@ A towering shield guardian crosses its massive arms protectively in an arcane ar
 
 - **ID:** `stone-giant`
 - **Stat profile:** CR 7; Huge Giant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1004,8 +1004,8 @@ A lean slate-skinned stone giant draws back a boulder in a vast mountain cavern.
 
 - **ID:** `young-black-dragon`
 - **Stat profile:** CR 7; Large Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1076,8 +1076,8 @@ A young black dragon climbs from a swamp pool as smoking acid gathers along its 
 
 - **ID:** `young-copper-dragon`
 - **Stat profile:** CR 7; Large Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1148,8 +1148,8 @@ A young copper dragon clings to a sandstone bluff, verdigris touching its bright
 
 - **ID:** `assassin`
 - **Stat profile:** CR 8; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1219,8 +1219,8 @@ A compact hooded assassin lands silently in a dark courtyard with shortsword and
 
 - **ID:** `chain-devil`
 - **Stat profile:** CR 8; Medium Fiend (devil)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1290,8 +1290,8 @@ A scarred chain devil stands in an infernal prison as hooked black chains coil a
 
 - **ID:** `cloaker`
 - **Stat profile:** CR 8; Large Aberration
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1361,8 +1361,8 @@ A black manta-shaped cloaker drops from a cavern ceiling, exposing its ribbed un
 
 - **ID:** `frost-giant`
 - **Stat profile:** CR 8; Huge Giant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1433,8 +1433,8 @@ A pale-blue frost giant crosses a glacier carrying a huge rimed axe and giant bo
 
 - **ID:** `hezrou`
 - **Stat profile:** CR 8; Large Fiend (demon)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1504,8 +1504,8 @@ A hulking toad-faced hezrou lurches through a black planar marsh surrounded by f
 
 - **ID:** `hydra`
 - **Stat profile:** CR 8; Huge Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1576,8 +1576,8 @@ A five-headed hydra wades through a coastal marsh, its long necks striking in se
 
 - **ID:** `spirit-naga`
 - **Stat profile:** CR 8; Large Fiend
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1647,8 +1647,8 @@ A dark-scaled spirit naga rises from its coils in a buried shrine as violet necr
 
 - **ID:** `tyrannosaurus-rex`
 - **Stat profile:** CR 8; Huge Beast (dinosaur)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1718,8 +1718,8 @@ A huge olive-brown tyrannosaurus turns at a run with jaws open and long tail hel
 
 - **ID:** `young-bronze-dragon`
 - **Stat profile:** CR 8; Large Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1790,8 +1790,8 @@ A young bronze dragon climbs from stormy surf as blue-white lightning gathers be
 
 - **ID:** `young-green-dragon`
 - **Stat profile:** CR 8; Large Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1862,8 +1862,8 @@ A young green dragon coils among ancient roots while yellow-green poison mist dr
 
 - **ID:** `bone-devil`
 - **Stat profile:** CR 9; Large Fiend (devil)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1933,8 +1933,8 @@ A gaunt bone devil dives through an infernal canyon with its segmented venomous 
 
 - **ID:** `clay-golem`
 - **Stat profile:** CR 9; Large Construct
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -2004,8 +2004,8 @@ A massive terracotta clay golem raises both fists in an abandoned courtyard, aci
 
 - **ID:** `cloud-giant`
 - **Stat profile:** CR 9; Huge Giant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
