@@ -3,6 +3,8 @@
 [![CI](https://github.com/Daren9m/Encounterizer/actions/workflows/ci.yml/badge.svg)](https://github.com/Daren9m/Encounterizer/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-gold.svg)](LICENSE)
 
+![Encounterizer — Build the encounter. Know the odds. Run the room.](public/og.png)
+
 A free D&D 5.5e (2024 rules) toolkit for Dungeon Masters: build balanced
 encounters, forecast the battle before your party rolls initiative, and run
 the whole session — monsters, maps, puzzles, challenges, and spells in one
@@ -245,6 +247,12 @@ the full backlog. Highlights:
 - **Character Import** (#10) — Parse D&D Beyond links, PDFs, or sheet images into Battle Forecast parties
 - **Enhanced Export** (#15) — PDF stat blocks (map VTT export shipped with the Map Generator Overhaul)
 - **Battle Forecast Phase 2/3** — death saves, AoE modeling, save-or-suck conditions, "what if?" suggestions
+
+## Security
+
+Please report suspected vulnerabilities privately. See the
+[Security Policy](SECURITY.md) for supported versions, reporting instructions,
+and disclosure expectations.
 
 ## Licensing
 
