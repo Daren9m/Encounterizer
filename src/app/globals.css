@@ -51,6 +51,40 @@
   --shadow-float: 0 20px 60px rgba(0, 0, 0, 0.38);
 }
 
+html[data-theme='light'] {
+  --steel-950: #f3efe8;
+  --steel-900: #fcfaf6;
+  --steel-850: #eee8df;
+  --steel-800: #d9d0c4;
+  --steel-700: #a99b89;
+
+  --bronze: #965124;
+  --bronze-light: #7b3f1b;
+  --bronze-deep: #663216;
+  --bronze-wash: rgba(150, 81, 36, 0.1);
+
+  --text-1: #24211d;
+  --text-2: #514a42;
+  --text-3: #6b6258;
+
+  --surface-raised: rgba(252, 250, 246, 0.96);
+  --surface-inset: rgba(218, 208, 196, 0.36);
+  --line-subtle: rgba(36, 33, 29, 0.1);
+  --line-strong: rgba(36, 33, 29, 0.2);
+  --control-border: #8f8374;
+
+  --accent-danger: #a53238;
+  --accent-danger-light: #84242a;
+  --focus-ring: rgba(150, 81, 36, 0.3);
+  --difficulty-easy: #2f7b50;
+  --difficulty-medium: #806b10;
+  --difficulty-hard: #9b551d;
+  --difficulty-deadly: #a52f35;
+
+  --shadow-card: 0 12px 28px rgba(61, 49, 36, 0.1);
+  --shadow-float: 0 18px 48px rgba(61, 49, 36, 0.18);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -72,6 +106,15 @@ body {
   font-family: var(--font-body), 'IBM Plex Sans', system-ui, sans-serif;
   line-height: 1.55;
   text-rendering: optimizeLegibility;
+}
+
+html[data-theme='light'] body {
+  background-image:
+    radial-gradient(circle at 12% -8%, rgba(150, 81, 36, 0.08), transparent 30rem),
+    radial-gradient(circle at 88% 14%, rgba(91, 105, 132, 0.05), transparent 28rem),
+    linear-gradient(rgba(36, 33, 29, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(36, 33, 29, 0.025) 1px, transparent 1px);
+  color-scheme: light;
 }
 
 ::selection {
@@ -678,5 +721,16 @@ select optgroup {
 
   .animate-fade-in {
     animation: none;
+  }
+}
+
+@media print {
+  .player-handout-print .player-handout-hidden {
+    display: none !important;
+  }
+
+  .encounter-stat-block-page {
+    break-before: page;
+    page-break-before: always;
   }
 }

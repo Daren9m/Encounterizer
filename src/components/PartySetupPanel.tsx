@@ -8,6 +8,7 @@ import {
   CLASS_TEMPLATES,
   type ClassTemplate,
 } from '@/data/class-templates';
+import { importCharacterJson } from '@/lib/character-import';
 
 const ROLES: ClassTemplate['role'][] = ['Martial', 'Caster', 'Hybrid'];
 
@@ -69,15 +70,16 @@ export default function PartySetupPanel({
 }) {
   const [draft, setDraft] = useState<PartyMemberConfig[]>(members);
   const [customizing, setCustomizing] = useState<number | null>(null);
+  const [importMessage, setImportMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null);
 
   function updateMember(index: number, patch: Partial<PartyMemberConfig>) {
     setDraft((prev) => prev.map((m, i) => (i === index ? { ...m, ...patch } : m)));
   }
 
-  function updateOverride(
+  function updateOverride<K extends keyof NonNullable<PartyMemberConfig['overrides']>>(
     index: number,
-    key: keyof NonNullable<PartyMemberConfig['overrides']>,
-    value: number | undefined,
+    key: K,
+    value: NonNullable<PartyMemberConfig['overrides']>[K] | undefined,
   ) {
     setDraft((prev) =>
       prev.map((m, i) => {
@@ -88,6 +90,23 @@ export default function PartySetupPanel({
         return { ...m, overrides: Object.keys(overrides).length > 0 ? overrides : undefined };
       }),
     );
+  }
+
+  async function handleCharacterFile(file: File | undefined) {
+    if (!file) return;
+    const result = importCharacterJson(await file.text());
+    if (!result.ok) {
+      setImportMessage({ kind: 'error', text: result.error });
+      return;
+    }
+    setDraft((prev) => [...prev, result.member]);
+    setCustomizing(draft.length);
+    setImportMessage({
+      kind: 'info',
+      text: result.warnings.length > 0
+        ? `${result.member.name} imported. ${result.warnings.join(' ')}`
+        : `${result.member.name} imported. Review the values below before saving.`,
+    });
   }
 
   return (
@@ -179,6 +198,9 @@ export default function PartySetupPanel({
                 <OverrideField idSuffix={`${index}-attacks`} label="Attacks" value={member.overrides?.attacksPerRound} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).attacksPerRound} onChange={(v) => updateOverride(index, 'attacksPerRound', v)} />
                 <OverrideField idSuffix={`${index}-damage`} label="Dmg/Hit" value={member.overrides?.avgDamagePerHit} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).avgDamagePerHit} onChange={(v) => updateOverride(index, 'avgDamagePerHit', v)} />
                 <OverrideField idSuffix={`${index}-healing`} label="Heal/Rd" value={member.overrides?.healingPerRound} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).healingPerRound ?? 0} onChange={(v) => updateOverride(index, 'healingPerRound', v)} />
+                <OverrideField idSuffix={`${index}-dex-save`} label="DEX Save" value={member.overrides?.saveBonuses?.dex} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).saveBonuses.dex} onChange={(v) => updateOverride(index, 'saveBonuses', { ...buildSimPlayer(member, index).saveBonuses, dex: v ?? buildSimPlayer({ ...member, overrides: undefined }, index).saveBonuses.dex })} />
+                <OverrideField idSuffix={`${index}-con-save`} label="CON Save" value={member.overrides?.saveBonuses?.con} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).saveBonuses.con} onChange={(v) => updateOverride(index, 'saveBonuses', { ...buildSimPlayer(member, index).saveBonuses, con: v ?? buildSimPlayer({ ...member, overrides: undefined }, index).saveBonuses.con })} />
+                <OverrideField idSuffix={`${index}-wis-save`} label="WIS Save" value={member.overrides?.saveBonuses?.wis} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).saveBonuses.wis} onChange={(v) => updateOverride(index, 'saveBonuses', { ...buildSimPlayer(member, index).saveBonuses, wis: v ?? buildSimPlayer({ ...member, overrides: undefined }, index).saveBonuses.wis })} />
               </div>
             )}
           </div>
@@ -199,6 +221,18 @@ export default function PartySetupPanel({
           <Plus size={16} aria-hidden="true" />
           Add Player
         </button>
+        <label className="btn-secondary inline-flex min-h-11 cursor-pointer items-center text-sm">
+          Import Character JSON
+          <input
+            type="file"
+            accept="application/json,.json"
+            className="sr-only"
+            onChange={(event) => {
+              void handleCharacterFile(event.target.files?.[0]);
+              event.currentTarget.value = '';
+            }}
+          />
+        </label>
         <div className="flex-1" />
         <button type="button" className="btn-secondary text-sm" onClick={onCancel}>
           Cancel
@@ -212,6 +246,14 @@ export default function PartySetupPanel({
           Save &amp; Run Forecast
         </button>
       </div>
+      {importMessage && (
+        <p
+          className={`text-sm ${importMessage.kind === 'error' ? 'text-[var(--accent-danger)]' : 'text-[var(--text-2)]'}`}
+          role={importMessage.kind === 'error' ? 'alert' : 'status'}
+        >
+          {importMessage.text}
+        </p>
+      )}
     </div>
   );
 }

@@ -41,8 +41,27 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const themeScript = `(() => {
+    try {
+      const raw = localStorage.getItem('encounterizer:v1:theme');
+      const stored = raw ? JSON.parse(raw) : null;
+      const theme = stored === 'light' || stored === 'dark'
+        ? stored
+        : (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    } catch {
+      const theme = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    }
+  })();`;
+
   return (
-    <html lang="en" className={`${spectral.variable} ${plexSans.variable}`}>
+    <html lang="en" className={`${spectral.variable} ${plexSans.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="flex min-h-screen flex-col">
         <a
           href="#main-content"

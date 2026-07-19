@@ -41,7 +41,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "8 hours",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Choose up to three creatures within range.",
+    "effectSummary": "Increase the current and maximum HP of up to three creatures by 5 for 8 hours.",
     "upcast": "Each target's Hit Points increase by 5 for each spell slot level above 2.",
     "classes": [
       "Bard",
@@ -85,7 +85,7 @@ export const SPELLS_L2_3: Spell[] = [
     "concentration": false,
     "ritual": true,
     "saveType": "CHA",
-    "effectSummary": "A size=T of your choice that you can see within range must succeed on a Charisma saving throw, or it attempts to deliver a message for you (if the target's Challenge Rating isn't…",
+    "effectSummary": "Send a Tiny Beast to deliver a spoken message to a described recipient and location.",
     "upcast": "The spell's duration increases by 48 hours for each spell slot level above 2.",
     "classes": [
       "Bard",
@@ -106,7 +106,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Until dispelled",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a closed door, window, gate, container, or hatch and magically lock it for the duration.",
+    "effectSummary": "Magically lock a touched door, window, gate, container, or hatch; named creatures can open it normally.",
     "classes": [
       "Wizard"
     ],
@@ -124,7 +124,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "24 hours",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "With a touch, you place an illusion on a willing creature or an object that isn't being worn or carried.",
+    "effectSummary": "Make Divination magic read a creature or object as a chosen creature type, magical state, or alignment for 24 hours.",
     "classes": [
       "Wizard"
     ],
@@ -142,7 +142,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "You receive an omen from an otherworldly entity about the results of a course of action that you plan to take within the next 30 minutes.",
+    "effectSummary": "Ask about a course of action in the next 30 minutes and receive weal, woe, both, or nothing as an omen.",
     "classes": [
       "Cleric",
       "Druid",
@@ -162,7 +162,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a willing creature.",
+    "effectSummary": "A willing creature’s AC cannot be lower than 17 for the duration. Concentration.",
     "classes": [
       "Druid",
       "Ranger"
@@ -204,7 +204,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 minute",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "Your body becomes blurred.",
+    "effectSummary": "Attacks against you have Disadvantage unless the attacker ignores sight-based illusions. Concentration.",
     "classes": [
       "Sorcerer",
       "Wizard"
@@ -225,7 +225,7 @@ export const SPELLS_L2_3: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "CHA",
-    "effectSummary": "Each Humanoid in a 20-foot-radius Sphere centered on a point you choose within range must succeed on a Charisma saving throw or be affected by one of the following effects…",
+    "effectSummary": "Suppress Charmed or Frightened, or make affected Humanoids indifferent after failed CHA saves. Concentration.",
     "classes": [
       "Bard",
       "Cleric"
@@ -244,7 +244,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Until dispelled",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "A flame springs from an object that you touch.",
+    "effectSummary": "Create a heatless, permanent flame on a touched object; it can be covered but not smothered.",
     "classes": [
       "Cleric",
       "Druid",
@@ -265,7 +265,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "10 minutes",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "For the duration, magical Darkness spreads from a point within range and fills a 15-foot-radius Sphere.",
+    "effectSummary": "Fill a 15-ft-radius sphere with magical darkness that blocks Darkvision and nonmagical light. Concentration.",
     "classes": [
       "Sorcerer",
       "Warlock",
@@ -285,7 +285,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "8 hours",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "For the duration, a willing creature you touch has Darkvision with a range of 150 feet.",
+    "effectSummary": "Give a willing creature 150-ft Darkvision for 8 hours.",
     "classes": [
       "Druid",
       "Ranger",
@@ -307,7 +307,7 @@ export const SPELLS_L2_3: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "WIS",
-    "effectSummary": "You activate one of the effects below.",
+    "effectSummary": "Read surface thoughts, probe deeper after a WIS save, or detect thinking creatures nearby. Concentration.",
     "classes": [
       "Bard",
       "Sorcerer",
@@ -350,7 +350,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 hour",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You touch a creature and choose Strength, Dexterity, Intelligence, Wisdom, or Charisma.",
+    "effectSummary": "Grant Advantage on checks using one chosen ability and an additional benefit tied to that ability. Concentration.",
     "upcast": "You can target one additional creature for each spell slot level above 2. You can choose a different ability for each target.",
     "classes": [
       "Bard",
@@ -375,7 +375,7 @@ export const SPELLS_L2_3: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "CON",
-    "effectSummary": "For the duration, the spell enlarges or reduces a creature or an object you can see within range (see the chosen effect below).",
+    "effectSummary": "Increase or decrease a creature or object by one size category, with matching damage and check effects. Concentration.",
     "classes": [
       "Bard",
       "Druid",
@@ -397,7 +397,7 @@ export const SPELLS_L2_3: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "WIS",
-    "effectSummary": "You weave a distracting string of words, causing creatures of your choice that you can see within range to make a Wisdom saving throw.",
+    "effectSummary": "Creatures that fail a WIS save have Disadvantage on Perception checks to notice anyone other than you.",
     "classes": [
       "Bard",
       "Warlock"
@@ -416,7 +416,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You summon an otherworldly being that appears as a loyal steed in an unoccupied space of your choice within range.",
+    "effectSummary": "Summon a loyal celestial, fey, or fiend steed with a chosen supernatural benefit.",
     "upcast": "Use the spell slot's level for the spell's level in the stat block.",
     "classes": [
       "Paladin"
@@ -435,7 +435,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You sense any trap within range that is within line of sight.",
+    "effectSummary": "Sense the presence of traps in line of sight within range, though not their location.",
     "classes": [
       "Cleric",
       "Druid",
@@ -500,7 +500,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "10 days",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "You touch a corpse or other remains.",
+    "effectSummary": "Protect remains from decay and undeath for 10 days; that time does not count against resurrection limits.",
     "classes": [
       "Cleric",
       "Paladin",
@@ -521,7 +521,7 @@ export const SPELLS_L2_3: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "STR",
-    "effectSummary": "A Line of strong wind 60 feet long and 10 feet wide blasts from you in a direction you choose for the duration.",
+    "effectSummary": "Create a 60-ft by 10-ft line of wind that pushes creatures, disperses gases, and hinders movement. Concentration.",
     "classes": [
       "Druid",
       "Ranger",
@@ -611,7 +611,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Choose an object that you can see within range.",
+    "effectSummary": "Open one mundane or magical lock, stuck object, or barred entry; the spell makes a loud knock audible 300 ft away.",
     "classes": [
       "Bard",
       "Sorcerer",
@@ -631,7 +631,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a creature and end one condition on it: Blinded, Deafened, Paralyzed, or Poisoned.",
+    "effectSummary": "End Blinded, Deafened, Paralyzed, or Poisoned on a touched creature.",
     "classes": [
       "Bard",
       "Cleric",
@@ -654,7 +654,7 @@ export const SPELLS_L2_3: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "CON",
-    "effectSummary": "One creature or loose object of your choice that you can see within range rises vertically up to 20 feet and remains suspended there for the duration.",
+    "effectSummary": "Raise one creature or object up to 20 ft and move it vertically while you concentrate; unwilling creatures make a CON save.",
     "classes": [
       "Sorcerer",
       "Wizard"
@@ -673,7 +673,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "Describe or name a specific kind of Beast, Plant creature, or nonmagical plant.",
+    "effectSummary": "Learn the direction and distance to the nearest creature or plant of a named kind within 5 miles.",
     "classes": [
       "Bard",
       "Druid",
@@ -693,7 +693,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "10 minutes",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "Describe or name an object that is familiar to you.",
+    "effectSummary": "Sense the direction to a familiar or described object within 1,000 ft while you concentrate.",
     "classes": [
       "Bard",
       "Cleric",
@@ -716,7 +716,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Until dispelled",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "You implant a message within an object in range—a message that is uttered when a trigger condition is met.",
+    "effectSummary": "Store a message of up to 25 words in an object; it speaks when a defined visual or audible trigger occurs.",
     "classes": [
       "Bard",
       "Wizard"
@@ -735,7 +735,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a nonmagical weapon.",
+    "effectSummary": "Make a nonmagical weapon magical with +1 to attack and damage rolls for 1 hour.",
     "upcast": "The bonus increases to +2 with a level 3-5 spell slot. The bonus increases to +3 with a level 6+ spell slot.",
     "classes": [
       "Paladin",
@@ -780,7 +780,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 minute",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Three illusory duplicates of yourself appear in your space.",
+    "effectSummary": "Create three illusory duplicates that can cause attacks against you to hit a duplicate instead.",
     "classes": [
       "Bard",
       "Sorcerer",
@@ -844,7 +844,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 hour",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You radiate a concealing aura in a 30-foot Emanation for the duration.",
+    "effectSummary": "Creatures you choose within 30 ft gain +10 Stealth and leave no tracks while you concentrate.",
     "classes": [
       "Druid",
       "Ranger"
@@ -885,7 +885,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Up to five creatures of your choice who remain within range for the spell's entire casting gain the benefits of a Short Rest and also regain 2d8 Hit Points.",
+    "effectSummary": "Up to five creatures complete a Short Rest and regain 2d8 HP after the 10-minute casting.",
     "upcast": "The healing increases by 1d8 for each spell slot level above 2.",
     "classes": [
       "Cleric",
@@ -905,7 +905,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a creature and end the Poisoned condition on it.",
+    "effectSummary": "End Poisoned on a touched creature and grant Resistance to Poison damage for 1 hour.",
     "classes": [
       "Cleric",
       "Druid",
@@ -927,7 +927,7 @@ export const SPELLS_L2_3: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "CON",
-    "effectSummary": "A beam of enervating energy shoots from you toward a creature within range.",
+    "effectSummary": "On a ranged spell hit, the target deals half damage with Strength-based attacks. Concentration; repeat CON saves end it.",
     "classes": [
       "Warlock",
       "Wizard"
@@ -946,7 +946,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a rope.",
+    "effectSummary": "Create an extradimensional refuge at the top of a touched rope for up to eight Medium creatures for 1 hour.",
     "classes": [
       "Wizard"
     ],
@@ -986,7 +986,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "For the duration, you see creatures and objects that have the Invisible condition as if they were visible, and you can see into the Ethereal Plane.",
+    "effectSummary": "See invisible creatures and objects normally and see into the Ethereal Plane for 1 hour.",
     "classes": [
       "Bard",
       "Sorcerer",
@@ -1072,7 +1072,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 hour",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "Until the spell ends, one willing creature you touch gains the ability to move up, down, and across vertical surfaces and along ceilings, while leaving its hands free.",
+    "effectSummary": "Let a willing creature walk on walls and ceilings hands-free while you concentrate.",
     "upcast": "You can target one additional creature for each spell slot level above 2.",
     "classes": [
       "Sorcerer",
@@ -1157,7 +1157,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch another creature that is willing and create a mystic connection between you and the target until the spell ends.",
+    "effectSummary": "A willing target gains +1 AC and saves plus Resistance to all damage; you take the same damage it takes.",
     "classes": [
       "Cleric",
       "Paladin"
@@ -1200,7 +1200,7 @@ export const SPELLS_L2_3: Spell[] = [
     "concentration": false,
     "ritual": false,
     "saveType": "CHA",
-    "effectSummary": "You create a magical zone that guards against deception in a 15-foot-radius Sphere centered on a point within range.",
+    "effectSummary": "Creatures that fail a CHA save in a 15-ft-radius zone cannot knowingly speak a lie for 10 minutes.",
     "classes": [
       "Bard",
       "Cleric",
@@ -1220,7 +1220,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Choose a pile of bones or a corpse of a Medium or Small Humanoid within range.",
+    "effectSummary": "Create or reassert control over skeletons or zombies from nearby Humanoid remains for 24 hours.",
     "upcast": "You animate or reassert control over two additional Undead creatures for each spell slot level above 3. Each of the creatures must come from a different corpse or pile of bones.",
     "classes": [
       "Cleric",
@@ -1240,7 +1240,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 minute",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "Choose any number of creatures within range.",
+    "effectSummary": "Chosen creatures gain Advantage on WIS and death saves and receive maximum HP from healing. Concentration.",
     "classes": [
       "Cleric"
     ],
@@ -1281,7 +1281,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 minute",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Roll 1d6 at the end of each of your turns for the duration.",
+    "effectSummary": "At each turn’s end, a 4–6 on d6 shifts you to the Ethereal Plane until your next turn, protecting you from most effects.",
     "classes": [
       "Sorcerer",
       "Wizard"
@@ -1322,7 +1322,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "10 minutes",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You create an Invisible sensor within range in a location familiar to you (a place you have visited or seen before) or in an obvious location that is unfamiliar to you (such as…",
+    "effectSummary": "Place an invisible sensor at a known or obvious location within range and see or hear through it. Concentration.",
     "classes": [
       "Bard",
       "Cleric",
@@ -1386,7 +1386,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You create 45 pounds of food and 30 gallons of fresh water on the ground or in containers within range—both useful in fending off the hazards of malnutrition and dehydration.",
+    "effectSummary": "Create 45 pounds of nourishing food and 30 gallons of fresh water.",
     "classes": [
       "Cleric",
       "Paladin"
@@ -1406,7 +1406,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "For the duration, sunlight spreads from a point within range and fills a 60-foot-radius Sphere.",
+    "effectSummary": "Create a 60-ft-radius sphere of sunlight for 1 hour; it dispels overlapping Darkness spells of level 3 or lower.",
     "classes": [
       "Cleric",
       "Druid",
@@ -1500,7 +1500,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "10 minutes",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You touch a willing creature.",
+    "effectSummary": "Give a willing creature a 60-ft Fly Speed while you concentrate.",
     "upcast": "You can target one additional creature for each spell slot level above 3.",
     "classes": [
       "Sorcerer",
@@ -1521,7 +1521,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 hour",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "A willing creature you touch shape-shifts, along with everything it's wearing and carrying, into a misty cloud for the duration.",
+    "effectSummary": "Turn a willing creature and its gear into a mist cloud with flight, resistance, and limited actions. Concentration.",
     "upcast": "You can target one additional creature for each spell slot level above 3.",
     "classes": [
       "Sorcerer",
@@ -1631,7 +1631,7 @@ export const SPELLS_L2_3: Spell[] = [
     "concentration": false,
     "ritual": false,
     "saveType": "CHA",
-    "effectSummary": "You create a 10-foot-radius, 20-foot-tall Cylinder of magical energy centered on a point on the ground that you can see within range.",
+    "effectSummary": "Create a 10-ft-radius cylinder that hinders and wards against a chosen supernatural creature type for 1 hour.",
     "upcast": "The duration increases by 1 hour for each spell slot level above 3.",
     "classes": [
       "Cleric",
@@ -1653,7 +1653,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "10 minutes",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You create the image of an object, a creature, or some other visible phenomenon that is no larger than a 20-foot Cube.",
+    "effectSummary": "Create a moving, multisensory illusion up to a 20-ft cube; Investigation or physical interaction can reveal it. Concentration.",
     "upcast": "The spell lasts until dispelled, without requiring Concentration, if cast with a level 4+ spell slot.",
     "classes": [
       "Bard",
@@ -1675,7 +1675,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Up to six creatures of your choice that you can see within range regain Hit Points equal to 2d4 plus your spellcasting ability modifier.",
+    "effectSummary": "Up to six visible creatures regain 2d4 + your spellcasting modifier HP as a Bonus Action.",
     "upcast": "The healing increases by 1d4 for each spell slot level above 3.",
     "classes": [
       "Bard",
@@ -1716,7 +1716,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "8 hours",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "For the duration, you hide a target that you touch from Divination spells.",
+    "effectSummary": "Hide a touched creature, place, or object from Divination magic and magical sensors for 8 hours.",
     "classes": [
       "Bard",
       "Ranger",
@@ -1736,7 +1736,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "A Large, quasi-real, horselike creature appears on the ground in an unoccupied space of your choice within range.",
+    "effectSummary": "Create a fast, quasi-real Large mount that lasts 1 hour and fades after taking damage.",
     "classes": [
       "Wizard"
     ],
@@ -1754,7 +1754,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "This spell channels vitality into plants.",
+    "effectSummary": "Overgrow plants in a 100-ft-radius area to quadruple movement costs, or enrich crops in a half-mile radius for a year.",
     "classes": [
       "Bard",
       "Druid",
@@ -1774,7 +1774,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 hour",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "For the duration, the willing creature you touch has Resistance to one damage type of your choice: Acid, Cold, Fire, Lightning, or Thunder.",
+    "effectSummary": "Grant a willing creature Resistance to Acid, Cold, Fire, Lightning, or Thunder while you concentrate.",
     "classes": [
       "Cleric",
       "Druid",
@@ -1796,7 +1796,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "At your touch, all curses affecting one creature or object end.",
+    "effectSummary": "End all curses affecting a touched creature or object; cursed magic items remain cursed but can be removed.",
     "classes": [
       "Cleric",
       "Paladin",
@@ -1838,7 +1838,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You send a short message of 25 words or fewer to a creature you have met or a creature described to you by someone who has met it.",
+    "effectSummary": "Send a message of up to 25 words to a known creature anywhere; it recognizes you and can answer immediately.",
     "classes": [
       "Bard",
       "Cleric",
@@ -1882,7 +1882,7 @@ export const SPELLS_L2_3: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "WIS",
-    "effectSummary": "You alter time around up to six creatures of your choice in a 40-foot Cube within range.",
+    "effectSummary": "Up to six creatures that fail WIS saves have speed halved, −2 AC/DEX saves, and restricted actions. Concentration.",
     "classes": [
       "Bard",
       "Sorcerer",
@@ -1902,7 +1902,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "10 minutes",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You grant the semblance of life to a corpse of your choice within range, allowing it to answer questions you pose.",
+    "effectSummary": "Ask a corpse up to five questions; it answers from what it knew in life and cannot learn new information.",
     "classes": [
       "Bard",
       "Cleric",
@@ -1923,7 +1923,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "10 minutes",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You imbue plants in an immobile 30-foot Emanation with limited sentience and animation, giving them the ability to communicate with you and follow your simple commands.",
+    "effectSummary": "Communicate with plants in a 30-ft emanation and command limited movement or information sharing for 10 minutes.",
     "classes": [
       "Bard",
       "Druid",
@@ -1988,7 +1988,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "8 hours",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "A 10-foot Emanation springs into existence around you and remains stationary for the duration.",
+    "effectSummary": "Create a stationary 10-ft protective dome for 8 hours that chosen creatures and objects can pass through.",
     "classes": [
       "Bard",
       "Wizard"
@@ -2007,7 +2007,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "This spell grants the creature you touch the ability to understand any spoken or signed language that it hears or sees.",
+    "effectSummary": "A touched creature understands any spoken or signed language and is understood by creatures that know a language.",
     "classes": [
       "Bard",
       "Cleric",
@@ -2052,7 +2052,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "24 hours",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "This spell grants up to ten willing creatures of your choice within range the ability to breathe underwater until the spell ends.",
+    "effectSummary": "Up to ten willing creatures can breathe underwater for 24 hours.",
     "classes": [
       "Druid",
       "Ranger",
@@ -2073,7 +2073,7 @@ export const SPELLS_L2_3: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "This spell grants the ability to move across any liquid surface—such as water, acid, mud, snow, quicksand, or lava—as if it were harmless solid ground (creatures crossing molten…",
+    "effectSummary": "Up to ten willing creatures walk on liquid surfaces as harmless solid ground for 1 hour.",
     "classes": [
       "Cleric",
       "Druid",

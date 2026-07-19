@@ -159,6 +159,7 @@ function MapsBuilder() {
     setFeatureDensity(md);
     setTerrainVariety(mv);
     setRoomCount(mr);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot share-link hydration must render the exact seeded map.
     runGenerate({
       environment: env, width: mw, height: mh,
       featureDensity: md, terrainVariety: mv, roomCount: mr, seed: seedParam,

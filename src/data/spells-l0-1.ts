@@ -66,7 +66,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "1 minute",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You create up to four torch-size lights within range, making them appear as torches, lanterns, or glowing orbs that hover for the duration.",
+    "effectSummary": "Create up to four hovering lights, combine them into a glowing humanoid form, and move them while you concentrate.",
     "classes": [
       "Bard",
       "Sorcerer",
@@ -86,7 +86,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Whispering to the spirits of nature, you create one of the following effects within range.",
+    "effectSummary": "Create a minor nature effect: predict weather, make a flower bloom, produce a harmless sensory sign, or light/snuff a flame.",
     "classes": [
       "Druid"
     ],
@@ -126,7 +126,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You exert control over the elements, creating one of the following effects within range.",
+    "effectSummary": "Create a harmless air, earth, fire, or water effect within range, such as a breeze, dust shape, sparks, or a splash.",
     "classes": [
       "Druid",
       "Sorcerer",
@@ -229,7 +229,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "This spell repairs a single break or tear in an object you touch, such as a broken chain link, two halves of a broken key, a torn cloak, or a leaking wineskin.",
+    "effectSummary": "Repair one break or tear in a touched object; the spell cannot restore lost magical properties.",
     "classes": [
       "Bard",
       "Cleric",
@@ -251,7 +251,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "1 round",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You point toward a creature within range and whisper a message.",
+    "effectSummary": "Whisper to one creature in range; only it hears you and it can whisper a reply that only you hear.",
     "classes": [
       "Bard",
       "Druid",
@@ -272,7 +272,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "1 minute",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You create a sound or an image of an object within range that lasts for the duration.",
+    "effectSummary": "Create a sound or a static object image in a 5-ft cube; physical interaction reveals an image as an illusion.",
     "classes": [
       "Bard",
       "Sorcerer",
@@ -382,7 +382,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "1 minute",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You touch a willing creature and choose a damage type: Acid, Bludgeoning, Cold, Fire, Lightning, Necrotic, Piercing, Poison, Radiant, Slashing, or Thunder.",
+    "effectSummary": "Choose a damage type; the willing target can subtract 1d4 when it takes that type of damage while you concentrate.",
     "classes": [
       "Cleric",
       "Druid"
@@ -423,7 +423,7 @@ export const SPELLS_L0_1: Spell[] = [
     "concentration": false,
     "ritual": false,
     "damageType": "Force",
-    "effectSummary": "A Club or Quarterstaff you are holding is imbued with nature's power.",
+    "effectSummary": "Empower a held Club or Quarterstaff to use your spellcasting ability for attacks and deal improved Force damage.",
     "upcast": "The damage die changes when you reach levels 5 (d10), 11 (d12), and 17 (2d6).",
     "classes": [
       "Druid"
@@ -485,7 +485,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Choose a creature within range that has 0 Hit Points and isn't dead.",
+    "effectSummary": "Stabilize one living creature at 0 HP within range.",
     "upcast": "The range doubles when you reach levels 5 (30 feet), 11 (60 feet), and 17 (120 feet).",
     "classes": [
       "Cleric",
@@ -528,7 +528,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "1 minute",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You manifest a minor wonder within range.",
+    "effectSummary": "Create a minor divine wonder such as a booming voice, altered flames, harmless tremors, or an opening door or window.",
     "classes": [
       "Cleric"
     ],
@@ -547,7 +547,7 @@ export const SPELLS_L0_1: Spell[] = [
     "concentration": false,
     "ritual": false,
     "damageType": "Radiant",
-    "effectSummary": "Guided by a flash of magical insight, you make one attack with the weapon used in the spell's casting.",
+    "effectSummary": "Make one weapon attack using your spellcasting ability; on a hit, the attack can deal Radiant damage and scales by level.",
     "upcast": "Whether you deal Radiant damage or the weapon's normal damage type, the attack deals extra Radiant damage when you reach levels 5 (1d6), 11 (2d6), and 17 (3d6).",
     "classes": [
       "Bard",
@@ -591,7 +591,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "8 hours",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "You set an alarm against intrusion.",
+    "effectSummary": "Ward a door, window, or 20-ft cube for 8 hours; Tiny or larger intruders trigger an audible or mental alarm.",
     "classes": [
       "Ranger",
       "Wizard"
@@ -633,7 +633,7 @@ export const SPELLS_L0_1: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "CHA",
-    "effectSummary": "Up to three creatures of your choice that you can see within range must each make a Charisma saving throw.",
+    "effectSummary": "Up to three creatures subtract 1d4 from attack rolls and saving throws after a failed CHA save. Concentration.",
     "upcast": "You can target one additional creature for each spell slot level above 1.",
     "classes": [
       "Bard",
@@ -654,7 +654,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "1 minute",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You bless up to three creatures within range.",
+    "effectSummary": "Up to three creatures add 1d4 to attack rolls and saving throws. Concentration.",
     "upcast": "You can target one additional creature for each spell slot level above 1.",
     "classes": [
       "Cleric",
@@ -787,7 +787,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "For the duration, you understand the literal meaning of any language that you hear or see signed.",
+    "effectSummary": "Understand the literal meaning of spoken, signed, and written languages; reading requires touching the surface.",
     "classes": [
       "Bard",
       "Sorcerer",
@@ -809,7 +809,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You do one of the following:",
+    "effectSummary": "Create up to 10 gallons of clean water, produce rain in a 30-ft cube, or destroy the same amount of water or fog.",
     "upcast": "You create or destroy 10 additional gallons of water, or the size of the Cube increases by 5 feet, for each spell slot level above 1.",
     "classes": [
       "Cleric",
@@ -853,7 +853,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "10 minutes",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "For the duration, you sense the location of any Aberration, Celestial, Elemental, Fey, Fiend, or Undead within 30 feet of yourself.",
+    "effectSummary": "Sense nearby Aberrations, Celestials, Elementals, Fey, Fiends, and Undead, plus consecrated or desecrated places.",
     "classes": [
       "Cleric",
       "Paladin"
@@ -899,7 +899,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "10 minutes",
     "concentration": true,
     "ritual": true,
-    "effectSummary": "For the duration, you sense the location of poisons, poisonous or venomous creatures, and magical contagions within 30 feet of yourself.",
+    "effectSummary": "Sense nearby poisons, venomous creatures, and magical contagions, and identify the kind of each detected hazard.",
     "classes": [
       "Cleric",
       "Druid",
@@ -920,7 +920,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You make yourself—including your clothing, armor, weapons, and other belongings on your person—look different until the spell ends.",
+    "effectSummary": "Alter your appearance and equipment for 1 hour; the illusion fails physical inspection and can be discerned by Investigation.",
     "classes": [
       "Bard",
       "Sorcerer",
@@ -1042,7 +1042,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "10 minutes",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You take the Dash action, and until the spell ends, you can take that action again as a Bonus Action.",
+    "effectSummary": "Dash when cast and take Dash as a Bonus Action on later turns while you concentrate.",
     "classes": [
       "Sorcerer",
       "Warlock",
@@ -1064,7 +1064,7 @@ export const SPELLS_L0_1: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "DEX",
-    "effectSummary": "Objects in a 20-foot Cube within range are outlined in blue, green, or violet light (your choice).",
+    "effectSummary": "Outline creatures and objects in a 20-ft cube; failed DEX saves prevent invisibility and grant Advantage to attacks. Concentration.",
     "classes": [
       "Bard",
       "Druid"
@@ -1083,7 +1083,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You gain 2d4 + 4 Temporary Hit Points.",
+    "effectSummary": "Gain 2d4 + 4 Temporary HP for 1 hour.",
     "upcast": "You gain 5 additional Temporary Hit Points for each spell slot level above 1.",
     "classes": [
       "Sorcerer",
@@ -1103,7 +1103,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "1 minute",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Choose up to five falling creatures within range.",
+    "effectSummary": "Reaction: slow up to five falling creatures so they descend safely until they land or the spell ends.",
     "classes": [
       "Bard",
       "Sorcerer",
@@ -1123,7 +1123,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "You gain the service of a familiar, a spirit that takes an animal form you choose: Bat, Cat, Frog, Hawk, Lizard, Octopus, Owl, Rat, Raven, Spider, Weasel, or another Beast that…",
+    "effectSummary": "Summon a celestial, fey, or fiend spirit in a Tiny Beast form to scout, communicate telepathically, and deliver touch spells.",
     "classes": [
       "Wizard"
     ],
@@ -1141,7 +1141,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "This spell creates a circular, horizontal plane of force, 3 feet in diameter and 1 inch thick, that floats 3 feet above the ground in an unoccupied space of your choice that you…",
+    "effectSummary": "Create a hovering 3-ft force disk that follows you and carries up to 500 pounds for 1 hour.",
     "classes": [
       "Wizard"
     ],
@@ -1160,7 +1160,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "1 hour",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You create a 20-foot-radius Sphere of fog centered on a point within range.",
+    "effectSummary": "Create a heavily obscured 20-ft-radius fog sphere that spreads around corners. Concentration.",
     "upcast": "The fog's radius increases by 20 feet for each spell slot level above 1.",
     "classes": [
       "Druid",
@@ -1182,7 +1182,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "24 hours",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Ten berries appear in your hand and are infused with magic for the duration.",
+    "effectSummary": "Create ten berries; each nourishes a creature for a day and restores 1 HP when eaten.",
     "classes": [
       "Druid",
       "Ranger"
@@ -1285,7 +1285,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "1 minute",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "A willing creature you touch is imbued with bravery.",
+    "effectSummary": "A willing creature is immune to Frightened and gains Temporary HP at the start of each turn. Concentration.",
     "upcast": "You can target one additional creature for each spell slot level above 1.",
     "classes": [
       "Bard",
@@ -1391,7 +1391,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "You touch an object throughout the spell's casting.",
+    "effectSummary": "Learn a touched magic item’s properties, use, attunement needs, charges, and spells affecting it or another touched object or creature.",
     "classes": [
       "Bard",
       "Wizard"
@@ -1410,7 +1410,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "10 days",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "You write on parchment, paper, or another suitable material and imbue it with an illusion that lasts for the duration.",
+    "effectSummary": "Write a message that appears normal only to chosen readers and unintelligible or different to everyone else for 10 days.",
     "classes": [
       "Bard",
       "Warlock",
@@ -1451,7 +1451,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "1 minute",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a willing creature.",
+    "effectSummary": "Triple a willing creature’s jump distance for 1 minute.",
     "upcast": "You can target one additional creature for each spell slot level above 1.",
     "classes": [
       "Druid",
@@ -1473,7 +1473,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a creature.",
+    "effectSummary": "Increase a touched creature’s Speed by 10 ft for 1 hour.",
     "upcast": "You can target one additional creature for each spell slot level above 1.",
     "classes": [
       "Bard",
@@ -1495,7 +1495,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "8 hours",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a willing creature who isn't wearing armor.",
+    "effectSummary": "Set an unarmored willing creature’s base AC to 13 + DEX modifier for 8 hours.",
     "classes": [
       "Sorcerer",
       "Wizard"
@@ -1535,7 +1535,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "10 minutes",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "Until the spell ends, one willing creature you touch is protected against creatures that are Aberrations, Celestials, Elementals, Fey, Fiends, or Undead.",
+    "effectSummary": "Protect a willing creature from Aberrations, Celestials, Elementals, Fey, Fiends, and Undead. Concentration.",
     "classes": [
       "Cleric",
       "Druid",
@@ -1558,7 +1558,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "You remove poison and rot from nonmagical food and drink in a 5-foot-radius Sphere centered on a point within range.",
+    "effectSummary": "Remove poison and rot from nonmagical food and drink in a 5-ft-radius sphere.",
     "classes": [
       "Cleric",
       "Druid",
@@ -1601,7 +1601,7 @@ export const SPELLS_L0_1: Spell[] = [
     "concentration": false,
     "ritual": false,
     "saveType": "WIS",
-    "effectSummary": "You ward a creature within range.",
+    "effectSummary": "Attackers must pass a WIS save to target the warded creature or choose another target; attacking ends the ward.",
     "classes": [
       "Cleric"
     ],
@@ -1659,7 +1659,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "10 minutes",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "A shimmering field surrounds a creature of your choice within range, granting it a +2 bonus to AC for the duration.",
+    "effectSummary": "Grant one creature +2 AC while you concentrate.",
     "classes": [
       "Cleric",
       "Paladin"
@@ -1678,7 +1678,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "10 minutes",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You create the image of an object, a creature, or some other visible phenomenon that is no larger than a 15-foot Cube.",
+    "effectSummary": "Create and move a visual illusion up to a 15-ft cube; physical interaction reveals it. Concentration.",
     "classes": [
       "Bard",
       "Sorcerer",
@@ -1720,7 +1720,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "10 minutes",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "For the duration, you can comprehend and verbally communicate with Beasts, and you can use any of the Influence action's skill options with them.",
+    "effectSummary": "Understand and speak with Beasts and use Influence skill options with them for 10 minutes.",
     "classes": [
       "Bard",
       "Druid",
@@ -1766,7 +1766,7 @@ export const SPELLS_L0_1: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "This spell creates an Invisible, mindless, shapeless, Medium force that performs simple tasks at your command until the spell ends.",
+    "effectSummary": "Create an invisible force that follows commands and performs simple household tasks for 1 hour.",
     "classes": [
       "Bard",
       "Warlock",

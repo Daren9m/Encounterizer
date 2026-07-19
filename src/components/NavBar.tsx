@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, Swords, X } from 'lucide-react';
+import { Menu, Moon, Sun, Swords, X } from 'lucide-react';
 import { TOOL_ROUTES, type RouteInfo } from '@/lib/site';
 import RouteIcon from '@/components/RouteIcon';
+import { getTheme, setTheme, subscribeTheme } from '@/lib/theme';
 
 function NavLink({
   route,
@@ -54,11 +55,7 @@ export default function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-
-  // Close the mobile menu after navigating.
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
+  const theme = useSyncExternalStore(subscribeTheme, getTheme, () => 'dark');
 
   // Put keyboard users directly into the opened menu and return them to the
   // trigger when Escape closes it.
@@ -98,6 +95,7 @@ export default function NavBar() {
           <Link
             href="/"
             aria-current={pathname === '/' ? 'page' : undefined}
+            onClick={() => setMenuOpen(false)}
             className="group inline-flex min-h-11 items-center gap-3 rounded-lg"
           >
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--steel-700)] bg-[var(--steel-950)] shadow-sm transition-colors group-hover:border-[var(--bronze)]">
@@ -116,6 +114,15 @@ export default function NavBar() {
             {TOOL_ROUTES.map((route) => (
               <NavLink key={route.path} route={route} active={isActive(route.path)} />
             ))}
+            <button
+              type="button"
+              className="ml-1 inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--steel-800)] text-[var(--text-2)] transition-colors hover:border-[var(--steel-700)] hover:bg-[var(--steel-800)] hover:text-[var(--bronze)]"
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            >
+              {theme === 'light' ? <Moon size={19} aria-hidden="true" /> : <Sun size={19} aria-hidden="true" />}
+            </button>
           </div>
 
           {/* Mobile hamburger */}
@@ -153,6 +160,14 @@ export default function NavBar() {
                   mobile
                 />
               ))}
+              <button
+                type="button"
+                className="inline-flex min-h-11 w-full items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-sm font-medium text-[var(--text-2)] transition-colors hover:border-[var(--steel-800)] hover:bg-[var(--steel-800)] hover:text-[var(--text-1)]"
+                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              >
+                {theme === 'light' ? <Moon size={19} aria-hidden="true" /> : <Sun size={19} aria-hidden="true" />}
+                {theme === 'light' ? 'Dark mode' : 'Light mode'}
+              </button>
             </div>
           </div>
         )}

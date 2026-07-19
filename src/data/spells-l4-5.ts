@@ -20,7 +20,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "1 hour",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You create an Invisible, invulnerable eye within range that hovers for the duration.",
+    "effectSummary": "Create an invisible, invulnerable flying sensor you can move and see through for 1 hour. Concentration.",
     "classes": [
       "Wizard"
     ],
@@ -39,7 +39,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "10 minutes",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "An aura radiates from you in a 30-foot Emanation for the duration.",
+    "effectSummary": "Allies in your 30-ft aura resist Necrotic damage, keep their HP maximum, and regain 1 HP when starting a turn at 0. Concentration.",
     "classes": [
       "Cleric",
       "Paladin"
@@ -172,7 +172,7 @@ export const SPELLS_L4_5: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "WIS",
-    "effectSummary": "Each creature in a 10-foot-radius Sphere centered on a point you choose within range must succeed on a Wisdom saving throw, or that target can't take Bonus Actions or Reactions…",
+    "effectSummary": "Creatures in a 10-ft-radius sphere that fail WIS saves lose reactions and act unpredictably. Concentration.",
     "upcast": "The Sphere's radius increases by 5 feet for each spell slot level above 4.",
     "classes": [
       "Bard",
@@ -261,7 +261,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "8 hours",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a creature and grant it a measure of protection from death.",
+    "effectSummary": "The first time the target would drop to 0 HP or die outright, it instead drops to 1 HP or negates the lethal effect.",
     "classes": [
       "Cleric",
       "Paladin"
@@ -302,7 +302,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "This spell puts you in contact with a god or a god's servants.",
+    "effectSummary": "Ask a god one question about an event within 7 days and receive a truthful reply, possibly as a cryptic omen.",
     "classes": [
       "Cleric",
       "Druid",
@@ -344,7 +344,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You convert raw materials into products of the same material.",
+    "effectSummary": "Convert raw materials into a finished object of the same material; complex craftsmanship requires matching tool proficiency.",
     "classes": [
       "Wizard"
     ],
@@ -403,7 +403,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a willing creature.",
+    "effectSummary": "For 1 hour, a willing creature ignores difficult terrain and magical speed reduction and can escape restraints automatically.",
     "upcast": "You can target one additional creature for each spell slot level above 4.",
     "classes": [
       "Bard",
@@ -425,7 +425,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "10 minutes",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You summon a giant centipede, spider, or wasp (chosen when you cast the spell).",
+    "effectSummary": "Summon a giant centipede, spider, or wasp spirit that obeys you and uses the spell’s stat block. Concentration.",
     "upcast": "Use the spell slot's level for the spell's level in the stat block.",
     "classes": [
       "Druid"
@@ -466,7 +466,7 @@ export const SPELLS_L4_5: Spell[] = [
     "ritual": false,
     "saveType": "DEX",
     "damageType": "Radiant",
-    "effectSummary": "A Large spectral guardian appears and hovers for the duration in an unoccupied space that you can see within range.",
+    "effectSummary": "Create a stationary spectral guardian that damages hostile creatures entering its space until it deals 60 total damage.",
     "classes": [
       "Cleric"
     ],
@@ -485,7 +485,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "24 hours",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You make natural terrain in a 150-foot Cube in range look, sound, and smell like another sort of natural terrain.",
+    "effectSummary": "Make a 150-ft cube of natural terrain look, sound, and smell like another terrain; touch reveals the illusion.",
     "classes": [
       "Bard",
       "Druid",
@@ -530,7 +530,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "1 hour",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "Describe or name a creature that is familiar to you.",
+    "effectSummary": "Sense the direction to a familiar or described creature within 1,000 ft while you concentrate.",
     "classes": [
       "Bard",
       "Cleric",
@@ -597,7 +597,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "24 hours",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You make an area within range magically secure.",
+    "effectSummary": "Ward an area against sound, sight, sensors, telepathy, and planar travel in any combination for 24 hours.",
     "upcast": "You can increase the size of the Cube by 100 feet for each spell slot level above 4.",
     "classes": [
       "Wizard"
@@ -617,7 +617,7 @@ export const SPELLS_L4_5: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "DEX",
-    "effectSummary": "A shimmering sphere encloses a Large or smaller creature or object within range.",
+    "effectSummary": "Enclose a Large or smaller target in an immune force sphere after a failed DEX save. Concentration.",
     "classes": [
       "Wizard"
     ],
@@ -635,7 +635,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "Until dispelled",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You hide a chest and all its contents on the Ethereal Plane.",
+    "effectSummary": "Hide a specially made chest on the Ethereal Plane and recall or return it with its miniature replica.",
     "classes": [
       "Wizard"
     ],
@@ -653,7 +653,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a stone object of Medium size or smaller or a section of stone no more than 5 feet in any dimension and form it into any shape you like.",
+    "effectSummary": "Reshape a touched Medium or smaller stone object or 5-ft section of stone, including making a simple opening or seal.",
     "classes": [
       "Cleric",
       "Druid",
@@ -673,7 +673,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "1 hour",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "Until the spell ends, one willing creature you touch has Resistance to Bludgeoning, Piercing, and Slashing damage.",
+    "effectSummary": "Grant Resistance to Bludgeoning, Piercing, and Slashing damage while you concentrate.",
     "classes": [
       "Druid",
       "Ranger",
@@ -741,7 +741,7 @@ export const SPELLS_L4_5: Spell[] = [
     "concentration": true,
     "ritual": false,
     "damageType": "Bludgeoning, Piercing, Slashing",
-    "effectSummary": "Objects animate at your command.",
+    "effectSummary": "Animate up to ten unattended nonmagical objects as creatures under your Bonus Action commands. Concentration.",
     "upcast": "The creature's Slam damage increases by 1d4 (Medium or smaller), 1d6 (Large), or 1d12 (Huge) for each spell slot level above 5.",
     "classes": [
       "Bard",
@@ -763,7 +763,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "1 hour",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "An aura extends from you in a 10-foot Emanation for the duration.",
+    "effectSummary": "A 10-ft emanation moves with you and prevents living creatures from entering. Concentration.",
     "classes": [
       "Druid"
     ],
@@ -846,7 +846,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "1 minute",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "You contact a deity or a divine proxy and ask up to three questions that can be answered with yes or no.",
+    "effectSummary": "Ask a deity or divine proxy up to three yes-or-no questions and receive correct answers.",
     "classes": [
       "Cleric"
     ],
@@ -864,7 +864,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "1 minute",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "You commune with nature spirits and gain knowledge of the surrounding area.",
+    "effectSummary": "Learn three facts about terrain, creatures, settlements, planar influence, or structures within 3 miles outdoors.",
     "classes": [
       "Druid",
       "Ranger"
@@ -971,7 +971,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "Special",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You pull wisps of shadow material from the Shadowfell to create an object within range.",
+    "effectSummary": "Create one nonliving object from shadow material; size and duration depend on the material.",
     "upcast": "The Cube increases by 5 feet for each spell slot level above 5.",
     "classes": [
       "Sorcerer",
@@ -992,7 +992,7 @@ export const SPELLS_L4_5: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "CHA",
-    "effectSummary": "For the duration, Celestials, Elementals, Fey, Fiends, and Undead have Disadvantage on attack rolls against you.",
+    "effectSummary": "Supernatural creatures have Disadvantage attacking you; end the spell to break enchantment or banish one. Concentration.",
     "classes": [
       "Cleric",
       "Paladin"
@@ -1102,7 +1102,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a creature and magically remove one of the following effects from it:",
+    "effectSummary": "End one major debilitating effect, including exhaustion, petrification, curse, attunement, ability reduction, or HP maximum reduction.",
     "classes": [
       "Bard",
       "Cleric",
@@ -1124,7 +1124,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "Until dispelled",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a point and infuse an area around it with holy or unholy power.",
+    "effectSummary": "Ward a 60-ft-radius area for 24 hours with planar restrictions and one chosen holy or unholy secondary effect.",
     "classes": [
       "Cleric"
     ],
@@ -1189,7 +1189,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Name or describe a famous person, place, or object.",
+    "effectSummary": "Learn significant lore about a famous person, place, or object; more prior knowledge yields more detailed information.",
     "classes": [
       "Bard",
       "Cleric",
@@ -1210,7 +1210,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "A wave of healing energy washes out from a point you can see within range.",
+    "effectSummary": "Up to six creatures in a 30-ft-radius sphere regain 5d8 + your spellcasting modifier HP.",
     "upcast": "The healing increases by 1d8 for each spell slot level above 5.",
     "classes": [
       "Bard",
@@ -1272,7 +1272,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "A passage appears at a point that you can see on a wooden, plaster, or stone surface (such as a wall, ceiling, or floor) within range and lasts for the duration.",
+    "effectSummary": "Open a 5-ft-wide, 8-ft-tall passage through wood, plaster, or stone for 1 hour.",
     "classes": [
       "Wizard"
     ],
@@ -1291,7 +1291,7 @@ export const SPELLS_L4_5: Spell[] = [
     "concentration": false,
     "ritual": false,
     "saveType": "CHA",
-    "effectSummary": "You attempt to bind a Celestial, an Elemental, a Fey, or a Fiend to your service.",
+    "effectSummary": "Bind a Celestial, Elemental, Fey, or Fiend that fails a CHA save to serve for 24 hours.",
     "upcast": "The duration increases with a spell slot of level 6 (10 days), 7 (30 days), 8 (180 days), and 9 (366 days).",
     "classes": [
       "Bard",
@@ -1334,7 +1334,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a dead Humanoid or a piece of one.",
+    "effectSummary": "Return a dead Humanoid to life in a new adult body if it died within 10 days.",
     "classes": [
       "Druid"
     ],
@@ -1353,7 +1353,7 @@ export const SPELLS_L4_5: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "WIS",
-    "effectSummary": "You can see and hear a creature you choose that is on the same plane of existence as you.",
+    "effectSummary": "See and hear a creature on the same plane through an invisible sensor after its WIS save. Concentration.",
     "classes": [
       "Bard",
       "Cleric",
@@ -1376,7 +1376,7 @@ export const SPELLS_L4_5: Spell[] = [
     "concentration": false,
     "ritual": false,
     "saveType": "CHA",
-    "effectSummary": "You give an illusory appearance to each creature of your choice that you can see within range.",
+    "effectSummary": "Give any number of visible creatures illusory appearances for 8 hours; unwilling targets can resist with CHA saves.",
     "classes": [
       "Bard",
       "Sorcerer",
@@ -1396,7 +1396,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "1 hour",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You call forth a Dragon spirit.",
+    "effectSummary": "Summon a Dragon spirit that obeys your verbal commands and uses the spell’s stat block. Concentration.",
     "upcast": "Use the spell slot's level for the spell's level in the stat block.",
     "classes": [
       "Wizard"
@@ -1435,7 +1435,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "You forge a telepathic link among up to eight willing creatures of your choice within range, psychically linking each creature to all the others for the duration.",
+    "effectSummary": "Up to eight willing creatures communicate telepathically across any distance on the same plane for 1 hour.",
     "classes": [
       "Bard",
       "Wizard"
@@ -1454,7 +1454,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "1 round",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "As you cast the spell, you draw a 5-foot-radius circle on the ground inscribed with sigils that link your location to a permanent teleportation circle of your choice whose sigil…",
+    "effectSummary": "Create a one-round portal to a known permanent teleportation circle on the same plane.",
     "classes": [
       "Bard",
       "Sorcerer",
@@ -1475,7 +1475,7 @@ export const SPELLS_L4_5: Spell[] = [
     "duration": "1 minute",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You gain the ability to enter a tree and move from inside it to inside another tree of the same kind within 500 feet.",
+    "effectSummary": "Enter a living tree and emerge from another tree of the same kind within 500 ft, once per turn. Concentration.",
     "classes": [
       "Druid",
       "Ranger"
@@ -1513,7 +1513,7 @@ export const SPELLS_L4_5: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "DEX",
-    "effectSummary": "A nonmagical wall of solid stone springs into existence at a point you choose within range.",
+    "effectSummary": "Create connected stone panels that can become permanent if you concentrate for the full 10 minutes.",
     "classes": [
       "Druid",
       "Sorcerer",

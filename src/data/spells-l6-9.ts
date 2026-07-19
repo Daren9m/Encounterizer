@@ -106,7 +106,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "10 days",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Choose a spell of level 5 or lower that you can cast, that has a casting time of an action, and that can target you.",
+    "effectSummary": "Store a level-5-or-lower self-targeting spell to trigger automatically under a specified circumstance within 10 days.",
     "classes": [
       "Wizard"
     ],
@@ -124,7 +124,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You can cast this spell only at night.",
+    "effectSummary": "At night, raise up to three nearby corpses as Ghouls under your control for 24 hours.",
     "upcast": "If you use a level 7 spell slot, you can animate or reassert control over four Ghouls. If you use a level 8 spell slot, you can animate or reassert control over five Ghouls or two Ghasts or Wights. If you use a level 9 spell slot, you can animate or reassert control over six Ghouls, three Ghasts or Wights, or two Mummies. See the Monster Manual for these stat blocks.",
     "classes": [
       "Cleric",
@@ -189,7 +189,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "1 day",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You magically sense the most direct physical route to a location you name.",
+    "effectSummary": "Sense the most direct physical route to a named, familiar destination on the same plane. Concentration.",
     "classes": [
       "Bard",
       "Cleric",
@@ -273,7 +273,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "1 minute",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "An immobile, shimmering barrier appears in a 10-foot Emanation around you and remains for the duration.",
+    "effectSummary": "Create a 10-ft barrier that prevents level-5-or-lower spells cast from outside from affecting anything inside. Concentration.",
     "upcast": "The barrier blocks spells of 1 level higher for each spell slot level above 6.",
     "classes": [
       "Sorcerer",
@@ -294,7 +294,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "24 hours",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You create a ward that protects up to 2,500 square feet of floor space.",
+    "effectSummary": "Protect up to 2,500 square feet for 24 hours with fog, locked doors, webs, confusing passages, and one additional effect.",
     "classes": [
       "Bard",
       "Wizard"
@@ -333,7 +333,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Choose a creature that you can see within range.",
+    "effectSummary": "Restore 70 HP and end Blinded, Deafened, and Poisoned on one visible creature.",
     "upcast": "The healing increases by 10 for each spell slot level above 6.",
     "classes": [
       "Cleric",
@@ -354,7 +354,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You conjure a feast that appears on a surface in an unoccupied 10-foot Cube next to you.",
+    "effectSummary": "Conjure a feast for up to twelve creatures that grants major healing, immunities, WIS-save Advantage, and increased maximum HP for 24 hours.",
     "classes": [
       "Bard",
       "Cleric",
@@ -374,7 +374,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "Until dispelled",
     "concentration": false,
     "ritual": true,
-    "effectSummary": "You touch the sapphire used in the casting and an object weighing 10 pounds or less whose longest dimension is 6 feet or less.",
+    "effectSummary": "Mark a small object with a sapphire; crush the gem later to summon the object or learn who holds it.",
     "classes": [
       "Wizard"
     ],
@@ -413,7 +413,7 @@ export const SPELLS_L6_9: Spell[] = [
     "concentration": false,
     "ritual": false,
     "saveType": "CHA",
-    "effectSummary": "Your body falls into a catatonic state as your soul leaves it and enters the container you used for the spell's Material component.",
+    "effectSummary": "Move your soul into a container, possess nearby Humanoids after CHA saves, and return between host and container.",
     "classes": [
       "Wizard"
     ],
@@ -454,7 +454,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "2 hours",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "Choose an area of terrain no larger than 40 feet on a side within range.",
+    "effectSummary": "Reshape a 40-ft-square area of dirt, sand, or clay over 10 minutes and repeat each 10 minutes while concentrating.",
     "classes": [
       "Druid",
       "Sorcerer",
@@ -474,7 +474,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You beseech an otherworldly entity for aid.",
+    "effectSummary": "Request aid from an otherworldly servant of a known entity; the creature sets the terms of its service.",
     "classes": [
       "Cleric"
     ],
@@ -492,7 +492,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "Until dispelled",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You create an illusion of an object, a creature, or some other visible phenomenon within range that activates when a specific trigger occurs.",
+    "effectSummary": "Create an illusion that activates under a chosen perceptible condition and can repeat for up to 10 minutes each trigger.",
     "classes": [
       "Bard",
       "Wizard"
@@ -535,7 +535,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "10 minutes",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "This spell creates a magical link between a Large or larger inanimate plant within range and another plant, at any distance, on the same plane of existence.",
+    "effectSummary": "Link two Large living plants on the same plane as a portal for 1 round.",
     "classes": [
       "Druid"
     ],
@@ -553,7 +553,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "For the duration, the willing creature you touch has Truesight with a range of 120 feet.",
+    "effectSummary": "Give a willing creature 120-ft Truesight for 1 hour.",
     "classes": [
       "Bard",
       "Cleric",
@@ -635,7 +635,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You and up to five willing creatures within 5 feet of you instantly teleport to a previously designated sanctuary.",
+    "effectSummary": "Teleport yourself and up to five nearby willing creatures to a previously designated sanctuary.",
     "classes": [
       "Cleric"
     ],
@@ -739,7 +739,7 @@ export const SPELLS_L6_9: Spell[] = [
     "concentration": false,
     "ritual": false,
     "damageType": "Force",
-    "effectSummary": "You step into the border regions of the Ethereal Plane, where it overlaps with your current plane.",
+    "effectSummary": "Enter the Ethereal Plane for up to 8 hours, moving through objects and returning when the spell ends.",
     "upcast": "You can target up to three willing creatures (including yourself) for each spell slot level above 7. The creatures must be within 10 feet of you when you cast the spell.",
     "classes": [
       "Bard",
@@ -808,7 +808,7 @@ export const SPELLS_L6_9: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "CHA",
-    "effectSummary": "An immobile, Invisible, Cube-shaped prison composed of magical force springs into existence around an area you choose within range.",
+    "effectSummary": "Create an invisible barred cage or sealed force box that traps creatures for 1 hour without concentration.",
     "classes": [
       "Bard",
       "Warlock",
@@ -828,7 +828,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "24 hours",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You conjure a shimmering door in range that lasts for the duration.",
+    "effectSummary": "Create an extradimensional mansion with food and servants for up to 100 creatures for 24 hours.",
     "classes": [
       "Bard",
       "Wizard"
@@ -847,7 +847,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "10 days",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You make terrain in an area up to 1 mile square look, sound, smell, and even feel like some other sort of terrain.",
+    "effectSummary": "Transform the appearance and tactile feel of terrain in a 1-mile square for 10 days.",
     "classes": [
       "Bard",
       "Druid",
@@ -867,7 +867,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You and up to eight willing creatures who link hands in a circle are transported to a different plane of existence.",
+    "effectSummary": "Transport yourself and up to eight linked willing creatures to another plane, or banish one unwilling creature with a spell attack and CHA save.",
     "classes": [
       "Cleric",
       "Druid",
@@ -912,7 +912,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "1 day",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You create an illusory copy of yourself that lasts for the duration.",
+    "effectSummary": "Create an illusory copy you can see, hear, speak, and cast senses through within 500 miles. Concentration.",
     "classes": [
       "Bard",
       "Wizard"
@@ -931,7 +931,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "A creature you touch regains 4d8 + 15 Hit Points.",
+    "effectSummary": "Restore 4d8 + 15 HP, then 1 HP at each turn’s start; severed body parts regrow over 2 minutes.",
     "classes": [
       "Bard",
       "Cleric",
@@ -951,7 +951,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "With a touch, you revive a dead creature that has been dead for no more than a century, didn't die of old age, and wasn't Undead when it died.",
+    "effectSummary": "Return a creature dead up to 100 years to life with full HP, closing wounds and restoring missing body parts.",
     "classes": [
       "Bard",
       "Cleric"
@@ -971,7 +971,7 @@ export const SPELLS_L6_9: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "DEX",
-    "effectSummary": "This spell reverses gravity in a 50-foot-radius, 100-foot high Cylinder centered on a point within range.",
+    "effectSummary": "Reverse gravity in a 50-ft-radius, 100-ft-high cylinder; creatures and objects fall upward. Concentration.",
     "classes": [
       "Druid",
       "Sorcerer",
@@ -1009,7 +1009,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "Until dispelled",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You create a simulacrum of one Beast or Humanoid that is within 10 feet of you for the entire casting of the spell.",
+    "effectSummary": "Create a controllable duplicate of a Beast or Humanoid with half HP that cannot regain expended spell slots.",
     "classes": [
       "Wizard"
     ],
@@ -1071,7 +1071,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "24 hours",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Choose any number of willing creatures that you can see within range.",
+    "effectSummary": "Transform any number of willing creatures into chosen Beasts and change those forms on later turns. Concentration.",
     "classes": [
       "Druid"
     ],
@@ -1090,7 +1090,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "1 hour",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "An aura of antimagic surrounds you in a 10-foot Emanation.",
+    "effectSummary": "A 10-ft aura suppresses spells, magic items, summoned creatures, and magical effects around you. Concentration.",
     "classes": [
       "Cleric",
       "Wizard"
@@ -1153,7 +1153,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a creature or at least 1 cubic inch of its flesh.",
+    "effectSummary": "Grow an inert duplicate body that can receive the target’s soul after 120 days if the original dies.",
     "classes": [
       "Wizard"
     ],
@@ -1172,7 +1172,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "8 hours",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You take control of the weather within 5 miles of you for the duration.",
+    "effectSummary": "Change precipitation, temperature, and wind within 5 miles, one stage at a time, while concentrating.",
     "classes": [
       "Cleric",
       "Druid",
@@ -1192,7 +1192,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You create a shadowy Medium door on a flat solid surface that you can see within range.",
+    "effectSummary": "Create a door to a 30-ft extradimensional chamber or to a demiplane you previously created.",
     "classes": [
       "Sorcerer",
       "Warlock",
@@ -1257,7 +1257,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "1 hour",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Until the spell ends, when you make a Charisma check, you can replace the number you roll with a 15.",
+    "effectSummary": "For 1 hour, replace any Charisma-check d20 roll lower than 15 with a 15 and foil magical lie detection.",
     "classes": [
       "Bard",
       "Warlock"
@@ -1319,7 +1319,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "10 minutes",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You banish a creature that you can see within range into a labyrinthine demiplane.",
+    "effectSummary": "Banish a creature to a labyrinthine demiplane; it can escape with a DC 20 INT check. Concentration.",
     "classes": [
       "Wizard"
     ],
@@ -1337,7 +1337,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "24 hours",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "Until the spell ends, one willing creature you touch has Immunity to Psychic damage and the Charmed condition.",
+    "effectSummary": "For 24 hours, grant immunity to Psychic damage, Charmed, mind reading, emotion sensing, and Divination magic.",
     "classes": [
       "Bard",
       "Wizard"
@@ -1442,7 +1442,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "8 hours",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a willing creature and bestow a limited ability to see into the immediate future.",
+    "effectSummary": "For 8 hours, a willing creature has Advantage on d20 tests, attackers have Disadvantage against it, and it cannot be surprised.",
     "classes": [
       "Bard",
       "Druid",
@@ -1463,7 +1463,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "1 minute",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You conjure a portal linking an unoccupied space you can see within range to a precise location on a different plane of existence.",
+    "effectSummary": "Open a portal to a precise location on another plane, optionally drawing a named creature through it. Concentration.",
     "classes": [
       "Cleric",
       "Sorcerer",
@@ -1504,7 +1504,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "A flood of healing energy flows from you into creatures around you.",
+    "effectSummary": "Distribute 700 HP of healing among visible creatures and end Blinded, Deafened, and Poisoned on them.",
     "classes": [
       "Cleric"
     ],
@@ -1544,7 +1544,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "A wave of healing energy washes over one creature you can see within range.",
+    "effectSummary": "Restore one creature to maximum HP and end Charmed, Frightened, Paralyzed, and Stunned; a Prone target can stand using its Reaction.",
     "classes": [
       "Bard",
       "Cleric"
@@ -1606,7 +1606,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "1 hour",
     "concentration": true,
     "ritual": false,
-    "effectSummary": "You shape-shift into another creature for the duration or until you take a Magic action to shape-shift into a different eligible form.",
+    "effectSummary": "Assume eligible creature forms up to your level while retaining key statistics and change forms with a Magic action. Concentration.",
     "classes": [
       "Druid",
       "Wizard"
@@ -1645,7 +1645,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You briefly stop the flow of time for everyone but yourself.",
+    "effectSummary": "Take 1d4 + 1 turns in a row while time stops for everyone else; affecting others or moving too far ends it.",
     "classes": [
       "Sorcerer",
       "Wizard"
@@ -1665,7 +1665,7 @@ export const SPELLS_L6_9: Spell[] = [
     "concentration": true,
     "ritual": false,
     "saveType": "WIS",
-    "effectSummary": "Choose one creature or nonmagical object that you can see within range.",
+    "effectSummary": "Transform a creature or object into another creature or object; concentrating for 1 hour makes the change last until dispelled.",
     "classes": [
       "Bard",
       "Warlock",
@@ -1685,7 +1685,7 @@ export const SPELLS_L6_9: Spell[] = [
     "duration": "Instantaneous",
     "concentration": false,
     "ritual": false,
-    "effectSummary": "You touch a creature that has been dead for no longer than 200 years and that died for any reason except old age.",
+    "effectSummary": "Return a creature dead up to 200 years to life with full HP, a restored body, and all wounds and ailments removed.",
     "classes": [
       "Cleric",
       "Druid"

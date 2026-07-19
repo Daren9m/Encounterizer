@@ -159,4 +159,25 @@ describe('fillRecipeSlots', () => {
     expect(a).toEqual(b);
     expect(a.length).toBeGreaterThan(0);
   });
+
+  it('keeps every recipe within the requested encounter budget', () => {
+    const testParty = party(4, 3);
+    const budget = getPartyXpBudget(testParty, 'Moderate');
+
+    for (const recipe of ENCOUNTER_RECIPES) {
+      const filled = fillRecipeSlots(
+        recipe,
+        ALL_MONSTERS,
+        3,
+        'Forest',
+        seededRandom(42),
+        budget,
+      );
+      const totalXp = filled.reduce(
+        (total, slot) => total + slot.monster.xp * slot.count,
+        0,
+      );
+      expect(totalXp, recipe.name).toBeLessThanOrEqual(budget);
+    }
+  });
 });

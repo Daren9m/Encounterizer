@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ALL_MONSTERS } from '@/data';
+import { BESTIARY_META } from '@/data/bestiary-meta';
 import { SPELLS_META } from '@/data/spells-meta';
 import RouteIcon from '@/components/RouteIcon';
 import { TOOL_ROUTES, type RouteInfo } from '@/lib/site';
@@ -8,8 +8,6 @@ const encounterTool = TOOL_ROUTES.find((route) => route.path === '/encounters')!
 const supportingTools = TOOL_ROUTES.filter((route) => route.path !== '/encounters');
 
 export default function HomePage() {
-  const creatureTypes = new Set(ALL_MONSTERS.map((monster) => monster.type)).size;
-
   return (
     <div className="animate-fade-in space-y-16 pb-8 sm:space-y-20">
       <section
@@ -105,9 +103,9 @@ export default function HomePage() {
         </div>
 
         <dl className="grid grid-cols-3 gap-3 text-center sm:min-w-[22rem]">
-          <Stat value={ALL_MONSTERS.length.toLocaleString()} label="Monsters" />
+          <Stat value={BESTIARY_META.count.toLocaleString()} label="Monsters" />
           <Stat value={SPELLS_META.count.toLocaleString()} label="Spells" />
-          <Stat value={creatureTypes.toLocaleString()} label="Creature types" />
+          <Stat value={BESTIARY_META.creatureTypes.toLocaleString()} label="Creature types" />
         </dl>
       </section>
     </div>

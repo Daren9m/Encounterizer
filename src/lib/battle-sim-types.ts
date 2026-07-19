@@ -90,6 +90,10 @@ export interface SimPlayer {
   /** Casters: amortized leveled-spell damage, save-gated vs spellDc. */
   spellDc?: number;
   avgSpellDamagePerRound?: number;
+  /** Number of clustered targets caught by a typical area spell. */
+  spellTargets?: number;
+  /** Save-or-suck attempt made once per round against the highest threat. */
+  control?: { saveDc: number; saveAbility: SimAbility; chance: number };
   /** Healers: average HP restored per round to the most wounded ally. */
   healingPerRound?: number;
   special?: {
@@ -99,6 +103,12 @@ export interface SimPlayer {
     evasion?: boolean;
     /** Extra damage once per round on the first hit. */
     sneakDamage?: number;
+    /** Shield spell: spend one reaction per round to gain +5 AC vs a hit. */
+    shield?: boolean;
+    /** A hit on an opportunity attack stops the target's movement. */
+    sentinel?: boolean;
+    /** Leveled-spell surplus ends after a failed concentration save. */
+    concentration?: boolean;
   };
   initiativeMod: number;
   /** Movement per round in cells (spatial mode; default 6 = 30 ft). */
@@ -135,6 +145,7 @@ export interface BattleReport {
   partyHitRate: number;
   monsterHitRate: number;
   dropRanking: Array<{ playerId: string; name: string; dropRate: number }>;
+  revivalRanking: Array<{ playerId: string; name: string; revivalRate: number }>;
   deadliestMonster: {
     sourceId: string;
     name: string;
@@ -164,7 +175,15 @@ export interface PartyMemberConfig {
   overrides?: Partial<
     Pick<
       SimPlayer,
-      'ac' | 'maxHp' | 'attackBonus' | 'attacksPerRound' | 'avgDamagePerHit' | 'healingPerRound'
+      | 'ac'
+      | 'maxHp'
+      | 'attackBonus'
+      | 'attacksPerRound'
+      | 'avgDamagePerHit'
+      | 'healingPerRound'
+      | 'saveBonuses'
+      | 'spellDc'
+      | 'avgSpellDamagePerRound'
     >
   >;
 }

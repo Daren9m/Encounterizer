@@ -43,6 +43,14 @@ interface PlayerState {
   ref: SimPlayer;
   hp: number;
   down: boolean;
+  dead: boolean;
+  stable: boolean;
+  deathSuccesses: number;
+  deathFailures: number;
+  wasDown: boolean;
+  revived: boolean;
+  shieldAvailable: boolean;
+  concentrating: boolean;
   initiative: number;
   sneakUsedThisRound: boolean;
   /** Grid cell in spatial mode; -1 in the abstract engine. */
@@ -57,6 +65,7 @@ interface MonsterState {
   initiative: number;
   rechargeReady: boolean;
   legendaryLeft: number;
+  lostTurns: number;
   /** Grid cell in spatial mode; -1 in the abstract engine. */
   cell: number;
 }
@@ -154,17 +163,61 @@ const livingCells = (units: Array<{ down: boolean; cell: number }>, except?: { c
   return cells;
 };
 
-function applyDamageToPlayer(target: PlayerState, amount: number, isWeaponAttack: boolean): number {
+function attackHitsPlayer(target: PlayerState, roll: number, attackBonus: number): boolean {
+  if (roll === 1) return false;
+  if (roll === 20) return true;
+  const total = roll + attackBonus;
+  if (total < target.ref.ac) return false;
+  if (target.shieldAvailable && target.ref.special?.shield && total < target.ref.ac + 5) {
+    target.shieldAvailable = false;
+    return false;
+  }
+  return true;
+}
+
+function applyDamageToPlayer(
+  target: PlayerState,
+  amount: number,
+  isWeaponAttack: boolean,
+  rng: Rng,
+): number {
   let dealt = amount;
   if (isWeaponAttack && target.ref.special?.rage) {
     dealt = Math.floor(dealt / 2);
   }
   target.hp -= dealt;
+  if (dealt > 0 && target.concentrating) {
+    const dc = Math.max(10, Math.floor(dealt / 2));
+    if (d20(rng) + target.ref.saveBonuses.con < dc) target.concentrating = false;
+  }
   if (target.hp <= 0) {
     target.hp = 0;
-    target.down = true; // KO is final in v1 — no death saves, no yo-yo
+    target.down = true;
+    target.stable = false;
+    target.deathSuccesses = 0;
+    target.deathFailures = 0;
+    target.wasDown = true;
+    target.concentrating = false;
   }
   return dealt;
+}
+
+function resolveDeathSave(target: PlayerState, rng: Rng): void {
+  if (target.dead || target.stable || !target.down) return;
+  const roll = d20(rng);
+  if (roll === 20) {
+    target.hp = 1;
+    target.down = false;
+    target.revived = true;
+    target.deathFailures = 0;
+    target.deathSuccesses = 0;
+    return;
+  }
+  if (roll === 1) target.deathFailures += 2;
+  else if (roll >= 10) target.deathSuccesses++;
+  else target.deathFailures++;
+  if (target.deathFailures >= 3) target.dead = true;
+  if (target.deathSuccesses >= 3) target.stable = true;
 }
 
 /** Saving-throw damage with Evasion semantics on DEX saves. */
@@ -184,13 +237,14 @@ function saveDamage(
   } else {
     amount = evades ? Math.floor(fullDamage / 2) : fullDamage;
   }
-  return applyDamageToPlayer(target, amount, false);
+  return applyDamageToPlayer(target, amount, false, rng);
 }
 
 interface IterationResult {
   winner: 'party' | 'monsters' | 'stalemate';
   rounds: number;
   playerDowns: boolean[];
+  playerRevived: boolean[];
   partyHpFraction: number;
   damageBySource: Map<string, number>;
   partyHits: number;
@@ -211,14 +265,16 @@ function runIteration(
   spatial?: SpatialContext,
 ): IterationResult {
   const playerStates: PlayerState[] = players.map((p, i) => ({
-    kind: 'player', ref: p, hp: p.maxHp, down: false,
+    kind: 'player', ref: p, hp: p.maxHp, down: false, dead: false, stable: false,
+    deathSuccesses: 0, deathFailures: 0, wasDown: false, revived: false,
+    shieldAvailable: true, concentrating: p.special?.concentration ?? false,
     initiative: d20(rng) + p.initiativeMod, sneakUsedThisRound: false,
     cell: spatial ? (spatial.bf.playerSpawns[i] ?? spatial.fallbackCell) : -1,
   }));
   const monsterStates: MonsterState[] = monsters.map((m) => ({
     kind: 'monster', ref: m, hp: m.maxHp, down: false,
     initiative: d20(rng) + m.initiativeMod,
-    rechargeReady: true, legendaryLeft: m.legendary?.perRound ?? 0,
+    rechargeReady: true, legendaryLeft: m.legendary?.perRound ?? 0, lostTurns: 0,
     cell: spatial ? (spatial.bf.monsterSpawns.get(m.id) ?? spatial.fallbackCell) : -1,
   }));
   const gridW = spatial?.bf.width ?? 0;
@@ -233,11 +289,11 @@ function runIteration(
     monsterAttempts++;
     const roll = d20(rng);
     const crit = roll === 20;
-    if (!crit && (roll === 1 || roll + attack.attackBonus < player.ref.ac)) return;
+    if (!attackHitsPlayer(player, roll, attack.attackBonus)) return;
     monsterHits++;
     let damage = rollDice(attack.damageDice, rng);
     if (crit) damage += rollDice({ ...attack.damageDice, mod: 0 }, rng);
-    const dealt = applyDamageToPlayer(player, damage, true);
+    const dealt = applyDamageToPlayer(player, damage, true, rng);
     damageBySource.set(striker.ref.sourceId, (damageBySource.get(striker.ref.sourceId) ?? 0) + dealt);
   };
   const opportunityStrikeOnMonster = (monster: MonsterState, from: number, to: number): void => {
@@ -250,6 +306,7 @@ function runIteration(
     if (!crit && (roll === 1 || roll + striker.ref.attackBonus < monster.ref.ac)) return;
     partyHits++;
     monster.hp -= Math.round(striker.ref.avgDamagePerHit * (crit ? 1.5 : 1));
+    if (striker.ref.special?.sentinel) monster.cell = from;
     if (monster.hp <= 0) { monster.hp = 0; monster.down = true; }
   };
 
@@ -265,7 +322,7 @@ function runIteration(
   let monsterHits = 0; let monsterAttempts = 0;
   const curve: Array<[number, number]> = [];
 
-  const partyAlive = () => playerStates.some((p) => !p.down);
+  const partyAlive = () => playerStates.some((p) => !p.down && !p.dead);
   const monstersAlive = () => monsterStates.some((m) => !m.down);
 
   let round = 0;
@@ -273,11 +330,19 @@ function runIteration(
   let contactRound = 0;
 
   outer: for (round = 1; round <= maxRounds; round++) {
-    for (const p of playerStates) p.sneakUsedThisRound = false;
+    for (const p of playerStates) {
+      p.sneakUsedThisRound = false;
+      p.shieldAvailable = true;
+    }
     for (const m of monsterStates) m.legendaryLeft = m.ref.legendary?.perRound ?? 0;
 
     for (const unit of order) {
-      if (unit.down) continue;
+      if (unit.kind === 'monster' && unit.down) continue;
+      if (unit.kind === 'player' && unit.dead) continue;
+      if (unit.kind === 'player' && unit.down) {
+        resolveDeathSave(unit, rng);
+        continue;
+      }
 
       if (unit.kind === 'player') {
         const player = unit;
@@ -328,11 +393,18 @@ function runIteration(
           if (player.ref.healingPerRound) {
             let wounded: PlayerState | undefined;
             for (const ally of playerStates) {
-              if (ally.down || ally.hp >= ally.ref.maxHp) continue;
-              if (!wounded || ally.hp / ally.ref.maxHp < wounded.hp / wounded.ref.maxHp) wounded = ally;
+              if (ally.dead || (!ally.down && ally.hp >= ally.ref.maxHp)) continue;
+              if (ally.down || !wounded || ally.hp / ally.ref.maxHp < wounded.hp / wounded.ref.maxHp) wounded = ally;
             }
             if (wounded) {
               wounded.hp = Math.min(wounded.ref.maxHp, wounded.hp + player.ref.healingPerRound);
+              if (wounded.hp > 0 && wounded.down) {
+                wounded.down = false;
+                wounded.stable = false;
+                wounded.deathSuccesses = 0;
+                wounded.deathFailures = 0;
+                wounded.revived = true;
+              }
             }
           }
 
@@ -360,9 +432,16 @@ function runIteration(
 
           // Leveled-spell surplus, save-gated vs DEX (range-free — see
           // SPATIAL_NOTES)
-          if (player.ref.spellDc && player.ref.avgSpellDamagePerRound) {
-            const target = highestThreatAlive(monsterStates);
-            if (target) {
+          if (
+            player.ref.spellDc
+            && player.ref.avgSpellDamagePerRound
+            && (!player.ref.special?.concentration || player.concentrating)
+          ) {
+            const targets = [...monsterStates]
+              .filter((target) => !target.down)
+              .sort((a, b) => b.ref.threat - a.ref.threat || a.hp - b.hp)
+              .slice(0, player.ref.spellTargets ?? 1);
+            for (const target of targets) {
               const saved = d20(rng) + target.ref.saves.dex >= player.ref.spellDc;
               const damage = saved
                 ? Math.floor(player.ref.avgSpellDamagePerRound / 2)
@@ -371,12 +450,19 @@ function runIteration(
               if (target.hp <= 0) { target.hp = 0; target.down = true; }
             }
           }
+
+          if (player.ref.control && rng() < player.ref.control.chance) {
+            const target = highestThreatAlive(monsterStates);
+            if (target && d20(rng) + target.ref.saves[player.ref.control.saveAbility] < player.ref.control.saveDc) {
+              target.lostTurns = Math.max(target.lostTurns, 1);
+            }
+          }
         }
 
         if (!monstersAlive()) { winner = 'party'; break outer; }
 
         // Legendary actions trigger after each player's turn
-        const legend = monsterStates.find((m) => !m.down && m.ref.legendary && m.legendaryLeft > 0);
+        const legend = monsterStates.find((m) => !m.down && m.lostTurns === 0 && m.ref.legendary && m.legendaryLeft > 0);
         if (legend?.ref.legendary) {
           const affordable = legend.ref.legendary.actions.find((a) => a.cost <= legend.legendaryLeft);
           if (affordable) {
@@ -389,6 +475,11 @@ function runIteration(
         }
       } else {
         const monster = unit;
+
+        if (monster.lostTurns > 0) {
+          monster.lostTurns--;
+          continue;
+        }
 
         // Spatial: close on the nearest player before acting.
         let monsterDashed = false;
@@ -445,12 +536,12 @@ function runIteration(
               monsterAttempts++;
               const roll = rangedInMelee ? Math.min(d20(rng), d20(rng)) : d20(rng);
               const crit = roll === 20;
-              const hit = crit || (roll !== 1 && roll + attack.attackBonus >= target.ref.ac);
+              const hit = attackHitsPlayer(target, roll, attack.attackBonus);
               if (!hit) continue;
               monsterHits++;
               let damage = rollDice(attack.damageDice, rng);
               if (crit) damage += rollDice({ ...attack.damageDice, mod: 0 }, rng);
-              const dealt = applyDamageToPlayer(target, damage, true);
+              const dealt = applyDamageToPlayer(target, damage, true, rng);
               damageBySource.set(
                 monster.ref.sourceId,
                 (damageBySource.get(monster.ref.sourceId) ?? 0) + dealt,
@@ -478,7 +569,8 @@ function runIteration(
   return {
     winner,
     rounds: Math.min(round, maxRounds),
-    playerDowns: playerStates.map((p) => p.down),
+    playerDowns: playerStates.map((p) => p.wasDown),
+    playerRevived: playerStates.map((p) => p.revived),
     partyHpFraction: playerStates.reduce((s, p) => s + p.hp, 0) / partyMaxHp,
     damageBySource,
     partyHits, partyAttempts, monsterHits, monsterAttempts,
@@ -499,8 +591,8 @@ function resolveRecharge(
     const target = monsterPickTarget(playerStates, rng);
     if (!target) return 0;
     const roll = d20(rng);
-    const hit = roll === 20 || (roll !== 1 && roll + (recharge.attackBonus ?? 0) >= target.ref.ac);
-    if (hit) dealt = applyDamageToPlayer(target, rollDice(recharge.damageDice, rng), true);
+    const hit = attackHitsPlayer(target, roll, recharge.attackBonus ?? 0);
+    if (hit) dealt = applyDamageToPlayer(target, rollDice(recharge.damageDice, rng), true, rng);
   } else {
     // Save-based AoE: catch up to maxTargets of the lowest-HP players
     const targets = [...playerStates]
@@ -530,8 +622,8 @@ function resolveLegendary(
     const target = monsterPickTarget(playerStates, rng);
     if (!target) return 0;
     const roll = d20(rng);
-    const hit = roll === 20 || (roll !== 1 && roll + action.attackBonus >= target.ref.ac);
-    if (hit) dealt = applyDamageToPlayer(target, rollDice(action.damageDice, rng), true);
+    const hit = attackHitsPlayer(target, roll, action.attackBonus);
+    if (hit) dealt = applyDamageToPlayer(target, rollDice(action.damageDice, rng), true, rng);
   } else if (action.kind === 'save' && action.saveDc && action.damageDice) {
     const targets = [...playerStates]
       .filter((p) => !p.down)
@@ -579,6 +671,7 @@ export function simulateBattle(
   let partyHits = 0; let partyAttempts = 0;
   let monsterHits = 0; let monsterAttempts = 0;
   const downCounts = players.map(() => 0);
+  const revivalCounts = players.map(() => 0);
   const damageTotals = new Map<string, number>();
   const curveSums: Array<[number, number]> = Array.from({ length: maxRounds }, () => [0, 0]);
 
@@ -593,6 +686,7 @@ export function simulateBattle(
     partyHits += result.partyHits; partyAttempts += result.partyAttempts;
     monsterHits += result.monsterHits; monsterAttempts += result.monsterAttempts;
     result.playerDowns.forEach((down, idx) => { if (down) downCounts[idx]++; });
+    result.playerRevived.forEach((revived, idx) => { if (revived) revivalCounts[idx]++; });
     for (const [sourceId, damage] of result.damageBySource) {
       damageTotals.set(sourceId, (damageTotals.get(sourceId) ?? 0) + damage);
     }
@@ -673,6 +767,9 @@ export function simulateBattle(
     dropRanking: players
       .map((p, i) => ({ playerId: p.id, name: p.name, dropRate: downCounts[i] / iterations }))
       .sort((a, b) => b.dropRate - a.dropRate),
+    revivalRanking: players
+      .map((p, i) => ({ playerId: p.id, name: p.name, revivalRate: revivalCounts[i] / iterations }))
+      .sort((a, b) => b.revivalRate - a.revivalRate),
     deadliestMonster: deadliest,
     hpCurve: hpCurve.slice(0, lastInteresting + 1),
     simLabel,

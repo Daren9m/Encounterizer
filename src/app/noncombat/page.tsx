@@ -137,6 +137,7 @@ function NoncombatBuilder() {
     const timeP = searchParams.get('time');
     const timeV = TIME_OPTIONS.some(o => o.value === timeP) ? (timeP as TimeBudget) : 'standard';
     setKind(kindV ?? ''); setDifficulty(diffV ?? ''); setPartyLevel(lvl); setPartySize(size);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot share-link hydration preserves deterministic draw order.
     setPartyLevelInput(String(lvl)); setPartySizeInput(String(size));
     setTheme(themeV); setTone(toneV); setTimeBudget(timeV);
     const r = generateNoncombat({ kind: kindV, difficulty: diffV, partyLevel: lvl, partySize: size, theme: themeV, tone: toneV, timeBudget: timeV, seed: seedParam });
