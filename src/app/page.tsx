@@ -28,7 +28,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Feature Cards — all six tools */}
+      {/* Feature Cards — all five tools */}
       <section className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mt-8" aria-label="Tools">
         {TOOL_ROUTES.map((route) => (
           <FeatureCard

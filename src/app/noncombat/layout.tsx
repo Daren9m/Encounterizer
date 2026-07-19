@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { TOOL_ROUTES } from '@/lib/site';
 
-const route = TOOL_ROUTES.find((r) => r.path === '/puzzles')!;
+const route = TOOL_ROUTES.find((r) => r.path === '/noncombat')!;
 
 export const metadata: Metadata = {
   title: route.title,

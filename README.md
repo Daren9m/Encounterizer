@@ -35,11 +35,7 @@ place. No accounts, no server, no cost. Everything runs in your browser.
 - **🗺️ Map Generator** — Procedural battle maps: BSP room-and-corridor
   dungeons, cellular-automata caves, and environment-specific outdoor
   terrain. Export as JSON or ASCII.
-- **🧩 Puzzle Generator** — Ready-to-run riddles, ciphers, and minigames
-  with DM briefs, read-aloud text, player handouts, progressive hints, and
-  printable solutions.
-- **🎭 Non-Combat Challenges** — Social encounters, exploration hazards,
-  skill challenges, and traps with stakes, complications, and outcomes.
+- **🧩 Puzzles & Challenges** — One seeded generator: verified logic/word/spatial puzzles, riddles, ciphers, contests, plus social encounters, journeys, traps, chases, and investigations.
 - **✨ Spell Reference** — **All 339 spells from the SRD 5.2.1** (levels
   0–9, verbatim 2024 rules text) with instant search, mechanics-first
   summaries, filters for level/school/class/concentration/ritual, and
@@ -72,8 +68,7 @@ src/
     encounters/              # Encounter Builder + Battle Forecast
     monsters/                # Bestiary + custom monster import
     maps/                    # Map Generator
-    puzzles/                 # Puzzle Generator
-    challenges/              # Non-Combat Challenges
+    noncombat/               # Puzzles & Challenges
     spells/                  # Spell Reference
     credits/                 # SRD attribution + licensing
     icon.svg, opengraph-image.png, robots.ts, sitemap.ts
@@ -93,8 +88,7 @@ src/
     monster-to-sim.ts        # Stat block → simulator stats extraction
     monster-filter.ts        # Search/filter engine
     map-generator.ts         # BSP + cellular automata + outdoor scatter
-    puzzle-generator.ts      # Puzzles, riddles, ciphers
-    noncombat-generator.ts   # Social/exploration/skill/trap encounters
+    noncombat/generate.ts    # Unified orchestrator: puzzles & challenges (one seeded gen)
     encounter-recipes.ts     # Recipe-based encounter templates (engine)
     import-5etools.ts        # 5etools JSON → Monster converter (2024 format)
     custom-monster-import.ts # Client-side JSON import with validation
