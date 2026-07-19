@@ -22,7 +22,7 @@ import type {
 } from '@/lib/types';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import MonsterStatBlock from '@/components/MonsterStatBlock';
-import MapGrid from '@/components/MapGrid';
+import MapSvg from '@/components/MapSvg';
 import FilterPanel from '@/components/FilterPanel';
 import PartySetupPanel from '@/components/PartySetupPanel';
 import BattleReportCard from '@/components/BattleReportCard';
@@ -1113,7 +1113,7 @@ function EncounterBuilder() {
                   Regenerate Map
                 </button>
               </div>
-              <MapGrid map={encounter.map} />
+              <MapSvg map={encounter.map} />
             </div>
           )}
         </div>

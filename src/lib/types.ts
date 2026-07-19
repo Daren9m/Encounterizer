@@ -264,6 +264,22 @@ export interface EncounterMap {
   };
 }
 
+/** A creature marker drawn on the battle map. */
+export interface MapToken {
+  /** 'party-N' for party slots, `${Monster.id}#${i}` for monster
+   *  instances (the same ids the battle sim uses). */
+  id: string;
+  kind: 'party' | 'monster';
+  name: string;
+  /** 1–2 character initials shown inside the token. */
+  label: string;
+  /** Top-left cell of the footprint. */
+  x: number;
+  y: number;
+  /** Footprint edge in cells: Tiny/Small/Medium 1, Large 2, Huge 3, Gargantuan 4. */
+  sizeCells: 1 | 2 | 3 | 4;
+}
+
 // ─── Encounter ───────────────────────────────────────────────────
 
 export interface EncounterMonster {
