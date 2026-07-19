@@ -5,6 +5,26 @@
       "src": "/images/monsters/aboleth.webp",
       "alt": "A huge blue-gray aboleth with three eyes and four tentacles glides through a dark underwater cavern."
     },
+    "adult-black-dragon": {
+      "src": "/images/monsters/adult-black-dragon.webp",
+      "alt": "A huge adult black dragon stands in a drowned forest, pouring acid from its skull-like jaws."
+    },
+    "adult-brass-dragon": {
+      "src": "/images/monsters/adult-brass-dragon.webp",
+      "alt": "A huge adult brass dragon stands across a dune crest with vast wings spread and fire rolling from its jaws."
+    },
+    "adult-bronze-dragon": {
+      "src": "/images/monsters/adult-bronze-dragon.webp",
+      "alt": "A huge adult bronze dragon rises through crashing surf and fires lightning past a coastal fortress."
+    },
+    "adult-copper-dragon": {
+      "src": "/images/monsters/adult-copper-dragon.webp",
+      "alt": "A huge verdigris-patched adult copper dragon climbs headfirst down a red canyon wall."
+    },
+    "adult-white-dragon": {
+      "src": "/images/monsters/adult-white-dragon.webp",
+      "alt": "A huge adult white dragon climbs across broken sea ice while breathing a cone of freezing vapor."
+    },
     "air-elemental": {
       "src": "/images/monsters/air-elemental.webp",
       "alt": "A large humanoid vortex of pale air surges across a rocky plateau amid spiraling leaves and dust."
@@ -40,6 +60,10 @@
     "archelon": {
       "src": "/images/monsters/archelon.webp",
       "alt": "A colossal scarred archelon glides over a coastal seabed on four long flippers beneath a broad leathery shell."
+    },
+    "archmage": {
+      "src": "/images/monsters/archmage.webp",
+      "alt": "A small elder archmage stands within a clear magical ward while directing bright force bolts."
     },
     "assassin": {
       "src": "/images/monsters/assassin.webp",
@@ -92,6 +116,10 @@
     "bearded-devil": {
       "src": "/images/monsters/bearded-devil.webp",
       "alt": "A rust-red bearded devil advances along an infernal causeway with barbed facial tendrils and a black glaive."
+    },
+    "behir": {
+      "src": "/images/monsters/behir.webp",
+      "alt": "A twelve-legged blue behir coils down a cavern wall as white lightning gathers in its jaws."
     },
     "berserker": {
       "src": "/images/monsters/berserker.webp",
@@ -237,9 +265,17 @@
       "src": "/images/monsters/deer.webp",
       "alt": "A russet deer pauses mid-step in a dawn forest glade, antlered head turned toward a sound."
     },
+    "deva": {
+      "src": "/images/monsters/deva.webp",
+      "alt": "A winged deva hovers above pale stone with a radiant mace held protectively across its body."
+    },
     "dire-wolf": {
       "src": "/images/monsters/dire-wolf.webp",
       "alt": "A pony-sized silver-gray dire wolf charges along a snowy ridge with jaws open and one broad paw forward."
+    },
+    "djinni": {
+      "src": "/images/monsters/djinni.webp",
+      "alt": "A cloud-haired djinni hovers above a coastal terrace with a storm blade and whirlwind coiling around one hand."
     },
     "doppelganger": {
       "src": "/images/monsters/doppelganger.webp",
@@ -277,6 +313,10 @@
       "src": "/images/monsters/earth-elemental.webp",
       "alt": "A hulking earth elemental rises through fractured granite with a boulder raised in one massive hand."
     },
+    "efreeti": {
+      "src": "/images/monsters/efreeti.webp",
+      "alt": "A coal-dark efreeti hovers in a furnace hall with flaming hair, a red-hot blade, and fire in one palm."
+    },
     "elephant": {
       "src": "/images/monsters/elephant.webp",
       "alt": "A huge gray elephant strides through dusty grassland with ears spread, trunk curled, and two ivory tusks forward."
@@ -284,6 +324,10 @@
     "elk": {
       "src": "/images/monsters/elk.webp",
       "alt": "A large russet elk drives through a mountain meadow with its broad antler rack lowered."
+    },
+    "erinyes": {
+      "src": "/images/monsters/erinyes.webp",
+      "alt": "A black-winged erinyes hovers over an infernal tribunal with sword drawn and enchanted rope circling."
     },
     "ettercap": {
       "src": "/images/monsters/ettercap.webp",
@@ -453,6 +497,10 @@
       "src": "/images/monsters/gibbering-mouther.webp",
       "alt": "A pallid gibbering mouther rolls across liquefying cavern stone, crowded with chattering mouths and blinking eyes."
     },
+    "glabrezu": {
+      "src": "/images/monsters/glabrezu.webp",
+      "alt": "A four-armed glabrezu advances across a shattered causeway with two great pincers spread and two fists raised."
+    },
     "gladiator": {
       "src": "/images/monsters/gladiator.webp",
       "alt": "A compact armored gladiator braces behind a scarred shield with a long spear ready."
@@ -517,6 +565,10 @@
       "src": "/images/monsters/guard-captain.webp",
       "alt": "A compact guard captain holds a longsword at a city gate with paired javelins and a muted command sash."
     },
+    "guardian-naga": {
+      "src": "/images/monsters/guardian-naga.webp",
+      "alt": "A golden guardian naga coils across a sanctuary entrance with its crowned head raised and venom shining on its fangs."
+    },
     "half-dragon": {
       "src": "/images/monsters/half-dragon.webp",
       "alt": "An armored half-dragon with dark iridescent scales turns to strike as light gathers in its jaws."
@@ -561,6 +613,10 @@
       "src": "/images/monsters/homunculus.webp",
       "alt": "A tiny clay homunculus hovers over an arcane worktable on broad leathery wings."
     },
+    "horned-devil": {
+      "src": "/images/monsters/horned-devil.webp",
+      "alt": "A horned devil dives over an infernal rampart with a blazing two-pronged fork and hooked tail."
+    },
     "hunter-shark": {
       "src": "/images/monsters/hunter-shark.webp",
       "alt": "A scarred blue-gray hunter shark banks through open coastal water with rows of teeth visible."
@@ -572,6 +628,10 @@
     "hyena": {
       "src": "/images/monsters/hyena.webp",
       "alt": "A spotted hyena with heavy shoulders trots through dry grass with its blunt muzzle held low."
+    },
+    "ice-devil": {
+      "src": "/images/monsters/ice-devil.webp",
+      "alt": "A blue-white insectile ice devil braces behind a frozen spear with its segmented tail curled to strike."
     },
     "ice-mephit": {
       "src": "/images/monsters/ice-mephit.webp",
@@ -677,6 +737,10 @@
       "src": "/images/monsters/mummy.webp",
       "alt": "A compact linen-wrapped mummy advances through a dusty tomb with one darkened fist raised and glare fixed forward."
     },
+    "nalfeshnee": {
+      "src": "/images/monsters/nalfeshnee.webp",
+      "alt": "A tusked, ape-bodied nalfeshnee hovers above shattered stone as a ring of fearful distortion spreads outward."
+    },
     "night-hag": {
       "src": "/images/monsters/night-hag.webp",
       "alt": "A gaunt indigo night hag parts nightmare mist while clutching a dark soul bag in a moonlit ruin."
@@ -781,6 +845,10 @@
       "src": "/images/monsters/quasit.webp",
       "alt": "A tiny wingless green quasit crouches on cracked stone, horned head raised and claws beginning to blur with magic."
     },
+    "rakshasa": {
+      "src": "/images/monsters/rakshasa.webp",
+      "alt": "A tiger-headed rakshasa stands in a quiet audience chamber with both unnatural backward hands visible."
+    },
     "rat": {
       "src": "/images/monsters/rat.webp",
       "alt": "A small brown rat sniffs the air beside a cellar crack with its long tail curved behind it."
@@ -797,6 +865,10 @@
       "src": "/images/monsters/reef-shark.webp",
       "alt": "A sleek gray reef shark turns through a clear coral channel with its tall dorsal fin upright."
     },
+    "remorhaz": {
+      "src": "/images/monsters/remorhaz.webp",
+      "alt": "A huge blue-armored remorhaz erupts from snow, its many legs spread and furnace-red underside steaming."
+    },
     "rhinoceros": {
       "src": "/images/monsters/rhinoceros.webp",
       "alt": "A large gray rhinoceros charges across dry grass with its two nasal horns lowered through rising dust."
@@ -804,6 +876,10 @@
     "riding-horse": {
       "src": "/images/monsters/riding-horse.webp",
       "alt": "A saddled bay riding horse canters along a grassland trail with black mane and reins lifted."
+    },
+    "roc": {
+      "src": "/images/monsters/roc.webp",
+      "alt": "A gargantuan dark-feathered roc banks between snowy peaks with one enormous talon extended."
     },
     "roper": {
       "src": "/images/monsters/roper.webp",
@@ -873,6 +949,10 @@
       "src": "/images/monsters/specter.webp",
       "alt": "A blue-black specter dives through a ruined wall, its hollow face and reaching hand emerging from torn vapor."
     },
+    "sphinx-of-lore": {
+      "src": "/images/monsters/sphinx-of-lore.webp",
+      "alt": "A human-headed Sphinx of Lore sits in a desert archive as golden symbols gather around its measured roar."
+    },
     "sphinx-of-wonder": {
       "src": "/images/monsters/sphinx-of-wonder.webp",
       "alt": "A tiny cream-and-gold sphinx of wonder hovers over a stone tablet with feathered wings spread in discovery."
@@ -904,6 +984,14 @@
     "stone-giant": {
       "src": "/images/monsters/stone-giant.webp",
       "alt": "A lean slate-skinned stone giant draws back a boulder in a vast mountain cavern."
+    },
+    "stone-golem": {
+      "src": "/images/monsters/stone-golem.webp",
+      "alt": "A massive dark stone golem launches a pale force bolt while swinging one slab fist in a ruined courtyard."
+    },
+    "storm-giant": {
+      "src": "/images/monsters/storm-giant.webp",
+      "alt": "A colossal violet-gray storm giant hovers above a sea cliff with a thunderous sword and lightning in hand."
     },
     "succubus": {
       "src": "/images/monsters/succubus.webp",
@@ -949,6 +1037,10 @@
       "src": "/images/monsters/tough-boss.webp",
       "alt": "A compact armored tough boss commands a barricaded alley with warhammer and heavy crossbow ready."
     },
+    "treant": {
+      "src": "/images/monsters/treant.webp",
+      "alt": "An ancient treant strides from an old forest, raising one vast branch arm as bark shards fly."
+    },
     "triceratops": {
       "src": "/images/monsters/triceratops.webp",
       "alt": "A huge three-horned triceratops lowers its broad frill and charges across a dusty grassland."
@@ -968,6 +1060,10 @@
     "unicorn": {
       "src": "/images/monsters/unicorn.webp",
       "alt": "A radiant white unicorn rears protectively beside a forest spring, its single spiraled horn aglow."
+    },
+    "vampire": {
+      "src": "/images/monsters/vampire.webp",
+      "alt": "A pale vampire walks down a moonlit manor wall as one hand gathers grave force and the other turns to mist."
     },
     "vampire-familiar": {
       "src": "/images/monsters/vampire-familiar.webp",
@@ -1077,6 +1173,10 @@
       "src": "/images/monsters/young-black-dragon.webp",
       "alt": "A young black dragon climbs from a swamp pool as smoking acid gathers along its skull-like jaws."
     },
+    "young-blue-dragon": {
+      "src": "/images/monsters/young-blue-dragon.webp",
+      "alt": "A young cobalt blue dragon rises from a dune as lightning branches around its great nasal horn."
+    },
     "young-brass-dragon": {
       "src": "/images/monsters/young-brass-dragon.webp",
       "alt": "A young brass dragon bursts from a desert dune with broad wings opening and fire glowing in its throat."
@@ -1089,9 +1189,21 @@
       "src": "/images/monsters/young-copper-dragon.webp",
       "alt": "A young copper dragon clings to a sandstone bluff, verdigris touching its bright scales."
     },
+    "young-gold-dragon": {
+      "src": "/images/monsters/young-gold-dragon.webp",
+      "alt": "A young gold dragon lands in a meadow, its long body and barbels lit by fire gathering in its throat."
+    },
     "young-green-dragon": {
       "src": "/images/monsters/young-green-dragon.webp",
       "alt": "A young green dragon coils among ancient roots while yellow-green poison mist drifts from its jaws."
+    },
+    "young-red-dragon": {
+      "src": "/images/monsters/young-red-dragon.webp",
+      "alt": "A young red dragon spreads its dark wings on a volcanic shelf as smoke pours from ember-lit jaws."
+    },
+    "young-silver-dragon": {
+      "src": "/images/monsters/young-silver-dragon.webp",
+      "alt": "A young silver dragon perches above mountain clouds as cold mist gathers around its broad horned head."
     },
     "young-white-dragon": {
       "src": "/images/monsters/young-white-dragon.webp",
