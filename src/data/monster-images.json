@@ -33,6 +33,10 @@
       "src": "/images/monsters/ape.webp",
       "alt": "A muscular charcoal ape braces in a forest clearing with one long arm drawn back around a stone."
     },
+    "archelon": {
+      "src": "/images/monsters/archelon.webp",
+      "alt": "A colossal scarred archelon glides over a coastal seabed on four long flippers beneath a broad leathery shell."
+    },
     "awakened-shrub": {
       "src": "/images/monsters/awakened-shrub.webp",
       "alt": "A small awakened shrub scuttles across a woodland floor on tangled roots with thorny branches raised."
@@ -89,6 +93,10 @@
       "src": "/images/monsters/black-dragon-wyrmling.webp",
       "alt": "A young black dragon crouches on a swamp root, oily wings spread as smoking acid drips from its jaws."
     },
+    "black-pudding": {
+      "src": "/images/monsters/black-pudding.webp",
+      "alt": "A glossy black pudding spreads across an Underdark floor and wall while a metal grate corrodes beneath it."
+    },
     "blink-dog": {
       "src": "/images/monsters/blink-dog.webp",
       "alt": "A golden blink dog reappears in a running bound on a forest path with a pale afterimage behind it."
@@ -117,6 +125,10 @@
       "src": "/images/monsters/brown-bear.webp",
       "alt": "A huge grizzled brown bear rises beside a forest river with one broad clawed paw sweeping outward."
     },
+    "bugbear-stalker": {
+      "src": "/images/monsters/bugbear-stalker.webp",
+      "alt": "A long-armed ochre bugbear stalker steps from forest shadow with morningstar low and javelins on its back."
+    },
     "bugbear-warrior": {
       "src": "/images/monsters/bugbear-warrior.webp",
       "alt": "A hairy bugbear warrior lunges from a forest ravine with one long hand grabbing and a hammer raised."
@@ -132,6 +144,10 @@
     "centaur-trooper": {
       "src": "/images/monsters/centaur-trooper.webp",
       "alt": "A chestnut centaur trooper advances across a meadow with pike lowered and longbow secured along the flank."
+    },
+    "chuul": {
+      "src": "/images/monsters/chuul.webp",
+      "alt": "A blue-green chuul wades from cavern water with massive pincers open and pale mouth tentacles spread."
     },
     "cockatrice": {
       "src": "/images/monsters/cockatrice.webp",
@@ -185,6 +201,10 @@
       "src": "/images/monsters/dire-wolf.webp",
       "alt": "A pony-sized silver-gray dire wolf charges along a snowy ridge with jaws open and one broad paw forward."
     },
+    "doppelganger": {
+      "src": "/images/monsters/doppelganger.webp",
+      "alt": "An ash-gray doppelganger turns in a narrow alley as a borrowed human face ripples away from its blank true form."
+    },
     "draft-horse": {
       "src": "/images/monsters/draft-horse.webp",
       "alt": "A powerful dark bay draft horse leans into a plain work harness on a muddy village lane."
@@ -209,6 +229,10 @@
       "src": "/images/monsters/eagle.webp",
       "alt": "A brown-and-cream eagle banks toward a coastal cliff with its broad wings cupped and talons extended."
     },
+    "elephant": {
+      "src": "/images/monsters/elephant.webp",
+      "alt": "A huge gray elephant strides through dusty grassland with ears spread, trunk curled, and two ivory tusks forward."
+    },
     "elk": {
       "src": "/images/monsters/elk.webp",
       "alt": "A large russet elk drives through a mountain meadow with its broad antler rack lowered."
@@ -216,6 +240,10 @@
     "ettercap": {
       "src": "/images/monsters/ettercap.webp",
       "alt": "A bristled ettercap clings sideways to a webbed tree and casts a thick strand from one clawed arm."
+    },
+    "ettin": {
+      "src": "/images/monsters/ettin.webp",
+      "alt": "A huge two-headed ettin strides through a hill pass with a battleaxe in one hand and morningstar in the other."
     },
     "fire-elemental": {
       "src": "/images/monsters/fire-elemental.webp",
@@ -317,6 +345,10 @@
       "src": "/images/monsters/giant-rat.webp",
       "alt": "A terrier-sized brown giant rat creeps over sewer rubble with its thick naked tail curved behind it."
     },
+    "giant-scorpion": {
+      "src": "/images/monsters/giant-scorpion.webp",
+      "alt": "A giant amber scorpion braces in a desert ravine with pincers spread and one venomous stinger arched overhead."
+    },
     "giant-seahorse": {
       "src": "/images/monsters/giant-seahorse.webp",
       "alt": "A horse-sized blue-green giant seahorse charges upright through a clear underwater canyon."
@@ -373,6 +405,10 @@
       "src": "/images/monsters/goblin-warrior.webp",
       "alt": "A small green-skinned goblin warrior crouches on a forest path with scimitar drawn and shortbow ready."
     },
+    "gold-dragon-wyrmling": {
+      "src": "/images/monsters/gold-dragon-wyrmling.webp",
+      "alt": "A gold dragon wyrmling opens its wings beside a meadow river as warm firelight gathers in its throat."
+    },
     "gray-ooze": {
       "src": "/images/monsters/gray-ooze.webp",
       "alt": "A translucent gray ooze creeps down a cavern wall, extending one pseudopod toward rusted metal."
@@ -380,6 +416,10 @@
     "green-dragon-wyrmling": {
       "src": "/images/monsters/green-dragon-wyrmling.webp",
       "alt": "A young green dragon stalks along a mossy forest trunk as poisonous yellow-green vapor curls from its jaws."
+    },
+    "green-hag": {
+      "src": "/images/monsters/green-hag.webp",
+      "alt": "A moss-green hag stands in shallow swamp water with hooked claws raised beneath tangled iron-gray hair."
     },
     "grick": {
       "src": "/images/monsters/grick.webp",
@@ -397,6 +437,10 @@
       "src": "/images/monsters/guard.webp",
       "alt": "A compact town guard holds a gateway with a round shield forward and a plain spear ready."
     },
+    "guard-captain": {
+      "src": "/images/monsters/guard-captain.webp",
+      "alt": "A compact guard captain holds a longsword at a city gate with paired javelins and a muted command sash."
+    },
     "harpy": {
       "src": "/images/monsters/harpy.webp",
       "alt": "A storm-gray harpy sings from a coastal cliff with broad feathered wings raised and talons gripping stone."
@@ -405,9 +449,21 @@
       "src": "/images/monsters/hawk.webp",
       "alt": "A small rust-and-cream hawk turns sharply above a grassland with its barred tail fanned."
     },
+    "hell-hound": {
+      "src": "/images/monsters/hell-hound.webp",
+      "alt": "A charcoal hell hound charges over black rock as furnace light and flame build inside its open jaws."
+    },
     "hippogriff": {
       "src": "/images/monsters/hippogriff.webp",
       "alt": "A tawny hippogriff lands on a mountain shelf, eagle talons forward and horse hind legs braced beneath wide wings."
+    },
+    "hippopotamus": {
+      "src": "/images/monsters/hippopotamus.webp",
+      "alt": "A huge gray-brown hippopotamus surges from a green river with its broad mouth and ivory teeth fully open."
+    },
+    "hobgoblin-captain": {
+      "src": "/images/monsters/hobgoblin-captain.webp",
+      "alt": "A rust-red hobgoblin captain stands in ordered dark armor with greatsword ready and longbow on the back."
     },
     "hobgoblin-warrior": {
       "src": "/images/monsters/hobgoblin-warrior.webp",
@@ -433,13 +489,29 @@
       "src": "/images/monsters/imp.webp",
       "alt": "A tiny red imp hovers in a dark stone alcove with leathery wings spread and barbed tail raised."
     },
+    "incubus": {
+      "src": "/images/monsters/incubus.webp",
+      "alt": "A dark-winged incubus descends inside a moonlit chamber with violet psychic haze around one reaching hand."
+    },
     "jackal": {
       "src": "/images/monsters/jackal.webp",
       "alt": "A tawny jackal pauses on a dune crest with one paw lifted and tall ears alert."
     },
+    "killer-whale": {
+      "src": "/images/monsters/killer-whale.webp",
+      "alt": "A huge black-and-white killer whale rolls through cold ocean water beneath the silver surface."
+    },
+    "knight": {
+      "src": "/images/monsters/knight.webp",
+      "alt": "A compact knight in brushed plate guards a castle approach with greatsword ready and heavy crossbow on the back."
+    },
     "kobold-warrior": {
       "src": "/images/monsters/kobold-warrior.webp",
       "alt": "A small russet-scaled kobold warrior crouches in a mine passage with dagger poised and tail extended."
+    },
+    "lamia": {
+      "src": "/images/monsters/lamia.webp",
+      "alt": "A tawny lion-bodied lamia leaps from a desert terrace with its humanoid claw extended in violet corrupting magic."
     },
     "lemure": {
       "src": "/images/monsters/lemure.webp",
@@ -461,6 +533,10 @@
       "src": "/images/monsters/magmin.webp",
       "alt": "A small wingless magmin of living orange magma strides across black stone with one burning hand extended."
     },
+    "manticore": {
+      "src": "/images/monsters/manticore.webp",
+      "alt": "A russet manticore crouches on a ridge, leathery wings spread and its spike-filled tail curled to fire."
+    },
     "mastiff": {
       "src": "/images/monsters/mastiff.webp",
       "alt": "A powerful brindled mastiff steps forward barking in a lamplit stable courtyard."
@@ -477,6 +553,10 @@
       "src": "/images/monsters/mimic.webp",
       "alt": "A battered dungeon chest twists into a mimic, slick flesh and an adhesive pseudopod breaking through warped boards."
     },
+    "minotaur-of-baphomet": {
+      "src": "/images/monsters/minotaur-of-baphomet.webp",
+      "alt": "A black-furred minotaur of Baphomet charges through a labyrinth with carved horns and a violet-smoking glaive."
+    },
     "minotaur-skeleton": {
       "src": "/images/monsters/minotaur-skeleton.webp",
       "alt": "A towering minotaur skeleton lowers its horned bull skull to charge through a ruined labyrinth."
@@ -484,6 +564,14 @@
     "mule": {
       "src": "/images/monsters/mule.webp",
       "alt": "A dun pack mule climbs a rocky hill trail with long ears forward and balanced canvas bundles."
+    },
+    "mummy": {
+      "src": "/images/monsters/mummy.webp",
+      "alt": "A compact linen-wrapped mummy advances through a dusty tomb with one darkened fist raised and glare fixed forward."
+    },
+    "nightmare": {
+      "src": "/images/monsters/nightmare.webp",
+      "alt": "A coal-black nightmare rears over a dark planar causeway with flaming mane, tail, and all four hooves."
     },
     "noble": {
       "src": "/images/monsters/noble.webp",
@@ -520,6 +608,10 @@
     "pegasus": {
       "src": "/images/monsters/pegasus.webp",
       "alt": "A white pegasus lifts from a high meadow with four hooves leaving the grass and broad feathered wings descending."
+    },
+    "phase-spider": {
+      "src": "/images/monsters/phase-spider.webp",
+      "alt": "A blue-black phase spider steps through a dungeon wall, its eight-legged rear half fading into violet translucence."
     },
     "piranha": {
       "src": "/images/monsters/piranha.webp",
@@ -669,6 +761,10 @@
       "src": "/images/monsters/swarm-of-bats.webp",
       "alt": "Dozens of small brown bats spiral from a cave in a broad coordinated swarm."
     },
+    "swarm-of-crawling-claws": {
+      "src": "/images/monsters/swarm-of-crawling-claws.webp",
+      "alt": "Dozens of desiccated crawling claws spill down a crypt stair in a coordinated wave of hooked fingers."
+    },
     "swarm-of-insects": {
       "src": "/images/monsters/swarm-of-insects.webp",
       "alt": "A dense mixed swarm of beetles and flies rolls over a low ruin wall in a dark shifting wave."
@@ -701,6 +797,10 @@
       "src": "/images/monsters/troll-limb.webp",
       "alt": "A severed green-gray troll forearm crawls across a cavern floor on five claws, its stump sealed by new tissue."
     },
+    "vampire-familiar": {
+      "src": "/images/monsters/vampire-familiar.webp",
+      "alt": "A pale vampire familiar springs from a moonlit manor wall with two shadow-wreathed daggers and more blades concealed."
+    },
     "venomous-snake": {
       "src": "/images/monsters/venomous-snake.webp",
       "alt": "A small olive viper coils in woodland leaves with its triangular head raised and fangs visible."
@@ -725,6 +825,10 @@
       "src": "/images/monsters/warrior-infantry.webp",
       "alt": "A compact infantry warrior braces behind a tall wooden shield with a plain spear leveled."
     },
+    "warrior-veteran": {
+      "src": "/images/monsters/warrior-veteran.webp",
+      "alt": "A compact scarred warrior veteran stands in repaired armor with greatsword guarded and heavy crossbow on the back."
+    },
     "weasel": {
       "src": "/images/monsters/weasel.webp",
       "alt": "A slender chestnut weasel rises beside a tree root with forepaws tucked and nose lifted."
@@ -733,13 +837,25 @@
       "src": "/images/monsters/wererat.webp",
       "alt": "A small gray-brown wererat crouches on a cellar beam with hand crossbow aimed and naked tail wrapped for balance."
     },
+    "werewolf": {
+      "src": "/images/monsters/werewolf.webp",
+      "alt": "A compact gray werewolf crouches on a moonlit hill with claws forward and a longbow across its back."
+    },
     "white-dragon-wyrmling": {
       "src": "/images/monsters/white-dragon-wyrmling.webp",
       "alt": "A white dragon wyrmling scrambles across an ice ridge as frost vapor gathers before its horned jaws."
     },
+    "wight": {
+      "src": "/images/monsters/wight.webp",
+      "alt": "A pale-eyed wight emerges from a barrow in dark armor with necrotic sword drawn and bow on its shoulder."
+    },
     "will-o-wisp": {
       "src": "/images/monsters/will-o-wisp.webp",
       "alt": "A tiny blue-white will-o-wisp hovers above black marsh water, trailing mist and a sharp electrical filament."
+    },
+    "winter-wolf": {
+      "src": "/images/monsters/winter-wolf.webp",
+      "alt": "A huge white winter wolf braces on an arctic ridge as cyan frost gathers inside its jaws."
     },
     "wolf": {
       "src": "/images/monsters/wolf.webp",

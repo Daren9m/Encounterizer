@@ -6,8 +6,8 @@
 
 - **ID:** `bugbear-stalker`
 - **Stat profile:** CR 3; Medium Fey (goblinoid)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -77,8 +77,8 @@ A long-armed ochre bugbear stalker steps from forest shadow with morningstar low
 
 - **ID:** `doppelganger`
 - **Stat profile:** CR 3; Medium Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -146,8 +146,8 @@ An ash-gray doppelganger turns in a narrow alley as a borrowed human face ripple
 
 - **ID:** `giant-scorpion`
 - **Stat profile:** CR 3; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -216,8 +216,8 @@ A giant amber scorpion braces in a desert ravine with pincers spread and one ven
 
 - **ID:** `gold-dragon-wyrmling`
 - **Stat profile:** CR 3; Medium Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -287,8 +287,8 @@ A gold dragon wyrmling opens its wings beside a meadow river as warm firelight g
 
 - **ID:** `green-hag`
 - **Stat profile:** CR 3; Medium Fey
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -357,8 +357,8 @@ A moss-green hag stands in shallow swamp water with hooked claws raised beneath 
 
 - **ID:** `hell-hound`
 - **Stat profile:** CR 3; Medium Fiend
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -427,8 +427,8 @@ A charcoal hell hound charges over black rock as furnace light and flame build i
 
 - **ID:** `hobgoblin-captain`
 - **Stat profile:** CR 3; Medium Fey (goblinoid)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -497,8 +497,8 @@ A rust-red hobgoblin captain stands in ordered dark armor with greatsword ready 
 
 - **ID:** `killer-whale`
 - **Stat profile:** CR 3; Huge Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -566,8 +566,8 @@ A huge black-and-white killer whale rolls through cold ocean water beneath the s
 
 - **ID:** `knight`
 - **Stat profile:** CR 3; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -636,8 +636,8 @@ A compact knight in brushed plate guards a castle approach with greatsword ready
 
 - **ID:** `manticore`
 - **Stat profile:** CR 3; Large Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -706,8 +706,8 @@ A russet manticore crouches on a ridge, leathery wings spread and its spike-fill
 
 - **ID:** `minotaur-of-baphomet`
 - **Stat profile:** CR 3; Large Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -777,8 +777,8 @@ A black-furred minotaur of Baphomet charges through a labyrinth with carved horn
 
 - **ID:** `mummy`
 - **Stat profile:** CR 3; Small Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -847,8 +847,8 @@ A compact linen-wrapped mummy advances through a dusty tomb with one darkened fi
 
 - **ID:** `nightmare`
 - **Stat profile:** CR 3; Large Fiend
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -917,8 +917,8 @@ A coal-black nightmare rears over a dark planar causeway with flaming mane, tail
 
 - **ID:** `phase-spider`
 - **Stat profile:** CR 3; Large Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -987,8 +987,8 @@ A blue-black phase spider steps through a dungeon wall, its eight-legged rear ha
 
 - **ID:** `swarm-of-crawling-claws`
 - **Stat profile:** CR 3; Medium Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1057,8 +1057,8 @@ Dozens of desiccated crawling claws spill down a crypt stair in a coordinated wa
 
 - **ID:** `vampire-familiar`
 - **Stat profile:** CR 3; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1129,8 +1129,8 @@ A pale vampire familiar springs from a moonlit manor wall with two shadow-wreath
 
 - **ID:** `warrior-veteran`
 - **Stat profile:** CR 3; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1199,8 +1199,8 @@ A compact scarred warrior veteran stands in repaired armor with greatsword guard
 
 - **ID:** `werewolf`
 - **Stat profile:** CR 3; Small Monstrosity (lycanthrope)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1270,8 +1270,8 @@ A compact gray werewolf crouches on a moonlit hill with claws forward and a long
 
 - **ID:** `wight`
 - **Stat profile:** CR 3; Medium Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1341,8 +1341,8 @@ A pale-eyed wight emerges from a barrow in dark armor with necrotic sword drawn 
 
 - **ID:** `winter-wolf`
 - **Stat profile:** CR 3; Large Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1411,8 +1411,8 @@ A huge white winter wolf braces on an arctic ridge as cyan frost gathers inside 
 
 - **ID:** `archelon`
 - **Stat profile:** CR 4; Huge Beast (dinosaur)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1481,8 +1481,8 @@ A colossal scarred archelon glides over a coastal seabed on four long flippers b
 
 - **ID:** `black-pudding`
 - **Stat profile:** CR 4; Large Ooze
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1551,8 +1551,8 @@ A glossy black pudding spreads across an Underdark floor and wall while a metal 
 
 - **ID:** `chuul`
 - **Stat profile:** CR 4; Large Aberration
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1621,8 +1621,8 @@ A blue-green chuul wades from cavern water with massive pincers open and pale mo
 
 - **ID:** `elephant`
 - **Stat profile:** CR 4; Huge Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1692,8 +1692,8 @@ A huge gray elephant strides through dusty grassland with ears spread, trunk cur
 
 - **ID:** `ettin`
 - **Stat profile:** CR 4; Large Giant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1763,8 +1763,8 @@ A huge two-headed ettin strides through a hill pass with a battleaxe in one hand
 
 - **ID:** `guard-captain`
 - **Stat profile:** CR 4; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1833,8 +1833,8 @@ A compact guard captain holds a longsword at a city gate with paired javelins an
 
 - **ID:** `hippopotamus`
 - **Stat profile:** CR 4; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1903,8 +1903,8 @@ A huge gray-brown hippopotamus surges from a green river with its broad mouth an
 
 - **ID:** `incubus`
 - **Stat profile:** CR 4; Medium Fiend
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1975,8 +1975,8 @@ A dark-winged incubus descends inside a moonlit chamber with violet psychic haze
 
 - **ID:** `lamia`
 - **Stat profile:** CR 4; Large Fiend
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
