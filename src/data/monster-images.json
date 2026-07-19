@@ -9,6 +9,10 @@
       "src": "/images/monsters/adult-black-dragon.webp",
       "alt": "A huge adult black dragon stands in a drowned forest, pouring acid from its skull-like jaws."
     },
+    "adult-blue-dragon": {
+      "src": "/images/monsters/adult-blue-dragon.webp",
+      "alt": "A huge adult blue dragon bursts from a wall of sand as lightning fires past its massive nasal horn."
+    },
     "adult-brass-dragon": {
       "src": "/images/monsters/adult-brass-dragon.webp",
       "alt": "A huge adult brass dragon stands across a dune crest with vast wings spread and fire rolling from its jaws."
@@ -21,6 +25,22 @@
       "src": "/images/monsters/adult-copper-dragon.webp",
       "alt": "A huge verdigris-patched adult copper dragon climbs headfirst down a red canyon wall."
     },
+    "adult-gold-dragon": {
+      "src": "/images/monsters/adult-gold-dragon.webp",
+      "alt": "A huge adult gold dragon rises from a river, long barbels streaming as it breathes white-orange fire."
+    },
+    "adult-green-dragon": {
+      "src": "/images/monsters/adult-green-dragon.webp",
+      "alt": "A huge adult green dragon stands over ancient roots while a yellow poison cloud pours from its jaws."
+    },
+    "adult-red-dragon": {
+      "src": "/images/monsters/adult-red-dragon.webp",
+      "alt": "A huge adult red dragon stands over a caldera and breathes a torrent of fire across black basalt."
+    },
+    "adult-silver-dragon": {
+      "src": "/images/monsters/adult-silver-dragon.webp",
+      "alt": "A huge adult silver dragon lands across a mountain bridge as frost and stilling mist leave its jaws."
+    },
     "adult-white-dragon": {
       "src": "/images/monsters/adult-white-dragon.webp",
       "alt": "A huge adult white dragon climbs across broken sea ice while breathing a cone of freezing vapor."
@@ -32,6 +52,46 @@
     "allosaurus": {
       "src": "/images/monsters/allosaurus.webp",
       "alt": "A dusty olive allosaurus turns across open grassland with jaws spread and its long tail balancing the charge."
+    },
+    "ancient-black-dragon": {
+      "src": "/images/monsters/ancient-black-dragon.webp",
+      "alt": "An ancient black dragon rises through a drowned city, its skull-like head pouring acid across the swamp."
+    },
+    "ancient-blue-dragon": {
+      "src": "/images/monsters/ancient-blue-dragon.webp",
+      "alt": "An ancient blue dragon erupts beneath a canyon as lightning follows its titanic horn through a sandstorm."
+    },
+    "ancient-brass-dragon": {
+      "src": "/images/monsters/ancient-brass-dragon.webp",
+      "alt": "An ancient brass dragon rises beneath a dune field, its colossal wings and fire dwarfing distant ruins."
+    },
+    "ancient-bronze-dragon": {
+      "src": "/images/monsters/ancient-bronze-dragon.webp",
+      "alt": "An ancient verdigris-covered bronze dragon surges from a storm ocean and breathes lightning over a reef."
+    },
+    "ancient-copper-dragon": {
+      "src": "/images/monsters/ancient-copper-dragon.webp",
+      "alt": "An ancient verdigris-covered copper dragon spans red-rock pillars with colossal wings and curling acid breath."
+    },
+    "ancient-gold-dragon": {
+      "src": "/images/monsters/ancient-gold-dragon.webp",
+      "alt": "An ancient gold dragon coils across the sky above a river valley while breathing a sun-bright stream of fire."
+    },
+    "ancient-green-dragon": {
+      "src": "/images/monsters/ancient-green-dragon.webp",
+      "alt": "An ancient green dragon blends into a primordial forest canopy while poison fog floods the roots below."
+    },
+    "ancient-red-dragon": {
+      "src": "/images/monsters/ancient-red-dragon.webp",
+      "alt": "An ancient red dragon crushes a volcanic fortress beneath its colossal body and fills the ash sky with fire."
+    },
+    "ancient-silver-dragon": {
+      "src": "/images/monsters/ancient-silver-dragon.webp",
+      "alt": "An ancient silver dragon spans mountain towers as a vast cloud of frost and stilling mist descends from its jaws."
+    },
+    "ancient-white-dragon": {
+      "src": "/images/monsters/ancient-white-dragon.webp",
+      "alt": "An ancient white dragon climbs over a shattered glacier while its colossal wings darken the snow and cold floods the air."
     },
     "animated-armor": {
       "src": "/images/monsters/animated-armor.webp",
@@ -92,6 +152,10 @@
     "badger": {
       "src": "/images/monsters/badger.webp",
       "alt": "A striped badger braces at the mouth of a forest burrow with soil clinging to its digging claws."
+    },
+    "balor": {
+      "src": "/images/monsters/balor.webp",
+      "alt": "A huge horned balor strides across a shattered bridge with a flame whip, lightning blade, and vast dark wings."
     },
     "bandit": {
       "src": "/images/monsters/bandit.webp",
@@ -284,6 +348,10 @@
     "draft-horse": {
       "src": "/images/monsters/draft-horse.webp",
       "alt": "A powerful dark bay draft horse leans into a plain work harness on a muddy village lane."
+    },
+    "dragon-turtle": {
+      "src": "/images/monsters/dragon-turtle.webp",
+      "alt": "A gargantuan dragon turtle rises between sea cliffs and blasts white steam over the waves."
     },
     "dretch": {
       "src": "/images/monsters/dretch.webp",
@@ -649,6 +717,10 @@
       "src": "/images/monsters/invisible-stalker.webp",
       "alt": "A nearly invisible stalker crosses a rainy rooftop, outlined only by warped air, droplets, and spiraling papers."
     },
+    "iron-golem": {
+      "src": "/images/monsters/iron-golem.webp",
+      "alt": "A towering iron golem sweeps its bladed arm as fire flashes from its chest and poison smoke vents from its helm."
+    },
     "jackal": {
       "src": "/images/monsters/jackal.webp",
       "alt": "A tawny jackal pauses on a dune crest with one paw lifted and tall ears alert."
@@ -665,6 +737,10 @@
       "src": "/images/monsters/kobold-warrior.webp",
       "alt": "A small russet-scaled kobold warrior crouches in a mine passage with dagger poised and tail extended."
     },
+    "kraken": {
+      "src": "/images/monsters/kraken.webp",
+      "alt": "A gargantuan kraken rises over a drowned city with eight arms, two long tentacles, and lightning across its dark hide."
+    },
     "lamia": {
       "src": "/images/monsters/lamia.webp",
       "alt": "A tawny lion-bodied lamia leaps from a desert terrace with its humanoid claw extended in violet corrupting magic."
@@ -672,6 +748,10 @@
     "lemure": {
       "src": "/images/monsters/lemure.webp",
       "alt": "A sagging pale lemure drags its shapeless body across cracked infernal stone, leaving oily slime."
+    },
+    "lich": {
+      "src": "/images/monsters/lich.webp",
+      "alt": "A robed skeletal lich hovers in an arcane vault with a rune-caged spirit jar and cold magic in both hands."
     },
     "lion": {
       "src": "/images/monsters/lion.webp",
@@ -700,6 +780,10 @@
     "manticore": {
       "src": "/images/monsters/manticore.webp",
       "alt": "A russet manticore crouches on a ridge, leathery wings spread and its spike-filled tail curled to fire."
+    },
+    "marilith": {
+      "src": "/images/monsters/marilith.webp",
+      "alt": "A six-armed marilith coils on black stone with six pact blades forming a deadly wheel around her."
     },
     "mastiff": {
       "src": "/images/monsters/mastiff.webp",
@@ -736,6 +820,10 @@
     "mummy": {
       "src": "/images/monsters/mummy.webp",
       "alt": "A compact linen-wrapped mummy advances through a dusty tomb with one darkened fist raised and glare fixed forward."
+    },
+    "mummy-lord": {
+      "src": "/images/monsters/mummy-lord.webp",
+      "alt": "A compact mummy lord stands on a burial dais, wrapped fist raised as black-violet energy spreads outward."
     },
     "nalfeshnee": {
       "src": "/images/monsters/nalfeshnee.webp",
@@ -809,6 +897,14 @@
       "src": "/images/monsters/pirate-captain.webp",
       "alt": "A compact pirate captain braces on a stormy deck with rapier drawn and a flintlock pistol ready."
     },
+    "pit-fiend": {
+      "src": "/images/monsters/pit-fiend.webp",
+      "alt": "A horned pit fiend advances before an infernal gate with dark wings, fiery mace, claws, and barbed tail ready."
+    },
+    "planetar": {
+      "src": "/images/monsters/planetar.webp",
+      "alt": "A jade-toned planetar descends with enormous white wings and a great sword blazing with radiant light."
+    },
     "plesiosaurus": {
       "src": "/images/monsters/plesiosaurus.webp",
       "alt": "A slate-blue plesiosaurus banks above a rocky seabed, four flippers driving its long neck toward a school of fish."
@@ -840,6 +936,10 @@
     "pteranodon": {
       "src": "/images/monsters/pteranodon.webp",
       "alt": "A tawny pteranodon banks beside a sea cliff on immense leathery wings, long crest streaming behind."
+    },
+    "purple-worm": {
+      "src": "/images/monsters/purple-worm.webp",
+      "alt": "A gargantuan purple worm erupts through a cavern floor with its circular jaws open and stinger tail raised."
     },
     "quasit": {
       "src": "/images/monsters/quasit.webp",
@@ -945,6 +1045,10 @@
       "src": "/images/monsters/skeleton.webp",
       "alt": "An animated humanoid skeleton advances through a ruin with shortsword raised and shortbow on its back."
     },
+    "solar": {
+      "src": "/images/monsters/solar.webp",
+      "alt": "A gold-winged solar hovers above celestial clouds with a radiant bow drawn and a great sword flying beside it."
+    },
     "specter": {
       "src": "/images/monsters/specter.webp",
       "alt": "A blue-black specter dives through a ruined wall, its hollow face and reaching hand emerging from torn vapor."
@@ -952,6 +1056,10 @@
     "sphinx-of-lore": {
       "src": "/images/monsters/sphinx-of-lore.webp",
       "alt": "A human-headed Sphinx of Lore sits in a desert archive as golden symbols gather around its measured roar."
+    },
+    "sphinx-of-valor": {
+      "src": "/images/monsters/sphinx-of-valor.webp",
+      "alt": "A maned Sphinx of Valor guards a desert causeway with wings spread and thunder rippling from its roar."
     },
     "sphinx-of-wonder": {
       "src": "/images/monsters/sphinx-of-wonder.webp",
@@ -1024,6 +1132,10 @@
     "swarm-of-venomous-snakes": {
       "src": "/images/monsters/swarm-of-venomous-snakes.webp",
       "alt": "Dozens of olive, tan, and rust venomous snakes pour over a fallen log with several heads raised."
+    },
+    "tarrasque": {
+      "src": "/images/monsters/tarrasque.webp",
+      "alt": "The gargantuan tarrasque climbs through a fortified city edge, reflective carapace raised as its roar sends out shock waves."
     },
     "tiger": {
       "src": "/images/monsters/tiger.webp",

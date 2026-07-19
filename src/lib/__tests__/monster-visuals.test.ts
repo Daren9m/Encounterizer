@@ -92,11 +92,13 @@ describe('monster visual pipeline', () => {
       });
     }
 
-    const unavailable = dataset.records.find((record) =>
+    const unavailable = dataset.records.filter((record) =>
       ['blocked', 'ready'].includes(record.imageStatus),
     );
-    expect(unavailable).toBeDefined();
-    expect(getMonsterImage(unavailable!.monsterId)).toBeUndefined();
+    expect(published.length + unavailable.length).toBe(dataset.records.length);
+    for (const record of unavailable) {
+      expect(getMonsterImage(record.monsterId)).toBeUndefined();
+    }
     expect(getMonsterImage('custom-monster')).toBeUndefined();
   });
 

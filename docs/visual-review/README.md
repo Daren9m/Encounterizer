@@ -17,4 +17,4 @@ Source: *System Reference Document 5.2.1* by Wizards of the Coast LLC, CC-BY-4.0
 | [Production batch 8](./production-08.md) | 29 | 0 | 29 | 0 |
 | [Production batch 9](./production-09.md) | 29 | 0 | 29 | 0 |
 | [Production batch 10](./production-10.md) | 28 | 0 | 28 | 0 |
-| [Production batch 11](./production-11.md) | 28 | 28 | 0 | 0 |
+| [Production batch 11](./production-11.md) | 28 | 0 | 28 | 0 |

@@ -6,8 +6,8 @@
 
 - **ID:** `adult-green-dragon`
 - **Stat profile:** CR 15; Huge Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -78,8 +78,8 @@ A huge adult green dragon stands over ancient roots while a yellow poison cloud 
 
 - **ID:** `mummy-lord`
 - **Stat profile:** CR 15; Small Undead (cleric)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -149,8 +149,8 @@ A compact mummy lord stands on a burial dais, wrapped fist raised as black-viole
 
 - **ID:** `purple-worm`
 - **Stat profile:** CR 15; Gargantuan Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -222,8 +222,8 @@ A gargantuan purple worm erupts through a cavern floor with its circular jaws op
 
 - **ID:** `adult-blue-dragon`
 - **Stat profile:** CR 16; Huge Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -294,8 +294,8 @@ A huge adult blue dragon bursts from a wall of sand as lightning fires past its 
 
 - **ID:** `adult-silver-dragon`
 - **Stat profile:** CR 16; Huge Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -366,8 +366,8 @@ A huge adult silver dragon lands across a mountain bridge as frost and stilling 
 
 - **ID:** `iron-golem`
 - **Stat profile:** CR 16; Large Construct
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -437,8 +437,8 @@ A towering iron golem sweeps its bladed arm as fire flashes from its chest and p
 
 - **ID:** `marilith`
 - **Stat profile:** CR 16; Large Fiend (demon)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -509,8 +509,8 @@ A six-armed marilith coils on black stone with six pact blades forming a deadly 
 
 - **ID:** `planetar`
 - **Stat profile:** CR 16; Large Celestial (angel)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -580,8 +580,8 @@ A jade-toned planetar descends with enormous white wings and a great sword blazi
 
 - **ID:** `adult-gold-dragon`
 - **Stat profile:** CR 17; Huge Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -652,8 +652,8 @@ A huge adult gold dragon rises from a river, long barbels streaming as it breath
 
 - **ID:** `adult-red-dragon`
 - **Stat profile:** CR 17; Huge Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -724,8 +724,8 @@ A huge adult red dragon stands over a caldera and breathes a torrent of fire acr
 
 - **ID:** `dragon-turtle`
 - **Stat profile:** CR 17; Gargantuan Dragon
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -796,8 +796,8 @@ A gargantuan dragon turtle rises between sea cliffs and blasts white steam over 
 
 - **ID:** `sphinx-of-valor`
 - **Stat profile:** CR 17; Large Celestial
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -868,8 +868,8 @@ A maned Sphinx of Valor guards a desert causeway with wings spread and thunder r
 
 - **ID:** `balor`
 - **Stat profile:** CR 19; Huge Fiend (demon)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -940,8 +940,8 @@ A huge horned balor strides across a shattered bridge with a flame whip, lightni
 
 - **ID:** `ancient-brass-dragon`
 - **Stat profile:** CR 20; Gargantuan Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1012,8 +1012,8 @@ An ancient brass dragon rises beneath a dune field, its colossal wings and fire 
 
 - **ID:** `ancient-white-dragon`
 - **Stat profile:** CR 20; Gargantuan Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1084,8 +1084,8 @@ An ancient white dragon climbs over a shattered glacier while its colossal wings
 
 - **ID:** `pit-fiend`
 - **Stat profile:** CR 20; Large Fiend (devil)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1158,8 +1158,8 @@ A horned pit fiend advances before an infernal gate with dark wings, fiery mace,
 
 - **ID:** `ancient-black-dragon`
 - **Stat profile:** CR 21; Gargantuan Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1230,8 +1230,8 @@ An ancient black dragon rises through a drowned city, its skull-like head pourin
 
 - **ID:** `ancient-copper-dragon`
 - **Stat profile:** CR 21; Gargantuan Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1302,8 +1302,8 @@ An ancient verdigris-covered copper dragon spans red-rock pillars with colossal 
 
 - **ID:** `lich`
 - **Stat profile:** CR 21; Medium Undead (wizard)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1375,8 +1375,8 @@ A robed skeletal lich hovers in an arcane vault with a rune-caged spirit jar and
 
 - **ID:** `solar`
 - **Stat profile:** CR 21; Large Celestial (angel)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1448,8 +1448,8 @@ A gold-winged solar hovers above celestial clouds with a radiant bow drawn and a
 
 - **ID:** `ancient-bronze-dragon`
 - **Stat profile:** CR 22; Gargantuan Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1520,8 +1520,8 @@ An ancient verdigris-covered bronze dragon surges from a storm ocean and breathe
 
 - **ID:** `ancient-green-dragon`
 - **Stat profile:** CR 22; Gargantuan Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1592,8 +1592,8 @@ An ancient green dragon blends into a primordial forest canopy while poison fog 
 
 - **ID:** `ancient-blue-dragon`
 - **Stat profile:** CR 23; Gargantuan Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1664,8 +1664,8 @@ An ancient blue dragon erupts beneath a canyon as lightning follows its titanic 
 
 - **ID:** `ancient-silver-dragon`
 - **Stat profile:** CR 23; Gargantuan Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1736,8 +1736,8 @@ An ancient silver dragon spans mountain towers as a vast cloud of frost and stil
 
 - **ID:** `kraken`
 - **Stat profile:** CR 23; Gargantuan Monstrosity (titan)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1809,8 +1809,8 @@ A gargantuan kraken rises over a drowned city with eight arms, two long tentacle
 
 - **ID:** `ancient-gold-dragon`
 - **Stat profile:** CR 24; Gargantuan Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1881,8 +1881,8 @@ An ancient gold dragon coils across the sky above a river valley while breathing
 
 - **ID:** `ancient-red-dragon`
 - **Stat profile:** CR 24; Gargantuan Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1953,8 +1953,8 @@ An ancient red dragon crushes a volcanic fortress beneath its colossal body and 
 
 - **ID:** `tarrasque`
 - **Stat profile:** CR 30; Gargantuan Monstrosity (titan)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
