@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { XP_BUDGET_PER_CHARACTER } from '@/lib/types';
-import type { Difficulty, Party } from '@/lib/types';
+import type { OfficialDifficulty, Party } from '@/lib/types';
 import { assessEncounterDifficulty, getPartyXpBudget } from '@/lib/encounter-generator';
 
 // Independent re-transcription of the 2024 DMG "XP Budget per Character"
@@ -62,7 +62,7 @@ describe('XP_BUDGET_PER_CHARACTER', () => {
   });
 
   it('is monotonically non-decreasing across levels within each tier', () => {
-    const tiers: Difficulty[] = ['Low', 'Moderate', 'High'];
+    const tiers: OfficialDifficulty[] = ['Low', 'Moderate', 'High'];
     for (const tier of tiers) {
       for (let level = 2; level <= 20; level++) {
         expect(XP_BUDGET_PER_CHARACTER[level][tier]).toBeGreaterThan(
@@ -77,6 +77,14 @@ describe('getPartyXpBudget', () => {
   it('sums per-member budgets', () => {
     expect(getPartyXpBudget(party(4, 3), 'Moderate')).toBe(4 * 225);
     expect(getPartyXpBudget(party(5, 8), 'High')).toBe(5 * 2100);
+  });
+
+  it('derives Trivial and Extreme without changing official budgets', () => {
+    const p = party(4, 3);
+    expect(getPartyXpBudget(p, 'Trivial')).toBe(300);
+    expect(getPartyXpBudget(p, 'Low')).toBe(600);
+    expect(getPartyXpBudget(p, 'High')).toBe(1600);
+    expect(getPartyXpBudget(p, 'Extreme')).toBe(2080);
   });
 
   it('handles mixed-level parties', () => {
@@ -98,11 +106,13 @@ describe('getPartyXpBudget', () => {
 });
 
 describe('assessEncounterDifficulty', () => {
-  // 4 × level 3: Low 600, Moderate 900, High 1600
+  // 4 × level 3: Trivial 300, Low 600, Moderate 900, High 1600, Extreme 2080
   const p = party(4, 3);
 
   it('treats budgets as inclusive caps', () => {
-    expect(assessEncounterDifficulty(0, p)).toBe('Low');
+    expect(assessEncounterDifficulty(0, p)).toBe('Trivial');
+    expect(assessEncounterDifficulty(300, p)).toBe('Trivial');
+    expect(assessEncounterDifficulty(301, p)).toBe('Low');
     expect(assessEncounterDifficulty(600, p)).toBe('Low');
     expect(assessEncounterDifficulty(601, p)).toBe('Moderate');
     expect(assessEncounterDifficulty(900, p)).toBe('Moderate');

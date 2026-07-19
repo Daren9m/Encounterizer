@@ -10,7 +10,11 @@ import {
   generateEncounter,
   summarizeEncounter,
 } from '@/lib/encounter-generator';
-import { generateMap } from '@/lib/map-generator';
+import {
+  generateMap,
+  type MapFeatureDensity,
+  type MapTerrainVariety,
+} from '@/lib/map-generator';
 import { randomSeed } from '@/lib/random';
 import type {
   Encounter, Difficulty, Environment,
@@ -34,7 +38,9 @@ import {
   type PartyConfig,
 } from '@/lib/battle-sim-types';
 
-const DIFFICULTIES: Difficulty[] = ['Low', 'Moderate', 'High'];
+const DIFFICULTIES: Difficulty[] = ['Trivial', 'Low', 'Moderate', 'High', 'Extreme'];
+const MAP_DENSITIES: MapFeatureDensity[] = ['Sparse', 'Balanced', 'Dense'];
+const MAP_VARIETIES: MapTerrainVariety[] = ['Focused', 'Varied', 'Wild'];
 const ENVIRONMENTS: Environment[] = [
   'Arctic', 'Coastal', 'Desert', 'Forest', 'Grassland', 'Hill',
   'Mountain', 'Swamp', 'Underdark', 'Underwater', 'Urban', 'Planar',
@@ -67,6 +73,10 @@ interface GenerateConfig {
   difficulty: Difficulty;
   environment: Environment;
   includeMap: boolean;
+  mapWidth: number;
+  mapHeight: number;
+  mapFeatureDensity: MapFeatureDensity;
+  mapTerrainVariety: MapTerrainVariety;
   filter: MonsterFilter;
   seed: number;
 }
@@ -77,7 +87,13 @@ function writeUrl(cfg: GenerateConfig): void {
   params.set('level', String(cfg.partyLevel));
   params.set('diff', cfg.difficulty);
   params.set('env', cfg.environment);
-  if (cfg.includeMap) params.set('map', '1');
+  if (cfg.includeMap) {
+    params.set('map', '1');
+    params.set('mw', String(cfg.mapWidth));
+    params.set('mh', String(cfg.mapHeight));
+    params.set('md', cfg.mapFeatureDensity);
+    params.set('mv', cfg.mapTerrainVariety);
+  }
   params.set('seed', String(cfg.seed));
   if (Object.keys(cfg.filter).length > 0) params.set('f', JSON.stringify(cfg.filter));
   window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
@@ -107,6 +123,14 @@ function isEnvironment(v: string | null): v is Environment {
   return v !== null && (ENVIRONMENTS as string[]).includes(v);
 }
 
+function isMapFeatureDensity(v: unknown): v is MapFeatureDensity {
+  return typeof v === 'string' && (MAP_DENSITIES as string[]).includes(v);
+}
+
+function isMapTerrainVariety(v: unknown): v is MapTerrainVariety {
+  return typeof v === 'string' && (MAP_VARIETIES as string[]).includes(v);
+}
+
 function isPartyConfig(v: unknown): v is PartyConfig {
   return (
     typeof v === 'object' && v !== null
@@ -121,6 +145,10 @@ interface EncounterSettings {
   difficulty: Difficulty;
   environment: Environment;
   includeMap: boolean;
+  mapWidth?: number;
+  mapHeight?: number;
+  mapFeatureDensity?: MapFeatureDensity;
+  mapTerrainVariety?: MapTerrainVariety;
 }
 
 function isEncounterSettings(v: unknown): v is EncounterSettings {
@@ -132,6 +160,10 @@ function isEncounterSettings(v: unknown): v is EncounterSettings {
     && isDifficulty(s.difficulty)
     && isEnvironment(s.environment)
     && typeof s.includeMap === 'boolean'
+    && (s.mapWidth === undefined || typeof s.mapWidth === 'number')
+    && (s.mapHeight === undefined || typeof s.mapHeight === 'number')
+    && (s.mapFeatureDensity === undefined || isMapFeatureDensity(s.mapFeatureDensity))
+    && (s.mapTerrainVariety === undefined || isMapTerrainVariety(s.mapTerrainVariety))
   );
 }
 
@@ -179,6 +211,10 @@ function EncounterBuilder() {
   const [monsterFilter, setMonsterFilter] = useState<MonsterFilter>({});
   const [expandedMonster, setExpandedMonster] = useState<string | null>(null);
   const [includeMap, setIncludeMap] = useState(true);
+  const [mapWidth, setMapWidth] = useState(24);
+  const [mapHeight, setMapHeight] = useState(18);
+  const [mapFeatureDensity, setMapFeatureDensity] = useState<MapFeatureDensity>('Balanced');
+  const [mapTerrainVariety, setMapTerrainVariety] = useState<MapTerrainVariety>('Varied');
   const [showManualAdd, setShowManualAdd] = useState(false);
   const [manualSearch, setManualSearch] = useState('');
 
@@ -197,6 +233,7 @@ function EncounterBuilder() {
   const [savedEncounters, setSavedEncounters, savedHydrated] =
     usePersistentState<SavedEncounter[]>('savedEncounters', []);
   const [savingName, setSavingName] = useState<string | null>(null);
+  const [editingDetails, setEditingDetails] = useState(false);
 
   // Persisted page settings. Declared BEFORE the URL-init effect so a shared
   // link's params win over remembered settings.
@@ -212,6 +249,10 @@ function EncounterBuilder() {
       setDifficulty(stored.difficulty);
       setEnvironment(stored.environment);
       setIncludeMap(stored.includeMap);
+      setMapWidth(stored.mapWidth ?? 24);
+      setMapHeight(stored.mapHeight ?? 18);
+      setMapFeatureDensity(stored.mapFeatureDensity ?? 'Balanced');
+      setMapTerrainVariety(stored.mapTerrainVariety ?? 'Varied');
     }
     settingsHydrated.current = true;
   }, []);
@@ -219,13 +260,17 @@ function EncounterBuilder() {
     if (!settingsHydrated.current) return;
     storageSave('encounterSettings', {
       partySize, partyLevel, difficulty, environment, includeMap,
+      mapWidth, mapHeight, mapFeatureDensity, mapTerrainVariety,
     } satisfies EncounterSettings);
-  }, [partySize, partyLevel, difficulty, environment, includeMap]);
+  }, [
+    partySize, partyLevel, difficulty, environment, includeMap,
+    mapWidth, mapHeight, mapFeatureDensity, mapTerrainVariety,
+  ]);
 
   // Current party for XP budgets
   const party = useMemo(() => buildParty(partySize, partyLevel), [partySize, partyLevel]);
 
-  // The single source of XP truth for the meter, badge, and header stats
+  // The single source of encounter totals for the meter, badge, and header stats
   const summary = useMemo(
     () => summarizeEncounter(encounter?.monsters ?? [], party),
     [encounter, party],
@@ -250,7 +295,14 @@ function EncounterBuilder() {
       filterMonsters,
     );
     if (cfg.includeMap) {
-      enc.map = generateMap({ environment: cfg.environment, seed: cfg.seed });
+      enc.map = generateMap({
+        environment: cfg.environment,
+        width: cfg.mapWidth,
+        height: cfg.mapHeight,
+        featureDensity: cfg.mapFeatureDensity,
+        terrainVariety: cfg.mapTerrainVariety,
+        seed: cfg.seed,
+      });
     }
     setEncounter(enc);
     setIsSeeded(true);
@@ -271,6 +323,12 @@ function EncounterBuilder() {
     const env = searchParams.get('env');
     const seed = clampInt(searchParams.get('seed'), 0, 0x7fffffff);
     const withMap = searchParams.get('map') === '1';
+    const sharedMapWidth = clampInt(searchParams.get('mw'), 10, 40) ?? 24;
+    const sharedMapHeight = clampInt(searchParams.get('mh'), 10, 30) ?? 18;
+    const sharedMapDensity = isMapFeatureDensity(searchParams.get('md'))
+      ? searchParams.get('md') as MapFeatureDensity : 'Balanced';
+    const sharedMapVariety = isMapTerrainVariety(searchParams.get('mv'))
+      ? searchParams.get('mv') as MapTerrainVariety : 'Varied';
 
     let filter: MonsterFilter = {};
     const rawFilter = searchParams.get('f');
@@ -291,6 +349,12 @@ function EncounterBuilder() {
     if (isEnvironment(env)) setEnvironment(env);
     if (Object.keys(filter).length > 0) setMonsterFilter(filter);
     if (seed !== null) setIncludeMap(withMap);
+    if (seed !== null && withMap) {
+      setMapWidth(sharedMapWidth);
+      setMapHeight(sharedMapHeight);
+      setMapFeatureDensity(sharedMapDensity);
+      setMapTerrainVariety(sharedMapVariety);
+    }
 
     if (seed !== null && size !== null && level !== null && isDifficulty(diff) && isEnvironment(env)) {
       runGenerate({
@@ -299,6 +363,10 @@ function EncounterBuilder() {
         difficulty: diff,
         environment: env,
         includeMap: withMap,
+        mapWidth: sharedMapWidth,
+        mapHeight: sharedMapHeight,
+        mapFeatureDensity: sharedMapDensity,
+        mapTerrainVariety: sharedMapVariety,
         filter,
         seed,
       });
@@ -308,8 +376,25 @@ function EncounterBuilder() {
   function handleGenerate() {
     runGenerate({
       partySize, partyLevel, difficulty, environment,
-      includeMap, filter: monsterFilter, seed: randomSeed(),
+      includeMap, mapWidth, mapHeight, mapFeatureDensity, mapTerrainVariety,
+      filter: monsterFilter, seed: randomSeed(),
     });
+  }
+
+  function handleRegenerateMap() {
+    setEncounter(prev => prev ? {
+      ...prev,
+      map: generateMap({
+        environment: prev.environment,
+        width: mapWidth,
+        height: mapHeight,
+        featureDensity: mapFeatureDensity,
+        terrainVariety: mapTerrainVariety,
+        seed: randomSeed(),
+      }),
+    } : prev);
+    setIsSeeded(false);
+    clearUrlSeed();
   }
 
   const handleCopyLink = useCallback(() => {
@@ -391,6 +476,13 @@ function EncounterBuilder() {
     clearUrlSeed();
   }, [party]);
 
+  function updateEncounterNarrative(
+    field: 'name' | 'description' | 'tactics',
+    value: string,
+  ) {
+    setEncounter(prev => prev ? { ...prev, [field]: value } : prev);
+  }
+
   const handleExport = useCallback(() => {
     if (!encounter) return;
     const json = JSON.stringify(encounter, null, 2);
@@ -419,6 +511,7 @@ function EncounterBuilder() {
     clearUrlSeed();
     setExpandedMonster(null);
     setReport(null);
+    setEditingDetails(false);
   }, []);
 
   return (
@@ -468,26 +561,60 @@ function EncounterBuilder() {
           </div>
         </div>
 
+        {includeMap && (
+          <fieldset className="rounded-md border border-[var(--steel-800)] p-3 mb-4">
+            <legend className="micro-label px-1">Battle Map Options</legend>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <label htmlFor="enc-map-width" className="text-xs text-[var(--text-2)] block mb-1">Width</label>
+                <input
+                  id="enc-map-width" type="number" min={10} max={40} value={mapWidth}
+                  onChange={e => setMapWidth(Math.max(10, Math.min(40, Number(e.target.value))))}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label htmlFor="enc-map-height" className="text-xs text-[var(--text-2)] block mb-1">Height</label>
+                <input
+                  id="enc-map-height" type="number" min={10} max={30} value={mapHeight}
+                  onChange={e => setMapHeight(Math.max(10, Math.min(30, Number(e.target.value))))}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label htmlFor="enc-map-density" className="text-xs text-[var(--text-2)] block mb-1">Object Density</label>
+                <select
+                  id="enc-map-density" value={mapFeatureDensity}
+                  onChange={e => setMapFeatureDensity(e.target.value as MapFeatureDensity)}
+                  className="w-full"
+                >
+                  {MAP_DENSITIES.map(value => <option key={value} value={value}>{value}</option>)}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="enc-map-variety" className="text-xs text-[var(--text-2)] block mb-1">Terrain Mix</label>
+                <select
+                  id="enc-map-variety" value={mapTerrainVariety}
+                  onChange={e => setMapTerrainVariety(e.target.value as MapTerrainVariety)}
+                  className="w-full"
+                >
+                  {MAP_VARIETIES.map(value => <option key={value} value={value}>{value}</option>)}
+                </select>
+              </div>
+            </div>
+          </fieldset>
+        )}
+
         {/* Difficulty Meter */}
-        <DifficultyMeter budgets={summary.budgets} totalXp={summary.totalXp} />
+        <DifficultyMeter
+          assessment={summary.assessment}
+          totalMonsterHp={summary.totalMonsterHp}
+          totalXp={summary.totalXp}
+        />
 
         <div className="flex flex-wrap items-center gap-3 mt-4">
           <button type="button" onClick={handleGenerate} className="btn-primary text-lg">
             Auto-Generate
-          </button>
-          <button
-            type="button"
-            onClick={handleForecastClick}
-            disabled={!encounter || encounter.monsters.length === 0 || simRunning}
-            className="btn-secondary inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
-            title={
-              !encounter || encounter.monsters.length === 0
-                ? 'Generate or build an encounter first'
-                : 'Simulate this battle 1,000 times'
-            }
-          >
-            <Swords size={16} className="text-[var(--bronze)]" aria-hidden="true" />
-            Battle Forecast
           </button>
           <button
             type="button"
@@ -595,7 +722,8 @@ function EncounterBuilder() {
                 <div className="min-w-0">
                   <span className="font-bold">{saved.name}</span>
                   <span className="text-[var(--text-2)] ml-2">
-                    {saved.encounter.difficulty} · {saved.encounter.totalXp.toLocaleString()} XP ·{' '}
+                    {saved.encounter.difficulty} ·{' '}
+                    {saved.encounter.monsters.reduce((sum, em) => sum + em.monster.hitPoints * em.count, 0).toLocaleString()} HP ·{' '}
                     {saved.encounter.monsters.reduce((s, em) => s + em.count, 0)} monsters ·{' '}
                     {new Date(saved.savedAt).toLocaleDateString()}
                   </span>
@@ -676,35 +804,98 @@ function EncounterBuilder() {
         <div className="animate-fade-in space-y-6">
           {/* Encounter Header */}
           <div className="card">
-            <div className="flex items-start justify-between mb-3">
-              <h2 className="text-2xl">{encounter.name}</h2>
-              {summary.assessment && <DifficultyBadge difficulty={summary.assessment} />}
+            <div className="flex items-start justify-between gap-3 mb-3">
+              {editingDetails ? (
+                <>
+                  <label htmlFor="encounter-name" className="sr-only">Encounter name</label>
+                  <input
+                    id="encounter-name"
+                    value={encounter.name}
+                    onChange={e => updateEncounterNarrative('name', e.target.value)}
+                    className="text-2xl font-bold flex-1 print:hidden"
+                  />
+                  <h2 className="text-2xl hidden print:block">{encounter.name}</h2>
+                </>
+              ) : (
+                <h2 className="text-2xl">{encounter.name}</h2>
+              )}
+              <div className="flex items-center gap-2 shrink-0">
+                {summary.assessment && <DifficultyBadge difficulty={summary.assessment} />}
+                <button
+                  type="button"
+                  onClick={() => setEditingDetails(value => !value)}
+                  className={editingDetails ? 'btn-primary text-xs print:hidden' : 'btn-secondary text-xs print:hidden'}
+                >
+                  {editingDetails ? 'Done Editing' : 'Edit Details'}
+                </button>
+              </div>
             </div>
-            {encounter.description && (
+            {editingDetails ? (
+              <>
+                <label htmlFor="encounter-description" className="micro-label block mb-1 print:hidden">Description</label>
+                <textarea
+                  id="encounter-description"
+                  value={encounter.description}
+                  onChange={e => updateEncounterNarrative('description', e.target.value)}
+                  rows={3}
+                  className="w-full mb-4 print:hidden"
+                />
+                {encounter.description && (
+                  <p className="text-[var(--text-2)] mb-4 italic hidden print:block">{encounter.description}</p>
+                )}
+              </>
+            ) : encounter.description && (
               <p className="text-[var(--text-2)] mb-4 italic">{encounter.description}</p>
             )}
 
             <div className="grid sm:grid-cols-4 gap-4 text-sm">
               <div>
-                <span className="text-[var(--bronze)] font-bold">Total XP: </span>
-                {summary.totalXp.toLocaleString()}
+                <span className="text-[var(--bronze)] font-bold">Monster HP: </span>
+                {summary.totalMonsterHp.toLocaleString()}
               </div>
               <div>
-                <span className="text-[var(--bronze)] font-bold">{difficulty} Budget: </span>
-                {summary.budgets[difficulty].toLocaleString()}
-              </div>
-              <div>
-                <span className="text-[var(--bronze)] font-bold">Monsters: </span>
+                <span className="text-[var(--bronze)] font-bold">Creatures: </span>
                 {summary.monsterCount}
               </div>
               <div>
                 <span className="text-[var(--bronze)] font-bold">Environment: </span>
                 {encounter.environment}
               </div>
+              <div>
+                <span className="text-[var(--text-2)] font-bold">Rules XP: </span>
+                {summary.totalXp.toLocaleString()}
+                <span className="text-xs text-[var(--text-2)] block">
+                  {difficulty} cap {summary.budgets[difficulty].toLocaleString()}
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Battle Forecast */}
+          <section className="relative overflow-hidden rounded-lg border-2 border-[var(--bronze)] bg-[linear-gradient(135deg,rgba(188,138,67,0.18),rgba(49,57,72,0.92))] p-5 shadow-lg print:hidden">
+            <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[rgba(188,138,67,0.14)]" aria-hidden="true" />
+            <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <span className="rounded-full bg-[var(--bronze)] p-2 text-[#1d1105]">
+                  <Swords size={24} aria-hidden="true" />
+                </span>
+                <div>
+                  <h3 className="text-2xl">Battle Forecast</h3>
+                  <p className="text-sm text-[var(--text-2)] max-w-2xl">
+                    Simulate 1,000 battles to see win rate, remaining party HP, likely knockouts, and the deadliest monster.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleForecastClick}
+                disabled={simRunning}
+                className="btn-primary text-base whitespace-nowrap disabled:opacity-50 disabled:cursor-wait"
+              >
+                {simRunning ? 'Forecasting…' : report ? 'Refresh Forecast' : 'Run Battle Forecast'}
+              </button>
+            </div>
+          </section>
           {simRunning && (
             <div className="card animate-pulse" role="status" aria-label="Running battle forecast">
               <h3 className="text-xl mb-2">Battle Forecast</h3>
@@ -745,13 +936,13 @@ function EncounterBuilder() {
                       <div>
                         <span className="font-bold">{em.monster.name}</span>
                         <span className="text-sm text-[var(--text-2)] ml-2">
-                          CR {crDisplay(em.monster.challengeRating)} | AC {em.monster.armor.ac} | HP {em.monster.hitPoints}
+                          CR {crDisplay(em.monster.challengeRating)} | AC {em.monster.armor.ac} | {em.monster.hitPoints} HP each
                         </span>
                       </div>
                     </button>
                     <div className="flex items-center gap-2">
-                      <span className="xp-capsule text-xs">
-                        {(em.monster.xp * em.count).toLocaleString()} XP
+                      <span className="xp-capsule text-xs" title={`${(em.monster.xp * em.count).toLocaleString()} XP rules value`}>
+                        {(em.monster.hitPoints * em.count).toLocaleString()} total HP
                       </span>
                       <button
                         type="button"
@@ -771,22 +962,41 @@ function EncounterBuilder() {
                   </div>
 
                   {expandedMonster === em.monster.id && (
-                    <div className="mt-2 ml-4 animate-fade-in">
+                    <div className="mt-2 ml-4 animate-fade-in print:hidden">
                       <MonsterStatBlock monster={em.monster} />
                     </div>
                   )}
+                  <div className="hidden print:block mt-4 break-inside-avoid">
+                    <MonsterStatBlock monster={em.monster} />
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Tactics */}
-          {encounter.tactics && (
-            <div className="card">
+          {(encounter.tactics || editingDetails) && (
+            <div className={`card ${!encounter.tactics ? 'print:hidden' : ''}`}>
               <h3 className="text-xl mb-3">Tactics</h3>
-              <div className="text-sm text-[var(--text-2)] whitespace-pre-line">
-                {encounter.tactics}
-              </div>
+              {editingDetails ? (
+                <>
+                  <label htmlFor="encounter-tactics" className="sr-only">Encounter tactics</label>
+                  <textarea
+                    id="encounter-tactics"
+                    value={encounter.tactics ?? ''}
+                    onChange={e => updateEncounterNarrative('tactics', e.target.value)}
+                    rows={6}
+                    className="w-full print:hidden"
+                  />
+                  <div className="text-sm text-[var(--text-2)] whitespace-pre-line hidden print:block">
+                    {encounter.tactics}
+                  </div>
+                </>
+              ) : (
+                <div className="text-sm text-[var(--text-2)] whitespace-pre-line">
+                  {encounter.tactics}
+                </div>
+              )}
             </div>
           )}
 
@@ -801,7 +1011,17 @@ function EncounterBuilder() {
           {/* Map */}
           {encounter.map && (
             <div className="card overflow-x-auto">
-              <h3 className="text-xl mb-3">Battle Map</h3>
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div>
+                  <h3 className="text-xl">Battle Map</h3>
+                  <p className="text-xs text-[var(--text-2)] print:hidden">
+                    {mapWidth}×{mapHeight} · {mapFeatureDensity} objects · {mapTerrainVariety} terrain
+                  </p>
+                </div>
+                <button type="button" onClick={handleRegenerateMap} className="btn-secondary text-sm print:hidden">
+                  Regenerate Map
+                </button>
+              </div>
               <MapGrid map={encounter.map} />
             </div>
           )}
@@ -814,53 +1034,45 @@ function EncounterBuilder() {
 // ─── Difficulty Meter ─────────────────────────────────────────────
 
 function DifficultyMeter({
-  budgets,
+  assessment,
+  totalMonsterHp,
   totalXp,
 }: {
-  budgets: Record<Difficulty, number>;
+  assessment: Difficulty | null;
+  totalMonsterHp: number;
   totalXp: number;
 }) {
-  // The zone past High is "Extreme" territory; scale the bar so it exists.
-  const max = budgets.High * 1.3;
-  const pct = (v: number) => Math.min((v / max) * 100, 100);
-
-  const gradient =
-    totalXp > budgets.High
-      ? 'linear-gradient(90deg, #7acb9a, #e3c567, #e69c55, #d05a59)'
-      : totalXp > budgets.Moderate
-      ? 'linear-gradient(90deg, #7acb9a, #e3c567, #e69c55)'
-      : totalXp > budgets.Low
-      ? 'linear-gradient(90deg, #7acb9a, #e3c567)'
-      : '#7acb9a';
+  const activeIndex = assessment ? DIFFICULTIES.indexOf(assessment) : -1;
+  const colors = ['#6f7785', '#7acb9a', '#e3c567', '#e69c55', '#d05a59'];
 
   return (
-    <div className="mt-3">
-      <div className="flex justify-between text-xs text-[var(--text-2)] mb-1">
-        <span>Low ({budgets.Low.toLocaleString()})</span>
-        <span>Moderate ({budgets.Moderate.toLocaleString()})</span>
-        <span>High ({budgets.High.toLocaleString()})</span>
-        <span className="text-[var(--difficulty-deadly)] font-bold">Extreme</span>
+    <div className="mt-3" role="group" aria-label="Encounter difficulty and monster hit points">
+      <div className="grid grid-cols-5 gap-1 text-[10px] sm:text-xs text-center text-[var(--text-2)] mb-1">
+        {DIFFICULTIES.map(level => (
+          <span key={level} className={assessment === level ? 'font-bold text-[var(--text-1)]' : ''}>
+            {level}
+          </span>
+        ))}
       </div>
-      <div className="relative h-6 bg-[var(--steel-950)] rounded overflow-hidden border border-[var(--steel-800)]">
-        {/* Budget markers */}
-        <div className="absolute top-0 bottom-0 border-r" style={{ left: `${pct(budgets.Low)}%`, borderColor: 'var(--difficulty-easy)' }} />
-        <div className="absolute top-0 bottom-0 border-r" style={{ left: `${pct(budgets.Moderate)}%`, borderColor: 'var(--difficulty-medium)' }} />
-        <div className="absolute top-0 bottom-0 border-r" style={{ left: `${pct(budgets.High)}%`, borderColor: 'var(--difficulty-hard)' }} />
-
-        {/* Current XP bar */}
-        {totalXp > 0 && (
+      <div className="grid grid-cols-5 gap-1 h-7 rounded overflow-hidden" aria-hidden="true">
+        {DIFFICULTIES.map((level, index) => (
           <div
-            className="absolute top-0 bottom-0 transition-all duration-300"
-            style={{ width: `${pct(totalXp)}%`, background: gradient }}
+            key={level}
+            className="transition-all duration-300 border border-[var(--steel-800)]"
+            style={{
+              backgroundColor: index <= activeIndex ? colors[index] : 'var(--steel-950)',
+              opacity: index <= activeIndex ? 1 : 0.65,
+            }}
           />
-        )}
-
-        {/* XP label */}
-        {totalXp > 0 && (
-          <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white drop-shadow-md">
-            {totalXp.toLocaleString()} XP
-          </div>
-        )}
+        ))}
+      </div>
+      <div className="flex justify-between items-baseline gap-3 mt-1">
+        <span className="text-sm font-bold text-[var(--bronze)]">
+          {totalMonsterHp.toLocaleString()} monster HP
+        </span>
+        <span className="text-[10px] text-[var(--text-2)]" title="Used for the official 2024 encounter budget calculation">
+          {totalXp.toLocaleString()} rules XP
+        </span>
       </div>
     </div>
   );

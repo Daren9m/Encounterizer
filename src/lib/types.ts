@@ -32,11 +32,13 @@ export type MovementMode = 'Walk' | 'Fly' | 'Swim' | 'Burrow' | 'Climb' | 'Hover
 export type AttackDelivery = 'Melee' | 'Ranged';
 export type AttackType = 'Weapon' | 'Spell';
 
-// 2024 DMG encounter difficulty tiers. These are the *build targets* a DM
-// selects; 'Extreme' below is an assessment-only label for encounters that
-// exceed the High budget (the 2024 DMG defines nothing above High).
-export type Difficulty = 'Low' | 'Moderate' | 'High';
-export type EncounterAssessment = Difficulty | 'Extreme';
+// The 2024 DMG defines Low, Moderate, and High encounter budgets. Encounterizer
+// adds Trivial (50% of Low) and Extreme (130% of High) as deterministic build
+// targets so DMs can work with a familiar five-step scale without changing the
+// official values below.
+export type OfficialDifficulty = 'Low' | 'Moderate' | 'High';
+export type Difficulty = 'Trivial' | OfficialDifficulty | 'Extreme';
+export type EncounterAssessment = Difficulty;
 
 export type Alignment =
   | 'Lawful Good' | 'Neutral Good' | 'Chaotic Good'
@@ -274,7 +276,7 @@ export interface Party {
 // 2014 thresholds, these are spending CAPS — an encounter's raw monster
 // XP is compared directly against the budget with NO count multiplier.
 
-export const XP_BUDGET_PER_CHARACTER: Record<number, Record<Difficulty, number>> = {
+export const XP_BUDGET_PER_CHARACTER: Record<number, Record<OfficialDifficulty, number>> = {
   1:  { Low: 50,   Moderate: 75,    High: 100   },
   2:  { Low: 100,  Moderate: 150,   High: 200   },
   3:  { Low: 150,  Moderate: 225,   High: 400   },
