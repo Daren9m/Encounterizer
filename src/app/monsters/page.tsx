@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Maximize2, Skull, X } from 'lucide-react';
 import { filterMonsters, getMonsterSummaryStats } from '@/lib/monster-filter';
 import type { Monster, MonsterFilter } from '@/lib/types';
@@ -13,6 +13,7 @@ import { useMonsters } from '@/app/hooks/useMonsters';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import { getMonsterPhysicalDescription } from '@/data/monster-description-index';
 import { getMonsterImage } from '@/data/monster-visual-index';
+import ToolPageHeader from '@/components/ToolPageHeader';
 
 function crDisplay(cr: number): string {
   if (cr === 0.125) return '1/8';
@@ -27,6 +28,11 @@ export default function BestiaryPage() {
   const [filter, setFilter] = useState<MonsterFilter>({});
   const [selectedMonster, setSelectedMonster] = useState<Monster | null>(null);
   const [isHandoutOpen, setIsHandoutOpen] = useState(false);
+  const detailRef = useRef<HTMLDivElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const handoutTriggerRef = useRef<HTMLButtonElement>(null);
+  const handoutCloseRef = useRef<HTMLButtonElement>(null);
+  const pageContentRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = usePersistentState<ViewMode>(
     'bestiaryViewMode', 'grid', (v): v is ViewMode => v === 'grid' || v === 'list',
   );
@@ -37,22 +43,41 @@ export default function BestiaryPage() {
 
   const handleSelect = useCallback((monster: Monster) => {
     setIsHandoutOpen(false);
-    setSelectedMonster(prev => prev?.id === monster.id ? null : monster);
-  }, []);
+    const next = selectedMonster?.id === monster.id ? null : monster;
+    setSelectedMonster(next);
+    if (next && window.matchMedia('(max-width: 1023px)').matches) {
+      window.requestAnimationFrame(() => {
+        detailRef.current?.focus({ preventScroll: true });
+        detailRef.current?.scrollIntoView({
+          behavior: 'instant' as ScrollBehavior,
+          block: 'start',
+        });
+      });
+    }
+  }, [selectedMonster]);
 
   useEffect(() => {
     if (!isHandoutOpen) return;
 
     const previousOverflow = document.body.style.overflow;
+    const opener = handoutTriggerRef.current;
+    const pageContent = pageContentRef.current;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setIsHandoutOpen(false);
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        handoutCloseRef.current?.focus();
+      }
     };
 
     document.body.style.overflow = 'hidden';
+    if (pageContent) pageContent.inert = true;
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
+      if (pageContent) pageContent.inert = false;
       window.removeEventListener('keydown', handleKeyDown);
+      opener?.focus();
     };
   }, [isHandoutOpen]);
 
@@ -72,6 +97,7 @@ export default function BestiaryPage() {
             className="h-full w-full"
           />
           <button
+            ref={handoutCloseRef}
             type="button"
             autoFocus
             onClick={() => setIsHandoutOpen(false)}
@@ -83,33 +109,40 @@ export default function BestiaryPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl">Monster Bestiary</h1>
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-[var(--text-2)]">
-            {results.length} of {allMonsters.length} monsters
-            {custom.length > 0 && ` (${custom.length} custom)`}
-          </span>
-          <div className="flex border border-[var(--steel-800)] rounded overflow-hidden ml-2 print:hidden">
-            <button
-              type="button"
-              onClick={() => setViewMode('grid')}
-              aria-pressed={viewMode === 'grid'}
-              className={`px-3 py-1 text-xs ${viewMode === 'grid' ? 'bg-[var(--bronze)] text-[#1d1105] font-bold' : 'bg-[var(--steel-900)] text-[var(--text-2)]'}`}
-            >
-              Grid
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('list')}
-              aria-pressed={viewMode === 'list'}
-              className={`px-3 py-1 text-xs ${viewMode === 'list' ? 'bg-[var(--bronze)] text-[#1d1105] font-bold' : 'bg-[var(--steel-900)] text-[var(--text-2)]'}`}
-            >
-              List
-            </button>
+      <div ref={pageContentRef} aria-hidden={isHandoutOpen || undefined}>
+      <ToolPageHeader
+        path="/monsters"
+        description="Search the SRD bestiary by the details that matter at the table, then open a focused stat-block inspector or player-safe image handout."
+        actions={(
+          <div className="flex flex-col gap-2 sm:items-end">
+            <span className="text-sm text-[var(--text-2)]" aria-live="polite">
+              {results.length} of {allMonsters.length} monsters
+              {custom.length > 0 && ` · ${custom.length} custom`}
+            </span>
+            <div className="segmented-control" role="group" aria-label="Bestiary view">
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                aria-pressed={viewMode === 'grid'}
+                className="segmented-option"
+              >
+                Grid
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                aria-pressed={viewMode === 'list'}
+                className="segmented-option"
+              >
+                List
+              </button>
+            </div>
           </div>
-        </div>
-      </div>
+        )}
+      />
+      <p className="sr-only" aria-live="polite">
+        {selectedMonster ? `${selectedMonster.name} selected. Stat block ready.` : ''}
+      </p>
 
       <CustomMonsterPanel allMonsters={allMonsters} />
 
@@ -130,7 +163,7 @@ export default function BestiaryPage() {
 
       <div className="grid gap-6 lg:grid-cols-12">
         {/* Monster List */}
-        <div className="print:hidden lg:col-span-7">
+        <div ref={resultsRef} tabIndex={-1} aria-label="Monster results" className="print:hidden lg:col-span-7">
           {viewMode === 'grid' ? (
             <div className="grid items-start gap-3 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               {results.map(monster => (
@@ -146,7 +179,7 @@ export default function BestiaryPage() {
           ) : (
             <div className="space-y-1">
               {/* List header */}
-              <div className="grid grid-cols-12 gap-2 px-3 py-2 micro-label border-b border-[var(--steel-800)]">
+              <div className="micro-label hidden grid-cols-12 gap-2 border-b border-[var(--steel-800)] px-3 py-2 sm:grid">
                 <div className="col-span-4">Name</div>
                 <div className="col-span-2">Type</div>
                 <div className="col-span-1 text-center">CR</div>
@@ -158,16 +191,18 @@ export default function BestiaryPage() {
                 const physicalDescription = getMonsterPhysicalDescription(monster.id);
                 return (
                   <button
-                  key={monster.id}
-                  type="button"
-                  onClick={() => handleSelect(monster)}
-                  className={`grid grid-cols-12 gap-2 px-3 py-2 w-full text-left text-sm rounded transition-colors ${
+                   key={monster.id}
+                   type="button"
+                   onClick={() => handleSelect(monster)}
+                   aria-pressed={selectedMonster?.id === monster.id}
+                   aria-label={`View ${monster.name} stat block`}
+                   className={`grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded-lg px-3 py-3 text-left text-sm transition-colors sm:grid-cols-12 sm:gap-2 sm:py-2 ${
                     selectedMonster?.id === monster.id
                       ? 'bg-[var(--steel-800)] border border-[var(--bronze)]'
                       : 'hover:bg-[var(--steel-900)] border border-transparent'
                   }`}
                 >
-                  <div className="col-span-4 min-w-0">
+                  <div className="min-w-0 sm:col-span-4">
                     <div className="font-bold truncate">
                       {monster.name}
                       {monster.isLegendary && <span className="ml-1 text-[var(--bronze)]" title="Legendary">*</span>}
@@ -178,15 +213,15 @@ export default function BestiaryPage() {
                       </div>
                     )}
                   </div>
-                  <div className="col-span-2 text-[var(--text-2)] truncate">
+                  <div className="hidden truncate text-[var(--text-2)] sm:col-span-2 sm:block">
                     {monster.size} {monster.type}
                   </div>
-                  <div className="col-span-1 text-center text-[var(--bronze)] font-bold">
+                  <div className="text-center font-bold text-[var(--bronze)] sm:col-span-1">
                     {crDisplay(monster.challengeRating)}
                   </div>
-                  <div className="col-span-1 text-center">{monster.armor.ac}</div>
-                  <div className="col-span-1 text-center">{monster.hitPoints}</div>
-                  <div className="col-span-3 text-xs text-[var(--text-2)] truncate">
+                  <div className="hidden text-center sm:col-span-1 sm:block">{monster.armor.ac}</div>
+                  <div className="text-center text-xs text-[var(--text-2)] sm:col-span-1 sm:text-sm">{monster.hitPoints} HP</div>
+                  <div className="hidden truncate text-xs text-[var(--text-2)] sm:col-span-3 sm:block">
                     {formatSpeedShort(monster)}
                   </div>
                   </button>
@@ -203,9 +238,19 @@ export default function BestiaryPage() {
         </div>
 
         {/* Stat Block Detail */}
-        <div className="print:col-span-12 lg:col-span-5">
+        <div ref={detailRef} tabIndex={-1} className="scroll-mt-24 print:col-span-12 lg:col-span-5">
           {selectedMonster ? (
-            <div className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:pr-2">
+            <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-2">
+              <button
+                type="button"
+                className="btn-ghost mb-3 w-full lg:hidden"
+                onClick={() => {
+                  resultsRef.current?.focus({ preventScroll: true });
+                  resultsRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'start' });
+                }}
+              >
+                Back to monster results
+              </button>
               <MonsterPortrait
                 monsterId={selectedMonster.id}
                 sizes="(min-width: 1024px) 42vw, 100vw"
@@ -214,6 +259,7 @@ export default function BestiaryPage() {
               <div className="mb-2 flex justify-end gap-2">
                 {getMonsterImage(selectedMonster.id) && (
                   <button
+                    ref={handoutTriggerRef}
                     type="button"
                     onClick={() => setIsHandoutOpen(true)}
                     className="btn-primary inline-flex items-center gap-1.5 text-sm print:hidden"
@@ -239,6 +285,7 @@ export default function BestiaryPage() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );
@@ -269,20 +316,22 @@ function MonsterCard({
     <button
       type="button"
       onClick={() => onSelect(monster)}
-      className={`card text-left cursor-pointer transition-all ${
+      aria-pressed={isSelected}
+      aria-label={`View ${monster.name} stat block`}
+      className={`card w-full overflow-hidden text-left cursor-pointer transition-all ${
         isSelected ? 'border-[var(--bronze)] ring-1 ring-[var(--bronze)]' : ''
       }`}
     >
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-3 sm:gap-4">
         <MonsterPortrait
           monsterId={monster.id}
           sizes="128px"
-          className="aspect-[4/5] w-28 shrink-0 rounded-md sm:w-32"
+          className="aspect-[4/5] w-24 shrink-0 rounded-lg sm:w-32"
         />
         <div className="min-w-0 flex-1">
       <div className="flex items-start justify-between gap-2">
-        <div>
-          <h3 className="">{monster.name}</h3>
+        <div className="min-w-0">
+          <h3 className="truncate">{monster.name}</h3>
           <p className="text-xs text-[var(--text-2)]">
             {monster.size} {monster.type}
             {monster.subtype ? ` (${monster.subtype})` : ''}
@@ -294,7 +343,7 @@ function MonsterCard({
       </div>
 
       {physicalDescription && (
-        <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-[var(--text-2)]">
+        <p className="mt-2 hidden text-xs leading-relaxed text-[var(--text-2)] sm:line-clamp-3">
           {physicalDescription}
         </p>
       )}
@@ -337,7 +386,7 @@ function MonsterCard({
       )}
 
       {/* Stats row */}
-      <div className="flex gap-3 mt-2 text-xs text-[var(--text-2)]">
+      <div className="mt-2 flex flex-wrap gap-3 text-xs text-[var(--text-2)]">
         <span>AC {monster.armor.ac}</span>
         <span>HP {monster.hitPoints}</span>
         <span>{monster.xp.toLocaleString()} XP</span>
