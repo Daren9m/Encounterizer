@@ -154,17 +154,20 @@ export const EXTENDED_MECHANICS_RES: readonly RegExp[] = [
 // ─── Check 7: banned proper nouns + Product Identity monsters ────
 
 /**
- * Non-SRD monster names Wizards of the Coast designates Product
- * Identity. Source: the v3.5 System Reference Document "Legal
- * Information" Product Identity designation, which names exactly this
- * monster family — "beholder, gauth, carrion crawler, tanar'ri,
- * baatezu, displacer beast, githyanki, githzerai, kuo-toa, mind
- * flayer, illithid, slaad, umber hulk, yuan-ti" — and remains the
- * well-known PI monster list. None of these appear in SRD 5.2.1
- * (CC-BY-4.0), the source of this repo's generated bestiary;
- * audit-checks.test.ts cross-checks every entry against
- * src/data (ALL_MONSTERS) so the ban list can never reject a monster
- * name the SRD legally ships.
+ * Non-SRD monster names Wizards of the Coast treats as Product
+ * Identity. Twelve entries are the verbatim monster-name list from
+ * the v3.5 System Reference Document "Legal Information" Product
+ * Identity designation (the same twelve names WotC re-designated in
+ * the SRD 5.1 OGL legal information): "beholder, gauth, carrion
+ * crawler, tanar'ri, baatezu, displacer beast, githyanki, githzerai,
+ * mind flayer, illithid, umber hulk, yuan-ti". The remaining two —
+ * kuo-toa and slaad — are NOT in that designation; they are
+ * conservative additions: well-known WotC monsters that ship in no
+ * SRD, so over-banning them cannot reject legal content. None of the
+ * fourteen appear in SRD 5.2.1 (CC-BY-4.0), the source of this
+ * repo's generated bestiary; audit-checks.test.ts cross-checks every
+ * entry against src/data (ALL_MONSTERS) so the ban list can never
+ * reject a monster name the SRD legally ships.
  *
  * Lowercase-normalized like BANNED_PROPER_NOUNS. Matching is
  * word-boundary and case-insensitive, with spaces and hyphens

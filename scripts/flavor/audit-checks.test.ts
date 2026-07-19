@@ -417,6 +417,9 @@ describe('PRODUCT_IDENTITY_MONSTERS', () => {
   });
 
   it('covers the well-known Product Identity monster family', () => {
+    // Mix of names from the v3.5 SRD "Legal Information" PI designation
+    // and the list's two conservative additions (kuo-toa, slaad) — see
+    // the PRODUCT_IDENTITY_MONSTERS doc comment for the distinction.
     for (const name of [
       'beholder',
       'carrion crawler',
