@@ -15,6 +15,9 @@ import { randomSeed } from '@/lib/random';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import type { EncounterMap, Environment } from '@/lib/types';
 import { mapToMarkdown } from '@/lib/map-export-text';
+import {
+  isMapHistoryArray, resolveHistoryEntry, toHistoryEntry, type MapHistoryEntry,
+} from '@/lib/map-history';
 import { buildUvtt } from '@/lib/uvtt-export';
 import MapSvg from '@/components/MapSvg';
 import PrintButton from '@/components/PrintButton';
@@ -33,7 +36,6 @@ const isMapEnvironment = (v: unknown): v is Environment =>
 const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const isMapWidth = (v: unknown): v is number => isNumber(v) && v >= 10 && v <= 40;
 const isMapHeight = (v: unknown): v is number => isNumber(v) && v >= 10 && v <= 30;
-const isMapArray = (v: unknown): v is EncounterMap[] => Array.isArray(v);
 const isFeatureDensity = (v: unknown): v is MapFeatureDensity =>
   v === 'Sparse' || v === 'Balanced' || v === 'Dense';
 const isTerrainVariety = (v: unknown): v is MapTerrainVariety =>
@@ -104,7 +106,9 @@ function MapsBuilder() {
   const [roomCount, setRoomCount] = usePersistentState<number>('mapRoomCount', 0, isNumber);
   const [map, setMap] = useState<EncounterMap | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
-  const [history, setHistory] = usePersistentState<EncounterMap[]>('mapHistory', [], isMapArray);
+  // History stores ~200-byte stubs (seed + options) and regenerates on
+  // click; pre-overhaul full-map entries still load and age out.
+  const [history, setHistory] = usePersistentState<MapHistoryEntry[]>('mapHistory', [], isMapHistoryArray);
 
   const runGenerate = useCallback((opts: {
     environment: Environment; width: number; height: number;
@@ -121,7 +125,7 @@ function MapsBuilder() {
       seed: opts.seed,
     });
     setMap(result);
-    setHistory(prev => [result, ...prev.filter(m => m.id !== result.id).slice(0, 9)]);
+    setHistory(prev => [toHistoryEntry(result), ...prev.filter(m => m.id !== result.id).slice(0, 9)]);
     window.history.replaceState(null, '', `?${mapShareParams(result).toString()}`);
   }, [setHistory]);
 
@@ -444,7 +448,7 @@ function MapsBuilder() {
               <button
                 key={m.id}
                 type="button"
-                onClick={() => setMap(m)}
+                onClick={() => setMap(resolveHistoryEntry(m))}
                 aria-pressed={map?.id === m.id}
                 className={`card text-left text-sm ${map?.id === m.id ? 'border-[var(--bronze)]' : ''}`}
               >
