@@ -156,6 +156,38 @@ function matchesFilter(monster: Monster, filter: MonsterFilter): boolean {
 
 // ─── Sorting ────────────────────────────────────────────────────
 
+const FAMILY_PREFIXES: Array<[RegExp, number]> = [
+  [/^swarm of\s+/, 9],
+  [/^giant\s+/, 2],
+  [/^dire\s+/, 1],
+  [/^(ancient|adult|young)\s+/, 3],
+];
+
+/**
+ * Sort key that keeps common monster variants together. For example Rat,
+ * Giant Rat, and Swarm of Rats all resolve to the "rat" family.
+ */
+export function getMonsterFamilySortKey(name: string): string {
+  let core = name.toLocaleLowerCase().trim();
+  let variantRank = 0;
+
+  for (const [prefix, rank] of FAMILY_PREFIXES) {
+    if (prefix.test(core)) {
+      core = core.replace(prefix, '');
+      variantRank = rank;
+      break;
+    }
+  }
+
+  // Simple creature-name plurals cover the swarm names in the SRD without
+  // turning unrelated words such as "gas" into a different family.
+  if (/[^s]ies$/.test(core)) core = `${core.slice(0, -3)}y`;
+  else if (/(ches|shes|xes|zes)$/.test(core)) core = core.slice(0, -2);
+  else if (/[^s]s$/.test(core)) core = core.slice(0, -1);
+
+  return `${core}\u0000${variantRank.toString().padStart(2, '0')}\u0000${name.toLocaleLowerCase()}`;
+}
+
 /** Comparator value for sorting. Returns negative, zero, or positive. */
 function compareMonsters(
   a: Monster,
@@ -167,6 +199,8 @@ function compareMonsters(
   let cmp: number;
 
   switch (sortBy) {
+    case 'family':
+      return getMonsterFamilySortKey(a.name).localeCompare(getMonsterFamilySortKey(b.name)) * dir;
     case 'cr':
       cmp = a.challengeRating - b.challengeRating;
       break;

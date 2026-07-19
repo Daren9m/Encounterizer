@@ -205,7 +205,7 @@ export interface MonsterFilter {
   hasLair?: boolean;
   sources?: SourceBook[];
   tags?: string[];
-  sortBy?: 'name' | 'cr' | 'hp' | 'ac';
+  sortBy?: 'family' | 'name' | 'cr' | 'hp' | 'ac';
   sortDir?: 'asc' | 'desc';
 }
 

@@ -58,13 +58,13 @@ export default function CustomMonsterPanel({ allMonsters }: { allMonsters: Monst
   }
 
   return (
-    <div className="card mb-4 print:hidden">
+    <div className="card mb-3 !px-3 !py-2.5 print:hidden">
       <button
         type="button"
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-controls="custom-monster-panel"
-        className="flex items-center justify-between w-full text-left"
+        className="flex min-h-9 w-full items-center justify-between text-left"
       >
         <span className="font-display">
           Custom Monsters{customMonsters.length > 0 ? ` (${customMonsters.length})` : ''}
@@ -75,7 +75,7 @@ export default function CustomMonsterPanel({ allMonsters }: { allMonsters: Monst
       </button>
 
       {open && (
-        <div id="custom-monster-panel" className="mt-4 space-y-4 animate-fade-in">
+        <div id="custom-monster-panel" className="mt-2.5 space-y-3 border-t border-[var(--steel-800)] pt-3 animate-fade-in">
           <p className="text-sm text-[var(--text-2)]">
             Load your own monsters from a <strong>5etools bestiary JSON</strong>{' '}
             (<code className="text-xs">{'{"monster": [...]}'}</code>) or an{' '}
