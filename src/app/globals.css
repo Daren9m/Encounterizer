@@ -44,7 +44,7 @@
   /* Stat block light island (print/export) */
   --statblock-light-bg: #f7f4ee;
   --statblock-light-text: #1c1a16;
-  --statblock-light-accent: #b06f33;
+  --statblock-light-accent: #985323;
 
   /* Elevation — one soft shadow, cards only */
   --shadow-card: 0 14px 34px rgba(0, 0, 0, 0.22);
@@ -501,6 +501,26 @@ select optgroup {
   color: var(--statblock-light-text);
   border-color: #ddd6c8;
   box-shadow: none;
+  color-scheme: light;
+}
+
+/* Headings and display text normally opt into the dark-shell text token.
+   Re-establish the light-surface boundary so handout copy cannot inherit
+   near-white text from those global typography rules. */
+.light-island :where(h1, h2, h3, .font-display) {
+  color: var(--statblock-light-text);
+}
+
+.light-island > h3 {
+  color: var(--statblock-light-accent);
+}
+
+/* The global selection treatment is designed for the dark shell. Keep
+   selected handout copy dark and readable against its paper surface. */
+.light-island::selection,
+.light-island ::selection {
+  background: #e6c3a3;
+  color: var(--statblock-light-text);
 }
 
 /* Animated fade-in */
