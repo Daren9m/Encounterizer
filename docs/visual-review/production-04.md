@@ -6,8 +6,8 @@
 
 - **ID:** `hobgoblin-warrior`
 - **Stat profile:** CR 0.5; Medium Fey (goblinoid)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -75,8 +75,8 @@ A rust-red hobgoblin warrior in dark lamellar advances with longsword ready and 
 
 - **ID:** `ice-mephit`
 - **Stat profile:** CR 0.5; Small Elemental
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -143,8 +143,8 @@ A small blue-white ice mephit hovers above a frozen shelf while exhaling a plume
 
 - **ID:** `magma-mephit`
 - **Stat profile:** CR 0.5; Small Elemental
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -211,8 +211,8 @@ A cracked basalt magma mephit rises over a lava fissure with molten wings spread
 
 - **ID:** `magmin`
 - **Stat profile:** CR 0.5; Small Elemental
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -279,8 +279,8 @@ A small wingless magmin of living orange magma strides across black stone with o
 
 - **ID:** `reef-shark`
 - **Stat profile:** CR 0.5; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -347,8 +347,8 @@ A sleek gray reef shark turns through a clear coral channel with its tall dorsal
 
 - **ID:** `rust-monster`
 - **Stat profile:** CR 0.5; Medium Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -415,8 +415,8 @@ A rust-brown rust monster reaches two feathery antennae toward an iron helm in a
 
 - **ID:** `sahuagin-warrior`
 - **Stat profile:** CR 0.5; Medium Fiend
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -483,8 +483,8 @@ A dark green sahuagin warrior rises from moonlit surf with sharklike head and we
 
 - **ID:** `satyr`
 - **Stat profile:** CR 0.5; Medium Fey
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -552,8 +552,8 @@ A horned satyr springs sideways in a forest glade on two shaggy goat legs and cl
 
 - **ID:** `scout`
 - **Stat profile:** CR 0.5; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -621,8 +621,8 @@ A compact hooded scout kneels on a wooded ridge with longbow half-drawn and shor
 
 - **ID:** `shadow`
 - **Stat profile:** CR 0.5; Medium Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -688,8 +688,8 @@ A tall spectral shadow peels away from a dungeon wall and reaches forward with a
 
 - **ID:** `swarm-of-insects`
 - **Stat profile:** CR 0.5; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -755,8 +755,8 @@ A dense mixed swarm of beetles and flies rolls over a low ruin wall in a dark sh
 
 - **ID:** `tough`
 - **Stat profile:** CR 0.5; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -823,8 +823,8 @@ A compact street tough braces in a stone alley with an iron mace raised and heav
 
 - **ID:** `troll-limb`
 - **Stat profile:** CR 0.5; Small Giant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -890,8 +890,8 @@ A severed green-gray troll forearm crawls across a cavern floor on five claws, i
 
 - **ID:** `warhorse`
 - **Stat profile:** CR 0.5; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -959,8 +959,8 @@ A powerful black warhorse charges riderless across a field in a reinforced milit
 
 - **ID:** `warhorse-skeleton`
 - **Stat profile:** CR 0.5; Large Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1027,8 +1027,8 @@ An animated warhorse skeleton gallops across a ruined causeway with cold light i
 
 - **ID:** `worg`
 - **Stat profile:** CR 0.5; Large Fey
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1095,8 +1095,8 @@ A horse-sized black-gray worg prowls down a forest path with a massive head and 
 
 - **ID:** `brass-dragon-wyrmling`
 - **Stat profile:** CR 1; Medium Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1164,8 +1164,8 @@ A young brass dragon stands on a dune with two wings half-open and its broad pla
 
 - **ID:** `brown-bear`
 - **Stat profile:** CR 1; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1232,8 +1232,8 @@ A huge grizzled brown bear rises beside a forest river with one broad clawed paw
 
 - **ID:** `bugbear-warrior`
 - **Stat profile:** CR 1; Medium Fey (goblinoid)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1300,8 +1300,8 @@ A hairy bugbear warrior lunges from a forest ravine with one long hand grabbing 
 
 - **ID:** `copper-dragon-wyrmling`
 - **Stat profile:** CR 1; Medium Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1369,8 +1369,8 @@ A young copper dragon clings to a red-rock slope with two wings opening and chee
 
 - **ID:** `death-dog`
 - **Stat profile:** CR 1; Medium Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1437,8 +1437,8 @@ A two-headed rust-black death dog stalks through a desert ruin with both muzzles
 
 - **ID:** `dire-wolf`
 - **Stat profile:** CR 1; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1505,8 +1505,8 @@ A pony-sized silver-gray dire wolf charges along a snowy ridge with jaws open an
 
 - **ID:** `dryad`
 - **Stat profile:** CR 1; Medium Fey
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1574,8 +1574,8 @@ A bark-skinned dryad emerges from an ancient tree while sweeping a thorned vine 
 
 - **ID:** `ghoul`
 - **Stat profile:** CR 1; Medium Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1642,8 +1642,8 @@ A gaunt ash-gray ghoul lunges through a cemetery passage with black claws spread
 
 - **ID:** `giant-eagle`
 - **Stat profile:** CR 1; Large Celestial
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1710,8 +1710,8 @@ A horse-sized celestial eagle banks over a mountain valley with gold-edged wings
 
 - **ID:** `giant-hyena`
 - **Stat profile:** CR 1; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1779,8 +1779,8 @@ A horse-sized spotted giant hyena bounds through dry scrub with massive jaws ope
 
 - **ID:** `giant-octopus`
 - **Stat profile:** CR 1; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1848,8 +1848,8 @@ A huge red-violet giant octopus rises over a reef ledge with all eight sucker-li
 
 - **ID:** `giant-spider`
 - **Stat profile:** CR 1; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1916,8 +1916,8 @@ A horse-sized dark giant spider hangs sideways in a cavern web on eight long leg
 
 - **ID:** `giant-toad`
 - **Stat profile:** CR 1; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
