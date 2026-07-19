@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "import:bestiary": "tsx scripts/import-bestiary.ts",
+    "generate:flavor": "tsx scripts/generate-flavor.ts",
     "import:spells": "tsx scripts/import-spells.ts",
     "make:runic-font": "node scripts/make-runic-font.mjs",
     "visuals:sync": "tsx scripts/enrich-bestiary-visuals.ts",
