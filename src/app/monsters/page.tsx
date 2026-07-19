@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ChevronDown,
   ChevronUp,
@@ -184,7 +185,7 @@ export default function BestiaryPage() {
 
   return (
     <div className="relative left-1/2 w-[calc(100vw-2rem)] max-w-[110rem] -translate-x-1/2 animate-fade-in sm:w-[calc(100vw-3rem)] lg:w-[calc(100vw-4rem)]">
-      {isHandoutOpen && selectedMonster && getMonsterImage(selectedMonster.id) && (
+      {isHandoutOpen && selectedMonster && getMonsterImage(selectedMonster.id) && createPortal(
         <div
           role="dialog"
           aria-modal="true"
@@ -207,7 +208,8 @@ export default function BestiaryPage() {
           >
             <X size={24} aria-hidden="true" />
           </button>
-        </div>
+        </div>,
+        document.body,
       )}
 
       <div ref={pageContentRef} aria-hidden={isHandoutOpen || undefined}>
