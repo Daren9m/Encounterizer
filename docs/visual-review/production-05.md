@@ -6,8 +6,8 @@
 
 - **ID:** `giant-vulture`
 - **Stat profile:** CR 1; Large Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -74,8 +74,8 @@ A ragged giant vulture dives over a sunlit badland with its hooked beak and talo
 
 - **ID:** `goblin-boss`
 - **Stat profile:** CR 1; Small Fey (goblinoid)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -144,8 +144,8 @@ A small olive-skinned goblin boss directs troops from a stone, scimitar drawn an
 
 - **ID:** `harpy`
 - **Stat profile:** CR 1; Medium Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -213,8 +213,8 @@ A storm-gray harpy sings from a coastal cliff with broad feathered wings raised 
 
 - **ID:** `hippogriff`
 - **Stat profile:** CR 1; Large Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -283,8 +283,8 @@ A tawny hippogriff lands on a mountain shelf, eagle talons forward and horse hin
 
 - **ID:** `lion`
 - **Stat profile:** CR 1; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -352,8 +352,8 @@ A scarred tawny lion strides through dry grass and roars, its dark mane framing 
 
 - **ID:** `pirate`
 - **Stat profile:** CR 1; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -421,8 +421,8 @@ A small deck pirate flourishes a dagger on a rain-dark ship while loose coat tai
 
 - **ID:** `psychic-gray-ooze`
 - **Stat profile:** CR 1; Medium Ooze
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -490,8 +490,8 @@ A smoky gray ooze crawls down an Underdark wall as violet psychic ripples pulse 
 
 - **ID:** `quasit`
 - **Stat profile:** CR 1; Tiny Fiend (demon)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -559,8 +559,8 @@ A tiny wingless green quasit crouches on cracked stone, horned head raised and c
 
 - **ID:** `specter`
 - **Stat profile:** CR 1; Medium Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -627,8 +627,8 @@ A blue-black specter dives through a ruined wall, its hollow face and reaching h
 
 - **ID:** `sphinx-of-wonder`
 - **Stat profile:** CR 1; Tiny Celestial
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -696,8 +696,8 @@ A tiny cream-and-gold sphinx of wonder hovers over a stone tablet with feathered
 
 - **ID:** `spy`
 - **Stat profile:** CR 1; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -766,8 +766,8 @@ A compact hooded spy climbs a moonlit parapet with a hand crossbow ready and sho
 
 - **ID:** `swarm-of-piranhas`
 - **Stat profile:** CR 1; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -835,8 +835,8 @@ A dense swarm of silver and red piranhas wheels through a murky river beneath su
 
 - **ID:** `tiger`
 - **Stat profile:** CR 1; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -905,8 +905,8 @@ A large orange-and-black tiger stalks silently from dense green leaves with one 
 
 - **ID:** `allosaurus`
 - **Stat profile:** CR 2; Large Beast (dinosaur)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -974,8 +974,8 @@ A dusty olive allosaurus turns across open grassland with jaws spread and its lo
 
 - **ID:** `animated-rug-of-smothering`
 - **Stat profile:** CR 2; Large Construct
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1043,8 +1043,8 @@ A faded crimson animated rug rises from a manor floor, folding its tasseled edge
 
 - **ID:** `ankheg`
 - **Stat profile:** CR 2; Large Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1113,8 +1113,8 @@ A plated ankheg erupts from a grassland burrow, six legs braced as acid gathers 
 
 - **ID:** `awakened-tree`
 - **Stat profile:** CR 2; Huge Plant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1183,8 +1183,8 @@ A huge awakened oak strides through an old forest on lifting roots, one massive 
 
 - **ID:** `azer-sentinel`
 - **Stat profile:** CR 2; Medium Elemental
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1253,8 +1253,8 @@ A bronze azer sentinel guards a black forge gate with fiery hair and a heat-brig
 
 - **ID:** `bandit-captain`
 - **Stat profile:** CR 2; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1323,8 +1323,8 @@ A compact bandit captain commands a roadside ambush with scimitar extended and a
 
 - **ID:** `berserker`
 - **Stat profile:** CR 2; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1393,8 +1393,8 @@ A compact hide-clad berserker charges across a rocky hill with a nicked greataxe
 
 - **ID:** `black-dragon-wyrmling`
 - **Stat profile:** CR 2; Medium Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1463,8 +1463,8 @@ A young black dragon crouches on a swamp root, oily wings spread as smoking acid
 
 - **ID:** `bronze-dragon-wyrmling`
 - **Stat profile:** CR 2; Medium Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1533,8 +1533,8 @@ A bronze dragon wyrmling climbs from a tide pool as white lightning flickers bet
 
 - **ID:** `centaur-trooper`
 - **Stat profile:** CR 2; Large Fey
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1603,8 +1603,8 @@ A chestnut centaur trooper advances across a meadow with pike lowered and longbo
 
 - **ID:** `cultist-fanatic`
 - **Stat profile:** CR 2; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1673,8 +1673,8 @@ A hooded cultist fanatic grips a dark pact blade as violet necrotic light thread
 
 - **ID:** `druid`
 - **Stat profile:** CR 2; Small Humanoid
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1743,8 +1743,8 @@ A compact forest druid guides a green-gold wisp beside a vine-wrapped staff in a
 
 - **ID:** `ettercap`
 - **Stat profile:** CR 2; Medium Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1813,8 +1813,8 @@ A bristled ettercap clings sideways to a webbed tree and casts a thick strand fr
 
 - **ID:** `gargoyle`
 - **Stat profile:** CR 2; Medium Elemental
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1882,8 +1882,8 @@ A dark basalt gargoyle launches from a rain-soaked cathedral ledge with broad st
 
 - **ID:** `ghast`
 - **Stat profile:** CR 2; Medium Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1952,8 +1952,8 @@ A gaunt gray-green ghast lopes through a damp crypt with long black claws and br
 
 - **ID:** `giant-boar`
 - **Stat profile:** CR 2; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
