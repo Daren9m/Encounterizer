@@ -254,9 +254,24 @@ function NoncombatBuilder() {
     window.open(buildPlayerUrl(result), '_blank', 'noopener');
   }
 
+  /** History entries persist prose from older builds — regenerate from
+      the stored levers so player exports always match the player route. */
+  function freshPlayerView(r: NoncombatResult) {
+    return toPlayerView(generateNoncombat({
+      kind: r.requested.kind,
+      difficulty: r.requested.difficulty,
+      partyLevel: r.partyLevel,
+      partySize: r.partySize,
+      theme: r.requested.theme,
+      tone: r.tone,
+      timeBudget: r.timeBudget,
+      seed: r.seed,
+    }));
+  }
+
   function handleCopyPlayerMarkdown() {
     if (!result) return;
-    navigator.clipboard.writeText(playerViewToMarkdown(toPlayerView(result))).then(() => {
+    navigator.clipboard.writeText(playerViewToMarkdown(freshPlayerView(result))).then(() => {
       setStatusMessage('Player handout markdown copied to the clipboard.');
     }).catch(() => {
       setStatusMessage('The player markdown could not be copied. Please try again.');
@@ -265,7 +280,7 @@ function NoncombatBuilder() {
 
   function handleDownloadPlayerJson() {
     if (!result) return;
-    const json = playerViewToJson(toPlayerView(result), {
+    const json = playerViewToJson(freshPlayerView(result), {
       seed: result.seed,
       playerUrl: buildPlayerUrl(result),
     });

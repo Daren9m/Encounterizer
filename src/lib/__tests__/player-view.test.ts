@@ -64,6 +64,13 @@ describe('projection', () => {
     expect(md).toContain('## Scratched into the Wall');
     expect(md.match(/Scratched into the Wall/g)).toHaveLength(1);
   });
+  it('investigation clue cards stay DM-side — the deck is dealt one card at a time', () => {
+    const r = generateNoncombat({ kind: 'investigation', seed: 104729 });
+    expect(r.handout).toBeTruthy();
+    const v = toPlayerView(r);
+    expect(v.handout).toBeUndefined();
+    expect(playerViewToMarkdown(v)).not.toContain('##');
+  });
   it('markdown works with no handout', () => {
     const r = generateNoncombat({ kind: 'chase', seed: 7 });
     const md = playerViewToMarkdown(toPlayerView(r));

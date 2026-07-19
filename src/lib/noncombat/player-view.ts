@@ -28,7 +28,11 @@ export function toPlayerView(result: NoncombatResult): PlayerView {
   return {
     title: result.kind === 'trap' ? TRAP_TITLE : result.name,
     readAloud: result.readAloud,
-    handout: result.handout,
+    // Investigation's clue-card deck is dealt one card at a time by the
+    // DM — projecting the whole deck (red herring and culprit clues
+    // included) onto the player screen would solve the mystery at scene
+    // start, so it stays DM-side like the trap frame's name.
+    handout: result.kind === 'investigation' ? undefined : result.handout,
   };
 }
 
