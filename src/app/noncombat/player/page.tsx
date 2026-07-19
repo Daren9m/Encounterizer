@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { generateNoncombat, getNoncombatKinds } from '@/lib/noncombat/generate';
 import type { NoncombatKind } from '@/lib/noncombat/generate';
@@ -32,9 +32,12 @@ function PlayerScreen() {
   const searchParams = useSearchParams();
   const [view, setView] = useState<PlayerView | null>(null);
   const [missing, setMissing] = useState(false);
+  const hydratedRef = useRef(false);
 
   // One-shot hydration — the same param contract as the DM share URL.
   useEffect(() => {
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
     const clampInt = (raw: string | null, lo: number, hi: number): number | null => {
       if (raw === null) return null;
       const n = Number(raw);
@@ -68,7 +71,7 @@ function PlayerScreen() {
 
   if (missing) {
     return (
-      <div className="empty-state">
+      <div className="empty-state" role="status" aria-live="polite">
         <p className="micro-label">Player handout</p>
         <h1 className="mt-2 text-xl">This link is missing its scene</h1>
         <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--text-3)]">

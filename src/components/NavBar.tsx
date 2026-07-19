@@ -85,7 +85,8 @@ export default function NavBar() {
     pathname === path || pathname.startsWith(`${path}/`);
 
   // The player screen is a handout, not a tool page — no site chrome.
-  if (pathname === '/noncombat/player') return null;
+  // trailingSlash: true means usePathname() reports the slashed form.
+  if (pathname === '/noncombat/player' || pathname.startsWith('/noncombat/player/')) return null;
 
   return (
     <header
