@@ -23,6 +23,7 @@ import type {
 import DifficultyBadge from '@/components/DifficultyBadge';
 import MonsterStatBlock from '@/components/MonsterStatBlock';
 import MapSvg from '@/components/MapSvg';
+import RoomKeyPanel from '@/components/RoomKeyPanel';
 import FilterPanel from '@/components/FilterPanel';
 import PartySetupPanel from '@/components/PartySetupPanel';
 import BattleReportCard from '@/components/BattleReportCard';
@@ -1160,6 +1161,7 @@ function EncounterBuilder() {
                 </button>
               </div>
               <MapSvg map={encounter.map} />
+              {encounter.map.rooms && <RoomKeyPanel rooms={encounter.map.rooms} />}
             </div>
           )}
         </div>

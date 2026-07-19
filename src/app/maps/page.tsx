@@ -14,11 +14,14 @@ import { sceneToSvgString } from '@/lib/map-render/svg';
 import { randomSeed } from '@/lib/random';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import type { EncounterMap, Environment } from '@/lib/types';
+import { mapToMarkdown } from '@/lib/map-export-text';
+import { buildUvtt } from '@/lib/uvtt-export';
 import MapSvg from '@/components/MapSvg';
 import PrintButton from '@/components/PrintButton';
 import ResetGeneratorButton from '@/components/ResetGeneratorButton';
+import RoomKeyPanel from '@/components/RoomKeyPanel';
 import ToolPageHeader from '@/components/ToolPageHeader';
-import { downloadBlob, rasterizeSvg } from '@/components/map-export';
+import { downloadBlob, rasterizeSvg, svgToPngBase64 } from '@/components/map-export';
 
 const ENVIRONMENTS: Environment[] = [
   'Arctic', 'Coastal', 'Desert', 'Forest', 'Grassland', 'Hill',
@@ -212,6 +215,29 @@ function MapsBuilder() {
     downloadBlob(new Blob([text], { type: 'text/plain' }), `${map.name.toLowerCase().replace(/\s+/g, '-')}.txt`);
   }, [map]);
 
+  const handleExportMarkdown = useCallback(() => {
+    if (!map) return;
+    downloadBlob(
+      new Blob([mapToMarkdown(map)], { type: 'text/markdown' }),
+      `${map.name.toLowerCase().replace(/\s+/g, '-')}.md`,
+    );
+  }, [map]);
+
+  const handleExportUvtt = useCallback(async () => {
+    if (!map) return;
+    // The embedded image must be exactly pixels_per_grid px per cell
+    // with no rulers, or the VTT grid won't line up with the walls.
+    const svg = sceneToSvgString(
+      buildMapScene(map), LIGHT_PALETTE, { showRulers: false, showRoomLabels: false },
+    );
+    const image = await svgToPngBase64(svg, map.width * 70);
+    const doc = buildUvtt(map, image, 70);
+    downloadBlob(
+      new Blob([JSON.stringify(doc)], { type: 'application/json' }),
+      `${map.name.toLowerCase().replace(/\s+/g, '-')}.dd2vtt`,
+    );
+  }, [map]);
+
   return (
     <div className="animate-fade-in">
       <ToolPageHeader
@@ -365,29 +391,38 @@ function MapsBuilder() {
               <button type="button" onClick={handleExportText} className="btn-secondary">
                 Export Text
               </button>
+              <button type="button" onClick={handleExportMarkdown} className="btn-secondary">
+                Export Markdown
+              </button>
+              <button type="button" onClick={handleExportUvtt} className="btn-secondary">
+                Export UVTT
+              </button>
             </>
           )}
         </div>
       </div>
 
       {map && (
-        <div className="card overflow-x-auto animate-fade-in">
-          <MapSvg map={map} />
-          {map.seed !== undefined && (
-            <div className="mt-3 flex items-center gap-2 print:hidden">
-              <span className="text-xs px-2 py-1 rounded-full bg-[var(--steel-800)] text-[var(--text-2)]">
-                Seed: {map.seed}
-              </span>
-              <button
-                type="button"
-                onClick={handleGenerate}
-                className="text-xs text-[var(--bronze)] hover:underline"
-              >
-                Reroll
-              </button>
-            </div>
-          )}
-        </div>
+        <>
+          <div className="card overflow-x-auto animate-fade-in">
+            <MapSvg map={map} />
+            {map.seed !== undefined && (
+              <div className="mt-3 flex items-center gap-2 print:hidden">
+                <span className="text-xs px-2 py-1 rounded-full bg-[var(--steel-800)] text-[var(--text-2)]">
+                  Seed: {map.seed}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleGenerate}
+                  className="text-xs text-[var(--bronze)] hover:underline"
+                >
+                  Reroll
+                </button>
+              </div>
+            )}
+          </div>
+          {map.rooms && <RoomKeyPanel rooms={map.rooms} />}
+        </>
       )}
 
       {!map && (
