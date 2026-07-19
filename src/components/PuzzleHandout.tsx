@@ -1,6 +1,7 @@
 // Renders every HandoutSpec kind inside the light-island card used for
 // player-facing material. Runic text always gets .font-runic — the
 // unicode-range keeps Latin text unaffected.
+import type { JSX } from 'react';
 import type { HandoutSpec } from '@/lib/noncombat/types';
 
 export default function PuzzleHandout({ spec }: { spec: HandoutSpec }) {

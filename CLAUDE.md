@@ -4,7 +4,7 @@
 A D&D 5.5e (2024 rules) toolkit for Dungeon Masters: encounter building with
 2024 XP budgets, a Monte Carlo Battle Forecast, an SRD 5.2.1 bestiary with
 client-side custom imports, a map generator, a unified non-combat generator
-(puzzles & challenges), and a spell reference. Built with Next.js 14 (App
+(puzzles & challenges), and a spell reference. Built with Next.js 16 (App
 Router, **static export**), TypeScript strict, and Tailwind CSS. Deployed to
 Azure Static Web Apps free tier.
 

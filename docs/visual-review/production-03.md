@@ -6,8 +6,8 @@
 
 - **ID:** `giant-owl`
 - **Stat profile:** CR 0.25; Large Celestial
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -74,8 +74,8 @@ A great cream-and-tawny celestial owl glides over a snowy forest clearing with s
 
 - **ID:** `giant-venomous-snake`
 - **Stat profile:** CR 0.25; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -142,8 +142,8 @@ A man-long emerald giant viper strikes from a jungle-floor coil with two long fa
 
 - **ID:** `giant-wolf-spider`
 - **Stat profile:** CR 0.25; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -209,8 +209,8 @@ A man-sized hairy wolf spider stalks across a rocky crevice on eight stout legs.
 
 - **ID:** `grimlock`
 - **Stat profile:** CR 0.25; Medium Aberration
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -277,8 +277,8 @@ An eyeless gray grimlock turns toward a cavern sound with a heavy bone cudgel ra
 
 - **ID:** `panther`
 - **Stat profile:** CR 0.25; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -346,8 +346,8 @@ A sleek black panther climbs down a mossy branch, faint rosettes visible around 
 
 - **ID:** `priest-acolyte`
 - **Stat profile:** CR 0.25; Small Humanoid (cleric)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -414,8 +414,8 @@ A compact priest acolyte in simple vestments holds an iron mace while golden rad
 
 - **ID:** `pseudodragon`
 - **Stat profile:** CR 0.25; Tiny Dragon
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -482,8 +482,8 @@ A cat-sized russet pseudodragon perches on a stone rail with two wings open and 
 
 - **ID:** `pteranodon`
 - **Stat profile:** CR 0.25; Medium Beast (dinosaur)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -550,8 +550,8 @@ A tawny pteranodon banks beside a sea cliff on immense leathery wings, long cres
 
 - **ID:** `riding-horse`
 - **Stat profile:** CR 0.25; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -618,8 +618,8 @@ A saddled bay riding horse canters along a grassland trail with black mane and r
 
 - **ID:** `skeleton`
 - **Stat profile:** CR 0.25; Medium Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -687,8 +687,8 @@ An animated humanoid skeleton advances through a ruin with shortsword raised and
 
 - **ID:** `sprite`
 - **Stat profile:** CR 0.25; Tiny Fey
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -755,8 +755,8 @@ A hand-high sprite hovers beside a fern on transparent wings with a needle sword
 
 - **ID:** `steam-mephit`
 - **Stat profile:** CR 0.25; Small Elemental
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -822,8 +822,8 @@ A small pale steam mephit hovers in a wet grotto with two wings spread and scald
 
 - **ID:** `swarm-of-bats`
 - **Stat profile:** CR 0.25; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -889,8 +889,8 @@ Dozens of small brown bats spiral from a cave in a broad coordinated swarm.
 
 - **ID:** `swarm-of-rats`
 - **Stat profile:** CR 0.25; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -956,8 +956,8 @@ Scores of brown and gray rats pour around a damp dungeon corner in a low packed 
 
 - **ID:** `swarm-of-ravens`
 - **Stat profile:** CR 0.25; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1023,8 +1023,8 @@ A loud swarm of glossy black ravens spirals above a marsh ruin with many beaks o
 
 - **ID:** `violet-fungus`
 - **Stat profile:** CR 0.25; Medium Plant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1090,8 +1090,8 @@ A violet mushroom creature lashes four long tendrils from its rooted base in a d
 
 - **ID:** `wolf`
 - **Stat profile:** CR 0.25; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1157,8 +1157,8 @@ A lean gray wolf trots along a snowy forest edge with amber eyes fixed ahead.
 
 - **ID:** `zombie`
 - **Stat profile:** CR 0.25; Medium Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1224,8 +1224,8 @@ A pallid zombie in torn clothes lurches down an abandoned village lane with one 
 
 - **ID:** `ape`
 - **Stat profile:** CR 0.5; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1292,8 +1292,8 @@ A muscular charcoal ape braces in a forest clearing with one long arm drawn back
 
 - **ID:** `black-bear`
 - **Stat profile:** CR 0.5; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1360,8 +1360,8 @@ A glossy black bear climbs headfirst down a broad forest tree with curved forecl
 
 - **ID:** `cockatrice`
 - **Stat profile:** CR 0.5; Small Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1428,8 +1428,8 @@ A rooster-headed cockatrice flares two leathery wings above its scaled body and 
 
 - **ID:** `crocodile`
 - **Stat profile:** CR 0.5; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1495,8 +1495,8 @@ A large olive crocodile surges from a swamp channel with armored back, jaws open
 
 - **ID:** `darkmantle`
 - **Stat profile:** CR 0.5; Small Aberration
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1563,8 +1563,8 @@ A charcoal darkmantle drops from a cavern ceiling with its broad mantle spread a
 
 - **ID:** `dust-mephit`
 - **Stat profile:** CR 0.5; Small Elemental
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1631,8 +1631,8 @@ A small gray dust mephit hovers in a ruined hall while blasting a cone of blindi
 
 - **ID:** `giant-goat`
 - **Stat profile:** CR 0.5; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1698,8 +1698,8 @@ A horse-sized pale giant goat charges down a mountain ledge with huge ridged hor
 
 - **ID:** `giant-seahorse`
 - **Stat profile:** CR 0.5; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1766,8 +1766,8 @@ A horse-sized blue-green giant seahorse charges upright through a clear underwat
 
 - **ID:** `giant-wasp`
 - **Stat profile:** CR 0.5; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1834,8 +1834,8 @@ A man-sized yellow-and-black giant wasp banks through a clearing on four clear w
 
 - **ID:** `gnoll-warrior`
 - **Stat profile:** CR 0.5; Medium Fiend
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1903,8 +1903,8 @@ A spotted hyena-headed gnoll warrior braces on a scrubland ridge while drawing a
 
 - **ID:** `gray-ooze`
 - **Stat profile:** CR 0.5; Medium Ooze
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
