@@ -6,8 +6,8 @@
 
 - **ID:** `giant-constrictor-snake`
 - **Stat profile:** CR 2; Huge Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -75,8 +75,8 @@ A trunk-thick giant constrictor snake rises from olive coils beside a dark swamp
 
 - **ID:** `giant-elk`
 - **Stat profile:** CR 2; Huge Celestial
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -144,8 +144,8 @@ A huge russet celestial elk lowers its radiant many-tined antlers on a misty for
 
 - **ID:** `gibbering-mouther`
 - **Stat profile:** CR 2; Medium Aberration
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -214,8 +214,8 @@ A pallid gibbering mouther rolls across liquefying cavern stone, crowded with ch
 
 - **ID:** `green-dragon-wyrmling`
 - **Stat profile:** CR 2; Medium Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -284,8 +284,8 @@ A young green dragon stalks along a mossy forest trunk as poisonous yellow-green
 
 - **ID:** `grick`
 - **Stat profile:** CR 2; Medium Aberration
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -353,8 +353,8 @@ A pale eyeless grick clings to a limestone wall, four tentacles spread around it
 
 - **ID:** `griffon`
 - **Stat profile:** CR 2; Large Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -423,8 +423,8 @@ A golden-brown griffon launches from a mountain nest, eagle talons raised above 
 
 - **ID:** `hunter-shark`
 - **Stat profile:** CR 2; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -492,8 +492,8 @@ A scarred blue-gray hunter shark banks through open coastal water with rows of t
 
 - **ID:** `merrow`
 - **Stat profile:** CR 2; Large Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -562,8 +562,8 @@ A hulking blue-green merrow rises from the seabed with a barbed harpoon drawn ba
 
 - **ID:** `mimic`
 - **Stat profile:** CR 2; Medium Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -631,8 +631,8 @@ A battered dungeon chest twists into a mimic, slick flesh and an adhesive pseudo
 
 - **ID:** `minotaur-skeleton`
 - **Stat profile:** CR 2; Large Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -700,8 +700,8 @@ A towering minotaur skeleton lowers its horned bull skull to charge through a ru
 
 - **ID:** `ochre-jelly`
 - **Stat profile:** CR 2; Large Ooze
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -769,8 +769,8 @@ A glossy ochre jelly pours down a cavern pillar and reaches across the passage w
 
 - **ID:** `ogre`
 - **Stat profile:** CR 2; Large Giant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -839,8 +839,8 @@ A hulking hide-clad ogre lumbers down a muddy track with a tree-trunk club and j
 
 - **ID:** `ogre-zombie`
 - **Stat profile:** CR 2; Large Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -909,8 +909,8 @@ A massive gray ogre zombie staggers through a ruined courtyard with one heavy fi
 
 - **ID:** `pegasus`
 - **Stat profile:** CR 2; Large Celestial
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -978,8 +978,8 @@ A white pegasus lifts from a high meadow with four hooves leaving the grass and 
 
 - **ID:** `plesiosaurus`
 - **Stat profile:** CR 2; Large Beast (dinosaur)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1047,8 +1047,8 @@ A slate-blue plesiosaurus banks above a rocky seabed, four flippers driving its 
 
 - **ID:** `polar-bear`
 - **Stat profile:** CR 2; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1116,8 +1116,8 @@ A huge frost-clumped polar bear climbs from broken sea ice and raises its narrow
 
 - **ID:** `priest`
 - **Stat profile:** CR 2; Small Humanoid (cleric)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1186,8 +1186,8 @@ A compact blue-robed priest guards with a steel mace while holding a white-gold 
 
 - **ID:** `rhinoceros`
 - **Stat profile:** CR 2; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1255,8 +1255,8 @@ A large gray rhinoceros charges across dry grass with its two nasal horns lowere
 
 - **ID:** `saber-toothed-tiger`
 - **Stat profile:** CR 2; Large Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1325,8 +1325,8 @@ A heavy-shouldered saber-toothed tiger leaps from a rocky shelf with long ivory 
 
 - **ID:** `sea-hag`
 - **Stat profile:** CR 2; Medium Fey
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1395,8 +1395,8 @@ A gaunt green sea hag rises from black tidal water, webbed claws spread beneath 
 
 - **ID:** `silver-dragon-wyrmling`
 - **Stat profile:** CR 2; Medium Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1465,8 +1465,8 @@ A silver dragon wyrmling perches above mountain clouds as frost gathers along it
 
 - **ID:** `swarm-of-venomous-snakes`
 - **Stat profile:** CR 2; Medium Beast
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1534,8 +1534,8 @@ Dozens of olive, tan, and rust venomous snakes pour over a fallen log with sever
 
 - **ID:** `wererat`
 - **Stat profile:** CR 2; Small Monstrosity (lycanthrope)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1604,8 +1604,8 @@ A small gray-brown wererat crouches on a cellar beam with hand crossbow aimed an
 
 - **ID:** `white-dragon-wyrmling`
 - **Stat profile:** CR 2; Medium Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1675,8 +1675,8 @@ A white dragon wyrmling scrambles across an ice ridge as frost vapor gathers bef
 
 - **ID:** `will-o-wisp`
 - **Stat profile:** CR 2; Tiny Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1745,8 +1745,8 @@ A tiny blue-white will-o-wisp hovers above black marsh water, trailing mist and 
 
 - **ID:** `ankylosaurus`
 - **Stat profile:** CR 3; Huge Beast (dinosaur)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1815,8 +1815,8 @@ A huge armored ankylosaurus pivots across dusty grassland and swings its massive
 
 - **ID:** `basilisk`
 - **Stat profile:** CR 3; Medium Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1885,8 +1885,8 @@ An eight-legged basilisk crawls over cavern rock, bony spurs raised and pale gre
 
 - **ID:** `bearded-devil`
 - **Stat profile:** CR 3; Medium Fiend (devil)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1955,8 +1955,8 @@ A rust-red bearded devil advances along an infernal causeway with barbed facial 
 
 - **ID:** `blue-dragon-wyrmling`
 - **Stat profile:** CR 3; Medium Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts

@@ -12,7 +12,7 @@ Source: *System Reference Document 5.2.1* by Wizards of the Coast LLC, CC-BY-4.0
 | [Production batch 3](./production-03.md) | 29 | 0 | 29 | 0 |
 | [Production batch 4](./production-04.md) | 29 | 0 | 29 | 0 |
 | [Production batch 5](./production-05.md) | 29 | 0 | 29 | 0 |
-| [Production batch 6](./production-06.md) | 29 | 29 | 0 | 0 |
+| [Production batch 6](./production-06.md) | 29 | 0 | 29 | 0 |
 | [Production batch 7](./production-07.md) | 29 | 29 | 0 | 0 |
 | [Production batch 8](./production-08.md) | 29 | 29 | 0 | 0 |
 | [Production batch 9](./production-09.md) | 29 | 29 | 0 | 0 |
