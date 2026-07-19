@@ -24,6 +24,7 @@ import DifficultyBadge from '@/components/DifficultyBadge';
 import MonsterStatBlock from '@/components/MonsterStatBlock';
 import MapSvg from '@/components/MapSvg';
 import RoomKeyPanel from '@/components/RoomKeyPanel';
+import { placeTokens } from '@/lib/token-placement';
 import FilterPanel from '@/components/FilterPanel';
 import PartySetupPanel from '@/components/PartySetupPanel';
 import BattleReportCard from '@/components/BattleReportCard';
@@ -288,6 +289,16 @@ function EncounterBuilder() {
 
   // Current party for XP budgets
   const party = useMemo(() => buildParty(partySize, partyLevel), [partySize, partyLevel]);
+
+  // Seeded token placement rides map.seed (third rng stream), so a
+  // shared link reproduces map AND starting positions with zero extra
+  // params, and "Regenerate Map" re-places automatically.
+  const placement = useMemo(
+    () => (encounter?.map
+      ? placeTokens(encounter.map, encounter.monsters, partySize, encounter.map.seed ?? encounter.seed)
+      : null),
+    [encounter, partySize],
+  );
 
   // The single source of encounter totals for the meter, badge, and header stats
   const summary = useMemo(
@@ -1114,7 +1125,15 @@ function EncounterBuilder() {
                   Regenerate Map
                 </button>
               </div>
-              <MapSvg map={encounter.map} />
+              <MapSvg map={encounter.map} tokens={placement?.tokens} />
+              <p className="mt-2 text-xs text-[var(--text-3)]">
+                Suggested starting positions — bronze ring: party (P1–P{partySize}), red ring: monsters.
+              </p>
+              {placement && placement.notes.length > 0 && (
+                <p className="mt-1 text-xs text-[var(--text-3)] print:hidden">
+                  {placement.notes.join(' ')}
+                </p>
+              )}
               {encounter.map.rooms && <RoomKeyPanel rooms={encounter.map.rooms} />}
             </div>
           )}
