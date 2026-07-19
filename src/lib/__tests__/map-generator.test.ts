@@ -43,6 +43,26 @@ describe('generateMap', () => {
     expect(terrains.has('wall')).toBe(true);
     expect(terrains.has('floor')).toBe(true);
   });
+
+  it('places more features at dense than sparse object density', () => {
+    const countFeatures = (density: 'Sparse' | 'Dense') => generateMap({
+      environment: 'Desert', seed: 4242, width: 40, height: 30,
+      featureDensity: density, terrainVariety: 'Varied',
+    }).grid.flat().filter((cell) => !['floor', 'entrance'].includes(cell.terrain)).length;
+
+    expect(countFeatures('Dense')).toBeGreaterThan(countFeatures('Sparse'));
+  });
+
+  it('uses a broader terrain mix when variety is Wild', () => {
+    const terrainTypes = (terrainVariety: 'Focused' | 'Wild') => new Set(
+      generateMap({
+        environment: 'Desert', seed: 99, width: 40, height: 30,
+        featureDensity: 'Dense', terrainVariety,
+      }).grid.flat().map((cell) => cell.terrain).filter((terrain) => terrain !== 'floor'),
+    );
+
+    expect(terrainTypes('Wild').size).toBeGreaterThan(terrainTypes('Focused').size);
+  });
 });
 
 describe('TERRAIN_INFO', () => {

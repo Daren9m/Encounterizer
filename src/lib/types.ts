@@ -32,11 +32,13 @@ export type MovementMode = 'Walk' | 'Fly' | 'Swim' | 'Burrow' | 'Climb' | 'Hover
 export type AttackDelivery = 'Melee' | 'Ranged';
 export type AttackType = 'Weapon' | 'Spell';
 
-// 2024 DMG encounter difficulty tiers. These are the *build targets* a DM
-// selects; 'Extreme' below is an assessment-only label for encounters that
-// exceed the High budget (the 2024 DMG defines nothing above High).
-export type Difficulty = 'Low' | 'Moderate' | 'High';
-export type EncounterAssessment = Difficulty | 'Extreme';
+// The 2024 DMG defines Low, Moderate, and High encounter budgets. Encounterizer
+// adds Trivial (50% of Low) and Extreme (130% of High) as deterministic build
+// targets so DMs can work with a familiar five-step scale without changing the
+// official values below.
+export type OfficialDifficulty = 'Low' | 'Moderate' | 'High';
+export type Difficulty = 'Trivial' | OfficialDifficulty | 'Extreme';
+export type EncounterAssessment = Difficulty;
 
 export type Alignment =
   | 'Lawful Good' | 'Neutral Good' | 'Chaotic Good'
@@ -274,7 +276,7 @@ export interface Party {
 // 2014 thresholds, these are spending CAPS — an encounter's raw monster
 // XP is compared directly against the budget with NO count multiplier.
 
-export const XP_BUDGET_PER_CHARACTER: Record<number, Record<Difficulty, number>> = {
+export const XP_BUDGET_PER_CHARACTER: Record<number, Record<OfficialDifficulty, number>> = {
   1:  { Low: 50,   Moderate: 75,    High: 100   },
   2:  { Low: 100,  Moderate: 150,   High: 200   },
   3:  { Low: 150,  Moderate: 225,   High: 400   },
@@ -365,5 +367,58 @@ export interface FiveEToolsMonster {
   conditionImmune?: unknown[];
   gear?: unknown[];
   environment?: string[];
+  [key: string]: unknown;
+}
+
+// Raw 5etools 2024 spell JSON shape (data/spells/spells-xphb.json).
+export interface FiveEToolsSpellTime {
+  number: number;
+  unit: string;
+  /** Reaction trigger, e.g. "which you take when you are hit by an attack roll" */
+  condition?: string;
+}
+
+export interface FiveEToolsSpellRange {
+  /** 'point' or a shape ('emanation', 'cone', 'sphere', 'cube', 'line', ...) */
+  type: string;
+  distance?: { type: string; amount?: number };
+}
+
+export interface FiveEToolsSpellDuration {
+  type: string;
+  duration?: { type: string; amount: number; upTo?: boolean };
+  concentration?: boolean;
+  ends?: string[];
+}
+
+export interface FiveEToolsSpellComponents {
+  v?: boolean;
+  s?: boolean;
+  m?: string | true | { text: string; cost?: number; consume?: boolean | string };
+}
+
+export interface FiveEToolsSpell {
+  name: string;
+  source: string;
+  /** true = included in SRD 5.2.1 verbatim; a string = the SRD rename */
+  srd52?: boolean | string;
+  level: number;
+  /** School code: A/C/D/E/V/I/N/T */
+  school: string;
+  time: FiveEToolsSpellTime[];
+  range: FiveEToolsSpellRange;
+  components: FiveEToolsSpellComponents;
+  duration: FiveEToolsSpellDuration[];
+  entries: unknown[];
+  entriesHigherLevel?: Array<{ name?: string; entries?: unknown }>;
+  scalingLevelDice?:
+    | { label?: string; scaling: Record<string, string> }
+    | Array<{ label?: string; scaling: Record<string, string> }>;
+  savingThrow?: string[];
+  spellAttack?: string[];
+  damageInflict?: string[];
+  conditionInflict?: string[];
+  areaTags?: string[];
+  meta?: { ritual?: boolean };
   [key: string]: unknown;
 }

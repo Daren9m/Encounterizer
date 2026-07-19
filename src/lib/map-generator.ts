@@ -5,13 +5,30 @@ import { seededRandom } from './random';
 // Uses BSP (Binary Space Partition) for dungeon rooms and
 // cellular automata for organic cave/outdoor maps.
 
-interface MapOptions {
+export type MapFeatureDensity = 'Sparse' | 'Balanced' | 'Dense';
+export type MapTerrainVariety = 'Focused' | 'Varied' | 'Wild';
+
+export interface MapOptions {
   width?: number;
   height?: number;
   environment: Environment;
   roomCount?: number;
   seed?: number;
+  featureDensity?: MapFeatureDensity;
+  terrainVariety?: MapTerrainVariety;
 }
+
+const FEATURE_CHANCE: Record<MapFeatureDensity, number> = {
+  Sparse: 0.035,
+  Balanced: 0.08,
+  Dense: 0.14,
+};
+
+const DENSITY_MULTIPLIER: Record<MapFeatureDensity, number> = {
+  Sparse: 0.45,
+  Balanced: 1,
+  Dense: 1.75,
+};
 
 function createGrid(w: number, h: number, fill: TerrainType): MapCell[][] {
   return Array.from({ length: h }, () =>
@@ -104,7 +121,13 @@ function carveCorridor(grid: MapCell[][], from: Rect, to: Rect, rng: () => numbe
   }
 }
 
-function generateDungeon(w: number, h: number, rng: () => number): MapCell[][] {
+function generateDungeon(
+  w: number,
+  h: number,
+  rng: () => number,
+  featureDensity: MapFeatureDensity,
+  terrainVariety: MapTerrainVariety,
+): MapCell[][] {
   const grid = createGrid(w, h, 'wall');
   const partitions = splitBSP({ x: 1, y: 1, w: w - 2, h: h - 2 }, 5, rng);
   const rooms = partitions.map(p => carveRoom(grid, p, rng));
@@ -125,7 +148,7 @@ function generateDungeon(w: number, h: number, rng: () => number): MapCell[][] {
         grid[y]?.[x + 1]?.terrain,
       ];
       const wallCount = adj.filter(t => t === 'wall').length;
-      if (wallCount === 2 && rng() < 0.15) {
+      if (wallCount === 2 && rng() < 0.15 * DENSITY_MULTIPLIER[featureDensity]) {
         grid[y][x].terrain = 'door';
       }
     }
@@ -145,21 +168,24 @@ function generateDungeon(w: number, h: number, rng: () => number): MapCell[][] {
 
   // Scatter features
   for (const room of rooms) {
-    if (rng() < 0.3) {
+    if (rng() < 0.3 * DENSITY_MULTIPLIER[featureDensity]) {
       const px = room.x + 1 + Math.floor(rng() * Math.max(1, room.w - 2));
       const py = room.y + 1 + Math.floor(rng() * Math.max(1, room.h - 2));
       if (py < h && px < w && grid[py][px].terrain === 'floor') {
-        grid[py][px].terrain = 'pillar';
+        const alternatives: TerrainType[] = terrainVariety === 'Focused'
+          ? ['pillar']
+          : terrainVariety === 'Varied' ? ['pillar', 'rubble'] : ['pillar', 'rubble', 'altar'];
+        grid[py][px].terrain = alternatives[Math.floor(rng() * alternatives.length)];
       }
     }
-    if (rng() < 0.15) {
+    if (rng() < 0.15 * DENSITY_MULTIPLIER[featureDensity]) {
       const tx = room.x + Math.floor(rng() * room.w);
       const ty = room.y + Math.floor(rng() * room.h);
       if (ty < h && tx < w && grid[ty][tx].terrain === 'floor') {
         grid[ty][tx] = { terrain: 'trap', label: 'Trap' };
       }
     }
-    if (rng() < 0.2) {
+    if (rng() < 0.2 * DENSITY_MULTIPLIER[featureDensity]) {
       const tx = room.x + Math.floor(rng() * room.w);
       const ty = room.y + Math.floor(rng() * room.h);
       if (ty < h && tx < w && grid[ty][tx].terrain === 'floor') {
@@ -173,7 +199,13 @@ function generateDungeon(w: number, h: number, rng: () => number): MapCell[][] {
 
 // ─── Cellular Automata (Caves / Organic) ─────────────────────────
 
-function generateCave(w: number, h: number, rng: () => number): MapCell[][] {
+function generateCave(
+  w: number,
+  h: number,
+  rng: () => number,
+  featureDensity: MapFeatureDensity,
+  terrainVariety: MapTerrainVariety,
+): MapCell[][] {
   let grid = createGrid(w, h, 'wall');
 
   // Random fill (45% floor)
@@ -216,59 +248,64 @@ function generateCave(w: number, h: number, rng: () => number): MapCell[][] {
     grid[xy][xx] = { terrain: 'exit', label: 'Exit' };
   }
 
+  const caveFeatures: TerrainType[] = terrainVariety === 'Focused'
+    ? ['rubble']
+    : terrainVariety === 'Varied' ? ['rubble', 'difficult'] : ['rubble', 'difficult', 'water'];
+  for (const [y, x] of floors.slice(1, -1)) {
+    if (grid[y][x].terrain === 'floor' && rng() < FEATURE_CHANCE[featureDensity] * 0.6) {
+      grid[y][x].terrain = caveFeatures[Math.floor(rng() * caveFeatures.length)];
+    }
+  }
+
   return grid;
 }
 
 // ─── Outdoor / Arena Maps ────────────────────────────────────────
 
 function generateOutdoor(
-  w: number, h: number, env: Environment, rng: () => number
+  w: number,
+  h: number,
+  env: Environment,
+  rng: () => number,
+  featureDensity: MapFeatureDensity,
+  terrainVariety: MapTerrainVariety,
 ): MapCell[][] {
   const grid = createGrid(w, h, 'floor');
 
   // Scatter environment-appropriate features
-  const featureChance = 0.08;
+  const featureChance = FEATURE_CHANCE[featureDensity];
+
+  const terrainChoices: Partial<Record<Environment, TerrainType[]>> = {
+    Forest: ['vegetation', 'difficult', 'water'],
+    Swamp: ['water', 'difficult', 'vegetation'],
+    Desert: ['difficult', 'elevated', 'rubble'],
+    Arctic: ['ice', 'difficult', 'elevated'],
+    Mountain: ['elevated', 'rubble', 'chasm'],
+    Coastal: ['water', 'difficult', 'elevated'],
+    Underwater: ['water', 'difficult', 'vegetation'],
+    Urban: ['wall', 'pillar', 'rubble'],
+    Hill: ['elevated', 'vegetation', 'difficult'],
+    Grassland: ['vegetation', 'elevated', 'difficult'],
+  };
+
+  const pickTerrain = (): TerrainType => {
+    const choices = terrainChoices[env] ?? ['difficult', 'elevated', 'rubble'];
+    if (terrainVariety === 'Focused') return rng() < 0.88 ? choices[0] : choices[1];
+    if (terrainVariety === 'Varied') return rng() < 0.58 ? choices[0] : choices[1 + Math.floor(rng() * 2)];
+    return choices[Math.floor(rng() * choices.length)];
+  };
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       if (rng() > featureChance) continue;
 
-      // Pick terrain based on environment
-      switch (env) {
-        case 'Forest':
-          grid[y][x].terrain = rng() < 0.7 ? 'vegetation' : 'difficult';
-          break;
-        case 'Swamp':
-          grid[y][x].terrain = rng() < 0.5 ? 'water' : 'difficult';
-          break;
-        case 'Desert':
-          grid[y][x].terrain = rng() < 0.5 ? 'difficult' : 'elevated';
-          break;
-        case 'Arctic':
-          grid[y][x].terrain = rng() < 0.5 ? 'ice' : 'difficult';
-          break;
-        case 'Mountain':
-          grid[y][x].terrain = rng() < 0.4 ? 'elevated' : rng() < 0.5 ? 'chasm' : 'rubble';
-          break;
-        case 'Coastal':
-        case 'Underwater':
-          grid[y][x].terrain = rng() < 0.6 ? 'water' : 'difficult';
-          break;
-        case 'Urban':
-          grid[y][x].terrain = rng() < 0.5 ? 'wall' : 'pillar';
-          break;
-        case 'Hill':
-        case 'Grassland':
-          grid[y][x].terrain = rng() < 0.5 ? 'elevated' : 'vegetation';
-          break;
-        default:
-          grid[y][x].terrain = 'difficult';
-      }
+      grid[y][x].terrain = pickTerrain();
     }
   }
 
   // Add a water feature for some environments
-  if (['Swamp', 'Coastal', 'Forest'].includes(env) && rng() < 0.6) {
+  const riverChance = featureDensity === 'Sparse' ? 0.25 : featureDensity === 'Dense' ? 0.85 : 0.6;
+  if (['Swamp', 'Coastal', 'Forest'].includes(env) && rng() < riverChance) {
     const riverY = Math.floor(h * 0.3 + rng() * h * 0.4);
     for (let x = 0; x < w; x++) {
       const wobble = Math.floor(Math.sin(x * 0.5) * 2);
@@ -295,6 +332,8 @@ export function generateMap(options: MapOptions): EncounterMap {
     height = 18,
     environment,
     seed = Date.now(),
+    featureDensity = 'Balanced',
+    terrainVariety = 'Varied',
   } = options;
 
   const rng = seededRandom(seed);
@@ -307,19 +346,21 @@ export function generateMap(options: MapOptions): EncounterMap {
   // Choose generation strategy based on environment
   switch (environment) {
     case 'Underdark':
-      grid = generateCave(w, h, rng);
+      grid = generateCave(w, h, rng, featureDensity, terrainVariety);
       name = 'Underdark Cavern';
       break;
     case 'Mountain':
-      grid = rng() < 0.5 ? generateCave(w, h, rng) : generateOutdoor(w, h, environment, rng);
+      grid = rng() < 0.5
+        ? generateCave(w, h, rng, featureDensity, terrainVariety)
+        : generateOutdoor(w, h, environment, rng, featureDensity, terrainVariety);
       name = rng() < 0.5 ? 'Mountain Cave' : 'Mountain Pass';
       break;
     case 'Urban':
-      grid = generateDungeon(w, h, rng);
+      grid = generateDungeon(w, h, rng, featureDensity, terrainVariety);
       name = 'City Ruins';
       break;
     case 'Planar':
-      grid = generateCave(w, h, rng);
+      grid = generateCave(w, h, rng, featureDensity, terrainVariety);
       name = 'Planar Rift';
       break;
     case 'Forest':
@@ -330,11 +371,11 @@ export function generateMap(options: MapOptions): EncounterMap {
     case 'Coastal':
     case 'Swamp':
     case 'Underwater':
-      grid = generateOutdoor(w, h, environment, rng);
+      grid = generateOutdoor(w, h, environment, rng, featureDensity, terrainVariety);
       name = `${environment} Battlefield`;
       break;
     default:
-      grid = generateDungeon(w, h, rng);
+      grid = generateDungeon(w, h, rng, featureDensity, terrainVariety);
       name = 'Dungeon';
   }
 

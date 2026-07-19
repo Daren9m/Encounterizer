@@ -8,10 +8,17 @@ import { seededRandom, shuffleArray, pickRandom, randomSeed } from './random';
 
 /** Party-wide XP budget: the sum of each member's per-level budget row. */
 export function getPartyXpBudget(party: Party, difficulty: Difficulty): number {
-  return party.members.reduce((total, member) => {
+  const officialTier = difficulty === 'Trivial'
+    ? 'Low'
+    : difficulty === 'Extreme' ? 'High' : difficulty;
+  const officialBudget = party.members.reduce((total, member) => {
     const level = Math.min(Math.max(member.level, 1), 20);
-    return total + (XP_BUDGET_PER_CHARACTER[level]?.[difficulty] ?? 0);
+    return total + (XP_BUDGET_PER_CHARACTER[level]?.[officialTier] ?? 0);
   }, 0);
+
+  if (difficulty === 'Trivial') return Math.floor(officialBudget * 0.5);
+  if (difficulty === 'Extreme') return Math.round(officialBudget * 1.3);
+  return officialBudget;
 }
 
 /**
@@ -23,6 +30,7 @@ export function assessEncounterDifficulty(
   totalXp: number,
   party: Party,
 ): EncounterAssessment {
+  if (totalXp <= getPartyXpBudget(party, 'Trivial')) return 'Trivial';
   if (totalXp <= getPartyXpBudget(party, 'Low')) return 'Low';
   if (totalXp <= getPartyXpBudget(party, 'Moderate')) return 'Moderate';
   if (totalXp <= getPartyXpBudget(party, 'High')) return 'High';
@@ -31,6 +39,7 @@ export function assessEncounterDifficulty(
 
 export interface EncounterXpSummary {
   totalXp: number;
+  totalMonsterHp: number;
   monsterCount: number;
   budgets: Record<Difficulty, number>;
   /** null when the encounter has no monsters yet */
@@ -43,14 +52,21 @@ export function summarizeEncounter(
   party: Party,
 ): EncounterXpSummary {
   const totalXp = monsters.reduce((sum, em) => sum + em.monster.xp * em.count, 0);
+  const totalMonsterHp = monsters.reduce(
+    (sum, em) => sum + em.monster.hitPoints * em.count,
+    0,
+  );
   const monsterCount = monsters.reduce((sum, em) => sum + em.count, 0);
   return {
     totalXp,
+    totalMonsterHp,
     monsterCount,
     budgets: {
+      Trivial: getPartyXpBudget(party, 'Trivial'),
       Low: getPartyXpBudget(party, 'Low'),
       Moderate: getPartyXpBudget(party, 'Moderate'),
       High: getPartyXpBudget(party, 'High'),
+      Extreme: getPartyXpBudget(party, 'Extreme'),
     },
     assessment: monsterCount === 0 ? null : assessEncounterDifficulty(totalXp, party),
   };
@@ -255,7 +271,7 @@ const TACTICS_BY_TYPE: Record<string, string[]> = {
 
 const TREASURE_BY_CR: Record<string, string[]> = {
   low: [
-    '2d6 × 10 CP, 1d6 × 10 SP',
+    '2d6 GP in loose coin',
     'A battered trinket worth 5 GP and a healing potion',
     '3d6 GP scattered among the remains',
     'A crude map leading to a nearby point of interest',
@@ -268,7 +284,7 @@ const TREASURE_BY_CR: Record<string, string[]> = {
   ],
   high: [
     '2d6 × 100 GP, 2d6 gems worth 100 GP each',
-    'A rare magic item and 500 GP in mixed coinage',
+    'A rare magic item and 500 GP',
     'A spell scroll (5th level), potion of greater healing, and 300 GP',
     'An art object worth 750 GP and a rare magic item',
   ],
@@ -314,7 +330,7 @@ function generateTactics(monsters: EncounterMonster[], rng: () => number): strin
   return lines.join('\n');
 }
 
-function generateTreasure(cr: number, rng: () => number): string {
+export function generateTreasure(cr: number, rng: () => number): string {
   let tier: string;
   if (cr <= 4) tier = 'low';
   else if (cr <= 10) tier = 'mid';

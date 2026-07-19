@@ -3,6 +3,7 @@ import { ALL_MONSTERS } from '@/data';
 import {
   generateEncounter,
   generateQuickEncounter,
+  generateTreasure,
   getPartyXpBudget,
   summarizeEncounter,
 } from '@/lib/encounter-generator';
@@ -53,7 +54,7 @@ describe('generateEncounter', () => {
 
   it('never exceeds the requested XP budget (2024 budgets are caps)', () => {
     const levels = [1, 5, 11, 20];
-    const difficulties: Difficulty[] = ['Low', 'Moderate', 'High'];
+    const difficulties: Difficulty[] = ['Trivial', 'Low', 'Moderate', 'High', 'Extreme'];
     for (const level of levels) {
       for (const difficulty of difficulties) {
         for (let seed = 1; seed <= 10; seed++) {
@@ -72,7 +73,9 @@ describe('generateEncounter', () => {
   it('assessed difficulty never exceeds the requested tier', () => {
     // With budgets as caps, filling ≤ the Moderate budget can read as Low or
     // Moderate — but never High or Extreme.
-    const order: Record<string, number> = { Low: 0, Moderate: 1, High: 2, Extreme: 3 };
+    const order: Record<string, number> = {
+      Trivial: 0, Low: 1, Moderate: 2, High: 3, Extreme: 4,
+    };
     for (let seed = 1; seed <= 10; seed++) {
       const enc = generateEncounter(
         ALL_MONSTERS,
@@ -107,15 +110,34 @@ describe('summarizeEncounter', () => {
     const p = party(4, 3);
     const empty = summarizeEncounter([], p);
     expect(empty.totalXp).toBe(0);
+    expect(empty.totalMonsterHp).toBe(0);
     expect(empty.monsterCount).toBe(0);
     expect(empty.assessment).toBeNull();
-    expect(empty.budgets).toEqual({ Low: 600, Moderate: 900, High: 1600 });
+    expect(empty.budgets).toEqual({
+      Trivial: 300,
+      Low: 600,
+      Moderate: 900,
+      High: 1600,
+      Extreme: 2080,
+    });
 
     const goblinish = ALL_MONSTERS.find((m) => m.xp === 100) ?? ALL_MONSTERS[0];
     const summary = summarizeEncounter([{ monster: goblinish, count: 3 }], p);
     expect(summary.totalXp).toBe(goblinish.xp * 3);
+    expect(summary.totalMonsterHp).toBe(goblinish.hitPoints * 3);
     expect(summary.monsterCount).toBe(3);
     expect(summary.assessment).not.toBeNull();
+  });
+});
+
+describe('generateTreasure', () => {
+  it('expresses coin treasure only in gold pieces at every tier', () => {
+    for (const cr of [1, 5, 11, 20]) {
+      for (const roll of [0, 0.26, 0.51, 0.76]) {
+        const treasure = generateTreasure(cr, () => roll);
+        expect(treasure).not.toMatch(/\b(?:CP|SP|EP|PP)\b|mixed coinage/i);
+      }
+    }
   });
 });
 

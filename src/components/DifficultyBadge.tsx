@@ -3,6 +3,7 @@
 import { EncounterAssessment } from '@/lib/types';
 
 const CLASSES: Record<EncounterAssessment, string> = {
+  Trivial: 'badge-trivial',
   Low: 'badge-low',
   Moderate: 'badge-moderate',
   High: 'badge-high',
@@ -10,7 +11,8 @@ const CLASSES: Record<EncounterAssessment, string> = {
 };
 
 const TOOLTIPS: Partial<Record<EncounterAssessment, string>> = {
-  Extreme: 'Beyond the 2024 DMG High budget — the rules define nothing past High. Here be TPKs.',
+  Trivial: 'Encounterizer target: 50% of the official 2024 DMG Low budget.',
+  Extreme: 'Encounterizer target: up to 130% of the official 2024 DMG High budget. Here be TPKs.',
 };
 
 export default function DifficultyBadge({ difficulty }: { difficulty: EncounterAssessment }) {

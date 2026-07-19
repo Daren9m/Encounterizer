@@ -1,0 +1,228 @@
+{
+  "XPHB": {
+    "Fire Bolt": {
+      "class": [
+        {
+          "name": "Sorcerer",
+          "source": "XPHB"
+        },
+        {
+          "name": "Wizard",
+          "source": "XPHB"
+        },
+        {
+          "name": "Artificer",
+          "source": "EFA"
+        }
+      ]
+    },
+    "Bigby's Hand": {
+      "class": [
+        {
+          "name": "Sorcerer",
+          "source": "XPHB"
+        },
+        {
+          "name": "Wizard",
+          "source": "XPHB"
+        },
+        {
+          "name": "Artificer",
+          "source": "EFA"
+        }
+      ]
+    },
+    "Shield": {
+      "class": [
+        {
+          "name": "Sorcerer",
+          "source": "XPHB"
+        },
+        {
+          "name": "Wizard",
+          "source": "XPHB"
+        }
+      ]
+    },
+    "Revivify": {
+      "class": [
+        {
+          "name": "Cleric",
+          "source": "XPHB"
+        },
+        {
+          "name": "Druid",
+          "source": "XPHB"
+        },
+        {
+          "name": "Ranger",
+          "source": "XPHB"
+        },
+        {
+          "name": "Paladin",
+          "source": "XPHB"
+        },
+        {
+          "name": "Artificer",
+          "source": "EFA"
+        }
+      ]
+    },
+    "Fireball": {
+      "class": [
+        {
+          "name": "Sorcerer",
+          "source": "XPHB"
+        },
+        {
+          "name": "Wizard",
+          "source": "XPHB"
+        }
+      ]
+    },
+    "Spirit Guardians": {
+      "class": [
+        {
+          "name": "Cleric",
+          "source": "XPHB"
+        }
+      ]
+    },
+    "Confusion": {
+      "class": [
+        {
+          "name": "Bard",
+          "source": "XPHB"
+        },
+        {
+          "name": "Druid",
+          "source": "XPHB"
+        },
+        {
+          "name": "Sorcerer",
+          "source": "XPHB"
+        },
+        {
+          "name": "Wizard",
+          "source": "XPHB"
+        }
+      ]
+    },
+    "Detect Magic": {
+      "class": [
+        {
+          "name": "Bard",
+          "source": "XPHB"
+        },
+        {
+          "name": "Cleric",
+          "source": "XPHB"
+        },
+        {
+          "name": "Druid",
+          "source": "XPHB"
+        },
+        {
+          "name": "Ranger",
+          "source": "XPHB"
+        },
+        {
+          "name": "Sorcerer",
+          "source": "XPHB"
+        },
+        {
+          "name": "Warlock",
+          "source": "XPHB"
+        },
+        {
+          "name": "Wizard",
+          "source": "XPHB"
+        },
+        {
+          "name": "Paladin",
+          "source": "XPHB"
+        },
+        {
+          "name": "Artificer",
+          "source": "EFA"
+        }
+      ]
+    },
+    "Continual Flame": {
+      "class": [
+        {
+          "name": "Cleric",
+          "source": "XPHB"
+        },
+        {
+          "name": "Druid",
+          "source": "XPHB"
+        },
+        {
+          "name": "Wizard",
+          "source": "XPHB"
+        },
+        {
+          "name": "Artificer",
+          "source": "EFA"
+        }
+      ]
+    },
+    "Command": {
+      "class": [
+        {
+          "name": "Bard",
+          "source": "XPHB"
+        },
+        {
+          "name": "Cleric",
+          "source": "XPHB"
+        },
+        {
+          "name": "Paladin",
+          "source": "XPHB"
+        }
+      ]
+    },
+    "Earthquake": {
+      "class": [
+        {
+          "name": "Cleric",
+          "source": "XPHB"
+        },
+        {
+          "name": "Druid",
+          "source": "XPHB"
+        },
+        {
+          "name": "Sorcerer",
+          "source": "XPHB"
+        }
+      ]
+    },
+    "Prestidigitation": {
+      "class": [
+        {
+          "name": "Bard",
+          "source": "XPHB"
+        },
+        {
+          "name": "Sorcerer",
+          "source": "XPHB"
+        },
+        {
+          "name": "Warlock",
+          "source": "XPHB"
+        },
+        {
+          "name": "Wizard",
+          "source": "XPHB"
+        },
+        {
+          "name": "Artificer",
+          "source": "EFA"
+        }
+      ]
+    }
+  }
+}
