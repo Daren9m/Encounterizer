@@ -9,6 +9,7 @@ import { THEME_OPTIONS, TONE_OPTIONS, TIME_OPTIONS } from '@/lib/noncombat/themi
 import type { ThemeChoice, Tone, TimeBudget, Difficulty } from '@/lib/noncombat/types';
 import { handoutToText } from '@/lib/noncombat/handout-text';
 import { randomSeed } from '@/lib/random';
+import { validateBoundedIntegerInput } from '@/lib/number-input';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import PuzzleHandout from '@/components/PuzzleHandout';
 import PrintButton from '@/components/PrintButton';
@@ -55,8 +56,10 @@ export default function NoncombatPage() {
 function NoncombatBuilder() {
   const [kind, setKind] = usePersistentState<NoncombatKind | ''>('noncombatKind', '');
   const [difficulty, setDifficulty] = usePersistentState<Difficulty | ''>('noncombatDifficulty', '');
-  const [partyLevel, setPartyLevel] = usePersistentState<number>('noncombatPartyLevel', 5);
-  const [partySize, setPartySize] = usePersistentState<number>('noncombatPartySize', 4);
+  const [partyLevel, setPartyLevel, partyLevelHydrated] = usePersistentState<number>('noncombatPartyLevel', 5);
+  const [partySize, setPartySize, partySizeHydrated] = usePersistentState<number>('noncombatPartySize', 4);
+  const [partyLevelInput, setPartyLevelInput] = useState('5');
+  const [partySizeInput, setPartySizeInput] = useState('4');
   const [theme, setTheme] = usePersistentState<ThemeChoice>('noncombatTheme', 'any');
   const [tone, setTone] = usePersistentState<Tone>('noncombatTone', 'standard');
   const [timeBudget, setTimeBudget] = usePersistentState<TimeBudget>('noncombatTime', 'standard');
@@ -70,6 +73,25 @@ function NoncombatBuilder() {
   );
 
   const kinds = getNoncombatKinds();
+  const partyLevelValidation = validateBoundedIntegerInput(
+    partyLevelInput, 'Party level', 1, 20,
+  );
+  const partySizeValidation = validateBoundedIntegerInput(
+    partySizeInput, 'Party size', 1, 8,
+  );
+  const partyInputsValid = partyLevelValidation.error === null
+    && partySizeValidation.error === null;
+  const partyInputsHydratedRef = useRef(false);
+
+  useEffect(() => {
+    if (!partyLevelHydrated || !partySizeHydrated || partyInputsHydratedRef.current) return;
+    partyInputsHydratedRef.current = true;
+    const frame = window.requestAnimationFrame(() => {
+      setPartyLevelInput(String(partyLevel));
+      setPartySizeInput(String(partySize));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [partyLevel, partyLevelHydrated, partySize, partySizeHydrated]);
 
   function pushHistory(r: NoncombatResult) {
     setHistory(prev => [r, ...prev.filter(h => h.id !== r.id).slice(0, 9)]);
@@ -115,6 +137,7 @@ function NoncombatBuilder() {
     const timeP = searchParams.get('time');
     const timeV = TIME_OPTIONS.some(o => o.value === timeP) ? (timeP as TimeBudget) : 'standard';
     setKind(kindV ?? ''); setDifficulty(diffV ?? ''); setPartyLevel(lvl); setPartySize(size);
+    setPartyLevelInput(String(lvl)); setPartySizeInput(String(size));
     setTheme(themeV); setTone(toneV); setTimeBudget(timeV);
     const r = generateNoncombat({ kind: kindV, difficulty: diffV, partyLevel: lvl, partySize: size, theme: themeV, tone: toneV, timeBudget: timeV, seed: seedParam });
     setResult(r);
@@ -124,6 +147,15 @@ function NoncombatBuilder() {
   }, []);
 
   function handleGenerate(seedOverride?: number, kindOverride?: NoncombatKind) {
+    if (!partyInputsValid) {
+      const invalidId = partyLevelValidation.error
+        ? 'noncombat-party-level'
+        : 'noncombat-party-size';
+      setStatusMessage('Fix the party level and size before generating a scene.');
+      document.getElementById(invalidId)?.focus();
+      return;
+    }
+
     const r = generateNoncombat({
       kind: kindOverride ?? (kind || undefined),
       difficulty: difficulty || undefined,
@@ -172,6 +204,8 @@ function NoncombatBuilder() {
     setDifficulty('');
     setPartyLevel(5);
     setPartySize(4);
+    setPartyLevelInput('5');
+    setPartySizeInput('4');
     setTheme('any');
     setTone('standard');
     setTimeBudget('standard');
@@ -179,6 +213,18 @@ function NoncombatBuilder() {
     setShowSolution(false);
     setLinkCopied(false);
     setStatusMessage('Generator reset. Choose settings to create a new scene.');
+  }
+
+  function handlePartyLevelInputChange(raw: string) {
+    setPartyLevelInput(raw);
+    const validation = validateBoundedIntegerInput(raw, 'Party level', 1, 20);
+    if (validation.value !== null) setPartyLevel(validation.value);
+  }
+
+  function handlePartySizeInputChange(raw: string) {
+    setPartySizeInput(raw);
+    const validation = validateBoundedIntegerInput(raw, 'Party size', 1, 8);
+    if (validation.value !== null) setPartySize(validation.value);
   }
 
   function handleCopyLink() {
@@ -337,11 +383,45 @@ function NoncombatBuilder() {
           </div>
           <div>
             <label htmlFor="noncombat-party-level" className="micro-label block mb-1">Party Level</label>
-            <input id="noncombat-party-level" type="number" min={1} max={20} value={partyLevel} onChange={e => setPartyLevel(Math.max(1, Math.min(20, Number(e.target.value))))} className="w-full" />
+            <input
+              id="noncombat-party-level"
+              type="number"
+              min={1}
+              max={20}
+              step={1}
+              inputMode="numeric"
+              value={partyLevelInput}
+              onChange={e => handlePartyLevelInputChange(e.target.value)}
+              aria-invalid={partyLevelValidation.error ? true : undefined}
+              aria-describedby={partyLevelValidation.error ? 'noncombat-party-level-error' : undefined}
+              className="w-full"
+            />
+            {partyLevelValidation.error && (
+              <p id="noncombat-party-level-error" className="mt-1 text-xs text-[var(--accent-danger-light)]" role="alert">
+                {partyLevelValidation.error}
+              </p>
+            )}
           </div>
           <div>
             <label htmlFor="noncombat-party-size" className="micro-label block mb-1">Party Size</label>
-            <input id="noncombat-party-size" type="number" min={1} max={8} value={partySize} onChange={e => setPartySize(Math.max(1, Math.min(8, Number(e.target.value))))} className="w-full" />
+            <input
+              id="noncombat-party-size"
+              type="number"
+              min={1}
+              max={8}
+              step={1}
+              inputMode="numeric"
+              value={partySizeInput}
+              onChange={e => handlePartySizeInputChange(e.target.value)}
+              aria-invalid={partySizeValidation.error ? true : undefined}
+              aria-describedby={partySizeValidation.error ? 'noncombat-party-size-error' : undefined}
+              className="w-full"
+            />
+            {partySizeValidation.error && (
+              <p id="noncombat-party-size-error" className="mt-1 text-xs text-[var(--accent-danger-light)]" role="alert">
+                {partySizeValidation.error}
+              </p>
+            )}
           </div>
           <div>
             <label htmlFor="noncombat-theme" className="micro-label block mb-1">Theme</label>
