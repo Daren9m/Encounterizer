@@ -93,6 +93,24 @@ describe('filterMonsters', () => {
     expect(filterMonsters(ALL, { sortBy: 'hp', sortDir: 'asc' })[0].id).toBe('goblin');
     expect(filterMonsters(ALL, { sortBy: 'ac', sortDir: 'desc' })[0].id).toBe('red-dragon');
   });
+
+  it('keeps base, giant, and swarm variants together in family order', () => {
+    const variants = [
+      makeMonster({ id: 'zombie', name: 'Zombie' }),
+      makeMonster({ id: 'swarm-rats', name: 'Swarm of Rats' }),
+      makeMonster({ id: 'giant-rat', name: 'Giant Rat' }),
+      makeMonster({ id: 'rat', name: 'Rat' }),
+      makeMonster({ id: 'raven', name: 'Raven' }),
+    ];
+
+    expect(filterMonsters(variants, { sortBy: 'family' }).map((m) => m.id)).toEqual([
+      'rat',
+      'giant-rat',
+      'swarm-rats',
+      'raven',
+      'zombie',
+    ]);
+  });
 });
 
 describe('getFilterOptions', () => {

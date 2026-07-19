@@ -31,6 +31,7 @@ interface FilterPanelProps {
   filter: MonsterFilter;
   onChange: (filter: MonsterFilter) => void;
   resultCount?: number;
+  defaultSortBy?: NonNullable<MonsterFilter['sortBy']>;
 }
 
 function ChipGroup<T extends string>({
@@ -63,7 +64,12 @@ function ChipGroup<T extends string>({
   );
 }
 
-export default function FilterPanel({ filter, onChange, resultCount }: FilterPanelProps) {
+export default function FilterPanel({
+  filter,
+  onChange,
+  resultCount,
+  defaultSortBy = 'name',
+}: FilterPanelProps) {
   const [expanded, setExpanded] = useState(false);
 
   function toggle<T extends string>(
@@ -81,14 +87,17 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
     onChange({ ...filter, [key]: value });
   }
 
-  const activeFilterCount = Object.values(filter).filter(
-    v => v !== undefined && v !== '' && (!Array.isArray(v) || v.length > 0)
+  const activeFilterCount = Object.entries(filter).filter(
+    ([key, value]) => !['sortBy', 'sortDir'].includes(key)
+      && value !== undefined
+      && value !== ''
+      && (!Array.isArray(value) || value.length > 0)
   ).length;
 
   return (
-    <div className="card mb-6 print:hidden">
+    <div className="filter-panel card mb-4 !p-3 print:hidden">
       {/* Search + CR range (always visible) */}
-      <div className="flex flex-wrap gap-4 items-end">
+      <div className="flex flex-wrap items-end gap-2.5">
         <div className="flex-1 min-w-[200px]">
           <label htmlFor="filter-search" className="micro-label block mb-1">
             Search
@@ -99,7 +108,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
             placeholder="Monster name, type, or tag..."
             value={filter.search ?? ''}
             onChange={e => set('search', e.target.value || undefined)}
-            className="w-full"
+            className="filter-control w-full"
           />
         </div>
         <div className="w-24">
@@ -114,7 +123,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
             step={0.125}
             value={filter.crMin ?? ''}
             onChange={e => set('crMin', e.target.value ? Number(e.target.value) : undefined)}
-            className="w-full"
+            className="filter-control w-full"
           />
         </div>
         <div className="w-24">
@@ -129,7 +138,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
             step={0.125}
             value={filter.crMax ?? ''}
             onChange={e => set('crMax', e.target.value ? Number(e.target.value) : undefined)}
-            className="w-full"
+            className="filter-control w-full"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -138,7 +147,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
             onClick={() => setExpanded(!expanded)}
             aria-expanded={expanded}
             aria-controls="filter-panel-expanded"
-            className="btn-secondary text-sm"
+            className="btn-secondary !min-h-9 !px-3 text-sm"
           >
             {expanded ? 'Less Filters' : 'More Filters'}
             {activeFilterCount > 0 && (
@@ -150,8 +159,8 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
           {activeFilterCount > 0 && (
             <button
               type="button"
-              onClick={() => onChange({})}
-              className="inline-flex min-h-11 items-center text-sm text-[var(--text-2)] underline transition-colors hover:text-[var(--bronze)]"
+              onClick={() => onChange({ sortBy: defaultSortBy })}
+              className="inline-flex min-h-9 items-center px-1 text-sm text-[var(--text-2)] underline transition-colors hover:text-[var(--bronze)]"
             >
               Clear
             </button>
@@ -167,7 +176,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
 
       {/* Expanded filters */}
       {expanded && (
-        <div id="filter-panel-expanded" className="mt-4 space-y-4 animate-fade-in">
+        <div id="filter-panel-expanded" className="filter-groups-grid mt-3 grid gap-2.5 animate-fade-in xl:grid-cols-2">
           <ChipGroup label="Size" options={SIZES} selected={filter.sizes ?? []} onToggle={v => toggle('sizes', v)} />
           <ChipGroup label="Creature Type" options={TYPES} selected={filter.types ?? []} onToggle={v => toggle('types', v)} />
           <ChipGroup label="Environment" options={ENVIRONMENTS} selected={filter.environments ?? []} onToggle={v => toggle('environments', v)} />
@@ -179,7 +188,7 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
           <ChipGroup label="Vulnerable To" options={DAMAGE_TYPES} selected={filter.damageVulnerabilities ?? []} onToggle={v => toggle('damageVulnerabilities', v)} />
           <ChipGroup label="Condition Immunities" options={CONDITIONS} selected={filter.conditionImmunities ?? []} onToggle={v => toggle('conditionImmunities', v)} />
 
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-x-4 gap-y-2 xl:col-span-2">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -210,16 +219,17 @@ export default function FilterPanel({ filter, onChange, resultCount }: FilterPan
           </div>
 
           {/* Sort */}
-          <div className="flex gap-4 items-end">
+          <div className="flex items-end gap-3 xl:col-span-2">
             <div>
               <label htmlFor="filter-sort-by" className="micro-label block mb-1">
                 Sort By
               </label>
               <select
                 id="filter-sort-by"
-                value={filter.sortBy ?? 'name'}
+                value={filter.sortBy ?? defaultSortBy}
                 onChange={e => set('sortBy', e.target.value as MonsterFilter['sortBy'])}
               >
+                <option value="family">Related monsters</option>
                 <option value="name">Name</option>
                 <option value="cr">Challenge Rating</option>
                 <option value="hp">Hit Points</option>

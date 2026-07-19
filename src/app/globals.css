@@ -457,6 +457,73 @@ select optgroup {
   border-color: transparent;
 }
 
+/* Dense bestiary controls: preserve comfortable mobile targets while fitting
+   the desktop filter matrix into substantially less vertical space. */
+.filter-panel .filter-chip {
+  min-height: 2rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.filter-panel .filter-control {
+  min-height: 2.25rem;
+  padding-block: 0.35rem;
+}
+
+.filter-panel .filter-groups-grid fieldset {
+  min-width: 0;
+  padding: 0.5rem;
+  border: 1px solid var(--line-subtle);
+  border-radius: 0.625rem;
+  background: rgba(10, 11, 15, 0.24);
+}
+
+/* The grid responds to both the chosen density and the user's explicit column
+   count. Auto mode consumes extra ultrawide space instead of leaving gutters. */
+.bestiary-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.bestiary-results {
+  container-type: inline-size;
+}
+
+@media (min-width: 768px) {
+  .bestiary-grid[data-columns='auto'][data-card-size='compact'] {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  }
+
+  .bestiary-grid[data-columns='auto'][data-card-size='standard'] {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  }
+
+  .bestiary-grid[data-columns='auto'][data-card-size='large'] {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 25rem), 1fr));
+  }
+}
+
+@container (min-width: 40rem) {
+  .bestiary-grid[data-columns='2'],
+  .bestiary-grid[data-columns='3'],
+  .bestiary-grid[data-columns='4'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 60rem) {
+  .bestiary-grid[data-columns='3'],
+  .bestiary-grid[data-columns='4'] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 78rem) {
+  .bestiary-grid[data-columns='4'] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 /* Micro-label — tiny field labels: 600 uppercase, wide tracking, faint */
 .micro-label {
   font-size: 0.7rem;
@@ -544,6 +611,11 @@ select optgroup {
   .btn-secondary,
   .btn-ghost {
     min-height: 2.875rem;
+  }
+
+  .filter-panel .filter-chip {
+    min-height: 2.5rem;
+    padding-inline: 0.75rem;
   }
 }
 
