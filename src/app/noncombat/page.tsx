@@ -8,6 +8,7 @@ import type { NoncombatKind, NoncombatResult } from '@/lib/noncombat/generate';
 import { THEME_OPTIONS, TONE_OPTIONS, TIME_OPTIONS } from '@/lib/noncombat/theming';
 import type { ThemeChoice, Tone, TimeBudget, Difficulty } from '@/lib/noncombat/types';
 import { handoutToText } from '@/lib/noncombat/handout-text';
+import { toPlayerView, playerViewToMarkdown, playerViewToJson } from '@/lib/noncombat/player-view';
 import { randomSeed } from '@/lib/random';
 import { validateBoundedIntegerInput } from '@/lib/number-input';
 import { usePersistentState } from '@/lib/use-persistent-state';
@@ -25,7 +26,7 @@ const DIFFICULTIES: Difficulty[] = ['Easy', 'Medium', 'Hard'];
 // seed. This URL contract is permanent — kind and difficulty are both
 // omitted when the caller left them as "Any" (a seeded draw).
 
-function buildShareUrl(r: NoncombatResult): string {
+function buildResultParams(r: NoncombatResult): URLSearchParams {
   const params = new URLSearchParams();
   params.set('seed', String(r.seed));
   if (r.requested.kind) params.set('kind', r.requested.kind);
@@ -35,7 +36,16 @@ function buildShareUrl(r: NoncombatResult): string {
   params.set('theme', r.requested.theme);
   params.set('tone', r.tone);
   params.set('time', r.timeBudget);
-  return `${window.location.origin}/noncombat?${params.toString()}`;
+  return params;
+}
+
+function buildShareUrl(r: NoncombatResult): string {
+  return `${window.location.origin}/noncombat?${buildResultParams(r).toString()}`;
+}
+
+/** The player-safe screen — same param contract, spoiler-free render. */
+function buildPlayerUrl(r: NoncombatResult): string {
+  return `${window.location.origin}/noncombat/player?${buildResultParams(r).toString()}`;
 }
 
 export default function NoncombatPage() {
@@ -238,6 +248,50 @@ function NoncombatBuilder() {
       setLinkCopied(false);
       setStatusMessage('The share link could not be copied. Please try again.');
     });
+  }
+
+  function handleOpenPlayerView() {
+    if (!result) return;
+    window.open(buildPlayerUrl(result), '_blank', 'noopener');
+  }
+
+  /** History entries persist prose from older builds — regenerate from
+      the stored levers so player exports always match the player route. */
+  function freshPlayerView(r: NoncombatResult) {
+    return toPlayerView(generateNoncombat({
+      kind: r.requested.kind,
+      difficulty: r.requested.difficulty,
+      partyLevel: r.partyLevel,
+      partySize: r.partySize,
+      theme: r.requested.theme,
+      tone: r.tone,
+      timeBudget: r.timeBudget,
+      seed: r.seed,
+    }));
+  }
+
+  function handleCopyPlayerMarkdown() {
+    if (!result) return;
+    navigator.clipboard.writeText(playerViewToMarkdown(freshPlayerView(result))).then(() => {
+      setStatusMessage('Player handout markdown copied to the clipboard.');
+    }).catch(() => {
+      setStatusMessage('The player markdown could not be copied. Please try again.');
+    });
+  }
+
+  function handleDownloadPlayerJson() {
+    if (!result) return;
+    const json = playerViewToJson(freshPlayerView(result), {
+      seed: result.seed,
+      playerUrl: buildPlayerUrl(result),
+    });
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `player-handout-${result.seed}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   function handleExport() {
@@ -519,6 +573,19 @@ function NoncombatBuilder() {
                 Seed: {result.seed}
               </button>
             </div>
+          </div>
+
+          {/* Player view — spoiler-safe surface for the table */}
+          <div className="card print:hidden">
+            <div className="flex flex-wrap items-center gap-3">
+              <h3 className="text-lg mr-auto">Player View</h3>
+              <button type="button" onClick={handleOpenPlayerView} className="btn-secondary">Open Player View</button>
+              <button type="button" onClick={handleCopyPlayerMarkdown} className="btn-secondary">Copy Player Markdown</button>
+              <button type="button" onClick={handleDownloadPlayerJson} className="btn-secondary">Download JSON</button>
+            </div>
+            <p className="mt-2 text-xs text-[var(--text-2)]">
+              Read-aloud and handout only — open it on a shared screen or send the link to your players. Print lives on the player view.
+            </p>
           </div>
 
           {result.resultKind === 'puzzle' ? (

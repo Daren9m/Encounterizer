@@ -52,6 +52,15 @@ export const exploration: ChallengeFramework = {
       name: chain.length > 1 ? `The ${pick(['Long Road', 'Hard Crossing', 'Winding Descent', 'Overland Gauntlet'], rng)}` : lead.name,
       readAloud: `${cap(lead.desc)}. Overhead, ${weather} — ${pack.sensory[3] ?? pack.sensory[0]}.`,
       situation: `The party must get through. Weather: ${weather}. At this tier, ${guidance}. Creative route for ${lead.name.toLowerCase()}: ${lead.creative}.`,
+      handout: {
+        kind: 'text',
+        title: 'A Rough Map',
+        body: [
+          ...chain.map((o, i) => `${i + 1}. ${o.name}`),
+          `Beyond that, the mapmaker's hand gives out.`,
+          `Skies on the route: ${weather}.`,
+        ].join('\n'),
+      },
       stakes: `Success: the journey continues on schedule. Failure: ${RESOURCE_COST[levers.difficulty]}.`,
       skillChecks: [groupCheck, ...rest],
       complication: pick(pack.consequences, rng),

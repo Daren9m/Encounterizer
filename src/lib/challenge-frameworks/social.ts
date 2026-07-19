@@ -61,9 +61,10 @@ export const social: ChallengeFramework = {
     const interruption = pick(INTERRUPTIONS, rng);
     return {
       name: `The ${pick(['Proposition', 'Petition', 'Bargain', 'Confession', 'Overture', 'Reckoning'], rng)}`,
-      readAloud: `${cap(persona.archetype)} seeks you out — ${pack.sensory[0]}. Their speech: ${persona.speech}. Their tell: ${persona.quirk}.`,
+      readAloud: `${cap(persona.archetype)} seeks you out — ${pack.sensory[0]}.`,
       situation: [
         `${cap(persona.archetype)} wants: ${want}. Their manner: starts ${track.start}.`,
+        `Voice: ${persona.speech}. Tell: ${persona.quirk}.`,
         `Leverage (${leverage.kind}): ${leverage.approach}. Backfires: ${leverage.counter}.`,
         ...sides,
       ].join('\n'),

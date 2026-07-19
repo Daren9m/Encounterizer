@@ -81,6 +81,10 @@ export default function NavBar() {
   const isActive = (path: string) =>
     pathname === path || pathname.startsWith(`${path}/`);
 
+  // The player screen is a handout, not a tool page — no site chrome.
+  // trailingSlash: true means usePathname() reports the slashed form.
+  if (pathname === '/noncombat/player' || pathname.startsWith('/noncombat/player/')) return null;
+
   return (
     <header
       className="sticky top-0 z-50 border-b border-[var(--steel-800)] bg-[var(--steel-900)] shadow-[0_10px_30px_rgba(0,0,0,0.16)] backdrop-blur-xl print:hidden"
