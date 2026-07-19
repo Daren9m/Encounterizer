@@ -28,5 +28,8 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Flavor check (audit committed generated data)
+        run: npm run flavor:check
+
       - name: Build (static export)
         run: npm run build
