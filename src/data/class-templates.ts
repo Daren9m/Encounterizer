@@ -302,3 +302,23 @@ export function defaultPartyConfig(size: number, level: number): PartyMemberConf
     level,
   }));
 }
+
+/**
+ * Keep the forecast party aligned with the encounter builder's party controls.
+ * Existing names, class templates, and explicit overrides are preserved; the
+ * shared level is applied to every member and missing members use defaults.
+ */
+export function syncPartyConfigMembers(
+  members: PartyMemberConfig[],
+  size: number,
+  level: number,
+): PartyMemberConfig[] {
+  const normalizedSize = Math.max(1, Math.min(10, Math.round(size)));
+  const normalizedLevel = Math.max(1, Math.min(20, Math.round(level)));
+  const defaults = defaultPartyConfig(normalizedSize, normalizedLevel);
+
+  return defaults.map((fallback, index) => {
+    const existing = members[index];
+    return existing ? { ...existing, level: normalizedLevel } : fallback;
+  });
+}

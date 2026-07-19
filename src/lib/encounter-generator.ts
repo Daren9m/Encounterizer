@@ -22,6 +22,19 @@ export function getPartyXpBudget(party: Party, difficulty: Difficulty): number {
 }
 
 /**
+ * Aim at the middle of the requested difficulty band instead of its hard cap.
+ * Filling to 95–100% of a cap makes a generated "Moderate" encounter behave
+ * like the next tier whenever monster action economy or a high-CR group spikes.
+ */
+export function getEncounterTargetXp(party: Party, difficulty: Difficulty): number {
+  const order: Difficulty[] = ['Trivial', 'Low', 'Moderate', 'High', 'Extreme'];
+  const index = order.indexOf(difficulty);
+  const upper = getPartyXpBudget(party, difficulty);
+  const lower = index > 0 ? getPartyXpBudget(party, order[index - 1]) : 0;
+  return Math.round(lower + (upper - lower) * 0.5);
+}
+
+/**
  * Classify an encounter against the party's 2024 budgets. Budgets are caps:
  * an encounter belongs to the cheapest tier whose budget still contains it.
  * Raw monster XP is compared directly — 2024 has no monster-count multiplier.
@@ -360,8 +373,9 @@ export function generateEncounter(
 
   const rng = seededRandom(seed);
 
-  // Calculate XP budget for the desired difficulty
-  const xpBudget = getPartyXpBudget(party, difficulty);
+  // Generate near the center of the requested band. The full budget remains
+  // the assessment cap, but is intentionally not treated as a target.
+  const xpBudget = getEncounterTargetXp(party, difficulty);
 
   // Filter available monsters by environment and any user filters
   let available = allMonsters;

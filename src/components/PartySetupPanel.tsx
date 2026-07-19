@@ -159,7 +159,7 @@ export default function PartySetupPanel({
                 </button>
                 <button
                   type="button"
-                  className="text-[var(--accent-danger)] hover:opacity-80 px-2 text-sm inline-flex items-center"
+                  className="text-[var(--accent-danger)] hover:text-[var(--accent-danger-light)] px-2 text-sm inline-flex items-center"
                   aria-label={`Remove ${member.name || `player ${index + 1}`}`}
                   onClick={() => setDraft((prev) => prev.filter((_, i) => i !== index))}
                 >

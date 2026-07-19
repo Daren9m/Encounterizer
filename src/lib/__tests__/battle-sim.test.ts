@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getMonsterByName } from '@/data';
-import { buildSimPlayer } from '@/data/class-templates';
+import { buildSimPlayer, defaultPartyConfig } from '@/data/class-templates';
 import { buildAssessment, simulateBattle } from '@/lib/battle-sim';
 import { monsterToSimMonster } from '@/lib/monster-to-sim';
 import type { SimMonster, SimPlayer } from '@/lib/battle-sim-types';
@@ -182,6 +182,21 @@ describe('calibration against XP labels', () => {
       if (Math.abs(simIdx - xpIdx) <= 1) withinOne++;
     }
     expect(withinOne / cells.length).toBeGreaterThanOrEqual(0.66);
+  });
+
+  it('does not rate the reported level-8 moderate encounter as a party wipe', () => {
+    const players = defaultPartyConfig(6, 8).map(buildSimPlayer);
+    const monsters = [
+      ...monsterInstances("Will-o'-Wisp", 1),
+      ...monsterInstances('Stone Golem', 1),
+      ...monsterInstances('Mage', 1),
+      ...monsterInstances('Knight', 2),
+    ];
+
+    const report = simulateBattle(players, monsters, { seed: 798412425 });
+
+    expect(report.partyWinRate).toBeGreaterThan(0.65);
+    expect(report.simLabel).not.toMatch(/Deadly|Lethal/);
   });
 });
 

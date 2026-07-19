@@ -12,6 +12,7 @@ import { randomSeed } from '@/lib/random';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import PuzzleHandout from '@/components/PuzzleHandout';
 import PrintButton from '@/components/PrintButton';
+import ResetGeneratorButton from '@/components/ResetGeneratorButton';
 
 const DIFFICULTIES: Difficulty[] = ['Easy', 'Medium', 'Hard'];
 
@@ -134,6 +135,19 @@ function NoncombatBuilder() {
     setShowSolution(false);
     setLinkCopied(false);
     pushHistory(r);
+  }
+
+  function handleReset() {
+    setKind('');
+    setDifficulty('');
+    setPartyLevel(5);
+    setPartySize(4);
+    setTheme('any');
+    setTone('standard');
+    setTimeBudget('standard');
+    setResult(null);
+    setShowSolution(false);
+    setLinkCopied(false);
   }
 
   function handleCopyLink() {
@@ -318,6 +332,7 @@ function NoncombatBuilder() {
         </div>
         <div className="flex flex-wrap gap-3">
           <button type="button" onClick={() => handleGenerate()} className="btn-primary text-lg">Generate</button>
+          <ResetGeneratorButton onReset={handleReset} label="Reset Generator" />
           {result && (
             <>
               <button type="button" onClick={() => handleGenerate()} className="btn-secondary">Regenerate</button>

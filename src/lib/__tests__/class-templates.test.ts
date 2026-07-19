@@ -4,6 +4,7 @@ import {
   CLASS_TEMPLATES,
   computeHp,
   defaultPartyConfig,
+  syncPartyConfigMembers,
   tierForLevel,
   type LevelTier,
 } from '@/data/class-templates';
@@ -119,5 +120,27 @@ describe('defaultPartyConfig', () => {
       'fighter-champion', 'cleric-life', 'rogue-thief', 'wizard-evoker', 'fighter-champion',
     ]);
     expect(config.every((c) => c.level === 3)).toBe(true);
+  });
+
+  it('synchronizes size and level without discarding DM customizations', () => {
+    const members = [
+      {
+        name: 'Aria',
+        templateId: 'wizard-evoker',
+        level: 3,
+        overrides: { ac: 17 },
+      },
+    ];
+
+    const synced = syncPartyConfigMembers(members, 3, 8);
+
+    expect(synced).toHaveLength(3);
+    expect(synced[0]).toEqual({
+      name: 'Aria',
+      templateId: 'wizard-evoker',
+      level: 8,
+      overrides: { ac: 17 },
+    });
+    expect(synced.slice(1).every((member) => member.level === 8)).toBe(true);
   });
 });

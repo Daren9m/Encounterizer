@@ -235,7 +235,7 @@ export default function BestiaryPage() {
                 <Skull size={40} className="text-[var(--text-3)]" />
               </div>
               <p>Select a monster to view its full stat block</p>
-              <p className="text-xs mt-2 opacity-60">Click any monster card or row</p>
+              <p className="text-xs mt-2 text-[var(--text-3)]">Click any monster card or row</p>
             </div>
           )}
         </div>
@@ -344,7 +344,7 @@ function MonsterCard({
       </div>
 
       {/* Environments */}
-      <div className="mt-1 text-[10px] text-[var(--text-2)] opacity-60 truncate">
+      <div className="mt-1 text-[10px] text-[var(--text-3)] truncate">
         {monster.environments.join(' · ')}
       </div>
         </div>
