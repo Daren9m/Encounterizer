@@ -327,6 +327,17 @@ describe('contests & gauntlets', () => {
     const big = contests.generate({ levers: mkLevers('Medium', 3, { partySize: 5 }), rng: seededRandom(3) });
     expect(big.dmBrief.match(/side event/gi)?.length ?? 0).toBeGreaterThanOrEqual(1);
   });
+  it('wager board handout: posted rules, no mechanics', () => {
+    for (const seed of [3, 17, 314159]) {
+      const out = contests.generate({ levers: mkLevers('Medium', seed, { partySize: 5 }), rng: seededRandom(seed) });
+      expect(out.handout?.kind).toBe('text');
+      if (out.handout?.kind !== 'text') continue;
+      expect(out.handout.title).toBe('The House Rules');
+      expect(out.handout.body).toContain('Best of');
+      expect(out.handout.body).not.toMatch(/DC ?\d|\+\d/);
+      expect(out.handout.body).not.toMatch(/\b(Athletics|Acrobatics|Sleight of Hand|Deception|Performance|Constitution|History|Intimidation|Insight)\b/);
+    }
+  });
   it('gauntlet phases follow time budget; escape window follows difficulty', () => {
     const quick = gauntlets.generate({ levers: mkLevers('Easy', 4, { timeBudget: 'quick' }), rng: seededRandom(4) });
     expect(quick.stages).toBeUndefined();

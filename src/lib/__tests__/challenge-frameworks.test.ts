@@ -10,6 +10,7 @@ import { trap, COUNTERMEASURE_STEPS } from '../challenge-frameworks/trap';
 import { chase, buildChase } from '../challenge-frameworks/chase';
 import { investigation, buildClueWeb } from '../challenge-frameworks/investigation';
 import { LEVERAGE, PERSONAS } from '../../data/noncombat-cast';
+import { OBSTACLES } from '../../data/noncombat-scenarios';
 import { cap } from '../noncombat/theming';
 
 export function mkLevers(diff: Difficulty, seed: number, over: Partial<ResolvedLevers> = {}): ResolvedLevers {
@@ -161,6 +162,20 @@ describe('exploration framework (spec §8.3)', () => {
       const out = exploration.generate({ levers: mkLevers('Medium', s), rng: seededRandom(s) });
       expect(out.readAloud).not.toMatch(/[a-z] Overhead,/);
       for (const st of out.stages ?? []) expect(st.text).not.toMatch(/[a-z] Creative option:/);
+    }
+  });
+  it('rough map handout: waypoints and weather, no solutions', () => {
+    for (const seed of [3, 17, 314159]) {
+      const out = exploration.generate({ levers: mkLevers('Medium', seed, { timeBudget: 'set-piece' }), rng: seededRandom(seed) });
+      expect(out.handout?.kind).toBe('text');
+      if (out.handout?.kind !== 'text') continue;
+      expect(out.handout.title).toBe('A Rough Map');
+      const names = OBSTACLES.filter(o => out.situation.includes(o.name.toLowerCase()) || (out.stages ?? []).some(s => s.title === o.name)).map(o => o.name);
+      expect(names.length).toBeGreaterThanOrEqual(1);
+      for (const n of names) expect(out.handout.body).toContain(n);
+      for (const o of OBSTACLES) expect(out.handout.body).not.toContain(o.creative);
+      expect(out.handout.body).not.toMatch(/DC ?\d/);
+      expect(out.handout.body).not.toMatch(/\b(Athletics|Acrobatics|Survival|Perception|Investigation)\b/);
     }
   });
 });
