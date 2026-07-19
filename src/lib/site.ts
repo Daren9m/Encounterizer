@@ -23,7 +23,6 @@ export type RouteIconName =
   | 'skull'
   | 'map'
   | 'puzzle'
-  | 'drama'
   | 'sparkles';
 
 export interface RouteInfo {

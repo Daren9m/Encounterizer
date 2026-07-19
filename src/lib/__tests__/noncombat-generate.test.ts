@@ -16,6 +16,8 @@ describe('unified registry', () => {
     expect(eligibleGenerators(undefined)).toHaveLength(18);
     expect(getNoncombatKinds()).toHaveLength(11);
     expect(getNoncombatKinds().map(k => k.value)).toEqual([...ALL_KINDS]);
+    expect(GENERATORS.slice(0, 12).every(g => g.generatorKind === 'family')).toBe(true);
+    expect(GENERATORS.slice(12).every(g => g.generatorKind === 'framework')).toBe(true);
   });
 });
 
@@ -59,15 +61,15 @@ describe('determinism + fresh golden pins', () => {
   it('golden pins — the permanent /noncombat?seed= contract (never update without versioning URLs)', () => {
     const got = [1, 2, 3, 42, 1337, 424242].map(seed => {
       const r = generateNoncombat({ seed });
-      return `${seed}=>${r.id}|${r.resultKind}|${r.theme}|${r.difficulty}|${r.kind}`;
+      return `${seed}=>${r.id}|${r.resultKind}|${r.theme}|${r.difficulty}|${r.kind}|${r.name}`;
     });
     expect(got).toEqual([
-      "1=>nc-1-knights-knaves|puzzle|arcane-sanctum|Medium|logic",
-      "2=>nc-2-riddle-frames|puzzle|feywild-revel|Medium|word",
-      "3=>nc-3-exploration|challenge|ancient-tomb|Medium|exploration",
-      "42=>nc-42-rune-lock|puzzle|wild-frontier|Medium|logic",
-      "1337=>nc-1337-tile-path|puzzle|ancient-tomb|Medium|physical",
-      "424242=>nc-424242-gauntlets|puzzle|city-streets|Easy|environmental",
+      "1=>nc-1-knights-knaves|puzzle|arcane-sanctum|Medium|logic|The Truthful and the False",
+      "2=>nc-2-riddle-frames|puzzle|feywild-revel|Medium|word|The Riddle Door",
+      "3=>nc-3-exploration|challenge|ancient-tomb|Medium|exploration|The Overland Gauntlet",
+      "42=>nc-42-rune-lock|puzzle|wild-frontier|Medium|logic|The Rune-Sealed Lock",
+      "1337=>nc-1337-tile-path|puzzle|ancient-tomb|Medium|physical|The Constellation Floor",
+      "424242=>nc-424242-gauntlets|puzzle|city-streets|Easy|environmental|The Hazard Gauntlet",
     ]);
   });
   it('golden pin — explicit levers consume no draws before construction', () => {
@@ -75,8 +77,8 @@ describe('determinism + fresh golden pins', () => {
       seed: 42, kind: 'investigation', difficulty: 'Hard', theme: 'sacred-temple',
       tone: 'grim', timeBudget: 'quick', partyLevel: 9, partySize: 6,
     });
-    expect(`${r.id}|${r.resultKind}|${r.theme}|${r.kind}`).toBe(
-      'nc-42-investigation|challenge|sacred-temple|investigation',
+    expect(`${r.id}|${r.resultKind}|${r.theme}|${r.kind}|${r.name}`).toBe(
+      'nc-42-investigation|challenge|sacred-temple|investigation|The Vanished Seal',
     );
   });
   it('difficulty omitted is a seeded draw for ALL kinds — including challenges (new behavior)', () => {
@@ -95,5 +97,27 @@ describe('determinism + fresh golden pins', () => {
     expect(r.requested.kind).toBeUndefined();
     expect(r.requested.difficulty).toBeUndefined();
     expect(r.requested.theme).toBe('any');
+  });
+});
+
+describe('lever plumbing at the union level', () => {
+  it('tone threads through to failure text', () => {
+    const w = generateNoncombat({ kind: 'logic', tone: 'whimsical', seed: 8 });
+    const g = generateNoncombat({ kind: 'logic', tone: 'grim', seed: 8 });
+    if (w.resultKind === 'puzzle') expect(w.failureConsequence).not.toMatch(/\d+d\d+/);
+    if (g.resultKind === 'puzzle') expect(g.failureConsequence).toMatch(/\d+d\d+/);
+  });
+  it('party size threads through to skill-challenge structure', () => {
+    const small = generateNoncombat({ kind: 'skill-challenge', partySize: 2, seed: 7 });
+    const large = generateNoncombat({ kind: 'skill-challenge', partySize: 8, seed: 7 });
+    if (small.resultKind === 'challenge' && large.resultKind === 'challenge') {
+      expect(small.structure!.successesNeeded).toBeLessThan(large.structure!.successesNeeded);
+    }
+  });
+  it('time budget threads through to hints and clue-web size', () => {
+    const p = generateNoncombat({ kind: 'word', timeBudget: 'quick', seed: 4 });
+    if (p.resultKind === 'puzzle') expect(p.hints).toHaveLength(2);
+    const inv = generateNoncombat({ kind: 'investigation', timeBudget: 'quick', seed: 4 });
+    if (inv.resultKind === 'challenge') expect(inv.clueWeb!.nodes).toHaveLength(2);
   });
 });
