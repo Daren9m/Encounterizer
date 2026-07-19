@@ -16,6 +16,7 @@ import {
   type MapTerrainVariety,
 } from '@/lib/map-generator';
 import { randomSeed } from '@/lib/random';
+import { validateBoundedIntegerInput } from '@/lib/number-input';
 import type {
   Encounter, Difficulty, Environment,
   Party, Monster, MonsterFilter,
@@ -211,6 +212,8 @@ function EncounterBuilder() {
 
   const [partySize, setPartySize] = useState(4);
   const [partyLevel, setPartyLevel] = useState(3);
+  const [partySizeInput, setPartySizeInput] = useState('4');
+  const [partyLevelInput, setPartyLevelInput] = useState('3');
   const [difficulty, setDifficulty] = useState<Difficulty>('Moderate');
   const [environment, setEnvironment] = useState<Environment>('Forest');
   const [encounter, setEncounter] = useState<Encounter | null>(null);
@@ -226,6 +229,15 @@ function EncounterBuilder() {
   const [mapTerrainVariety, setMapTerrainVariety] = useState<MapTerrainVariety>('Varied');
   const [showManualAdd, setShowManualAdd] = useState(false);
   const [manualSearch, setManualSearch] = useState('');
+
+  const partySizeValidation = validateBoundedIntegerInput(
+    partySizeInput, 'Party size', 1, 10,
+  );
+  const partyLevelValidation = validateBoundedIntegerInput(
+    partyLevelInput, 'Party level', 1, 20,
+  );
+  const partyInputsValid = partySizeValidation.error === null
+    && partyLevelValidation.error === null;
 
   // Battle Forecast state
   const [partyConfig, setPartyConfig, partyConfigHydrated] = usePersistentState<PartyConfig | null>(
@@ -256,6 +268,8 @@ function EncounterBuilder() {
     if (stored) {
       setPartySize(stored.partySize);
       setPartyLevel(stored.partyLevel);
+      setPartySizeInput(String(stored.partySize));
+      setPartyLevelInput(String(stored.partyLevel));
       setDifficulty(stored.difficulty);
       setEnvironment(stored.environment);
       setIncludeMap(stored.includeMap);
@@ -398,8 +412,14 @@ function EncounterBuilder() {
       }
     }
 
-    if (size !== null) setPartySize(size);
-    if (level !== null) setPartyLevel(level);
+    if (size !== null) {
+      setPartySize(size);
+      setPartySizeInput(String(size));
+    }
+    if (level !== null) {
+      setPartyLevel(level);
+      setPartyLevelInput(String(level));
+    }
     if (isDifficulty(diff)) setDifficulty(diff);
     if (isEnvironment(env)) setEnvironment(env);
     if (Object.keys(filter).length > 0) setMonsterFilter(filter);
@@ -429,6 +449,14 @@ function EncounterBuilder() {
   }, [searchParams, runGenerate]);
 
   function handleGenerate() {
+    if (!partyInputsValid) {
+      const invalidId = partySizeValidation.error
+        ? 'enc-party-size'
+        : 'enc-party-level';
+      document.getElementById(invalidId)?.focus();
+      return;
+    }
+
     runGenerate({
       partySize, partyLevel, difficulty, environment,
       includeMap, mapWidth, mapHeight, mapFeatureDensity, mapTerrainVariety,
@@ -446,6 +474,12 @@ function EncounterBuilder() {
     invalidateForecast();
   }
 
+  function handlePartySizeInputChange(raw: string) {
+    setPartySizeInput(raw);
+    const validation = validateBoundedIntegerInput(raw, 'Party size', 1, 10);
+    if (validation.value !== null) handlePartySizeChange(validation.value);
+  }
+
   function handlePartyLevelChange(value: number) {
     const nextLevel = Math.max(1, Math.min(20, value));
     setPartyLevel(nextLevel);
@@ -456,9 +490,17 @@ function EncounterBuilder() {
     invalidateForecast();
   }
 
+  function handlePartyLevelInputChange(raw: string) {
+    setPartyLevelInput(raw);
+    const validation = validateBoundedIntegerInput(raw, 'Party level', 1, 20);
+    if (validation.value !== null) handlePartyLevelChange(validation.value);
+  }
+
   function handleReset() {
     setPartySize(4);
     setPartyLevel(3);
+    setPartySizeInput('4');
+    setPartyLevelInput('3');
     setDifficulty('Moderate');
     setEnvironment('Forest');
     setIncludeMap(true);
@@ -646,7 +688,9 @@ function EncounterBuilder() {
             <h2 className="mt-1 text-xl">Shape the fight</h2>
           </div>
           <span className="text-sm text-[var(--text-3)]">
-            {partySize} heroes · level {partyLevel} · {difficulty}
+            {partyInputsValid
+              ? `${partySize} heroes · level ${partyLevel} · ${difficulty}`
+              : 'Fix party details to generate'}
           </span>
         </div>
         <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -656,10 +700,18 @@ function EncounterBuilder() {
             </label>
             <input
               id="enc-party-size"
-              type="number" min={1} max={10} value={partySize}
-              onChange={e => handlePartySizeChange(Number(e.target.value))}
+              type="number" min={1} max={10} step={1} inputMode="numeric"
+              value={partySizeInput}
+              onChange={e => handlePartySizeInputChange(e.target.value)}
+              aria-invalid={partySizeValidation.error ? true : undefined}
+              aria-describedby={partySizeValidation.error ? 'enc-party-size-error' : undefined}
               className="w-full"
             />
+            {partySizeValidation.error && (
+              <p id="enc-party-size-error" className="mt-1 text-xs text-[var(--accent-danger-light)]" role="alert">
+                {partySizeValidation.error}
+              </p>
+            )}
           </div>
           <div>
             <label htmlFor="enc-party-level" className="micro-label block mb-1">
@@ -667,10 +719,18 @@ function EncounterBuilder() {
             </label>
             <input
               id="enc-party-level"
-              type="number" min={1} max={20} value={partyLevel}
-              onChange={e => handlePartyLevelChange(Number(e.target.value))}
+              type="number" min={1} max={20} step={1} inputMode="numeric"
+              value={partyLevelInput}
+              onChange={e => handlePartyLevelInputChange(e.target.value)}
+              aria-invalid={partyLevelValidation.error ? true : undefined}
+              aria-describedby={partyLevelValidation.error ? 'enc-party-level-error' : undefined}
               className="w-full"
             />
+            {partyLevelValidation.error && (
+              <p id="enc-party-level-error" className="mt-1 text-xs text-[var(--accent-danger-light)]" role="alert">
+                {partyLevelValidation.error}
+              </p>
+            )}
           </div>
           <div>
             <label htmlFor="enc-difficulty" className="micro-label block mb-1">
