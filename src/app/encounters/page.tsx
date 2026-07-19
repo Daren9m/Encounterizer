@@ -32,6 +32,7 @@ import PrintButton from '@/components/PrintButton';
 import ResetGeneratorButton from '@/components/ResetGeneratorButton';
 import ToolPageHeader from '@/components/ToolPageHeader';
 import { simulateBattle } from '@/lib/battle-sim';
+import { battlefieldFromMap } from '@/lib/sim/movement';
 import { monsterToSimMonster } from '@/lib/monster-to-sim';
 import {
   buildSimPlayer,
@@ -512,7 +513,18 @@ function EncounterBuilder() {
       const monsters = enc.monsters.flatMap((em) =>
         Array.from({ length: em.count }, (_, i) => monsterToSimMonster(em.monster, i, em.count)),
       );
-      setReport(simulateBattle(players, monsters, { seed: randomSeed() }));
+      // With a map attached, the forecast fights on it: the same token
+      // placement the map displays becomes the spawn grid.
+      const battlefield = enc.map
+        ? battlefieldFromMap(
+            enc.map,
+            placeTokens(enc.map, enc.monsters, config.members.length, enc.map.seed ?? enc.seed),
+          )
+        : undefined;
+      setReport(simulateBattle(players, monsters, {
+        seed: randomSeed(),
+        ...(battlefield ? { battlefield } : {}),
+      }));
       setReportSignature(encounterSignature(enc));
       setSimRunning(false);
     }, 30);

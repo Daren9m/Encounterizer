@@ -18,6 +18,10 @@ export interface SimAttack {
   avgDamage: number;
   /** Times per round this attack is made (multiattack expanded). */
   count: number;
+  /** Melee reach in cells (spatial mode; 1 = 5 ft). */
+  reachCells?: number;
+  /** Ranged normal range in cells (spatial mode). */
+  rangeCells?: number;
 }
 
 /** A recharge-gated big move (breath weapon, rock throw, ...). */
@@ -68,6 +72,8 @@ export interface SimMonster {
   /** True when the extractor had to invent damage to hit the CR floor. */
   synthesizedAttack: boolean;
   parseWarnings: string[];
+  /** Movement per round in cells (spatial mode; max of walk/fly ÷ 5). */
+  speedCells?: number;
 }
 
 export interface SimPlayer {
@@ -95,6 +101,25 @@ export interface SimPlayer {
     sneakDamage?: number;
   };
   initiativeMod: number;
+  /** Movement per round in cells (spatial mode; default 6 = 30 ft). */
+  speedCells?: number;
+  /** Weapon attack range in cells (spatial mode; 1 = melee reach). */
+  rangeCells?: number;
+}
+
+// ─── Spatial mode ─────────────────────────────────────────────────
+
+/** The battle map digested for the simulator: a cost grid plus the
+ *  starting cells token placement chose. */
+export interface Battlefield {
+  width: number;
+  height: number;
+  /** Per-cell entry cost: 0 = impassable, 1 = normal, 2 = difficult. */
+  cost: Uint8Array;
+  /** Spawn cell per player, in party order. */
+  playerSpawns: number[];
+  /** SimMonster.id → spawn cell (same ids MapToken uses). */
+  monsterSpawns: Map<string, number>;
 }
 
 export interface BattleReport {
@@ -121,6 +146,13 @@ export interface BattleReport {
   /** What the simulation says this fight plays like. */
   simLabel: 'Trivial' | 'Low' | 'Moderate' | 'High' | 'Deadly' | 'Lethal';
   approximationNotes: string[];
+  /** Present only when the run was simulated on a battle map. */
+  spatial?: {
+    gridWidth: number;
+    gridHeight: number;
+    /** Mean round of the first in-range attack attempt. */
+    avgRoundsToContact: number;
+  };
 }
 
 // ─── Party configuration (persisted) ─────────────────────────────

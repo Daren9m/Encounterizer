@@ -108,6 +108,11 @@ export default function BattleReportCard({
           <h3 className="text-xl">Battle Forecast</h3>
           <span className="text-xs text-[var(--text-2)]">
             {report.iterations.toLocaleString()} simulated battles · seed {report.seed}
+            {report.spatial && (
+              <span className="ml-2 px-1.5 py-0.5 rounded bg-[var(--steel-800)] text-[var(--bronze)]">
+                on the {report.spatial.gridWidth}×{report.spatial.gridHeight} battle map
+              </span>
+            )}
           </span>
         </div>
         <p className="text-xs text-[var(--text-2)] italic">
@@ -131,6 +136,14 @@ export default function BattleReportCard({
             </div>
             <div className="text-xs text-[var(--text-2)]">avg rounds</div>
           </div>
+          {report.spatial && (
+            <div>
+              <div className="text-[var(--bronze)] font-bold text-lg">
+                {report.spatial.avgRoundsToContact.toFixed(1)}
+              </div>
+              <div className="text-xs text-[var(--text-2)]">rounds to contact</div>
+            </div>
+          )}
           <div>
             <div className="text-[var(--bronze)] font-bold text-lg">
               {Math.round(report.avgPartyHpRemainingPct * 100)}%
