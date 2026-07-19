@@ -6,8 +6,8 @@
 
 - **ID:** `glabrezu`
 - **Stat profile:** CR 9; Large Fiend (demon)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -77,8 +77,8 @@ A four-armed glabrezu advances across a shattered causeway with two great pincer
 
 - **ID:** `treant`
 - **Stat profile:** CR 9; Huge Plant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -148,8 +148,8 @@ An ancient treant strides from an old forest, raising one vast branch arm as bar
 
 - **ID:** `young-blue-dragon`
 - **Stat profile:** CR 9; Large Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -220,8 +220,8 @@ A young cobalt blue dragon rises from a dune as lightning branches around its gr
 
 - **ID:** `young-silver-dragon`
 - **Stat profile:** CR 9; Large Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -292,8 +292,8 @@ A young silver dragon perches above mountain clouds as cold mist gathers around 
 
 - **ID:** `deva`
 - **Stat profile:** CR 10; Medium Celestial (angel)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -363,8 +363,8 @@ A winged deva hovers above pale stone with a radiant mace held protectively acro
 
 - **ID:** `guardian-naga`
 - **Stat profile:** CR 10; Large Celestial
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -434,8 +434,8 @@ A golden guardian naga coils across a sanctuary entrance with its crowned head r
 
 - **ID:** `stone-golem`
 - **Stat profile:** CR 10; Large Construct
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -505,8 +505,8 @@ A massive dark stone golem launches a pale force bolt while swinging one slab fi
 
 - **ID:** `young-gold-dragon`
 - **Stat profile:** CR 10; Large Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -577,8 +577,8 @@ A young gold dragon lands in a meadow, its long body and barbels lit by fire gat
 
 - **ID:** `young-red-dragon`
 - **Stat profile:** CR 10; Large Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -649,8 +649,8 @@ A young red dragon spreads its dark wings on a volcanic shelf as smoke pours fro
 
 - **ID:** `behir`
 - **Stat profile:** CR 11; Huge Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -721,8 +721,8 @@ A twelve-legged blue behir coils down a cavern wall as white lightning gathers i
 
 - **ID:** `djinni`
 - **Stat profile:** CR 11; Large Elemental (genie)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -794,8 +794,8 @@ A cloud-haired djinni hovers above a coastal terrace with a storm blade and whir
 
 - **ID:** `efreeti`
 - **Stat profile:** CR 11; Large Elemental (genie)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -867,8 +867,8 @@ A coal-dark efreeti hovers in a furnace hall with flaming hair, a red-hot blade,
 
 - **ID:** `horned-devil`
 - **Stat profile:** CR 11; Large Fiend (devil)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -938,8 +938,8 @@ A horned devil dives over an infernal rampart with a blazing two-pronged fork an
 
 - **ID:** `remorhaz`
 - **Stat profile:** CR 11; Huge Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1010,8 +1010,8 @@ A huge blue-armored remorhaz erupts from snow, its many legs spread and furnace-
 
 - **ID:** `roc`
 - **Stat profile:** CR 11; Gargantuan Monstrosity
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1081,8 +1081,8 @@ A gargantuan dark-feathered roc banks between snowy peaks with one enormous talo
 
 - **ID:** `sphinx-of-lore`
 - **Stat profile:** CR 11; Large Celestial
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1152,8 +1152,8 @@ A human-headed Sphinx of Lore sits in a desert archive as golden symbols gather 
 
 - **ID:** `archmage`
 - **Stat profile:** CR 12; Small Humanoid (wizard)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1223,8 +1223,8 @@ A small elder archmage stands within a clear magical ward while directing bright
 
 - **ID:** `erinyes`
 - **Stat profile:** CR 12; Medium Fiend (devil)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1294,8 +1294,8 @@ A black-winged erinyes hovers over an infernal tribunal with sword drawn and enc
 
 - **ID:** `adult-brass-dragon`
 - **Stat profile:** CR 13; Huge Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1366,8 +1366,8 @@ A huge adult brass dragon stands across a dune crest with vast wings spread and 
 
 - **ID:** `adult-white-dragon`
 - **Stat profile:** CR 13; Huge Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1438,8 +1438,8 @@ A huge adult white dragon climbs across broken sea ice while breathing a cone of
 
 - **ID:** `nalfeshnee`
 - **Stat profile:** CR 13; Large Fiend (demon)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1509,8 +1509,8 @@ A tusked, ape-bodied nalfeshnee hovers above shattered stone as a ring of fearfu
 
 - **ID:** `rakshasa`
 - **Stat profile:** CR 13; Medium Fiend
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1581,8 +1581,8 @@ A tiger-headed rakshasa stands in a quiet audience chamber with both unnatural b
 
 - **ID:** `storm-giant`
 - **Stat profile:** CR 13; Huge Giant
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1653,8 +1653,8 @@ A colossal violet-gray storm giant hovers above a sea cliff with a thunderous sw
 
 - **ID:** `vampire`
 - **Stat profile:** CR 13; Small Undead
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1725,8 +1725,8 @@ A pale vampire walks down a moonlit manor wall as one hand gathers grave force a
 
 - **ID:** `adult-black-dragon`
 - **Stat profile:** CR 14; Huge Dragon (chromatic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1797,8 +1797,8 @@ A huge adult black dragon stands in a drowned forest, pouring acid from its skul
 
 - **ID:** `adult-copper-dragon`
 - **Stat profile:** CR 14; Huge Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1869,8 +1869,8 @@ A huge verdigris-patched adult copper dragon climbs headfirst down a red canyon 
 
 - **ID:** `ice-devil`
 - **Stat profile:** CR 14; Large Fiend (devil)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
@@ -1941,8 +1941,8 @@ A blue-white insectile ice devil braces behind a frozen spear with its segmented
 
 - **ID:** `adult-bronze-dragon`
 - **Stat profile:** CR 15; Huge Dragon (metallic)
-- **Review:** pending
-- **Image:** blocked
+- **Review:** approved
+- **Image:** draft
 - **Confidence:** reference-derived
 
 ### Source facts
