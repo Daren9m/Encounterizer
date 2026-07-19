@@ -51,7 +51,7 @@ localStorage between visits.
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 15 (App Router, static export) |
+| Framework | Next.js 16 (App Router, static export) |
 | Language | TypeScript (strict) |
 | Styling | Tailwind CSS + CSS custom properties (Dusksteel tokens), Spectral + IBM Plex Sans via next/font, Lucide icons |
 | Data | Generated TypeScript bestiary + spell reference from SRD 5.2.1, client-side 5etools importers |
