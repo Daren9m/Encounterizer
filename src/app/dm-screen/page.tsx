@@ -22,6 +22,7 @@ import { useMonsters } from '@/app/hooks/useMonsters';
 import { useSpells } from '@/app/hooks/useSpells';
 import BattleOrganizer from '@/components/BattleOrganizer';
 import MonsterStatBlock from '@/components/MonsterStatBlock';
+import RulesReference from '@/components/RulesReference';
 import ToolPageHeader from '@/components/ToolPageHeader';
 import { levelLabel, type Spell } from '@/data/spells';
 import { getMonsterPhysicalDescription } from '@/data/monster-description-index';
@@ -142,6 +143,9 @@ export default function DmScreenPage() {
     if (addKind === 'initiative') {
       addItem({ id: id('initiative'), kind: 'initiative', title: title.trim() || 'Initiative Tracker', collapsed: false, hidden: false, origin: 'manual' });
     }
+    if (addKind === 'rules') {
+      addItem({ id: id('rules'), kind: 'rules', title: title.trim() || 'Table Rules Reference', collapsed: false, hidden: false, origin: 'manual' });
+    }
   }
 
   function addResource(resourceId: string, resourceTitle: string) {
@@ -200,13 +204,13 @@ export default function DmScreenPage() {
       {sectionOptions.length > 0 ? <>
         <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-[1fr_0.8fr_1.2fr]">
           <label className="text-xs font-semibold">Destination<select className="mt-1 w-full" value={selectedTargetSectionId} onChange={(event) => setTargetSectionId(event.target.value)}>{sectionOptions.map((section) => <option key={section.id} value={section.id}>{section.label}</option>)}</select></label>
-          <label className="text-xs font-semibold">Content type<select className="mt-1 w-full" value={addKind} onChange={(event) => setAddKind(event.target.value as DmScreenItemKind)}><option value="note">Note</option><option value="monster">Monster</option><option value="spell">Spell</option><option value="tool">App tool</option><option value="initiative">Initiative tracker</option></select></label>
+          <label className="text-xs font-semibold">Content type<select className="mt-1 w-full" value={addKind} onChange={(event) => setAddKind(event.target.value as DmScreenItemKind)}><option value="note">Note</option><option value="rules">Rules reference</option><option value="monster">Monster</option><option value="spell">Spell</option><option value="tool">App tool</option><option value="initiative">Initiative tracker</option></select></label>
           {(addKind === 'monster' || addKind === 'spell') ? <label className="text-xs font-semibold">Find {addKind}<input className="mt-1 w-full" value={resourceQuery} onChange={(event) => setResourceQuery(event.target.value)} placeholder={`Search ${addKind}s…`} /></label> : <label className="text-xs font-semibold">Title (optional)<input className="mt-1 w-full" value={title} onChange={(event) => setTitle(event.target.value)} /></label>}
         </div>
         {(addKind === 'monster' || addKind === 'spell') && resourceResults.length > 0 && <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{resourceResults.map((result) => <button key={result.id} type="button" className="rounded-lg border border-[var(--steel-800)] p-3 text-left hover:border-[var(--bronze)]" onClick={() => addResource(result.id, result.name)}><span className="block font-semibold">{result.name}</span><span className="text-xs text-[var(--text-3)]">{result.detail}</span></button>)}</div>}
         {addKind === 'note' && <textarea className="mt-3 w-full" rows={3} value={body} onChange={(event) => setBody(event.target.value)} placeholder="Rules reminder, boxed text, NPC notes, session beats…" />}
         {addKind === 'tool' && <div className="mt-3 grid gap-2 md:grid-cols-[1fr_2fr]"><select value={toolPath} onChange={(event) => setToolPath(event.target.value)}>{TOOL_ROUTES.map((route) => <option key={route.path} value={route.path}>{route.title}</option>)}</select><input value={body} onChange={(event) => setBody(event.target.value)} placeholder="Optional reminder about how you’ll use this tool" /></div>}
-        {(addKind === 'note' || addKind === 'tool' || addKind === 'initiative') && <button type="button" className="btn-primary mt-3" onClick={addConfiguredItem}><Plus size={17} aria-hidden="true" /> Add {addKind === 'initiative' ? 'tracker' : addKind}</button>}
+        {(addKind === 'note' || addKind === 'tool' || addKind === 'rules' || addKind === 'initiative') && <button type="button" className="btn-primary mt-3" onClick={addConfiguredItem}><Plus size={17} aria-hidden="true" /> Add {addKind === 'initiative' ? 'tracker' : addKind === 'rules' ? 'reference' : addKind}</button>}
       </> : <div className="rounded-lg border border-dashed border-[var(--steel-700)] p-5 text-center text-sm text-[var(--text-2)]">Create a section first, then fill it with anything you need at the table.</div>}
     </section>
 
@@ -253,7 +257,7 @@ function ScreenItem({ item, monster, spell, onUpdate, onRemove }: {
   onUpdate: (update: (item: DmScreenItem) => DmScreenItem) => void;
   onRemove: () => void;
 }) {
-  const Icon = item.kind === 'monster' ? Swords : item.kind === 'spell' ? Sparkles : item.kind === 'tool' ? LinkIcon : item.kind === 'initiative' || item.kind === 'battle' ? Swords : FileText;
+  const Icon = item.kind === 'monster' ? Swords : item.kind === 'spell' ? Sparkles : item.kind === 'tool' ? LinkIcon : item.kind === 'rules' ? BookOpen : item.kind === 'initiative' || item.kind === 'battle' ? Swords : FileText;
   return <article className={`rounded-xl border ${item.hidden ? 'border-dashed border-[var(--steel-700)] opacity-70 print:opacity-100' : 'border-[var(--steel-800)]'} bg-[var(--steel-900)]`}>
     <header className="flex items-center gap-2 px-3 py-2">
       <Icon size={17} className="shrink-0 text-[var(--bronze)]" aria-hidden="true" />
@@ -269,6 +273,7 @@ function ScreenItem({ item, monster, spell, onUpdate, onRemove }: {
       {item.kind === 'monster' && (monster ? <MonsterStatBlock monster={monster} physicalDescription={getMonsterPhysicalDescription(monster.id)} /> : <p className="text-sm text-[var(--accent-danger)]">This monster is no longer available.</p>)}
       {item.kind === 'spell' && (spell ? <SpellReference spell={spell} /> : <p className="text-sm text-[var(--accent-danger)]">This spell is no longer available.</p>)}
       {item.kind === 'tool' && <div><p className="text-sm text-[var(--text-2)]">{item.body}</p>{item.href && <Link className="btn-secondary mt-3 text-sm print:hidden" href={item.href}>Open tool <span aria-hidden="true">→</span></Link>}</div>}
+      {item.kind === 'rules' && <RulesReference />}
       {(item.kind === 'initiative' || item.kind === 'battle') && <BattleOrganizer mode="initiative" />}
     </div>
   </article>;

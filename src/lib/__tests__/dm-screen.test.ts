@@ -42,4 +42,13 @@ describe('DM screen', () => {
     expect(markdown).toContain('Use cover.');
     expect(markdown).toContain('| Init | Combatant | Side | HP | AC | Conditions | Notes |');
   });
+
+  it('starts with a removable rules reference and exports its complete contents', () => {
+    expect(EMPTY_DM_SCREEN.sections[0].items[0].kind).toBe('rules');
+    const markdown = dmScreenToMarkdown(EMPTY_DM_SCREEN, new Map(), new Map(), EMPTY_BATTLE);
+    expect(markdown).toContain('## Quick Reference');
+    expect(markdown).toContain('Saving Throws');
+    expect(markdown).toContain('Death Saving Throws');
+    expect(markdown).toContain('Unconscious');
+  });
 });
