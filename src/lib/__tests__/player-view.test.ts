@@ -18,6 +18,9 @@ const SPOILER_PATTERNS: RegExp[] = [
   /Escape:/,
   /Phase [2-9]/,
   /\b(group check|opposed check|saving throw)\b/i,
+  // Mechanics cadence: "one foot per round" is a DM sentence, not a
+  // dying victim's scrawl or a scene description (issue #136).
+  /\b(per|each|every) round\b|\bround by round\b/i,
   new RegExp(`\\b(${[...SKILLS, ...ABILITIES].join('|')})\\b`),
 ];
 

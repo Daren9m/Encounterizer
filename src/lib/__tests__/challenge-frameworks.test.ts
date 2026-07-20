@@ -95,7 +95,6 @@ describe('social framework (spec §8.2)', () => {
     const a = social.generate({ levers: mkLevers('Hard', 21), rng: seededRandom(21) });
     const b = social.generate({ levers: mkLevers('Hard', 21), rng: seededRandom(21) });
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
-    expect(a.situation).toMatch(/Voice: /);
     expect(a.situation).toMatch(/Tell: /);
     expect(a.readAloud).not.toMatch(/\bThey [a-z]+s\b/); // no third-person-singular after "They"
   });
@@ -113,18 +112,34 @@ describe('social framework (spec §8.2)', () => {
       expect(new Set(wants).size).toBe(wants.length);
     }
   });
-  it('the tell and voice are DM-side only — read-aloud stays in-world', () => {
+  it('the tell stays DM-side; the speech style is woven into the read-aloud (#136)', () => {
     for (const seed of [7, 31, 104729]) {
       const out = social.generate({ levers: mkLevers('Medium', seed), rng: seededRandom(seed) });
       const persona = PERSONAS.find(p => out.readAloud.includes(cap(p.archetype).slice(0, 12)));
       expect(persona).toBeTruthy();
+      // The tell is earned via Insight, never announced:
       expect(out.readAloud).not.toContain(persona!.quirk);
-      expect(out.readAloud).not.toContain(persona!.speech);
       expect(out.readAloud).not.toMatch(/Their (speech|tell):/);
-      expect(out.situation).toContain(`Voice: ${persona!.speech}`);
+      // Speech is perceivable in-world — woven as prose, per spec §4.2:
+      expect(out.readAloud).toContain(`and ${persona!.speech}.`);
       expect(out.situation).toContain(`Tell: ${persona!.quirk}`);
       // The Insight check still pays the tell off:
       expect(out.skillChecks.some(s => s.skill === 'Insight' && s.onSuccess.includes(persona!.quirk))).toBe(true);
+    }
+  });
+  it('every persona speech reads as a third-person verb phrase (weavable after "and …")', () => {
+    // The weave contract: speech follows "seeks you out … and ___." so
+    // it must OPEN with a third-person-singular verb. An -s suffix
+    // alone would wave through adjectives ("cautious…"), so new
+    // personas must add their opening verb here deliberately.
+    const WEAVE_VERBS = new Set([
+      'answers', 'speaks', 'quotes', 'talks', 'stays', 'trades', 'over-explains',
+      'performs', 'names', 'gives', 'prices', 'doles',
+    ]);
+    for (const p of PERSONAS) {
+      expect(p.speech, p.archetype).toMatch(/^[a-z]/);
+      expect(p.speech.endsWith('.'), p.archetype).toBe(false);
+      expect(WEAVE_VERBS.has(p.speech.split(' ')[0]), `${p.archetype}: "${p.speech}" must open with a known weave verb`).toBe(true);
     }
   });
 });
@@ -177,6 +192,13 @@ describe('exploration framework (spec §8.3)', () => {
       expect(out.handout.body).not.toMatch(/DC ?\d/);
       expect(out.handout.body).not.toMatch(/\b(Athletics|Acrobatics|Survival|Perception|Investigation)\b/);
     }
+  });
+  it('a single-waypoint map just ends — no "beyond that" line (#136)', () => {
+    const quick = exploration.generate({ levers: mkLevers('Medium', 3, { timeBudget: 'quick' }), rng: seededRandom(3) });
+    expect(quick.handout?.kind).toBe('text');
+    if (quick.handout?.kind === 'text') expect(quick.handout.body).not.toContain('mapmaker');
+    const set = exploration.generate({ levers: mkLevers('Medium', 3, { timeBudget: 'set-piece' }), rng: seededRandom(3) });
+    if (set.handout?.kind === 'text') expect(set.handout.body).toContain("the mapmaker's hand gives out");
   });
 });
 

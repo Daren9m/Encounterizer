@@ -57,7 +57,9 @@ export const exploration: ChallengeFramework = {
         title: 'A Rough Map',
         body: [
           ...chain.map((o, i) => `${i + 1}. ${o.name}`),
-          `Beyond that, the mapmaker's hand gives out.`,
+          // A one-waypoint map just ends; the trailing-off line only
+          // earns its place when there was a route to trail off from.
+          ...(chain.length > 1 ? [`Beyond that, the mapmaker's hand gives out.`] : []),
           `Skies on the route: ${weather}.`,
         ].join('\n'),
       },

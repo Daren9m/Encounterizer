@@ -46,11 +46,11 @@ export const gauntlets: PuzzleFamily = {
       name: phaseCount > 1 ? 'The Hazard Gauntlet' : first.name,
       estimatedMinutes: estimatedMinutes(levers.timeBudget),
       dmBrief,
-      readAloud: `${cap(pick(pack.sensory, rng))}. You have found ${first.name} — ${withArticle(pick(pack.materials, rng))} chamber where ${first.hazard}. ${cap(first.omen)}.`,
+      readAloud: `${cap(pick(pack.sensory, rng))}. You have found ${first.name} — ${withArticle(pick(pack.materials, rng))} chamber where ${first.felt}. ${cap(first.omen)}.`,
       handout: {
         kind: 'text',
         title: 'Scratched into the Wall',
-        body: `"${cap(first.hazard)} — and it does not stop. ${cap(first.omen)}. Hurry."\n— an earlier hand, in haste`,
+        body: `"${cap(first.felt)} — and it does not stop. ${cap(first.omen)}. Hurry."\n— an earlier hand, in haste`,
       },
       hints: allHints.slice(0, hintCount(levers.timeBudget)),
       solution: `Get at least ${threshold} of ${levers.partySize} to succeed on DC ${dc} ${first.skills[0]} (or ${first.skills.slice(1).join('/')}) as a group check within ${windowRounds} rounds, with ${ops} bodies on the mechanism at once, to trigger: ${first.escape}.${phaseCount > 1 ? ` Later phases repeat the same structure with new hazards: ${hazards.slice(1).map(h => h.name).join(', ')}.` : ''}`,

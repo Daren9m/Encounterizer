@@ -10,7 +10,17 @@
 
 export interface ContestType { name: string; skill: string; flavor: string }
 export interface SideEvent { role: string; skill: string; effect: string }
-export interface GauntletHazard { name: string; hazard: string; escape: string; omen: string; skills: string[] }
+export interface GauntletHazard {
+  name: string;
+  /** DM-side mechanical description — carries the per-round cadence. */
+  hazard: string;
+  /** The hazard as characters experience it — player surfaces only. */
+  felt: string;
+  escape: string;
+  /** Perceivable detail gesturing at the escape — player surfaces only. */
+  omen: string;
+  skills: string[];
+}
 
 // ─── Contest Types ─────────────────────────────────────────────────
 export const CONTEST_TYPES: ContestType[] = [
@@ -42,18 +52,18 @@ export const SIDE_EVENTS: SideEvent[] = [
 
 // ─── Gauntlet Hazards ───────────────────────────────────────────────
 export const GAUNTLET_HAZARDS: GauntletHazard[] = [
-  { name: 'The Flooding Chamber', hazard: 'water rises one foot per round', escape: 'find and wrench open the drain gate', omen: 'beneath the churn, water gurgles somewhere low — something down there is swallowing it', skills: ['Athletics', 'Investigation'] },
-  { name: 'The Shrinking Walls', hazard: 'the walls grind inward a pace every round, the ceiling following close behind', escape: 'jam the grinding gears with anything rigid enough to hold', omen: 'the grinding is not smooth — somewhere in the wall, gears catch and complain', skills: ['Athletics', 'Perception', 'Investigation'] },
-  { name: 'The Gas Vault', hazard: 'a hissing vent fills the room with sickly green vapor, thicker with every round', escape: 'seal the vent and force the door before the air turns fatal', omen: 'the vapor pours thickest from a single hissing vent near the floor', skills: ['Constitution', 'Investigation'] },
-  { name: 'The Freezing Vault', hazard: 'the air bites colder every round as frost creeps up the walls and seals the seams', escape: 'light the brazier chain before the frost welds the exit shut', omen: 'along one wall, a chain of cold braziers stands waiting, wicks still tarred', skills: ['Constitution', 'Survival', 'Sleight of Hand'] },
-  { name: 'The Gravity Well', hazard: 'the pull shifts a quarter-turn each round, dragging loose gear and footing with it', escape: 'reach the anchor stone and brace it before the room fully inverts', omen: 'one block of the floor never shifts — a single stone the pull cannot touch', skills: ['Acrobatics', 'Athletics'] },
-  { name: 'The Sand Cascade', hazard: 'sand pours from cracks in the ceiling, burying the floor a little deeper each round', escape: 'clear the sluice grate before the chamber fills to the rafters', omen: 'beneath the pouring sand, something metal rattles — a grate, half-buried', skills: ['Athletics', 'Investigation'] },
-  { name: 'The Pendulum Hall', hazard: 'a bank of scythed pendulums swings lower and faster with every round', escape: 'time a dash to the far lever and haul it before being caught mid-swing', omen: 'past the swinging blades, at the far end, a lever juts from the wall', skills: ['Acrobatics', 'Perception'] },
-  { name: 'The Swarm Nest', hazard: 'a broken seal releases stinging swarms that thicken with every passing round', escape: 'choke the nest opening and bar the inner door', omen: 'the swarms boil out of one cracked seam above the inner door', skills: ['Athletics', 'Survival', 'Sleight of Hand'] },
-  { name: 'The Collapsing Floor', hazard: 'flagstones crack and drop away, the safe footing shrinking round by round', escape: 'reach the support pillar and jam it before the floor gives out entirely', omen: 'the flagstones nearest the central pillar have not cracked — not one', skills: ['Acrobatics', 'Athletics'] },
-  { name: 'The Rising Current', hazard: 'a live current runs through the rising water, growing stronger and colder each round', escape: 'rope off to the anchor ring and crank the sluice shut', omen: 'an iron ring is set into the wall above the waterline, rope-worn smooth', skills: ['Athletics', 'Investigation'] },
-  { name: 'The Furnace Room', hazard: 'the walls glow hotter each round as unseen bellows stoke a hidden furnace beneath the floor', escape: 'douse the furnace core before the room turns to a kiln', omen: 'heat breathes up through a grate in the floor, in rhythm, like a bellows', skills: ['Constitution', 'Investigation'] },
-  { name: 'The Spike Floor', hazard: 'iron spikes punch up through more of the floor with every round, the safe path narrowing', escape: 'reach the control plinth and reverse the mechanism', omen: 'on a raised plinth across the hall, something clicks in time with the spikes', skills: ['Acrobatics', 'Perception'] },
+  { name: 'The Flooding Chamber', hazard: 'water rises one foot per round', felt: 'the flood climbs the walls faster than a held breath', escape: 'find and wrench open the drain gate', omen: 'beneath the churn, water gurgles somewhere low — something down there is swallowing it', skills: ['Athletics', 'Investigation'] },
+  { name: 'The Shrinking Walls', hazard: 'the walls grind inward a pace every round, the ceiling following close behind', felt: 'both walls creep inward with a low stone growl, the ceiling stooping to follow', escape: 'jam the grinding gears with anything rigid enough to hold', omen: 'the grinding is not smooth — somewhere in the wall, gears catch and complain', skills: ['Athletics', 'Perception', 'Investigation'] },
+  { name: 'The Gas Vault', hazard: 'a hissing vent fills the room with sickly green vapor, thicker with every round', felt: 'a sickly green haze crowds the air, searing eyes and throat', escape: 'seal the vent and force the door before the air turns fatal', omen: 'the vapor pours thickest from a single hissing vent near the floor', skills: ['Constitution', 'Investigation'] },
+  { name: 'The Freezing Vault', hazard: 'the air bites colder every round as frost creeps up the walls and seals the seams', felt: 'frost crawls up the walls and each breath burns worse than the last', escape: 'light the brazier chain before the frost welds the exit shut', omen: 'along one wall, a chain of cold braziers stands waiting, wicks still tarred', skills: ['Constitution', 'Survival', 'Sleight of Hand'] },
+  { name: 'The Gravity Well', hazard: 'the pull shifts a quarter-turn each round, dragging loose gear and footing with it', felt: 'the world tips further and further sideways, dragging loose gear and boots with it', escape: 'reach the anchor stone and brace it before the room fully inverts', omen: 'one block of the floor never shifts — a single stone the pull cannot touch', skills: ['Acrobatics', 'Athletics'] },
+  { name: 'The Sand Cascade', hazard: 'sand pours from cracks in the ceiling, burying the floor a little deeper each round', felt: 'the ceiling sifts itself onto your boots, dry and endless, swallowing the floor by inches', escape: 'clear the sluice grate before the chamber fills to the rafters', omen: 'beneath the pouring sand, something metal rattles — a grate, half-buried', skills: ['Athletics', 'Investigation'] },
+  { name: 'The Pendulum Hall', hazard: 'a bank of scythed pendulums swings lower and faster with every round', felt: 'scythes sweep the air in quickening arcs, each pass lower than the last', escape: 'time a dash to the far lever and haul it before being caught mid-swing', omen: 'past the swinging blades, at the far end, a lever juts from the wall', skills: ['Acrobatics', 'Perception'] },
+  { name: 'The Swarm Nest', hazard: 'a broken seal releases stinging swarms that thicken with every passing round', felt: 'stinging clouds thicken the air, crawling into collar and cuff', escape: 'choke the nest opening and bar the inner door', omen: 'the swarms boil out of one cracked seam above the inner door', skills: ['Athletics', 'Survival', 'Sleight of Hand'] },
+  { name: 'The Collapsing Floor', hazard: 'flagstones crack and drop away, the safe footing shrinking round by round', felt: 'the floor sheds itself into the dark below, safe footing shrinking by the heartbeat', escape: 'reach the support pillar and jam it before the floor gives out entirely', omen: 'the flagstones nearest the central pillar have not cracked — not one', skills: ['Acrobatics', 'Athletics'] },
+  { name: 'The Rising Current', hazard: 'a live current runs through the rising water, growing stronger and colder each round', felt: 'the rising water carries a lightning sting that grows crueler as it climbs', escape: 'rope off to the anchor ring and crank the sluice shut', omen: 'an iron ring is set into the wall above the waterline, rope-worn smooth', skills: ['Athletics', 'Investigation'] },
+  { name: 'The Furnace Room', hazard: 'the walls glow hotter each round as unseen bellows stoke a hidden furnace beneath the floor', felt: 'the walls glow ember-red and the air shimmers, hotter by the minute', escape: 'douse the furnace core before the room turns to a kiln', omen: 'heat breathes up through a grate in the floor, in rhythm, like a bellows', skills: ['Constitution', 'Investigation'] },
+  { name: 'The Spike Floor', hazard: 'iron spikes punch up through more of the floor with every round, the safe path narrowing', felt: 'iron points punch up through the flagstones, more of them with every breath', escape: 'reach the control plinth and reverse the mechanism', omen: 'on a raised plinth across the hall, something clicks in time with the spikes', skills: ['Acrobatics', 'Perception'] },
 ];
 
 // ─── PR 2: Challenge Framework Pools ─────────────────────────────────

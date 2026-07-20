@@ -379,4 +379,45 @@ describe('contests & gauntlets', () => {
       expect(h.omen, h.name).not.toMatch(/\b(Athletics|Acrobatics|Investigation|Perception|Survival|Constitution)\b/);
     }
   });
+  it('every hazard has a felt line — the hazard as experienced, no mechanics cadence (#136)', () => {
+    for (const h of GAUNTLET_HAZARDS) {
+      expect(h.felt, h.name).toBeTruthy();
+      expect(h.felt, h.name).not.toMatch(/\bDC\b|\d+d\d+/);
+      expect(h.felt[0], h.name).toBe(h.felt[0].toLowerCase());
+      expect(h.felt.endsWith('.'), h.name).toBe(false);
+      expect(h.felt, h.name).not.toMatch(/\b(per|each|every) round\b/i);
+      expect(h.felt, h.name).not.toMatch(/\b(Athletics|Acrobatics|Investigation|Perception|Survival|Constitution)\b/);
+    }
+  });
+  it('felt and omen share no content words — the handout must not stutter (#136)', () => {
+    const STOP = new Set([
+      'the', 'and', 'with', 'that', 'than', 'then', 'this', 'from', 'into', 'onto',
+      'your', 'over', 'under', 'they', 'them', 'their', 'does', 'have', 'been',
+      'were', 'until', 'till', 'each', 'every', 'more', 'when', 'where', 'what',
+      'like', 'still', 'down', 'there', 'here', 'only', 'very',
+    ]);
+    const content = (s: string) =>
+      new Set((s.toLowerCase().match(/[a-z]+/g) ?? []).filter(w => w.length >= 4 && !STOP.has(w)));
+    for (const h of GAUNTLET_HAZARDS) {
+      const felt = content(h.felt);
+      const shared = [...content(h.omen)].filter(w => felt.has(w));
+      expect(shared, `${h.name}: felt/omen repeat ${shared.join(', ')}`).toEqual([]);
+    }
+  });
+  it('player surfaces speak in scene voice, not the DM brief\'s mechanics cadence (#136)', () => {
+    for (const seed of [4, 11, 209580]) {
+      const out = gauntlets.generate({ levers: mkLevers('Hard', seed, { timeBudget: 'set-piece' }), rng: seededRandom(seed) });
+      const first = GAUNTLET_HAZARDS.filter(h => out.dmBrief.includes(h.name))
+        .sort((a, b) => out.dmBrief.indexOf(a.name) - out.dmBrief.indexOf(b.name))[0];
+      // readAloud describes the hazard via `felt`, not the DM's hazard string:
+      expect(out.readAloud).toContain(first.felt);
+      expect(out.readAloud).not.toContain(first.hazard);
+      // the scratched warning quotes the victim's experience too:
+      const body = out.handout?.kind === 'text' ? out.handout.body : '';
+      expect(body).toContain(first.felt.slice(1));
+      expect(body).not.toContain(first.hazard);
+      // DM brief keeps the mechanical hazard line untouched:
+      expect(out.dmBrief).toContain(first.hazard);
+    }
+  });
 });

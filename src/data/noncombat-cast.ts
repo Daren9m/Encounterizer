@@ -18,19 +18,19 @@ export interface Leverage {
 // ─── Personas ───────────────────────────────────────────────────────
 export const PERSONAS: Persona[] = [
   { archetype: 'a guild clerk drowning in ledgers', quirk: 'stacks and restacks papers when nervous', speech: 'answers questions with smaller questions' },
-  { archetype: 'a retired sell-sword turned innkeep', quirk: 'polishes the same tankard throughout', speech: 'short sentences, long pauses' },
+  { archetype: 'a retired sell-sword turned innkeep', quirk: 'polishes the same tankard throughout', speech: 'doles out short sentences between long pauses' },
   { archetype: 'a temple acolyte assigned to watch the visitors', quirk: 'touches the holy symbol before every lie', speech: 'quotes scripture that never quite fits' },
   { archetype: 'a caravan master counting losses', quirk: 'taps a tally stick against their palm', speech: 'talks in freight weights and travel days' },
-  { archetype: "a minor noble's steward doing the noble's real work", quirk: 'straightens whatever is nearest before speaking', speech: 'formal to the point of stiffness, until provoked' },
-  { archetype: 'a midwife who has delivered half the district', quirk: 'sizes up strangers like she is checking for a fever', speech: 'blunt, and unbothered by rank' },
+  { archetype: "a minor noble's steward doing the noble's real work", quirk: 'straightens whatever is nearest before speaking', speech: 'stays formal to the point of stiffness, until provoked' },
+  { archetype: 'a midwife who has delivered half the district', quirk: 'sizes up strangers like she is checking for a fever', speech: 'talks bluntly, unbothered by rank' },
   { archetype: 'a river ferryman who has seen every kind of passenger', quirk: 'spits over the rail before naming a price', speech: 'trades in questions that are really answers' },
   { archetype: 'a disgraced hedge-mage scraping by on charms', quirk: 'mutters the end of every sentence twice', speech: 'over-explains the harmless magic and dodges the rest' },
   { archetype: 'a town crier who knows more than the news he shouts', quirk: 'clears his throat before anything true', speech: 'performs even private conversations' },
   { archetype: 'a mercenary captain between contracts', quirk: 'counts exits in any room within a breath of entering', speech: 'names a price for everything, including advice' },
-  { archetype: 'a widowed innfolk running the family trade alone', quirk: 'wipes hands on an apron that is never actually dirty', speech: 'warm until money or the dead come up' },
-  { archetype: "a gatehouse sergeant tired of being no one's priority", quirk: 'rolls a shoulder that never quite healed right', speech: 'clipped orders even when making requests' },
+  { archetype: 'a widowed innfolk running the family trade alone', quirk: 'wipes hands on an apron that is never actually dirty', speech: 'stays warm until money or the dead come up' },
+  { archetype: "a gatehouse sergeant tired of being no one's priority", quirk: 'rolls a shoulder that never quite healed right', speech: 'gives clipped orders even when making requests' },
   { archetype: 'a traveling relic-appraiser with a magnifying loupe on a chain', quirk: 'squints at anything shiny, mid-sentence', speech: 'prices things aloud without meaning to' },
-  { archetype: 'a shrine keeper tending a god whose worship has thinned', quirk: 'lights a candle for every visitor, believer or not', speech: 'gentle, but circles back to the same worry' },
+  { archetype: 'a shrine keeper tending a god whose worship has thinned', quirk: 'lights a candle for every visitor, believer or not', speech: 'speaks gently, but circles back to the same worry' },
 ];
 
 // ─── Wants ──────────────────────────────────────────────────────────
