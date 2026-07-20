@@ -47,6 +47,7 @@ const PINNED: Array<{ label: string; options: MapOptions; hash: string }> = [
   { label: 'city streets (Urban auto)', options: { environment: 'Urban', seed: 42 }, hash: '603b8fad' },
   { label: 'scale mode with jitter', options: { environment: 'Forest', seed: 4242, scale: 'Large' }, hash: 'c56351b4' },
   { label: 'massive city', options: { environment: 'Urban', layout: 'city', seed: 11, scale: 'Massive' }, hash: 'f1c3fa1b' },
+  { label: 'building interior', options: { environment: 'Urban', layout: 'building', seed: 42, scale: 'Standard' }, hash: '876b124e' },
 ];
 
 describe('grid stream freeze', () => {

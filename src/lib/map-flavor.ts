@@ -15,7 +15,7 @@ import type { Environment, MapRoom, MapRoomTag } from './types';
 
 export const FLAVOR_STREAM_SALT = 0x466c6176; // 'Flav'
 
-export type MapStructure = 'dungeon' | 'cave' | 'outdoor' | 'city';
+export type MapStructure = 'dungeon' | 'cave' | 'outdoor' | 'city' | 'building';
 
 interface RoomArchetype {
   name: string;
@@ -97,6 +97,33 @@ const OUTDOOR_LANDMARK: RoomArchetype[] = [
   { name: 'Broken Ground', purpose: 'A knot of obstacles mid-field: cover, concealment, and places a body can lie unseen until stepped on.' },
   { name: 'Standing Stones', purpose: 'Old markers nobody remembers raising, for a purpose nobody wrote down. The fight will bend around them. It may not be the first.' },
   { name: 'Ruined Waypost', purpose: 'A collapsed structure with one good wall left. Everyone will want it. Someone may already have it.' },
+];
+
+const BUILDING_ENTRANCE: RoomArchetype[] = [
+  { name: 'Front Hall', purpose: 'The threshold. Coats still on their hooks, boots still paired by the door. Nobody left in a planned way.' },
+  { name: 'Foyer', purpose: 'Where guests were received, when there were guests. The welcome lamp burned itself out untended.' },
+  { name: 'Shopfront', purpose: 'The public face of the house. The till is untouched, which rules out every comfortable explanation.' },
+];
+
+const BUILDING_BOSS: RoomArchetype[] = [
+  { name: "Master's Study", purpose: 'The private room at the back, where the decisions were made. The last one is still on the desk, unsigned.' },
+  { name: 'Great Hearth Room', purpose: 'The warm heart of the house. The fire is banked, recent, and larger than any cooking needs.' },
+  { name: 'Counting Room', purpose: 'Locks on the inside of the door. Whatever was worth counting in here was worth dying over.' },
+];
+
+const BUILDING_ROOMS: RoomArchetype[] = [
+  { name: 'Kitchen', purpose: 'A meal was in progress. The knives are all accounted for except one.' },
+  { name: 'Pantry', purpose: 'Shelves stocked for a season. Something has been eating from the bottom shelves, low to the floor.' },
+  { name: 'Dining Room', purpose: 'The table is set for more people than could live here comfortably.' },
+  { name: 'Bedchamber', purpose: 'The bed is made. The window latch is broken from the outside.' },
+  { name: 'Study', purpose: 'Books and correspondence. The most-thumbed volume is not on any respectable shelf list.' },
+  { name: 'Workshop', purpose: 'Half-finished work clamped to the bench. The craftsman meant to come back within the hour.' },
+  { name: "Servant's Quarters", purpose: 'Narrow beds and a shared chest. The servants kept a bar for their side of the door.' },
+  { name: 'Parlor', purpose: 'The good furniture, kept for visitors. The dust says the last visitor stayed a very long time.' },
+  { name: 'Storage Room', purpose: 'Crates and cast-offs. One crate is nailed shut from a direction that makes no sense.' },
+  { name: 'Wash Room', purpose: 'Basins and linens. The drain gurgles at intervals no plumbing explains.' },
+  { name: 'Larder', purpose: 'Cool and dark, hooks in the beams. Not all the hanging shapes are hams.' },
+  { name: 'Chapel Niche', purpose: 'A household shrine, recently rededicated. The old icon is face-down in the corner.' },
 ];
 
 const CITY_APPROACH: RoomArchetype[] = [
@@ -225,6 +252,11 @@ function archetypeFor(
     if (hasTag(room, 'spawn:monster')) return pick(CITY_OPPOSITION, rng);
     return pick(CITY_LANDMARK, rng);
   }
+  if (structure === 'building') {
+    if (hasTag(room, 'entrance')) return pick(BUILDING_ENTRANCE, rng);
+    if (hasTag(room, 'boss')) return pick(BUILDING_BOSS, rng);
+    return genericQueue.shift() ?? pick(BUILDING_ROOMS, rng);
+  }
   if (structure === 'outdoor' || room.kind === 'zone') {
     if (hasTag(room, 'hazard')) return pick(RIVER_LANDMARK, rng);
     if (hasTag(room, 'spawn:party')) return pick(OUTDOOR_APPROACH, rng);
@@ -265,7 +297,9 @@ export function flavorRooms(
   rng: Rng,
 ): void {
   const env = ENV_FLAVOR[environment] ?? FALLBACK_FLAVOR;
-  const genericPool = structure === 'cave' ? CAVE_CHAMBERS : DUNGEON_ROOMS;
+  const genericPool = structure === 'cave' ? CAVE_CHAMBERS
+    : structure === 'building' ? BUILDING_ROOMS
+      : DUNGEON_ROOMS;
   const genericQueue = shuffleArray(genericPool, rng);
 
   for (const room of rooms) {
