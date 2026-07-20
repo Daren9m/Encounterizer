@@ -4,7 +4,8 @@
 A D&D 5.5e (2024 rules) toolkit for Dungeon Masters: encounter building with
 2024 XP budgets, a Monte Carlo Battle Forecast, an SRD 5.2.1 bestiary with
 client-side custom imports, a map generator, a unified non-combat generator
-(puzzles & challenges), and a spell reference. Built with Next.js 16 (App
+(puzzles & challenges), a live DM screen and battle organizer, a searchable
+SRD rules reference, and a spell reference. Built with Next.js 16 (App
 Router, **static export**), TypeScript strict, and Tailwind CSS. Deployed to
 Azure Static Web Apps free tier.
 
@@ -12,11 +13,13 @@ Azure Static Web Apps free tier.
 - **Static export** — `output: 'export'` in next.config.js. **No server
   code**: API routes and middleware are forbidden; everything runs in the
   browser.
-- **Five tool pages** (`'use client'`): `encounters` (builder + Battle
-  Forecast), `monsters` (bestiary + custom import), `maps`, `noncombat`
+- **Eight tool pages**: `encounters` (builder + Battle Forecast), `monsters`
+  (bestiary + custom import), `maps`, `noncombat`
   (unified puzzles & challenges — 12 verified puzzle families + 6 challenge
   frameworks behind one seeded orchestrator in `src/lib/noncombat/generate.ts`),
-  `spells`. Per-page metadata lives in each route's `layout.tsx`. Plus
+  `dm-screen`, `battle`, `reference` (SRD rules and conditions), and `spells`.
+  Navigation groups them as Prep, Run, and Reference; `TOOL_SECTIONS` in
+  `src/lib/site.ts` is the topology source of truth. Per-page metadata lives in each route's `layout.tsx`. Plus
   server-rendered `/` and `/credits`.
 - **Pure engine layer** — `src/lib/` functions have no side effects (no DOM,
   storage, or network). Browser concerns (localStorage, FileReader) live in
@@ -52,8 +55,8 @@ Azure Static Web Apps free tier.
 - `src/app/hooks/useMonsters.ts` — the single merge point for built-in +
   custom monsters; every monster consumer reads from it. `useSpells.ts` is
   the spell equivalent.
-- `src/lib/site.ts` — site URL, route list, per-route copy (nav, sitemap,
-  homepage, and metadata all derive from it).
+- `src/lib/site.ts` — site URL, section topology, flattened route list, and
+  per-route copy (nav, sitemap, homepage, footer, and metadata derive from it).
 
 ## Rules
 - Use 5.5e / 2024 rules. Encounter difficulty is Low/Moderate/High

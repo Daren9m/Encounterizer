@@ -7,8 +7,8 @@
 
 A free D&D 5.5e (2024 rules) toolkit for Dungeon Masters: build balanced
 encounters, forecast the battle before your party rolls initiative, and run
-the whole session — monsters, maps, puzzles, challenges, and spells in one
-place. No accounts, no server, no cost. Everything runs in your browser.
+the whole session — prep tools, live battle support, and searchable SRD rules
+in one place. No accounts, no server, no cost. Everything runs in your browser.
 
 > **Live site:** coming soon on Azure Static Web Apps — see
 > [Deployment](#deployment).
@@ -39,6 +39,12 @@ place. No accounts, no server, no cost. Everything runs in your browser.
   dungeons, cellular-automata caves, and environment-specific outdoor
   terrain. Export as JSON or ASCII.
 - **🧩 Puzzles & Challenges** — One seeded generator: verified logic/word/spatial puzzles, riddles, ciphers, contests, plus social encounters, journeys, traps, chases, and investigations.
+- **🛡️ DM Screen** — Build a private command screen from monsters, spells,
+  rules, notes, tool links, and a compact live battle tracker.
+- **⚔️ Battle Organizer** — Sort initiative and track HP, conditions,
+  concentration, reactions, legendary actions, rounds, and turn flow.
+- **📖 DM Reference** — Search, expand, print, or export 33 concise SRD 5.2.1
+  references covering checks, conditions, combat, recovery, movement, and sight.
 - **✨ Spell Reference** — **All 339 spells from the SRD 5.2.1** (levels
   0–9, verbatim 2024 rules text) with instant search, mechanics-first
   summaries, filters for level/school/class/concentration/ritual, and
@@ -72,6 +78,9 @@ src/
     monsters/                # Bestiary + custom monster import
     maps/                    # Map Generator
     noncombat/               # Puzzles & Challenges
+    dm-screen/               # Configurable DM command screen
+    battle/                  # Live initiative and combat organizer
+    reference/               # Searchable rules and conditions
     spells/                  # Spell Reference
     credits/                 # SRD attribution + licensing
     icon.svg, opengraph-image.png, robots.ts, sitemap.ts
