@@ -1,3 +1,4 @@
+import { DEFAULT_PARTY_TEMPLATE_ROTATION } from '@/data/class-templates';
 import {
   createPartyId,
   isPartyLibrary,
@@ -21,6 +22,7 @@ export type PartyDomainErrorCode =
   | 'duplicate-member-id'
   | 'invalid-name'
   | 'invalid-level'
+  | 'invalid-member-count'
   | 'invalid-position'
   | 'invalid-member'
   | 'id-allocation-failed';
@@ -43,6 +45,14 @@ export interface PartyOperationOptions {
 export interface CreatePartyInput {
   name: string;
   members: readonly NewPartyMemberInput[];
+}
+
+export const STARTER_MEMBER_COUNT_MIN = 1;
+export const STARTER_MEMBER_COUNT_MAX = 10;
+
+export interface StarterPartyMembersInput {
+  memberCount: number;
+  level: number;
 }
 
 function assertLibrary(library: PartyLibrary): void {
@@ -72,6 +82,33 @@ function checkedLevel(level: number): number {
     throw new PartyDomainError('invalid-level', 'Party member levels must be whole numbers from 1 to 20.');
   }
   return level;
+}
+
+/**
+ * Materialize an editable quick-start roster without storing a second party-size value.
+ * Suggested class estimates match the encounter defaults and remain immediately editable.
+ */
+export function buildStarterPartyMembers({
+  memberCount,
+  level,
+}: StarterPartyMembersInput): NewPartyMemberInput[] {
+  if (
+    !Number.isInteger(memberCount)
+    || memberCount < STARTER_MEMBER_COUNT_MIN
+    || memberCount > STARTER_MEMBER_COUNT_MAX
+  ) {
+    throw new PartyDomainError(
+      'invalid-member-count',
+      `Starter party size must be a whole number from ${STARTER_MEMBER_COUNT_MIN} to ${STARTER_MEMBER_COUNT_MAX}.`,
+    );
+  }
+
+  const normalizedLevel = checkedLevel(level);
+  return Array.from({ length: memberCount }, (_, index) => ({
+    name: `Hero ${index + 1}`,
+    templateId: DEFAULT_PARTY_TEMPLATE_ROTATION[index % DEFAULT_PARTY_TEMPLATE_ROTATION.length],
+    level: normalizedLevel,
+  }));
 }
 
 function operationTime(now: number | undefined, party?: PartyProfile): number {

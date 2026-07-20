@@ -36,7 +36,10 @@ import {
 } from '@/lib/party-backup';
 import {
   archiveParty,
+  buildStarterPartyMembers,
   createParty,
+  STARTER_MEMBER_COUNT_MAX,
+  STARTER_MEMBER_COUNT_MIN,
   deleteArchivedParty,
   duplicateParty,
   renameParty,
@@ -49,7 +52,6 @@ import {
 import {
   createPartyId,
   getActiveParty,
-  type NewPartyMemberInput,
   type PartyLibrary,
   type PartyMemberDraft,
   type PartyMemberProfile,
@@ -58,7 +60,10 @@ import {
 import PartyMemberEditor from '@/components/PartyMemberEditor';
 import PartyPersistenceStatus from '@/components/PartyPersistenceStatus';
 
-type StarterKind = 'balanced' | 'empty';
+type StarterKind = 'quick' | 'empty';
+type PartyStarterSelection =
+  | { kind: 'quick'; memberCount: number; level: number }
+  | { kind: 'empty' };
 type EditorMode = 'add' | 'edit' | 'import';
 
 interface EditorState {
@@ -75,15 +80,6 @@ interface EditorState {
 interface BackupCandidate {
   fileName: string;
   parsed: Extract<PartyBackupParseResult, { ok: true }>;
-}
-
-function balancedStarter(level: number): NewPartyMemberInput[] {
-  return [
-    { name: 'Player 1', templateId: 'fighter-champion', level },
-    { name: 'Player 2', templateId: 'cleric-life', level },
-    { name: 'Player 3', templateId: 'rogue-thief', level },
-    { name: 'Player 4', templateId: 'wizard-evoker', level },
-  ];
 }
 
 function cloneMemberDraft(member: PartyMemberDraft): PartyMemberDraft {
@@ -523,7 +519,7 @@ export default function PartyManager() {
           <div className="content-panel mx-4 mt-4 sm:mx-5">
             <h3 className="text-xl">Create your first reusable party</h3>
             <p className="mt-1 text-sm text-[var(--text-2)]">
-              Start with a balanced four-hero roster, then personalize only what matters at your table.
+              Choose how many characters are at this table, then personalize the roster.
             </p>
           </div>
         )}
@@ -576,10 +572,12 @@ export default function PartyManager() {
               setShowCreate(false);
               focusById('party-new-trigger');
             }}
-            onCreate={async (name, level, starter) => {
+            onCreate={async (name, starter) => {
               const saved = await commit((current) => createParty(current, {
                 name,
-                members: starter === 'balanced' ? balancedStarter(level) : [],
+                members: starter.kind === 'quick'
+                  ? buildStarterPartyMembers(starter)
+                  : [],
               }));
               if (saved) {
                 setShowCreate(false);
@@ -781,44 +779,70 @@ function CreatePartyPanel({
   canCancel: boolean;
   saving: boolean;
   onCancel: () => void;
-  onCreate: (name: string, level: number, starter: StarterKind) => Promise<boolean>;
+  onCreate: (name: string, starter: PartyStarterSelection) => Promise<boolean>;
 }) {
   const [name, setName] = useState('Adventuring Party');
+  const [memberCount, setMemberCount] = useState('4');
   const [level, setLevel] = useState('3');
-  const [starter, setStarter] = useState<StarterKind>('balanced');
+  const [starter, setStarter] = useState<StarterKind>('quick');
   const [nameError, setNameError] = useState('');
+  const [memberCountError, setMemberCountError] = useState('');
   const [levelError, setLevelError] = useState('');
+
+  const memberCountValidation = validateBoundedIntegerInput(
+    memberCount,
+    'Party size',
+    STARTER_MEMBER_COUNT_MIN,
+    STARTER_MEMBER_COUNT_MAX,
+  );
+  const levelValidation = validateBoundedIntegerInput(level, 'Starting level', 1, 20);
 
   async function submit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     const normalized = name.trim();
-    const levelValidation = validateBoundedIntegerInput(level, 'Starting level', 1, 20);
     const nextNameError = normalized && normalized.length <= 120
       ? ''
       : 'Party name must contain between 1 and 120 characters.';
     setNameError(nextNameError);
-    setLevelError(levelValidation.error ?? '');
+    setMemberCountError(starter === 'quick' ? memberCountValidation.error ?? '' : '');
+    setLevelError(starter === 'quick' ? levelValidation.error ?? '' : '');
     if (nextNameError) {
       document.getElementById('new-party-name')?.focus();
+      return;
+    }
+    if (starter === 'empty') {
+      await onCreate(normalized, { kind: 'empty' });
+      return;
+    }
+    if (memberCountValidation.value === null) {
+      document.getElementById('new-party-size')?.focus();
       return;
     }
     if (levelValidation.value === null) {
       document.getElementById('new-party-level')?.focus();
       return;
     }
-    await onCreate(normalized, levelValidation.value, starter);
+    await onCreate(normalized, {
+      kind: 'quick',
+      memberCount: memberCountValidation.value,
+      level: levelValidation.value,
+    });
   }
 
   return (
-    <form className="content-panel mx-4 mt-4 sm:mx-5" onSubmit={(event) => void submit(event)}>
+    <form
+      className="content-panel mx-4 mt-4 sm:mx-5"
+      noValidate
+      onSubmit={(event) => void submit(event)}
+    >
       <div className="content-panel-heading">
         <div>
           <p className="micro-label">New party</p>
-          <h3 className="mt-1 text-xl">Start useful, then personalize</h3>
-          <p>A balanced starter takes one click. An empty party leaves every roster choice to you.</p>
+          <h3 className="mt-1 text-xl">Set the party basics</h3>
+          <p>Name the group, then choose how much of the roster to prepare now.</p>
         </div>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div>
         <div>
           <label htmlFor="new-party-name" className="field-label">Party name</label>
           <input
@@ -834,57 +858,93 @@ function CreatePartyPanel({
           />
           {nameError && <p id="new-party-name-error" className="field-error" role="alert">{nameError}</p>}
         </div>
-        <div>
-          <label htmlFor="new-party-level" className="field-label">Starting level</label>
-          <input
-            id="new-party-level"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={20}
-            value={level}
-            aria-invalid={levelError ? true : undefined}
-            aria-describedby={levelError ? 'new-party-level-error' : 'new-party-level-hint'}
-            onChange={(event) => {
-              setLevel(event.target.value);
-              setLevelError('');
-            }}
-          />
-          {levelError
-            ? <p id="new-party-level-error" className="field-error" role="alert">{levelError}</p>
-            : <p id="new-party-level-hint" className="field-hint">You can keep mixed levels later.</p>}
-        </div>
       </div>
       <fieldset className="mt-4">
         <legend className="field-label">Starting roster</legend>
         <div className="grid gap-2 sm:grid-cols-2">
           <button
             type="button"
-            className={`selection-card min-h-24 ${starter === 'balanced' ? 'border-[var(--bronze)] bg-[var(--bronze-wash)]' : ''}`}
-            aria-pressed={starter === 'balanced'}
-            onClick={() => setStarter('balanced')}
+            className={`selection-card min-h-24 ${starter === 'quick' ? 'border-[var(--bronze)] bg-[var(--bronze-wash)]' : ''}`}
+            aria-pressed={starter === 'quick'}
+            onClick={() => setStarter('quick')}
           >
-            <strong className="block text-sm text-[var(--text-1)]">Balanced four-hero party</strong>
-            <span className="mt-1 block text-xs leading-relaxed text-[var(--text-3)]">Fighter, cleric, rogue, and wizard. Recommended.</span>
+            <strong className="block text-sm text-[var(--text-1)]">Quick editable roster</strong>
+            <span className="mt-1 block text-xs leading-relaxed text-[var(--text-3)]">Create the right number of slots with fighter, cleric, rogue, and wizard estimates in rotation. Change every one in step 2.</span>
           </button>
           <button
             type="button"
             className={`selection-card min-h-24 ${starter === 'empty' ? 'border-[var(--bronze)] bg-[var(--bronze-wash)]' : ''}`}
             aria-pressed={starter === 'empty'}
-            onClick={() => setStarter('empty')}
+            onClick={() => {
+              setStarter('empty');
+              setMemberCountError('');
+              setLevelError('');
+            }}
           >
-            <strong className="block text-sm text-[var(--text-1)]">Empty party</strong>
-            <span className="mt-1 block text-xs leading-relaxed text-[var(--text-3)]">Begin with a name and add each hero yourself.</span>
+            <strong className="block text-sm text-[var(--text-1)]">Start empty</strong>
+            <span className="mt-1 block text-xs leading-relaxed text-[var(--text-3)]">Create only the party, then add or import characters one at a time.</span>
           </button>
         </div>
       </fieldset>
+      {starter === 'quick' && (
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div>
+            <label htmlFor="new-party-size" className="field-label">Party size</label>
+            <input
+              id="new-party-size"
+              type="number"
+              inputMode="numeric"
+              min={STARTER_MEMBER_COUNT_MIN}
+              max={STARTER_MEMBER_COUNT_MAX}
+              step={1}
+              value={memberCount}
+              aria-invalid={memberCountError ? true : undefined}
+              aria-describedby={memberCountError ? 'new-party-size-error' : 'new-party-size-hint'}
+              onChange={(event) => {
+                setMemberCount(event.target.value);
+                setMemberCountError('');
+              }}
+            />
+            {memberCountError
+              ? <p id="new-party-size-error" className="field-error" role="alert">{memberCountError}</p>
+              : <p id="new-party-size-hint" className="field-hint">1–10 characters for quick setup. You can add more later.</p>}
+          </div>
+          <div>
+            <label htmlFor="new-party-level" className="field-label">Starting level</label>
+            <input
+              id="new-party-level"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={20}
+              step={1}
+              value={level}
+              aria-invalid={levelError ? true : undefined}
+              aria-describedby={levelError ? 'new-party-level-error' : 'new-party-level-hint'}
+              onChange={(event) => {
+                setLevel(event.target.value);
+                setLevelError('');
+              }}
+            />
+            {levelError
+              ? <p id="new-party-level-error" className="field-error" role="alert">{levelError}</p>
+              : <p id="new-party-level-hint" className="field-hint">Use one level now; mixed levels remain editable.</p>}
+          </div>
+        </div>
+      )}
       <footer className="workflow-action-bar -mx-4 -mb-4">
         <div className="workflow-primary-action">
           <button type="submit" className="btn-primary w-full sm:w-auto" disabled={saving}>
             <Users size={17} aria-hidden="true" />
             Create party
           </button>
-          <p>{starter === 'balanced' ? 'Creates four editable heroes.' : 'Creates an empty reusable party.'}</p>
+          <p>
+            {starter === 'quick'
+              ? memberCountValidation.value !== null && levelValidation.value !== null
+                ? `Creates ${memberCountValidation.value} editable ${memberCountValidation.value === 1 ? 'hero' : 'heroes'} at level ${levelValidation.value}.`
+                : 'Enter a valid party size and starting level to continue.'
+              : 'Creates an empty reusable party.'}
+          </p>
         </div>
         {canCancel && <button type="button" className="btn-ghost" disabled={saving} onClick={onCancel}>Cancel</button>}
       </footer>
