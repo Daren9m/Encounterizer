@@ -39,7 +39,7 @@ import {
   type DmScreenSection,
   type DmScreenState,
 } from '@/lib/dm-screen';
-import { DM_SCREEN_TOOL_ROUTES } from '@/lib/site';
+import { DM_SCREEN_DEFAULT_TOOL_PATH, DM_SCREEN_TOOL_ROUTES } from '@/lib/site';
 import type { Monster } from '@/lib/types';
 import { usePersistentState } from '@/lib/use-persistent-state';
 
@@ -78,7 +78,7 @@ export default function DmScreenPage() {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [resourceQuery, setResourceQuery] = useState('');
-  const [toolPath, setToolPath] = useState(DM_SCREEN_TOOL_ROUTES[0].path);
+  const [toolPath, setToolPath] = useState<string>(DM_SCREEN_DEFAULT_TOOL_PATH);
   const selectedTargetSectionId = sectionOptions.some((section) => section.id === targetSectionId)
     ? targetSectionId
     : sectionOptions[0]?.id ?? '';

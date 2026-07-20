@@ -28,7 +28,7 @@ export default function PartyPersistenceStatus({
         </span>
         <button
           type="button"
-          className="btn-ghost min-h-8 px-2 py-1 text-xs"
+          className="btn-ghost min-h-11 px-3 py-2 text-xs"
           onClick={() => void retryPartyStorage()}
         >
           Retry
