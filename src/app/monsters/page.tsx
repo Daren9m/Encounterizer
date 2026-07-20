@@ -403,7 +403,7 @@ export default function BestiaryPage() {
                     <button
                       type="button"
                       onClick={() => togglePin(monster.id)}
-                      className={`absolute right-1.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg transition-colors ${isPinned ? 'bg-[var(--bronze)] text-[#1d1105]' : 'text-[var(--text-3)] hover:bg-[var(--steel-800)] hover:text-[var(--bronze)]'}`}
+                      className={`absolute right-1.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg transition-colors ${isPinned ? 'bg-[var(--bronze)] text-[var(--text-on-accent)]' : 'text-[var(--text-3)] hover:bg-[var(--steel-800)] hover:text-[var(--bronze)]'}`}
                       aria-label={`${isPinned ? 'Unpin' : 'Pin'} ${monster.name}`}
                       aria-pressed={isPinned}
                     >
@@ -604,7 +604,7 @@ function MonsterCard({
           </span>
         ))}
         {monster.isLegendary && (
-          <span className="text-xs bg-[var(--bronze)] text-[#1d1105] px-2 py-0.5 rounded font-bold">
+          <span className="text-xs bg-[var(--bronze)] text-[var(--text-on-accent)] px-2 py-0.5 rounded font-bold">
             Legendary
           </span>
         )}
@@ -654,7 +654,7 @@ function MonsterCard({
       <button
         type="button"
         onClick={() => onTogglePin(monster.id)}
-        className={`absolute bottom-2 right-2 inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${isPinned ? 'bg-[var(--bronze)] text-[#1d1105]' : 'bg-[var(--steel-950)] text-[var(--text-3)] hover:text-[var(--bronze)]'}`}
+        className={`absolute bottom-2 right-2 inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${isPinned ? 'bg-[var(--bronze)] text-[var(--text-on-accent)]' : 'bg-[var(--steel-950)] text-[var(--text-3)] hover:text-[var(--bronze)]'}`}
         aria-label={`${isPinned ? 'Unpin' : 'Pin'} ${monster.name}`}
         aria-pressed={isPinned}
       >
