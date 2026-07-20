@@ -31,6 +31,17 @@
   --line-strong: rgba(255, 255, 255, 0.14);
   --control-border: #616571;
 
+  /* Semantic aliases used by the shared component patterns below. */
+  --surface-panel: var(--surface-raised);
+  --surface-subtle: var(--surface-inset);
+  --surface-interactive: rgba(42, 44, 54, 0.72);
+  --border-subtle: var(--line-subtle);
+  --border-default: var(--line-strong);
+  --border-interactive: var(--control-border);
+  --radius-control: 0.625rem;
+  --radius-panel: 0.875rem;
+  --control-height: 2.75rem;
+
   /* Foreground colors paired with filled semantic/accent surfaces. */
   --text-on-accent: #211206;
   --text-on-easy: #0d1a12;
@@ -42,6 +53,12 @@
   --accent-danger: #ef8583;
   --accent-danger-light: #ffaaa7;
   --focus-ring: rgba(232, 161, 94, 0.34);
+  --status-success: #7acb9a;
+  --status-success-wash: rgba(122, 203, 154, 0.11);
+  --status-warning: #e3c567;
+  --status-warning-wash: rgba(227, 197, 103, 0.11);
+  --status-danger: #ef8583;
+  --status-danger-wash: rgba(239, 133, 131, 0.11);
 
   /* Difficulty scale (encounter Low/Moderate/High/Extreme + DC Easy/Medium/Hard) */
   --difficulty-easy: #7acb9a;
@@ -82,6 +99,7 @@ html[data-theme='light'] {
   --line-subtle: rgba(36, 33, 29, 0.1);
   --line-strong: rgba(36, 33, 29, 0.2);
   --control-border: #8f8374;
+  --surface-interactive: rgba(238, 232, 223, 0.78);
 
   --text-on-accent: #ffffff;
   --text-on-easy: #ffffff;
@@ -91,6 +109,12 @@ html[data-theme='light'] {
   --accent-danger: #a53238;
   --accent-danger-light: #84242a;
   --focus-ring: rgba(150, 81, 36, 0.3);
+  --status-success: #2f7b50;
+  --status-success-wash: rgba(47, 123, 80, 0.09);
+  --status-warning: #806b10;
+  --status-warning-wash: rgba(128, 107, 16, 0.09);
+  --status-danger: #a53238;
+  --status-danger-wash: rgba(165, 50, 56, 0.09);
   --difficulty-easy: #2f7b50;
   --difficulty-medium: #806b10;
   --difficulty-hard: #9b551d;
@@ -227,12 +251,31 @@ p {
   color: var(--bronze);
 }
 
-/* Encounter difficulty badges (2024 tiers + Extreme assessment) */
-.badge-trivial { background-color: #6f7785; color: #ffffff; font-weight: 700; }
-.badge-low { background-color: var(--difficulty-easy); color: var(--text-on-easy); font-weight: 700; }
-.badge-moderate { background-color: var(--difficulty-medium); color: var(--text-on-medium); font-weight: 700; }
-.badge-high { background-color: var(--difficulty-hard); color: var(--text-on-hard); font-weight: 700; }
-.badge-extreme { background-color: var(--difficulty-deadly); color: #ffffff; font-weight: 700; }
+/* Encounter challenge is a readout, not an action. The dot-and-label treatment
+   intentionally avoids button height, borders, hover states, and filled pills. */
+.difficulty-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--text-1);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.difficulty-status-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.difficulty-status-trivial { color: var(--text-2); }
+.difficulty-status-low { color: var(--difficulty-easy); }
+.difficulty-status-moderate { color: var(--difficulty-medium); }
+.difficulty-status-high { color: var(--difficulty-hard); }
+.difficulty-status-extreme { color: var(--status-danger); }
 
 /* Skill-check DC badges (puzzles & challenges — Easy/Medium/Hard is still
    the 2024 vocabulary for check difficulty, unlike encounter tiers) */
@@ -243,44 +286,43 @@ p {
 /* Button variants */
 .btn-primary {
   @apply inline-flex items-center justify-center gap-2 px-5 py-2 font-semibold transition-all;
-  min-height: 2.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0.75rem;
+  min-height: var(--control-height);
+  border: 1px solid color-mix(in srgb, var(--bronze) 70%, white 30%);
+  border-radius: var(--radius-control);
   background-color: var(--bronze);
   color: var(--text-on-accent);
-  box-shadow: 0 8px 24px rgba(185, 111, 48, 0.2);
+  box-shadow: 0 5px 16px rgba(185, 111, 48, 0.18);
 }
 .btn-primary:hover {
   background-color: var(--bronze-light);
-  transform: translateY(-1px);
-  box-shadow: 0 12px 30px rgba(185, 111, 48, 0.28);
+  box-shadow: 0 7px 20px rgba(185, 111, 48, 0.24);
 }
 
 .btn-secondary {
   @apply inline-flex items-center justify-center gap-2 px-4 py-2 font-semibold transition-all;
-  min-height: 2.75rem;
-  border: 1px solid var(--control-border);
-  border-radius: 0.75rem;
-  background-color: var(--steel-800);
+  min-height: var(--control-height);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-control);
+  background-color: var(--surface-interactive);
   color: var(--text-1);
 }
 .btn-secondary:hover {
-  background-color: var(--steel-700);
-  border-color: rgba(232, 161, 94, 0.45);
+  background-color: var(--steel-800);
+  border-color: color-mix(in srgb, var(--bronze) 48%, var(--border-default));
 }
 
 .btn-ghost {
   @apply inline-flex items-center justify-center gap-2 px-4 py-2 font-semibold transition-all;
-  min-height: 2.75rem;
-  border-radius: 0.75rem;
+  min-height: var(--control-height);
+  border-radius: var(--radius-control);
   background-color: transparent;
-  border: 1px solid var(--control-border);
+  border: 1px solid transparent;
   color: var(--text-2);
 }
 .btn-ghost:hover {
-  border-color: var(--bronze);
+  border-color: var(--border-subtle);
   color: var(--text-1);
-  background: var(--bronze-wash);
+  background: var(--surface-interactive);
 }
 
 .btn-primary:active,
@@ -296,6 +338,36 @@ p {
   opacity: 0.48;
   transform: none;
   box-shadow: none;
+}
+
+.icon-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-height);
+  height: var(--control-height);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-control);
+  background: var(--surface-interactive);
+  color: var(--text-2);
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.icon-button:hover {
+  border-color: var(--border-interactive);
+  background: var(--steel-800);
+  color: var(--bronze-light);
+}
+
+.icon-button-danger {
+  color: var(--accent-danger);
+}
+
+.icon-button-danger:hover {
+  border-color: color-mix(in srgb, var(--status-danger) 50%, var(--border-default));
+  background: var(--status-danger-wash);
+  color: var(--accent-danger-light);
 }
 
 /* Card styling */
@@ -337,6 +409,721 @@ button.card:hover,
   background:
     linear-gradient(135deg, rgba(232, 161, 94, 0.1), transparent 42%),
     var(--surface-raised);
+}
+
+/* ─── Shared workflow patterns ─────────────────────────────────────
+   These patterns establish the interaction grammar used by tool pages:
+   numbered stages, grouped fields, optional disclosures, a single primary
+   action per region, status readouts, metrics, and low-frequency menus. */
+.workflow-shell,
+.next-step-shell {
+  border: 1px solid var(--border-default);
+  border-radius: 1rem;
+  background: var(--surface-panel);
+  box-shadow: var(--shadow-card);
+}
+
+.workflow-shell {
+  overflow: clip;
+}
+
+.workflow-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background:
+    linear-gradient(115deg, var(--bronze-wash), transparent 45%),
+    var(--surface-panel);
+}
+
+.workflow-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.workflow-step {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid color-mix(in srgb, var(--bronze) 48%, transparent);
+  border-radius: 0.7rem;
+  background: var(--bronze-wash);
+  color: var(--bronze-light);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.workflow-context {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-control);
+  background: var(--surface-subtle);
+  color: var(--text-2);
+  font-size: 0.82rem;
+}
+
+.workflow-context strong {
+  color: var(--text-1);
+  font-size: 0.9rem;
+}
+
+.setup-grid {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.setup-group {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  background: var(--surface-subtle);
+}
+
+.setup-group-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.setup-group-heading p {
+  color: var(--text-3);
+  font-size: 0.75rem;
+}
+
+.setup-group-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.55rem;
+  background: var(--bronze-wash);
+  color: var(--bronze-light);
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--text-2);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.field-hint,
+.field-error {
+  margin-top: 0.35rem;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.field-hint { color: var(--text-3); }
+.field-error { color: var(--accent-danger-light); }
+
+.meta-label {
+  display: block;
+  color: var(--text-3);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.optional-controls {
+  padding: 0 1.25rem 1.25rem;
+}
+
+.optional-controls-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+}
+
+.optional-controls-grid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.option-card {
+  display: flex;
+  min-width: 0;
+  min-height: 4.25rem;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-control);
+  background: var(--surface-subtle);
+  color: var(--text-3);
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+button.option-card:hover,
+.option-card-toggle:hover {
+  border-color: var(--border-interactive);
+  background: var(--surface-interactive);
+  color: var(--bronze-light);
+}
+
+.option-card.is-active {
+  border-color: color-mix(in srgb, var(--bronze) 55%, var(--border-default));
+  background: var(--bronze-wash);
+  color: var(--bronze-light);
+}
+
+.option-card-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  color: var(--text-2);
+}
+
+.option-card-copy strong {
+  color: var(--text-1);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.option-card-copy small {
+  margin-top: 0.1rem;
+  color: var(--text-3);
+  font-size: 0.69rem;
+  line-height: 1.35;
+}
+
+.option-card-chevron,
+.disclosure-chevron,
+.action-menu-chevron {
+  flex: 0 0 auto;
+  transition: transform 0.15s ease;
+}
+
+.option-card.is-active .option-card-chevron,
+.disclosure-panel[open] .disclosure-chevron,
+.action-menu[open] .action-menu-chevron {
+  transform: rotate(180deg);
+}
+
+.option-card-toggle {
+  cursor: pointer;
+}
+
+.option-card-toggle input {
+  flex: 0 0 auto;
+}
+
+.disclosure-panel,
+.optional-panel {
+  margin-inline: 1.25rem;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  background: var(--surface-subtle);
+}
+
+.disclosure-panel > summary {
+  display: flex;
+  min-height: var(--control-height);
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  color: var(--text-2);
+}
+
+.disclosure-panel > summary::-webkit-details-marker,
+.action-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.disclosure-panel > summary:hover {
+  background: var(--surface-interactive);
+  color: var(--text-1);
+}
+
+.disclosure-summary-copy {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.disclosure-summary-copy > svg {
+  flex: 0 0 auto;
+  color: var(--bronze-light);
+}
+
+.disclosure-summary-copy span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.disclosure-summary-copy strong {
+  color: var(--text-1);
+  font-size: 0.82rem;
+}
+
+.disclosure-summary-copy small {
+  color: var(--text-3);
+  font-size: 0.7rem;
+}
+
+.optional-panel-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem 1rem 0;
+}
+
+.optional-panel-heading > p {
+  max-width: 34rem;
+  color: var(--text-3);
+  font-size: 0.75rem;
+}
+
+.selection-card {
+  display: block;
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-control);
+  background: var(--control-surface);
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.selection-card:hover {
+  border-color: color-mix(in srgb, var(--bronze) 55%, var(--border-default));
+  background: var(--surface-interactive);
+}
+
+.workflow-action-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-subtle);
+}
+
+.workflow-primary-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.workflow-primary-action p {
+  color: var(--text-3);
+  font-size: 0.7rem;
+}
+
+.encounter-summary-card {
+  padding: 1.25rem;
+  border-color: var(--border-default);
+}
+
+.encounter-summary-header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.encounter-overview {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  background: var(--surface-subtle);
+}
+
+.difficulty-readout {
+  min-width: 0;
+}
+
+.difficulty-readout .difficulty-status {
+  margin-top: 0.45rem;
+}
+
+.difficulty-readout p {
+  margin-top: 0.55rem;
+  color: var(--text-3);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.difficulty-readout p strong {
+  color: var(--text-2);
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.metric-item {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.7rem;
+  border-left: 2px solid var(--border-default);
+}
+
+.metric-item dt {
+  order: 2;
+  margin-top: 0.1rem;
+  overflow: hidden;
+  color: var(--text-3);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.metric-item dd {
+  order: 1;
+  overflow: hidden;
+  color: var(--text-1);
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.difficulty-meter {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  background: var(--surface-subtle);
+}
+
+.difficulty-meter-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.difficulty-meter-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.difficulty-meter-heading strong {
+  color: var(--text-1);
+  font-size: 0.82rem;
+}
+
+.difficulty-meter-heading > p {
+  color: var(--text-3);
+  font-size: 0.7rem;
+}
+
+.difficulty-scale {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.2rem;
+  height: 0.65rem;
+  margin-top: 0.85rem;
+}
+
+.difficulty-segment {
+  border-radius: 999px;
+  background: var(--steel-800);
+  opacity: 0.52;
+}
+
+.difficulty-segment.is-filled { opacity: 0.9; }
+.difficulty-segment-trivial.is-filled { background: #7b8290; }
+.difficulty-segment-low.is-filled { background: var(--difficulty-easy); }
+.difficulty-segment-moderate.is-filled { background: var(--difficulty-medium); }
+.difficulty-segment-high.is-filled { background: var(--difficulty-hard); }
+.difficulty-segment-extreme.is-filled { background: var(--status-danger); }
+
+.difficulty-marker {
+  position: absolute;
+  top: -0.25rem;
+  bottom: -0.25rem;
+  width: 2px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: var(--text-1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--steel-950) 72%, transparent);
+}
+
+.difficulty-labels {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.2rem;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.difficulty-labels span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  color: var(--text-3);
+}
+
+.difficulty-labels strong {
+  overflow: hidden;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+.difficulty-labels small {
+  font-size: 0.6rem;
+}
+
+.difficulty-labels .is-current {
+  color: var(--text-1);
+}
+
+.encounter-actions {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.action-menu {
+  position: relative;
+}
+
+.action-menu > summary {
+  width: 100%;
+  cursor: pointer;
+  list-style: none;
+}
+
+.action-menu[open] > summary {
+  border-color: color-mix(in srgb, var(--bronze) 55%, var(--border-default));
+}
+
+.action-menu-panel {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-panel);
+  background: var(--steel-900);
+  box-shadow: var(--shadow-float);
+}
+
+.menu-action {
+  display: flex;
+  width: 100%;
+  min-height: 3.75rem;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-control);
+  color: var(--text-3);
+  text-align: left;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.menu-action:hover {
+  background: var(--surface-interactive);
+  color: var(--bronze-light);
+}
+
+.menu-action > svg {
+  flex: 0 0 auto;
+}
+
+.menu-action > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.menu-action strong {
+  color: var(--text-1);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.menu-action small {
+  margin-top: 0.08rem;
+  color: var(--text-3);
+  font-size: 0.67rem;
+}
+
+.save-encounter-row {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.next-step-shell {
+  padding: 1.25rem;
+}
+
+.next-step-grid {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.next-step-card {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  background: var(--surface-subtle);
+}
+
+.next-step-card p {
+  margin-top: 0.25rem;
+  color: var(--text-3);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.next-step-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid color-mix(in srgb, var(--bronze) 35%, transparent);
+  border-radius: 0.7rem;
+  background: var(--bronze-wash);
+  color: var(--bronze-light);
+}
+
+@media (min-width: 640px) {
+  .optional-controls-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .optional-panel-heading {
+    flex-direction: row;
+    align-items: end;
+    justify-content: space-between;
+  }
+
+  .difficulty-meter-heading {
+    flex-direction: row;
+    align-items: end;
+    justify-content: space-between;
+  }
+
+  .encounter-summary-header,
+  .encounter-actions {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .action-menu > summary {
+    width: auto;
+  }
+
+  .action-menu-panel {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 0.25rem);
+    right: 0;
+    width: min(34rem, calc(100vw - 3rem));
+    margin-top: 0;
+  }
+
+  .save-encounter-row {
+    grid-template-columns: minmax(12rem, 1fr) auto auto;
+    align-items: end;
+  }
+}
+
+@media (min-width: 768px) {
+  .workflow-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .workflow-context {
+    flex: 0 0 auto;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .setup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workflow-action-bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .workflow-primary-action {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .encounter-overview {
+    grid-template-columns: minmax(14rem, 0.65fr) minmax(0, 1.35fr);
+    align-items: stretch;
+  }
+
+  .difficulty-readout {
+    padding-right: 1rem;
+    border-right: 1px solid var(--border-subtle);
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .next-step-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .eyebrow {
@@ -381,6 +1168,14 @@ button.card:hover,
 
 .page-header-copy {
   max-width: 48rem;
+}
+
+.page-header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .section-heading {
@@ -587,7 +1382,7 @@ select optgroup {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: #a8aab3;
+  color: var(--text-3);
 }
 
 /* Reward / XP capsule — tinted bronze pill */
@@ -664,6 +1459,10 @@ select optgroup {
     gap: 0.75rem;
   }
 
+  .page-header-actions {
+    width: 100%;
+  }
+
   .btn-primary,
   .btn-secondary,
   .btn-ghost {
@@ -673,6 +1472,24 @@ select optgroup {
   .filter-panel .filter-chip {
     min-height: 2.5rem;
     padding-inline: 0.75rem;
+  }
+
+  .workflow-primary-action .btn-primary {
+    width: 100%;
+  }
+
+  .workflow-action-bar > .flex {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .workflow-action-bar > .flex > * {
+    width: 100%;
+  }
+
+  .difficulty-labels small {
+    display: none;
   }
 }
 
@@ -692,6 +1509,13 @@ select optgroup {
     --text-2: #1c1a16;
     --text-3: #4a4740;
     --accent-danger: #a53f3e;
+    --status-success: #245c39;
+    --status-warning: #685600;
+    --status-danger: #84262b;
+    --difficulty-easy: #245c39;
+    --difficulty-medium: #685600;
+    --difficulty-hard: #783b0e;
+    --difficulty-deadly: #84262b;
     --shadow-card: none;
   }
 
@@ -726,7 +1550,7 @@ select optgroup {
     color: var(--statblock-light-accent);
   }
 
-  .badge-trivial, .badge-low, .badge-moderate, .badge-high, .badge-extreme,
+  .difficulty-status,
   .badge-easy, .badge-medium, .badge-hard {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;

@@ -41,7 +41,7 @@ function OverrideField({ idSuffix, label, value, placeholder, onChange }: Overri
   const id = `override-${idSuffix}-${label.replace(/\W+/g, '-').toLowerCase()}`;
   return (
     <div>
-      <label htmlFor={id} className="micro-label block">
+      <label htmlFor={id} className="field-label">
         {label}
       </label>
       <input
@@ -110,21 +110,22 @@ export default function PartySetupPanel({
   }
 
   return (
-    <div className="card mb-6 animate-fade-in space-y-4 print:hidden">
-      <div>
-        <h3 className="text-lg">Party Setup</h3>
-        <p className="text-sm text-[var(--text-2)]">
+    <section className="card mb-6 animate-fade-in space-y-5 print:hidden" aria-labelledby="forecast-party-heading">
+      <header>
+        <p className="micro-label">Battle forecast</p>
+        <h2 id="forecast-party-heading" className="mt-1 text-xl">Configure the adventuring party</h2>
+        <p className="mt-1 max-w-3xl text-sm text-[var(--text-2)]">
           Pick a class template and level per player — or open Customize to tweak the numbers.
           The forecast only needs the combat math, not the whole character sheet.
         </p>
-      </div>
+      </header>
 
       <div className="space-y-3">
         {draft.map((member, index) => (
-          <div key={index} className="p-3 rounded bg-[var(--steel-950)] space-y-2">
+          <div key={index} className="surface-inset space-y-3 p-4">
             <div className="grid sm:grid-cols-[1fr_1.4fr_5rem_auto] gap-2 items-end">
               <div>
-                <label htmlFor={`member-name-${index}`} className="micro-label block">
+                <label htmlFor={`member-name-${index}`} className="field-label">
                   Name
                 </label>
                 <input
@@ -136,8 +137,8 @@ export default function PartySetupPanel({
                 />
               </div>
               <div>
-                <label htmlFor={`member-template-${index}`} className="micro-label block">
-                  Class Template
+                <label htmlFor={`member-template-${index}`} className="field-label">
+                  Class template
                 </label>
                 <select
                   id={`member-template-${index}`}
@@ -155,7 +156,7 @@ export default function PartySetupPanel({
                 </select>
               </div>
               <div>
-                <label htmlFor={`member-level-${index}`} className="micro-label block">
+                <label htmlFor={`member-level-${index}`} className="field-label">
                   Level
                 </label>
                 <input
@@ -173,13 +174,14 @@ export default function PartySetupPanel({
                   type="button"
                   className="btn-secondary text-xs"
                   aria-expanded={customizing === index}
+                  aria-controls={`party-member-customization-${index}`}
                   onClick={() => setCustomizing(customizing === index ? null : index)}
                 >
                   Customize
                 </button>
                 <button
                   type="button"
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-sm text-[var(--accent-danger)] transition-colors hover:bg-[var(--steel-800)] hover:text-[var(--accent-danger-light)]"
+                  className="icon-button icon-button-danger"
                   aria-label={`Remove ${member.name || `player ${index + 1}`}`}
                   onClick={() => setDraft((prev) => prev.filter((_, i) => i !== index))}
                 >
@@ -191,7 +193,7 @@ export default function PartySetupPanel({
             <StatPreview member={member} index={index} />
 
             {customizing === index && (
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-2 border-t border-[var(--steel-800)] animate-fade-in">
+              <div id={`party-member-customization-${index}`} className="grid grid-cols-2 gap-3 border-t border-[var(--line-subtle)] pt-3 animate-fade-in sm:grid-cols-3 lg:grid-cols-6">
                 <OverrideField idSuffix={`${index}-ac`} label="AC" value={member.overrides?.ac} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).ac} onChange={(v) => updateOverride(index, 'ac', v)} />
                 <OverrideField idSuffix={`${index}-hp`} label="Max HP" value={member.overrides?.maxHp} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).maxHp} onChange={(v) => updateOverride(index, 'maxHp', v)} />
                 <OverrideField idSuffix={`${index}-attack`} label="Atk Bonus" value={member.overrides?.attackBonus} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).attackBonus} onChange={(v) => updateOverride(index, 'attackBonus', v)} />
@@ -207,7 +209,7 @@ export default function PartySetupPanel({
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <footer className="flex flex-col gap-3 border-t border-[var(--line-subtle)] pt-4 sm:flex-row sm:flex-wrap sm:items-center">
         <button
           type="button"
           className="btn-secondary text-sm inline-flex items-center gap-1.5"
@@ -219,10 +221,10 @@ export default function PartySetupPanel({
           }
         >
           <Plus size={16} aria-hidden="true" />
-          Add Player
+          Add player
         </button>
         <label className="btn-secondary inline-flex min-h-11 cursor-pointer items-center text-sm">
-          Import Character JSON
+          Import character JSON
           <input
             type="file"
             accept="application/json,.json"
@@ -234,7 +236,7 @@ export default function PartySetupPanel({
           />
         </label>
         <div className="flex-1" />
-        <button type="button" className="btn-secondary text-sm" onClick={onCancel}>
+        <button type="button" className="btn-ghost text-sm" onClick={onCancel}>
           Cancel
         </button>
         <button
@@ -243,9 +245,9 @@ export default function PartySetupPanel({
           disabled={draft.length === 0}
           onClick={() => onSave(draft)}
         >
-          Save &amp; Run Forecast
+          Save &amp; run forecast
         </button>
-      </div>
+      </footer>
       {importMessage && (
         <p
           className={`text-sm ${importMessage.kind === 'error' ? 'text-[var(--accent-danger)]' : 'text-[var(--text-2)]'}`}
@@ -254,6 +256,6 @@ export default function PartySetupPanel({
           {importMessage.text}
         </p>
       )}
-    </div>
+    </section>
   );
 }
