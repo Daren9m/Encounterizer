@@ -57,13 +57,13 @@ const SCALE_DIMS: Record<MapScale, readonly [number, number]> = {
 
 // UI option lists (noncombat's THEME_OPTIONS precedent): one source
 // for both the maps page and the encounter builder.
-// 'building' joins when its generator lands (milestone #8 PR 2).
 export const MAP_LAYOUT_OPTIONS: Array<{ value: MapLayout; label: string; hint: string }> = [
   { value: 'auto', label: 'Auto', hint: 'Let the environment decide' },
   { value: 'dungeon', label: 'Dungeon', hint: 'Rooms, corridors, and doors' },
   { value: 'cavern', label: 'Cavern', hint: 'Organic cave systems' },
   { value: 'wilderness', label: 'Wilderness', hint: 'Open terrain and features' },
   { value: 'city', label: 'City Streets', hint: 'Blocks, plazas, and locked doors' },
+  { value: 'building', label: 'Building Interior', hint: 'A single floor, room by room' },
 ];
 
 export const MAP_SCALE_OPTIONS: Array<{ value: MapScale; label: string; hint: string }> = [
@@ -905,6 +905,214 @@ function generateCity(
   return { grid, rooms };
 }
 
+// ─── Building Interior ───────────────────────────────────────────
+
+function generateBuilding(
+  w: number,
+  h: number,
+  rng: () => number,
+  featureDensity: MapFeatureDensity,
+  roomCount: number,
+): GenResult {
+  const grid = createGrid(w, h, 'wall');
+  const interior: Rect = { x: 2, y: 2, w: w - 4, h: h - 4 };
+  for (let y = interior.y; y < interior.y + interior.h; y++) {
+    for (let x = interior.x; x < interior.x + interior.w; x++) {
+      grid[y][x].terrain = 'floor';
+    }
+  }
+
+  // Optional wing: a party wall splits main house from a shorter wing,
+  // the dead corner returns to exterior mass — an L-shaped floor plan.
+  // Its door joins the same deferred door pass as the partition walls.
+  const plans: Rect[] = [];
+  const partyWalls: Array<{ vertical: boolean; pos: number; from: number; to: number }> = [];
+  const wingRoll = rng();
+  if (wingRoll < 0.45 && interior.w >= 14 && interior.h >= 10) {
+    const wingW = 5 + Math.floor(rng() * Math.max(1, Math.floor(interior.w / 3) - 4));
+    const mainW = interior.w - wingW - 1;
+    const wingH = Math.max(6, Math.floor(interior.h * (0.5 + rng() * 0.3)));
+    const wallX = interior.x + mainW;
+    for (let y = interior.y; y < interior.y + interior.h; y++) {
+      grid[y][wallX].terrain = 'wall';
+    }
+    for (let y = interior.y + wingH; y < interior.y + interior.h; y++) {
+      for (let x = wallX; x < interior.x + interior.w; x++) {
+        grid[y][x].terrain = 'wall';
+      }
+    }
+    partyWalls.push({ vertical: true, pos: wallX, from: interior.y, to: interior.y + wingH - 1 });
+    plans.push({ x: interior.x, y: interior.y, w: mainW, h: interior.h });
+    plans.push({ x: wallX + 1, y: interior.y, w: interior.w - mainW - 1, h: wingH });
+  } else {
+    plans.push(interior);
+  }
+
+  // Recursive partition: each cut is a 1-cell wall line; the split
+  // tree is the connectivity spanning tree. Doors are punched in a
+  // SECOND pass, after every descendant wall exists — punching during
+  // the split let a child wall land flush against a parent's door and
+  // seal a room (found by the seed-14 connectivity test).
+  const roomRects: Rect[] = [];
+  const wallLines: Array<{ vertical: boolean; pos: number; from: number; to: number }> = [];
+  const split = (r: Rect, budget: number): void => {
+    const canV = r.w >= 7;
+    const canH = r.h >= 7;
+    if (budget <= 1 || (!canV && !canH)) {
+      roomRects.push(r);
+      return;
+    }
+    const vertical = canV && canH
+      ? (r.w > r.h ? true : r.h > r.w ? false : rng() > 0.5)
+      : canV;
+    if (vertical) {
+      const pos = r.x + 3 + Math.floor(rng() * (r.w - 6));
+      for (let y = r.y; y < r.y + r.h; y++) grid[y][pos].terrain = 'wall';
+      wallLines.push({ vertical: true, pos, from: r.y, to: r.y + r.h - 1 });
+      const leftShare = Math.max(1, Math.round(budget * ((pos - r.x) / r.w)));
+      split({ x: r.x, y: r.y, w: pos - r.x, h: r.h }, leftShare);
+      split({ x: pos + 1, y: r.y, w: r.x + r.w - pos - 1, h: r.h }, Math.max(1, budget - leftShare));
+    } else {
+      const pos = r.y + 3 + Math.floor(rng() * (r.h - 6));
+      for (let x = r.x; x < r.x + r.w; x++) grid[pos][x].terrain = 'wall';
+      wallLines.push({ vertical: false, pos, from: r.x, to: r.x + r.w - 1 });
+      const topShare = Math.max(1, Math.round(budget * ((pos - r.y) / r.h)));
+      split({ x: r.x, y: r.y, w: r.w, h: pos - r.y }, topShare);
+      split({ x: r.x, y: pos + 1, w: r.w, h: r.y + r.h - pos - 1 }, Math.max(1, budget - topShare));
+    }
+  };
+  const totalArea = plans.reduce((sum, p) => sum + p.w * p.h, 0);
+  for (const plan of plans) {
+    split(plan, Math.max(1, Math.round(roomCount * ((plan.w * plan.h) / totalArea))));
+  }
+
+  // Door pass: one per wall line, at a spot open on BOTH sides.
+  for (const wall of [...partyWalls, ...wallLines]) {
+    const candidates: Array<[number, number]> = [];
+    for (let i = wall.from; i <= wall.to; i++) {
+      const [x, y] = wall.vertical ? [wall.pos, i] : [i, wall.pos];
+      const sideA = wall.vertical ? grid[y][x - 1] : grid[y - 1]?.[x];
+      const sideB = wall.vertical ? grid[y][x + 1] : grid[y + 1]?.[x];
+      if (sideA && sideB && isPassable(sideA.terrain) && isPassable(sideB.terrain)) {
+        candidates.push([x, y]);
+      }
+    }
+    if (candidates.length > 0) {
+      const [dx, dy] = candidates[Math.floor(rng() * candidates.length)];
+      grid[dy][dx] = { terrain: 'door', label: 'Door' };
+    }
+  }
+
+  // Front door on the bottom shell, opening into the main house.
+  const doorCandidates: number[] = [];
+  for (let x = plans[0].x; x < plans[0].x + plans[0].w; x++) {
+    if (grid[h - 3]?.[x] && isPassable(grid[h - 3][x].terrain)) doorCandidates.push(x);
+  }
+  const entranceX = doorCandidates.length > 0
+    ? doorCandidates[Math.floor(rng() * doorCandidates.length)]
+    : plans[0].x;
+  const entranceY = h - 2;
+  grid[entranceY][entranceX] = { terrain: 'entrance', label: 'Front Door' };
+
+  // Furnishings: hearth, sparse columns/treasure/traps, one cellar stair.
+  const roomTags: Set<MapRoomTag>[] = roomRects.map(() => new Set());
+  const hearthIdx = Math.floor(rng() * roomRects.length);
+  const cellarIdx = Math.floor(rng() * roomRects.length);
+  roomRects.forEach((room, i) => {
+    const cx = room.x + Math.floor(room.w / 2);
+    const cy = room.y + Math.floor(room.h / 2);
+    if (i === hearthIdx && grid[cy][cx].terrain === 'floor') {
+      grid[cy][cx] = { terrain: 'altar', label: 'Hearth' };
+    }
+    if (i === cellarIdx) {
+      const sx = room.x + Math.floor(rng() * room.w);
+      const sy = room.y + Math.floor(rng() * room.h);
+      if (grid[sy]?.[sx]?.terrain === 'floor') {
+        grid[sy][sx] = { terrain: 'stairs', label: 'Cellar Stair' };
+      }
+    }
+    if (room.w >= 6 && room.h >= 6 && rng() < 0.4 * DENSITY_MULTIPLIER[featureDensity]) {
+      if (grid[cy][cx + 1]?.terrain === 'floor') grid[cy][cx + 1].terrain = 'pillar';
+    }
+    if (rng() < 0.15 * DENSITY_MULTIPLIER[featureDensity]) {
+      const tx = room.x + Math.floor(rng() * room.w);
+      const ty = room.y + Math.floor(rng() * room.h);
+      if (grid[ty]?.[tx]?.terrain === 'floor') {
+        grid[ty][tx] = { terrain: 'trap', label: 'Trap' };
+        roomTags[i].add('trap');
+      }
+    }
+    if (rng() < 0.2 * DENSITY_MULTIPLIER[featureDensity]) {
+      const tx = room.x + Math.floor(rng() * room.w);
+      const ty = room.y + Math.floor(rng() * room.h);
+      if (grid[ty]?.[tx]?.terrain === 'floor') {
+        grid[ty][tx] = { terrain: 'treasure', label: 'Treasure' };
+        roomTags[i].add('treasure');
+      }
+    }
+  });
+
+  // Tagging (no draws): party at the door, boss deepest, far half hostile.
+  const inRoom = (i: number, x: number, y: number) =>
+    x >= roomRects[i].x && x < roomRects[i].x + roomRects[i].w
+    && y >= roomRects[i].y && y < roomRects[i].y + roomRects[i].h;
+  let entranceRoom = 0;
+  for (let i = 0; i < roomRects.length; i++) {
+    if (inRoom(i, entranceX, entranceY - 1)) { entranceRoom = i; break; }
+  }
+  roomTags[entranceRoom].add('entrance');
+  roomTags[entranceRoom].add('spawn:party');
+
+  const dist = new Int32Array(w * h).fill(-1);
+  const start = entranceY * w + entranceX;
+  dist[start] = 0;
+  let frontier = [start];
+  let maxDist = 0;
+  while (frontier.length > 0) {
+    const next: number[] = [];
+    for (const cell of frontier) {
+      const cx = cell % w;
+      const cy = Math.floor(cell / w);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+        const nx = cx + dx;
+        const ny = cy + dy;
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+        const idx = ny * w + nx;
+        if (dist[idx] !== -1 || !isPassable(grid[ny][nx].terrain)) continue;
+        dist[idx] = dist[cell] + 1;
+        maxDist = Math.max(maxDist, dist[idx]);
+        next.push(idx);
+      }
+    }
+    frontier = next;
+  }
+  let bossIdx = -1;
+  let bossDist = -1;
+  roomRects.forEach((room, i) => {
+    if (i === entranceRoom) return;
+    const cx = room.x + Math.floor(room.w / 2);
+    const cy = room.y + Math.floor(room.h / 2);
+    const d = dist[cy * w + cx];
+    if (d > bossDist) { bossDist = d; bossIdx = i; }
+    if (d >= 0.55 * maxDist) roomTags[i].add('spawn:monster');
+  });
+  if (bossIdx >= 0) {
+    roomTags[bossIdx].add('boss');
+    roomTags[bossIdx].add('spawn:monster');
+  }
+
+  const rooms: ProtoRoom[] = roomRects.map((r, i) => ({
+    kind: 'room',
+    bounds: r,
+    tags: [...roomTags[i]],
+  }));
+  if (!rooms.some(r => r.tags.includes('spawn:monster'))) {
+    rooms.push(zoneAround(grid, entranceX, Math.max(2, entranceY - 4), w, h, ['spawn:monster']));
+  }
+
+  return { grid, rooms };
+}
+
 // ─── Public API ──────────────────────────────────────────────────
 
 /** Layout resolution + dimension derivation — draws 1–3 of the grid
@@ -994,13 +1202,13 @@ export function generateMap(options: MapOptions): EncounterMap {
       name = environment === 'Urban' ? 'City Streets' : `${environment} Settlement`;
       structure = 'city';
       break;
-    case 'building':
-      // PR 2 of the milestone delivers generateBuilding; until then the
-      // layout exists in the type but the UI does not offer it.
-      result = generateDungeon(w, h, rng, featureDensity, terrainVariety, roomCount);
-      name = 'Building Interior';
-      structure = 'dungeon';
+    case 'building': {
+      result = generateBuilding(w, h, rng, featureDensity, roomCount);
+      const area = w * h;
+      name = area < 260 ? 'Townhouse' : area < 950 ? 'Manor Floor' : 'Grand Hall';
+      structure = 'building';
       break;
+    }
     default:
       result = generateDungeon(w, h, rng, featureDensity, terrainVariety, roomCount);
       name = environment === 'Any' ? 'Dungeon' : `${environment} Dungeon`;

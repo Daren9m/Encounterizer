@@ -137,3 +137,77 @@ describe('city streets generator', () => {
     }
   });
 });
+
+describe('building interior generator', () => {
+  const HOUSE = generateMap({ environment: 'Urban', seed: 42, layout: 'building', scale: 'Standard' });
+
+  it('builds a walled shell with interior rooms and connecting doors', () => {
+    expect(countTerrain(HOUSE, 'wall')).toBeGreaterThan(20);
+    const roomsOfKind = HOUSE.rooms!.filter(r => r.kind === 'room');
+    expect(roomsOfKind.length).toBeGreaterThanOrEqual(3);
+    // A BSP tree with n rooms needs at least n-1 connecting doors.
+    expect(countTerrain(HOUSE, 'door')).toBeGreaterThanOrEqual(roomsOfKind.length - 1);
+    // Interiors are floor-dominant (thin partitions), unlike dungeons
+    // carved from solid rock, and get a house name — not the dungeon
+    // fallback's.
+    expect(['Townhouse', 'Manor Floor', 'Grand Hall']).toContain(HOUSE.name);
+    // Floor-dominant relative to the interior (shell is 2 rings thick).
+    const interiorArea = (HOUSE.width - 4) * (HOUSE.height - 4);
+    expect(countTerrain(HOUSE, 'floor') / interiorArea).toBeGreaterThan(0.6);
+    // At most the cellar stair — dungeons place two.
+    expect(countTerrain(HOUSE, 'stairs')).toBeLessThanOrEqual(1);
+  });
+
+  it('stays compact at every tier', () => {
+    for (const scale of ['Skirmish', 'Standard', 'Large', 'Massive'] as const) {
+      const map = generateMap({ environment: 'Urban', seed: 3, layout: 'building', scale });
+      expect(map.width).toBeLessThanOrEqual(42);
+      expect(map.height).toBeLessThanOrEqual(33);
+    }
+  });
+
+  it('keeps every room reachable from the front door', () => {
+    for (let seed = 1; seed <= 15; seed++) {
+      const house = generateMap({ environment: 'Urban', seed, layout: 'building' });
+      const entrance = findTerrain(house, 'entrance');
+      expect(entrance, `seed ${seed} has a front door`).not.toBeNull();
+      const reached = reachableFrom(house, entrance!);
+      for (const room of house.rooms!) {
+        const cells: number[] = [];
+        if (room.cells) cells.push(...room.cells);
+        else {
+          for (let y = room.bounds.y; y < room.bounds.y + room.bounds.h; y++) {
+            for (let x = room.bounds.x; x < room.bounds.x + room.bounds.w; x++) {
+              cells.push(y * house.width + x);
+            }
+          }
+        }
+        expect(
+          cells.some(cell => reached.has(cell)),
+          `seed ${seed}: room ${room.id} sealed off`,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it('tags the household: party at the door, boss deepest, monsters in the far half', () => {
+    const tags = HOUSE.rooms!.flatMap(r => r.tags);
+    expect(tags).toContain('spawn:party');
+    expect(tags).toContain('spawn:monster');
+    expect(tags).toContain('boss');
+    expect(tags).toContain('entrance');
+  });
+
+  it('flavors rooms with household archetypes', () => {
+    const HOUSEHOLD = /Kitchen|Pantry|Study|Bedchamber|Workshop|Hearth|Cellar|Dining|Parlor|Servant|Foyer|Shopfront|Counting/;
+    for (const room of HOUSE.rooms!) {
+      expect(room.name.length).toBeGreaterThan(0);
+      expect(room.purpose.length).toBeGreaterThan(0);
+      expect(room.readAloud.length).toBeGreaterThan(0);
+    }
+    expect(
+      HOUSE.rooms!.some(room => HOUSEHOLD.test(room.name)),
+      'at least one room reads as part of a house',
+    ).toBe(true);
+  });
+});
