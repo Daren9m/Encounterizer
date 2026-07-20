@@ -1,14 +1,13 @@
 // ─── Site Constants ──────────────────────────────────────────────
 // One source of truth for the site URL, route list, and per-route copy.
-// The nav, homepage cards, sitemap, and per-page metadata all read from
+// The nav, homepage directory, sitemap, and per-page metadata all read from
 // here so they can never drift apart.
 
 export const SITE_NAME = 'Encounterizer';
 
 export const SITE_DESCRIPTION =
-  'Free D&D 5.5e Dungeon Master toolkit — balanced encounters, live battle tools, '
-  + 'a searchable rules reference, 331-monster SRD bestiary, maps, puzzles, and spells. '
-  + 'No accounts, no server, no cost.';
+  'Free, private tools for D&D 5.5e DMs: build encounters, generate maps and challenges, '
+  + 'run combat, and check SRD rules, monsters, and spells.';
 
 /** Set the SITE_URL repo variable once the Azure Static Web App exists.
  *  `||` (not `??`) on purpose: when the repo variable is unset, GitHub
@@ -30,9 +29,10 @@ export type RouteIconName =
 
 export interface RouteInfo {
   path: string;
-  label: string;
+  navLabel: string;
   title: string;
   description: string;
+  navDescription: string;
   icon: RouteIconName;
 }
 
@@ -52,31 +52,31 @@ export interface ToolSection {
 export const TOOL_SECTIONS: ToolSection[] = [
   {
     id: 'prep',
-    label: 'Prep',
-    description: 'Create the encounters, locations, and scenes for your next session.',
+    label: 'Make',
+    description: 'Encounters, maps, and challenges.',
     routes: [
       {
         path: '/encounters',
-        label: 'Encounters',
+        navLabel: 'Encounters',
         title: 'Encounter Builder',
-        description:
-          'Build balanced D&D 5.5e encounters with 2024 XP budgets, then run the Battle Forecast — 1,000 simulated fights before your party rolls initiative.',
+        description: 'Set the party, shape the fight, and build a balanced encounter.',
+        navDescription: 'Balance a fight and test the odds.',
         icon: 'swords',
       },
       {
         path: '/maps',
-        label: 'Maps',
+        navLabel: 'Maps',
         title: 'Battle Map Generator',
-        description:
-          'Procedural battle maps for D&D — BSP dungeons, cellular-automata caves, and outdoor terrain, tuned per environment.',
+        description: 'Generate a dungeon, cave, or outdoor battlefield.',
+        navDescription: 'Generate a dungeon, cave, or battlefield.',
         icon: 'map',
       },
       {
         path: '/noncombat',
-        label: 'Puzzles & Challenges',
+        navLabel: 'Puzzles',
         title: 'Puzzles & Challenges',
-        description:
-          'Verified puzzles, riddles, ciphers, contests, social encounters, journeys, traps, chases, and investigations — one levered, themed, seeded generator.',
+        description: 'Build a puzzle, trap, chase, journey, or social scene.',
+        navDescription: 'Build puzzles, traps, chases, and scenes.',
         icon: 'puzzle',
       },
     ],
@@ -84,53 +84,53 @@ export const TOOL_SECTIONS: ToolSection[] = [
   {
     id: 'run',
     label: 'Run',
-    description: 'Keep the session moving with a focused screen and live battle flow.',
+    description: 'Your DM screen and live battle tools.',
     routes: [
       {
         path: '/dm-screen',
-        label: 'DM Screen',
+        navLabel: 'Screen',
         title: 'DM Screen',
-        description:
-          'Build a private, collapsible command screen from monsters, spells, notes, tool links, and a live battle tracker—then export the complete setup.',
+        description: 'Keep notes, rules, monsters, spells, and trackers together.',
+        navDescription: 'Keep your session tools together.',
         icon: 'screen',
       },
       {
         path: '/battle',
-        label: 'Battle',
+        navLabel: 'Battle',
         title: 'Battle Organizer',
-        description:
-          'Gather initiative, call next up and on deck, track HP, conditions, concentration, reactions, legendary actions, rounds, and the flow of a live battle.',
+        description: 'Track initiative, HP, conditions, reactions, and rounds.',
+        navDescription: 'Track initiative, HP, and conditions.',
         icon: 'battle',
       },
     ],
   },
   {
     id: 'reference',
-    label: 'Reference',
-    description: 'Find the rules, creatures, and spells you need without breaking the flow.',
+    label: 'Find',
+    description: 'Rules, monsters, and spells.',
     routes: [
       {
         path: '/reference',
-        label: 'DM Reference',
+        navLabel: 'Rules',
         title: 'DM Reference',
-        description:
-          'Search the rules DMs reach for most—conditions, checks, combat, damage, recovery, movement, and visibility—in one fast reference.',
+        description: 'Find conditions and common rulings without slowing the game.',
+        navDescription: 'Check conditions and common rulings.',
         icon: 'book',
       },
       {
         path: '/monsters',
-        label: 'Bestiary',
+        navLabel: 'Monsters',
         title: 'Monster Bestiary',
-        description:
-          'Browse 331 SRD 5.2.1 monsters with deep filters — CR, type, movement, damage types, resistances — or import your own from JSON.',
+        description: 'Search SRD monsters by CR, type, movement, defenses, and more.',
+        navDescription: 'Search SRD stat blocks.',
         icon: 'skull',
       },
       {
         path: '/spells',
-        label: 'Spells',
+        navLabel: 'Spells',
         title: 'Spell Reference',
-        description:
-          'Every SRD 5.2.1 spell, levels 0–9, with mechanics-first summaries, full rules text, filters for level, school, class, concentration, and side-by-side pinning.',
+        description: 'Search and compare SRD spells by level, school, class, and more.',
+        navDescription: 'Search and compare SRD spells.',
         icon: 'sparkles',
       },
     ],
@@ -139,6 +139,20 @@ export const TOOL_SECTIONS: ToolSection[] = [
 
 /** Flat compatibility view for metadata, cards, and consumers that do not need sections. */
 export const TOOL_ROUTES: RouteInfo[] = TOOL_SECTIONS.flatMap((section) => section.routes);
+
+/** Frequent destinations remain one click from every desktop page. */
+export const NAV_SHORTCUT_PATHS = [
+  '/encounters',
+  '/dm-screen',
+  '/battle',
+  '/reference',
+] as const;
+
+export const NAV_SHORTCUT_ROUTES: RouteInfo[] = NAV_SHORTCUT_PATHS.map((path) => {
+  const route = TOOL_ROUTES.find((candidate) => candidate.path === path);
+  if (!route) throw new Error(`Navigation shortcut is missing route metadata: ${path}`);
+  return route;
+});
 
 /** Tools that make sense as links from inside a DM Screen. The screen itself
  * is intentionally excluded: embedding a link back to the current surface is

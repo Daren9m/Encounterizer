@@ -15,21 +15,21 @@ export default function NotFound() {
         <Dices size={48} className="text-[var(--bronze)]" />
       </div>
       <h1 className="text-4xl mb-3">
-        404 — You rolled a natural 1
+        This page wandered off.
       </h1>
       <p className="text-[var(--text-2)] mb-8">
-        This corridor leads nowhere. The map was a mimic all along.
+        404 — The link may be old, or the page may have moved.
       </p>
 
       <div className="card text-left">
         <div className="flex flex-col gap-3 border-b border-[var(--steel-800)] pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg">Choose another route</h2>
+          <h2 className="text-lg">Where do you want to go?</h2>
           <Link
             href="/"
             className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-[var(--bronze)] underline underline-offset-4 hover:text-[var(--bronze-light)]"
           >
             <ArrowLeft size={16} aria-hidden="true" />
-            Back to the entrance
+            Go home
           </Link>
         </div>
         <div className="mt-5 grid gap-5 sm:grid-cols-3">
@@ -46,7 +46,7 @@ export default function NotFound() {
                       className="group inline-flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-[var(--text-1)] hover:bg-[var(--steel-900)] hover:text-[var(--bronze)]"
                     >
                       <RouteIcon name={route.icon} size={16} className="text-[var(--text-3)] group-hover:text-[var(--bronze)]" />
-                      {route.label}
+                      {route.navLabel}
                     </Link>
                   </li>
                 ))}

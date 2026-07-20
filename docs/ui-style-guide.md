@@ -47,29 +47,37 @@ Every tool belongs to one stable, user-centered section:
 
 | Section | User intent | Destinations |
 | --- | --- | --- |
-| Prep | Make the session | Encounters, Maps, Puzzles & Challenges |
-| Run | Manage the live table | DM Screen, Battle Organizer |
-| Reference | Find an answer | DM Reference, Bestiary, Spells |
+| Make | Build the session | Encounters, Maps, Puzzles |
+| Run | Manage the live table | Screen, Battle |
+| Find | Get an answer | Rules, Monsters, Spells |
 
 The route metadata in `src/lib/site.ts` is the source of truth. Navigation,
 homepage discovery, page-header context, footer links, recovery links, and the
 sitemap derive from it. Existing destination URLs stay stable when the
 taxonomy changes; section names organize links and do not add empty landing
-pages.
+pages. `title` and `description` serve page headings and metadata;
+`navLabel` and `navDescription` stay short enough for navigation and tool
+directories.
 
-Desktop navigation uses one disclosure button per section. Its panel contains
-ordinary lists of links—never ARIA `menu`/`menuitem` roles. The button exposes
-`aria-expanded` and `aria-controls`; only the current destination link receives
-`aria-current="page"`. Escape closes a disclosure and returns focus to its
-trigger. Outside pointer/focus, route changes, and breakpoint changes close it
-without moving focus unless the focused control disappears at the breakpoint;
-in that case, focus moves to the corresponding trigger in the visible mode.
+Desktop navigation keeps the four frequent destinations—Encounters, Screen,
+Battle, and Rules—one click away. A single **All tools** launcher opens the full
+directory, grouped as Make, Run, and Find. These shortcuts are access points,
+not a required sequence; the launcher still includes every destination.
 
-Mobile navigation shows all three sections under visible headings inside one
-bounded, vertically scrollable panel. Do not nest another accordion layer in
-that panel. Theme selection remains a top-level header action so it cannot be
-stranded below a long link list. Credits and licensing remain footer-only;
-player handouts remain outside global chrome and the sitemap.
+The launcher contains ordinary lists of links—never ARIA `menu`/`menuitem`
+roles. Its button exposes `aria-expanded` and `aria-controls`; only destination
+links receive `aria-current="page"`. Escape closes the launcher and returns
+focus to its trigger. Outside pointer/focus, route changes, and breakpoint
+changes close it without moving focus unless the focused control disappears at
+the breakpoint; in that case, focus moves to the corresponding control in the
+visible mode.
+
+Mobile navigation shows Make, Run, and Find under visible headings inside one
+bounded, vertically scrollable panel. Do not add another accordion layer. The
+footer repeats the same three groups with short navigation labels. Theme
+selection remains a top-level header action so it cannot be stranded below a
+long link list. Credits and licensing remain footer-only; player handouts
+remain outside global chrome and the sitemap.
 
 ## Workflow composition
 
