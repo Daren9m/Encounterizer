@@ -42,6 +42,14 @@ const ghost = makeMonster({
 
 const ALL = [goblin, dragon, ghost];
 
+const flexibleHumanoid = makeMonster({
+  id: 'priest',
+  name: 'Priest',
+  type: 'Humanoid',
+  size: 'Medium',
+  sizeOptions: ['Medium', 'Small'],
+});
+
 describe('filterMonsters', () => {
   it('passes everything through an empty filter, sorted by name', () => {
     const result = filterMonsters(ALL, {});
@@ -68,6 +76,12 @@ describe('filterMonsters', () => {
   it('filters by creature type and size', () => {
     expect(filterMonsters(ALL, { types: ['Undead'] })[0].id).toBe('ghost');
     expect(filterMonsters(ALL, { sizes: ['Huge'] })[0].id).toBe('red-dragon');
+  });
+
+  it('matches every allowed size on a flexible-size stat block', () => {
+    expect(filterMonsters([flexibleHumanoid], { sizes: ['Medium'] })).toHaveLength(1);
+    expect(filterMonsters([flexibleHumanoid], { sizes: ['Small'] })).toHaveLength(1);
+    expect(getFilterOptions([flexibleHumanoid]).sizes).toEqual(['Medium', 'Small']);
   });
 
   it('uses ANY-overlap semantics for environments and movement', () => {

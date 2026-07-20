@@ -191,9 +191,18 @@ export function stripTags(text: string): string {
 
 // ─── Field Parsers ──────────────────────────────────────────────
 
-function parseSize(raw: string[] | undefined): Size {
-  if (!raw || raw.length === 0) return 'Medium';
-  return SIZE_CODE[raw[0]] ?? 'Medium';
+function parseSizes(raw: string[] | undefined): Size[] {
+  if (!raw || raw.length === 0) return ['Medium'];
+  const rank: Record<Size, number> = {
+    Tiny: 0,
+    Small: 1,
+    Medium: 2,
+    Large: 3,
+    Huge: 4,
+    Gargantuan: 5,
+  };
+  return [...new Set(raw.map((code) => SIZE_CODE[code]).filter((size): size is Size => Boolean(size)))]
+    .sort((a, b) => rank[b] - rank[a]);
 }
 
 function parseCreatureType(raw: FiveEToolsMonster['type']): {
@@ -782,12 +791,13 @@ export function convert5eToolsMonster(raw: FiveEToolsMonster, opts: ConvertOptio
 
   const savingThrows = parseSavingThrows(raw.save);
   const skills = parseSkills(raw.skill);
+  const sizes = parseSizes(raw.size);
 
   const monster: Monster = {
     id: `${opts.idPrefix ?? ''}${slugifyMonsterName(name)}`,
     name,
     source,
-    size: parseSize(raw.size),
+    size: sizes[0] ?? 'Medium',
     type: creatureType,
     alignment,
     armor,
@@ -815,6 +825,8 @@ export function convert5eToolsMonster(raw: FiveEToolsMonster, opts: ConvertOptio
     attackDeliveryModes,
     tags,
   };
+
+  if (sizes.length > 1) monster.sizeOptions = sizes;
 
   if (subtype) monster.subtype = subtype;
   if (savingThrows) monster.savingThrows = savingThrows;

@@ -152,12 +152,19 @@ export function validateMonster(input: unknown): ValidateResult {
   const legendaryActions = isRecord(input.legendary)
     ? normalizeActions(input.legendary.actions)
     : [];
+  const explicitSizeOptions = filterList(input.sizeOptions, SIZES);
+  const legacySizeOptions = Array.isArray(input.size) ? filterList(input.size, SIZES) : [];
+  const sizeOptions = explicitSizeOptions.length > 0
+    ? explicitSizeOptions
+    : legacySizeOptions.length > 0
+      ? legacySizeOptions
+      : [inList(input.size, SIZES) ? input.size : 'Medium'];
 
   const monster: Monster = {
     id: typeof input.id === 'string' && input.id.trim() ? input.id.trim() : slugifyMonsterName(name),
     name,
     source: 'Custom',
-    size: inList(input.size, SIZES) ? input.size : 'Medium',
+    size: sizeOptions[0],
     type: inList(input.type, CREATURE_TYPES) ? input.type : 'Monstrosity',
     alignment: typeof input.alignment === 'string' ? (input.alignment as Alignment) : 'Unaligned',
     armor: { ac: armor, source: isRecord(input.armor) && typeof input.armor.source === 'string' ? input.armor.source : undefined },
@@ -185,6 +192,8 @@ export function validateMonster(input: unknown): ValidateResult {
     attackDeliveryModes: [],
     tags: Array.isArray(input.tags) ? input.tags.filter((t): t is string => typeof t === 'string') : [],
   };
+
+  if (sizeOptions.length > 1) monster.sizeOptions = sizeOptions;
 
   if (typeof input.subtype === 'string') monster.subtype = input.subtype;
   if (legendaryActions.length > 0) {

@@ -1,6 +1,8 @@
 'use client';
 
 import type { Monster } from '@/lib/types';
+import { formatMonsterAlignment } from '@/lib/monster-alignment';
+import { formatMonsterSize } from '@/lib/monster-size';
 
 function abilityMod(score: number): string {
   const mod = Math.floor((score - 10) / 2);
@@ -36,8 +38,8 @@ export default function MonsterStatBlock({
       {/* Header */}
       <h3 className="text-xl">{monster.name}</h3>
       <p className="text-sm italic mb-3">
-        {monster.size} {monster.type}
-        {monster.subtype ? ` (${monster.subtype})` : ''}, {monster.alignment}
+        {formatMonsterSize(monster)} {monster.type}
+        {monster.subtype ? ` (${monster.subtype})` : ''}, {formatMonsterAlignment(monster.alignment)}
       </p>
 
       {physicalDescription && (

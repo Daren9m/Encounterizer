@@ -909,7 +909,7 @@ export const MONSTERS_CR_5_8: Monster[] = [
     "id": "gladiator",
     "name": "Gladiator",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -990,6 +990,10 @@ export const MONSTERS_CR_5_8: Monster[] = [
     ],
     "tags": [
       "multiattack"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "savingThrows": {
       "str": 7,
@@ -2179,7 +2183,7 @@ export const MONSTERS_CR_5_8: Monster[] = [
     "id": "vampire-spawn",
     "name": "Vampire Spawn",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Undead",
     "alignment": "Neutral Evil",
     "armor": {
@@ -2266,6 +2270,10 @@ export const MONSTERS_CR_5_8: Monster[] = [
     "tags": [
       "multiattack",
       "grappler"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "savingThrows": {
       "dex": 6,
@@ -2419,7 +2427,7 @@ export const MONSTERS_CR_5_8: Monster[] = [
     "id": "werebear",
     "name": "Werebear",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Monstrosity",
     "alignment": "Neutral Good",
     "armor": {
@@ -2521,6 +2529,10 @@ export const MONSTERS_CR_5_8: Monster[] = [
     "tags": [
       "multiattack"
     ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
+    ],
     "subtype": "lycanthrope",
     "skills": {
       "Perception": 7
@@ -2536,7 +2548,7 @@ export const MONSTERS_CR_5_8: Monster[] = [
     "id": "wraith",
     "name": "Wraith",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Undead",
     "alignment": "Neutral Evil",
     "armor": {
@@ -2631,6 +2643,10 @@ export const MONSTERS_CR_5_8: Monster[] = [
     ],
     "tags": [
       "flyer"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "specialAbilities": [
       {
@@ -3133,7 +3149,7 @@ export const MONSTERS_CR_5_8: Monster[] = [
     "id": "mage",
     "name": "Mage",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -3203,6 +3219,10 @@ export const MONSTERS_CR_5_8: Monster[] = [
     ],
     "tags": [
       "multiattack"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "subtype": "wizard",
     "savingThrows": {
@@ -3448,7 +3468,7 @@ export const MONSTERS_CR_5_8: Monster[] = [
     "id": "pirate-captain",
     "name": "Pirate Captain",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -3531,6 +3551,10 @@ export const MONSTERS_CR_5_8: Monster[] = [
     "tags": [
       "multiattack",
       "charmer"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "savingThrows": {
       "str": 3,
@@ -4675,7 +4699,7 @@ export const MONSTERS_CR_5_8: Monster[] = [
     "id": "assassin",
     "name": "Assassin",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -4763,6 +4787,10 @@ export const MONSTERS_CR_5_8: Monster[] = [
     ],
     "tags": [
       "multiattack"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "savingThrows": {
       "dex": 7,

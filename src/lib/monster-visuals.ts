@@ -1,4 +1,5 @@
 import type { Monster } from '@/lib/types';
+import { formatMonsterSize } from '@/lib/monster-size';
 
 export const MONSTER_VISUAL_SCHEMA_VERSION = 1;
 export const MONSTER_IMAGE_PROMPT_VERSION = 1;
@@ -129,7 +130,7 @@ export function visualInputFor(monster: Monster): object {
     artBibleId: MONSTER_ART_BIBLE.id,
     id: monster.id,
     name: monster.name,
-    size: monster.size,
+    size: formatMonsterSize(monster),
     type: monster.type,
     subtype: monster.subtype ?? null,
     armorSource: monster.armor.source ?? null,
@@ -155,7 +156,7 @@ export function visualInputHash(monster: Monster): string {
 
 export function deriveSourceFacts(monster: Monster): string[] {
   const facts = [
-    `Size: ${monster.size}.`,
+    `Size: ${formatMonsterSize(monster)}.`,
     `Creature type: ${monster.type}${monster.subtype ? ` (${monster.subtype})` : ''}.`,
   ];
 

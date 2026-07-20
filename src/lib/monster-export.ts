@@ -1,4 +1,6 @@
 import type { Monster, MonsterAction } from './types';
+import { formatMonsterAlignment } from './monster-alignment';
+import { formatMonsterSize } from './monster-size';
 
 function abilityModifier(score: number): string {
   const modifier = Math.floor((score - 10) / 2);
@@ -58,7 +60,7 @@ export function monsterToMarkdown(monster: Monster): string {
   const lines = [
     `# ${monster.name}`,
     '',
-    `*${monster.size} ${monster.type}${monster.subtype ? ` (${monster.subtype})` : ''}, ${monster.alignment}*`,
+    `*${formatMonsterSize(monster)} ${monster.type}${monster.subtype ? ` (${monster.subtype})` : ''}, ${formatMonsterAlignment(monster.alignment)}*`,
     '',
     '---',
     '',

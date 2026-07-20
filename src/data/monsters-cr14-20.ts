@@ -771,7 +771,7 @@ export const MONSTERS_CR_14_20: Monster[] = [
     "id": "mummy-lord",
     "name": "Mummy Lord",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Undead",
     "alignment": "Lawful Evil",
     "armor": {
@@ -879,6 +879,10 @@ export const MONSTERS_CR_14_20: Monster[] = [
     "tags": [
       "multiattack",
       "magic resistance"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "subtype": "cleric",
     "savingThrows": {

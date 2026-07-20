@@ -51,6 +51,22 @@ describe('validateMonster', () => {
     expect(result.monster.damageResistances).toEqual(['Fire']);
   });
 
+  it('preserves multiple legal sizes', () => {
+    const result = validateMonster({
+      name: 'Flexible Humanoid',
+      challengeRating: 1,
+      hitPoints: 10,
+      armor: { ac: 12 },
+      size: 'Medium',
+      sizeOptions: ['Medium', 'Small'],
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.monster.size).toBe('Medium');
+    expect(result.monster.sizeOptions).toEqual(['Medium', 'Small']);
+  });
+
   it('rejects non-objects', () => {
     expect(validateMonster('a string').ok).toBe(false);
     expect(validateMonster(null).ok).toBe(false);

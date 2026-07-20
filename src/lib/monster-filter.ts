@@ -13,6 +13,7 @@ import type {
   AttackDelivery,
   SourceBook,
 } from './types';
+import { getMonsterSizes } from './monster-size';
 
 // ─── Helpers ────────────────────────────────────────────────────
 
@@ -58,7 +59,7 @@ function matchesFilter(monster: Monster, filter: MonsterFilter): boolean {
 
   // ── Size ──────────────────────────────────────────────────────
   if (filter.sizes && filter.sizes.length > 0) {
-    if (!filter.sizes.includes(monster.size)) {
+    if (!getMonsterSizes(monster).some((size) => filter.sizes!.includes(size))) {
       return false;
     }
   }
@@ -284,7 +285,7 @@ export function getFilterOptions(monsters: Monster[]): FilterOptions {
   let crMax = -Infinity;
 
   for (const m of monsters) {
-    sizes.add(m.size);
+    for (const size of getMonsterSizes(m)) sizes.add(size);
     types.add(m.type);
     sources.add(m.source);
 

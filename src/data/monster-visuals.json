@@ -8,7 +8,7 @@
     "sourceUrl": "https://www.dndbeyond.com/srd",
     "license": "CC-BY-4.0",
     "licenseUrl": "https://creativecommons.org/licenses/by/4.0/legalcode",
-    "sourceCommit": "974d5bfb7ceae1a13c0213d9b73d9692bd28ca49"
+    "sourceCommit": "3c5d9d3175ca9637132011c75efd73aad7a2364d"
   },
   "records": [
     {
@@ -1513,7 +1513,7 @@
       "monsterId": "archmage",
       "monsterName": "Archmage",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid (wizard).",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -1554,16 +1554,16 @@
       "environment": "A high circular study with floating diagrams and a night sky visible through tall windows",
       "altText": "A small elder archmage stands within a clear magical ward while directing bright force bolts.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:52e7e1d0"
+      "inputHash": "fnv1a32:8ba11db8"
     },
     {
       "monsterId": "assassin",
       "monsterName": "Assassin",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -1604,10 +1604,10 @@
       "environment": "A quiet rain-damp courtyard with deep architectural shadows and a low stone wall",
       "altText": "A compact hooded assassin lands silently in a dark courtyard with shortsword and light crossbow ready.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:39cd2e0c"
+      "inputHash": "fnv1a32:267aba44"
     },
     {
       "monsterId": "awakened-shrub",
@@ -1948,7 +1948,7 @@
       "monsterId": "bandit",
       "monsterName": "Bandit",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -1988,16 +1988,16 @@
       "environment": "A lonely roadside cut with scrub, weathered rocks, and subdued overcast light",
       "altText": "A small hooded bandit waits beside a lonely road with scimitar drawn and crossbow on their back.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:3b084ddd"
+      "inputHash": "fnv1a32:ac70f115"
     },
     {
       "monsterId": "bandit-captain",
       "monsterName": "Bandit Captain",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -2037,10 +2037,10 @@
       "environment": "A forest-road ambush beside a stopped wagon, with distant accomplices reduced to soft silhouettes",
       "altText": "A compact bandit captain commands a roadside ambush with scimitar extended and a pistol holstered at the waist.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:f14d75d7"
+      "inputHash": "fnv1a32:da650f63"
     },
     {
       "monsterId": "barbed-devil",
@@ -2288,7 +2288,7 @@
       "monsterId": "berserker",
       "monsterName": "Berserker",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -2328,10 +2328,10 @@
       "environment": "A cold rocky hillside under low cloud with trampled grass and no other combatants visible",
       "altText": "A compact hide-clad berserker charges across a rocky hill with a nicked greataxe raised overhead.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:bf884eb1"
+      "inputHash": "fnv1a32:6423c979"
     },
     {
       "monsterId": "black-bear",
@@ -3501,7 +3501,7 @@
       "monsterId": "commoner",
       "monsterName": "Commoner",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -3538,10 +3538,10 @@
       "environment": "The edge of a modest farmyard with a fence and stacked tools kept in the background",
       "altText": "A compact adult commoner in patched work clothes holds a plain wooden club defensively in a farmyard.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:b0b480a9"
+      "inputHash": "fnv1a32:3910bf81"
     },
     {
       "monsterId": "constrictor-snake",
@@ -3780,7 +3780,7 @@
       "monsterId": "cultist",
       "monsterName": "Cultist",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -3817,16 +3817,16 @@
       "environment": "A ruined cellar shrine lit by a few low candles and kept visually sparse",
       "altText": "A compact hooded cultist advances through a ruined cellar shrine with an iron ritual sickle.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:9325f9f1"
+      "inputHash": "fnv1a32:dd271899"
     },
     {
       "monsterId": "cultist-fanatic",
       "monsterName": "Cultist Fanatic",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -3866,10 +3866,10 @@
       "environment": "A secluded stone cellar with a restrained chalk circle and low candles behind the subject",
       "altText": "A hooded cultist fanatic grips a dark pact blade as violet necrotic light threads across a ritual glove.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:2996936e"
+      "inputHash": "fnv1a32:98314ec2"
     },
     {
       "monsterId": "darkmantle",
@@ -4407,7 +4407,7 @@
       "monsterId": "druid",
       "monsterName": "Druid",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -4447,10 +4447,10 @@
       "environment": "A rain-fresh forest glade with mossy stones and a clear open space around the full figure",
       "altText": "A compact forest druid guides a green-gold wisp beside a vine-wrapped staff in a rain-fresh glade.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:cd46553d"
+      "inputHash": "fnv1a32:5f3deea5"
     },
     {
       "monsterId": "dryad",
@@ -6890,7 +6890,7 @@
       "monsterId": "gladiator",
       "monsterName": "Gladiator",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -6930,10 +6930,10 @@
       "environment": "A quiet stone arena floor after the crowd has fallen into shadow",
       "altText": "A compact armored gladiator braces behind a scarred shield with a long spear ready.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:07fa33a4"
+      "inputHash": "fnv1a32:39efa80c"
     },
     {
       "monsterId": "gnoll-warrior",
@@ -7566,7 +7566,7 @@
       "monsterId": "guard",
       "monsterName": "Guard",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -7604,16 +7604,16 @@
       "environment": "A worn town gate at dusk with masonry and a lantern softly behind the figure",
       "altText": "A compact town guard holds a gateway with a round shield forward and a plain spear ready.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:11978cd7"
+      "inputHash": "fnv1a32:7bba6d0f"
     },
     {
       "monsterId": "guard-captain",
       "monsterName": "Guard Captain",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -7653,10 +7653,10 @@
       "environment": "A fortified city gate at dawn with simple masonry and a lowered barrier in soft focus",
       "altText": "A compact guard captain holds a longsword at a city gate with paired javelins and a muted command sash.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:5f991f7a"
+      "inputHash": "fnv1a32:4e200d6e"
     },
     {
       "monsterId": "guardian-naga",
@@ -8832,7 +8832,7 @@
       "monsterId": "knight",
       "monsterName": "Knight",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -8872,10 +8872,10 @@
       "environment": "A castle approach under overcast light with simple stonework and open ground around the stance",
       "altText": "A compact knight in brushed plate guards a castle approach with greatsword ready and heavy crossbow on the back.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:aa5d08cb"
+      "inputHash": "fnv1a32:ccd47713"
     },
     {
       "monsterId": "kobold-warrior",
@@ -9222,7 +9222,7 @@
       "monsterId": "mage",
       "monsterName": "Mage",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid (wizard).",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -9263,10 +9263,10 @@
       "environment": "A quiet ruined observatory with broken star charts and open sky behind the figure",
       "altText": "A compact robed mage casts blue-white bolts of force in a ruined observatory.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:e0637c66"
+      "inputHash": "fnv1a32:cea6e01e"
     },
     {
       "monsterId": "magma-mephit",
@@ -9904,7 +9904,7 @@
       "monsterId": "mummy",
       "monsterName": "Mummy",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Undead.",
         "Movement modes: Walk.",
         "Listed environments: Desert, Swamp.",
@@ -9944,16 +9944,16 @@
       "environment": "A sealed desert tomb chamber with low carved stone and dust suspended in one shaft of light",
       "altText": "A compact linen-wrapped mummy advances through a dusty tomb with one darkened fist raised and glare fixed forward.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:c33deb1f"
+      "inputHash": "fnv1a32:15a05a17"
     },
     {
       "monsterId": "mummy-lord",
       "monsterName": "Mummy Lord",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Undead (cleric).",
         "Movement modes: Walk.",
         "Listed environments: Desert, Swamp.",
@@ -9994,10 +9994,10 @@
       "environment": "A sealed desert burial hall with cracked ritual stones and windblown dust crossing the floor",
       "altText": "A compact mummy lord stands on a burial dais, wrapped fist raised as black-violet energy spreads outward.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:52c8a761"
+      "inputHash": "fnv1a32:5a4c466d"
     },
     {
       "monsterId": "nalfeshnee",
@@ -10152,7 +10152,7 @@
       "monsterId": "noble",
       "monsterName": "Noble",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -10191,10 +10191,10 @@
       "environment": "A restrained manor courtyard with pale stone and clipped greenery behind the subject",
       "altText": "A compact noble in a navy travel coat holds a slender rapier in a poised manor courtyard stance.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:133e53df"
+      "inputHash": "fnv1a32:6c951477"
     },
     {
       "monsterId": "ochre-jelly",
@@ -10778,7 +10778,7 @@
       "monsterId": "pirate",
       "monsterName": "Pirate",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -10817,16 +10817,16 @@
       "environment": "The rain-dark deck of a wooden sailing vessel with blurred rigging and gray sea beyond",
       "altText": "A small deck pirate flourishes a dagger on a rain-dark ship while loose coat tails whip in the sea wind.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:f02b3f0a"
+      "inputHash": "fnv1a32:12f4a552"
     },
     {
       "monsterId": "pirate-captain",
       "monsterName": "Pirate Captain",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -10867,10 +10867,10 @@
       "environment": "The rain-dark deck of a wooden sailing ship with rigging blurred behind the subject",
       "altText": "A compact pirate captain braces on a stormy deck with rapier drawn and a flintlock pistol ready.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:7f2e1e02"
+      "inputHash": "fnv1a32:e4e52e26"
     },
     {
       "monsterId": "pit-fiend",
@@ -11121,7 +11121,7 @@
       "monsterId": "priest",
       "monsterName": "Priest",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid (cleric).",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -11161,16 +11161,16 @@
       "environment": "A quiet stone sanctuary with simple arches and enough floor visible to read the full stance",
       "altText": "A compact blue-robed priest guards with a steel mace while holding a white-gold radiant flame aloft.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:e8d15443"
+      "inputHash": "fnv1a32:fcf68b9b"
     },
     {
       "monsterId": "priest-acolyte",
       "monsterName": "Priest Acolyte",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid (cleric).",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -11208,10 +11208,10 @@
       "environment": "A modest stone sanctuary with neutral geometric carvings and soft window light",
       "altText": "A compact priest acolyte in simple vestments holds an iron mace while golden radiance gathers in one hand.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:129e767e"
+      "inputHash": "fnv1a32:dd4542ca"
     },
     {
       "monsterId": "pseudodragon",
@@ -12229,7 +12229,7 @@
       "monsterId": "scout",
       "monsterName": "Scout",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -12268,10 +12268,10 @@
       "environment": "A wooded ridge overlooking a misty path with open sight lines around the figure",
       "altText": "A compact hooded scout kneels on a wooded ridge with longbow half-drawn and shortsword at the hip.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:8370f505"
+      "inputHash": "fnv1a32:4eb2b40d"
     },
     {
       "monsterId": "sea-hag",
@@ -13051,7 +13051,7 @@
       "monsterId": "spy",
       "monsterName": "Spy",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Climb, Walk.",
         "Listed environments: Any.",
@@ -13091,10 +13091,10 @@
       "environment": "A moonlit urban rooftop above a quiet courtyard with uncluttered masonry shapes",
       "altText": "A compact hooded spy climbs a moonlit parapet with a hand crossbow ready and shortsword concealed at the hip.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:6724c76f"
+      "inputHash": "fnv1a32:17458d67"
     },
     {
       "monsterId": "steam-mephit",
@@ -13826,7 +13826,7 @@
       "monsterId": "tough",
       "monsterName": "Tough",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -13864,16 +13864,16 @@
       "environment": "A narrow stone alley with crates and a shuttered doorway kept in soft focus",
       "altText": "A compact street tough braces in a stone alley with an iron mace raised and heavy crossbow on the back.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:9016f9d3"
+      "inputHash": "fnv1a32:0b13f3eb"
     },
     {
       "monsterId": "tough-boss",
       "monsterName": "Tough Boss",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -13913,10 +13913,10 @@
       "environment": "A fortified alley checkpoint built from crates, rough barricades, and rain-dark stone",
       "altText": "A compact armored tough boss commands a barricaded alley with warhammer and heavy crossbow ready.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:680896ac"
+      "inputHash": "fnv1a32:659fc950"
     },
     {
       "monsterId": "treant",
@@ -14218,7 +14218,7 @@
       "monsterId": "vampire",
       "monsterName": "Vampire",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Undead.",
         "Movement modes: Climb, Walk.",
         "Listed environments: Underdark, Urban.",
@@ -14260,16 +14260,16 @@
       "environment": "A moonlit upper gallery in an abandoned city manor with tall windows and deep stone shadows",
       "altText": "A pale vampire walks down a moonlit manor wall as one hand gathers grave force and the other turns to mist.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:1ae82cba"
+      "inputHash": "fnv1a32:045e3922"
     },
     {
       "monsterId": "vampire-familiar",
       "monsterName": "Vampire Familiar",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Climb, Walk.",
         "Listed environments: Underdark, Urban.",
@@ -14311,16 +14311,16 @@
       "environment": "A narrow moonlit manor exterior with a climbable stone wall and one dark window above",
       "altText": "A pale vampire familiar springs from a moonlit manor wall with two shadow-wreathed daggers and more blades concealed.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:ea4b32e9"
+      "inputHash": "fnv1a32:691448ad"
     },
     {
       "monsterId": "vampire-spawn",
       "monsterName": "Vampire Spawn",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Undead.",
         "Movement modes: Walk.",
         "Listed environments: Underdark, Urban.",
@@ -14361,10 +14361,10 @@
       "environment": "A narrow moonlit city ruin with high stone walls suited to supernatural climbing",
       "altText": "A pale vampire spawn clings to a moonlit stone wall, claws spread and fangs visible.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:660a63a6"
+      "inputHash": "fnv1a32:2d8cbd4a"
     },
     {
       "monsterId": "venomous-snake",
@@ -14653,7 +14653,7 @@
       "monsterId": "warrior-infantry",
       "monsterName": "Warrior Infantry",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -14692,16 +14692,16 @@
       "environment": "A churned field path with indistinct formation shapes kept far in the background",
       "altText": "A compact infantry warrior braces behind a tall wooden shield with a plain spear leveled.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:0eba2fba"
+      "inputHash": "fnv1a32:5d1bba3e"
     },
     {
       "monsterId": "warrior-veteran",
       "monsterName": "Warrior Veteran",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Humanoid.",
         "Movement modes: Walk.",
         "Listed environments: Any.",
@@ -14741,10 +14741,10 @@
       "environment": "A churned field camp at dawn with low tents and palisade shapes kept distant",
       "altText": "A compact scarred warrior veteran stands in repaired armor with greatsword guarded and heavy crossbow on the back.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:cc89d5f9"
+      "inputHash": "fnv1a32:6d4ddbb5"
     },
     {
       "monsterId": "water-elemental",
@@ -14846,7 +14846,7 @@
       "monsterId": "werebear",
       "monsterName": "Werebear",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Monstrosity (lycanthrope).",
         "Movement modes: Climb, Walk.",
         "Listed environments: Arctic, Forest, Hill.",
@@ -14887,16 +14887,16 @@
       "environment": "A cold forest hillside with scratched tree trunks and exposed stone ledges",
       "altText": "A compact werebear rises into a clawing attack on a cold forest slope with a handaxe in one fist.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:df25b4c3"
+      "inputHash": "fnv1a32:b24736bb"
     },
     {
       "monsterId": "wereboar",
       "monsterName": "Wereboar",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Monstrosity (lycanthrope).",
         "Movement modes: Walk.",
         "Listed environments: Forest, Grassland, Hill.",
@@ -14936,16 +14936,16 @@
       "environment": "A churned woodland track at the edge of a grassy hill under low storm light",
       "altText": "A bristled wereboar in hybrid form charges along a muddy woodland track with a javelin raised.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:5397f9d9"
+      "inputHash": "fnv1a32:a9510b81"
     },
     {
       "monsterId": "wererat",
       "monsterName": "Wererat",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Monstrosity (lycanthrope).",
         "Movement modes: Climb, Walk.",
         "Listed environments: Forest, Urban.",
@@ -14985,16 +14985,16 @@
       "environment": "A brick-lined urban cellar with timber beams and a low pool of reflected lantern light",
       "altText": "A small gray-brown wererat crouches on a cellar beam with hand crossbow aimed and naked tail wrapped for balance.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:70b93c02"
+      "inputHash": "fnv1a32:a2a49d4a"
     },
     {
       "monsterId": "weretiger",
       "monsterName": "Weretiger",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Monstrosity (lycanthrope).",
         "Movement modes: Walk.",
         "Listed environments: Desert, Forest, Grassland.",
@@ -15034,16 +15034,16 @@
       "environment": "A sun-dappled grassland margin beside dense forest with open space around the figure",
       "altText": "A striped weretiger in agile hybrid form stalks through tall grass with a longbow on its back.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:3ae7ccab"
+      "inputHash": "fnv1a32:50080813"
     },
     {
       "monsterId": "werewolf",
       "monsterName": "Werewolf",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Monstrosity (lycanthrope).",
         "Movement modes: Walk.",
         "Listed environments: Forest, Hill.",
@@ -15084,10 +15084,10 @@
       "environment": "A moonlit forest hill with broken brush and open ground around the crouched form",
       "altText": "A compact gray werewolf crouches on a moonlit hill with claws forward and a longbow across its back.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:7a69c05e"
+      "inputHash": "fnv1a32:267527b6"
     },
     {
       "monsterId": "white-dragon-wyrmling",
@@ -15384,7 +15384,7 @@
       "monsterId": "wraith",
       "monsterName": "Wraith",
       "sourceFacts": [
-        "Size: Small.",
+        "Size: Medium or Small.",
         "Creature type: Undead.",
         "Movement modes: Fly, Hover, Walk.",
         "Listed environments: Planar, Underdark.",
@@ -15425,10 +15425,10 @@
       "environment": "A vast underworld passage of broken black stone with distant pale planar light",
       "altText": "A small hooded wraith glides through a black stone passage with one spectral hand reaching forward.",
       "confidence": "reference-derived",
-      "reviewStatus": "approved",
-      "imageStatus": "draft",
+      "reviewStatus": "needs-revision",
+      "imageStatus": "needs-revision",
       "promptVersion": 1,
-      "inputHash": "fnv1a32:7eaf5fa4"
+      "inputHash": "fnv1a32:c9dd72fc"
     },
     {
       "monsterId": "wyvern",

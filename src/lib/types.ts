@@ -133,7 +133,10 @@ export interface Monster {
   id: string;
   name: string;
   source: SourceBook;
+  /** Primary/default size used by rules engines. */
   size: Size;
+  /** All legal sizes, in display order, when the stat block allows a choice. */
+  sizeOptions?: Size[];
   type: CreatureType;
   subtype?: string;          // e.g. "devil", "goblinoid", "shapechanger"
   alignment: Alignment;

@@ -1743,7 +1743,7 @@ export const MONSTERS_CR_HALF_1: Monster[] = [
     "id": "scout",
     "name": "Scout",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -1825,6 +1825,10 @@ export const MONSTERS_CR_HALF_1: Monster[] = [
     ],
     "tags": [
       "multiattack"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "skills": {
       "Nature": 4,
@@ -2042,7 +2046,7 @@ export const MONSTERS_CR_HALF_1: Monster[] = [
     "id": "tough",
     "name": "Tough",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -2121,6 +2125,10 @@ export const MONSTERS_CR_HALF_1: Monster[] = [
     ],
     "tags": [
       "pack tactics"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "specialAbilities": [
       {
@@ -4338,7 +4346,7 @@ export const MONSTERS_CR_HALF_1: Monster[] = [
     "id": "pirate",
     "name": "Pirate",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -4414,6 +4422,10 @@ export const MONSTERS_CR_HALF_1: Monster[] = [
     "tags": [
       "multiattack",
       "charmer"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "savingThrows": {
       "dex": 5,
@@ -4857,7 +4869,7 @@ export const MONSTERS_CR_HALF_1: Monster[] = [
     "id": "spy",
     "name": "Spy",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -4939,6 +4951,10 @@ export const MONSTERS_CR_HALF_1: Monster[] = [
       "Ranged"
     ],
     "tags": [],
+    "sizeOptions": [
+      "Medium",
+      "Small"
+    ],
     "skills": {
       "Deception": 5,
       "Insight": 4,
