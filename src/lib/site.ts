@@ -94,6 +94,13 @@ export const TOOL_ROUTES: RouteInfo[] = [
   },
 ];
 
+/** Tools that make sense as links from inside a DM Screen. The screen itself
+ * is intentionally excluded: embedding a link back to the current surface is
+ * circular and appears broken when selected. */
+export const DM_SCREEN_TOOL_ROUTES: RouteInfo[] = TOOL_ROUTES.filter(
+  (route) => route.path !== '/dm-screen',
+);
+
 /** Every indexable route — drives sitemap.xml. */
 export const ALL_ROUTE_PATHS: string[] = [
   '/',
