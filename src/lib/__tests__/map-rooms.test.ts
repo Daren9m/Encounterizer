@@ -64,15 +64,15 @@ describe('generateMap rooms', () => {
       featureDensity: 'Dense', terrainVariety: 'Wild',
     });
     expect(map.seed).toBe(4242);
-    expect(map.genOptions).toEqual({ featureDensity: 'Dense', terrainVariety: 'Wild' });
+    expect(map.genOptions).toEqual({ featureDensity: 'Dense', terrainVariety: 'Wild', scale: 'Standard' });
 
-    const withRooms = generateMap({ environment: 'Urban', seed: 7, roomCount: 6 });
+    const withRooms = generateMap({ environment: 'Urban', layout: 'dungeon', seed: 7, roomCount: 6 });
     expect(withRooms.genOptions?.roomCount).toBe(6);
   });
 
   it('honors roomCount within a tolerance of 2 on dungeon maps', () => {
     for (const seed of [11, 22, 33]) {
-      const map = generateMap({ environment: 'Urban', seed, width: 32, height: 24, roomCount: 8 });
+      const map = generateMap({ environment: 'Urban', layout: 'dungeon', seed, width: 32, height: 24, roomCount: 8 });
       const carved = map.rooms!.filter((room) => room.kind === 'room');
       expect(carved.length).toBeGreaterThanOrEqual(6);
       expect(carved.length).toBeLessThanOrEqual(10);
@@ -80,7 +80,7 @@ describe('generateMap rooms', () => {
   });
 
   it('numbers rooms sequentially and keeps bounds inside the map', () => {
-    const map = generateMap({ environment: 'Urban', seed: 99 });
+    const map = generateMap({ environment: 'Urban', layout: 'dungeon', seed: 99 });
     map.rooms!.forEach((room, i) => {
       expect(room.id).toBe(i + 1);
       expect(room.bounds.x).toBeGreaterThanOrEqual(0);
@@ -91,7 +91,7 @@ describe('generateMap rooms', () => {
   });
 
   it('tags entrance, exit, and boss rooms on dungeon maps', () => {
-    const map = generateMap({ environment: 'Urban', seed: 42, width: 32, height: 24 });
+    const map = generateMap({ environment: 'Urban', layout: 'dungeon', seed: 42, width: 32, height: 24 });
     const tags = map.rooms!.flatMap((room) => room.tags);
     expect(tags).toContain('entrance');
     expect(tags).toContain('exit');
@@ -126,7 +126,7 @@ describe('generateMap rooms', () => {
   });
 
   it('places stairs on dungeon maps', () => {
-    const map = generateMap({ environment: 'Urban', seed: 42, width: 32, height: 24 });
+    const map = generateMap({ environment: 'Urban', layout: 'dungeon', seed: 42, width: 32, height: 24 });
     expect(findTerrain(map, 'stairs')).not.toBeNull();
   });
 
@@ -139,7 +139,7 @@ describe('generateMap rooms', () => {
   });
 
   it('provides spawn zones even on the smallest dungeon maps', () => {
-    const map = generateMap({ environment: 'Urban', seed: 5, width: 10, height: 10 });
+    const map = generateMap({ environment: 'Urban', layout: 'dungeon', seed: 5, width: 10, height: 10 });
     const tags = map.rooms!.flatMap((room) => room.tags);
     expect(tags).toContain('spawn:party');
     expect(tags).toContain('spawn:monster');

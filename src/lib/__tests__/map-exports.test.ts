@@ -5,7 +5,7 @@ import { wallBoundaries } from '@/lib/map-render/wall-geometry';
 import { buildUvtt } from '@/lib/uvtt-export';
 import type { EncounterMap } from '@/lib/types';
 
-const DUNGEON = generateMap({ environment: 'Urban', seed: 42, width: 32, height: 24 });
+const DUNGEON = generateMap({ environment: 'Urban', layout: 'dungeon', seed: 42, width: 32, height: 24 });
 const CAVE = generateMap({ environment: 'Underdark', seed: 7 });
 
 describe('mapToMarkdown', () => {

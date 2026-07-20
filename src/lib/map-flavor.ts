@@ -15,7 +15,7 @@ import type { Environment, MapRoom, MapRoomTag } from './types';
 
 export const FLAVOR_STREAM_SALT = 0x466c6176; // 'Flav'
 
-export type MapStructure = 'dungeon' | 'cave' | 'outdoor';
+export type MapStructure = 'dungeon' | 'cave' | 'outdoor' | 'city';
 
 interface RoomArchetype {
   name: string;
@@ -97,6 +97,33 @@ const OUTDOOR_LANDMARK: RoomArchetype[] = [
   { name: 'Broken Ground', purpose: 'A knot of obstacles mid-field: cover, concealment, and places a body can lie unseen until stepped on.' },
   { name: 'Standing Stones', purpose: 'Old markers nobody remembers raising, for a purpose nobody wrote down. The fight will bend around them. It may not be the first.' },
   { name: 'Ruined Waypost', purpose: 'A collapsed structure with one good wall left. Everyone will want it. Someone may already have it.' },
+];
+
+const CITY_APPROACH: RoomArchetype[] = [
+  { name: 'City Gate', purpose: 'The way in, under the eyes of whatever keeps watch now. The portcullis has not been raised in some time — nor fully lowered.' },
+  { name: 'Outer Lane', purpose: 'The street the party arrives by. The doors along it are shut, and stay shut, and someone behind each one is listening.' },
+  { name: 'Caravan Yard', purpose: 'Where wagons stop and unload. The last caravan unloaded in a hurry, and left things it meant to keep.' },
+];
+
+const CITY_OPPOSITION: RoomArchetype[] = [
+  { name: 'Far Ward', purpose: 'The deep end of the district. The people who live here stopped answering knocks before the trouble started.' },
+  { name: 'Barricade Line', purpose: 'Furniture, cart-beds, and pew-wood stacked across the street. Built facing the way the party is coming from.' },
+  { name: 'Shadowed Colonnade', purpose: 'Covered walkways with sightlines down every approach. Whatever holds this street chose it for exactly that.' },
+];
+
+const CITY_BOSS: RoomArchetype[] = [
+  { name: 'Grand Plaza', purpose: 'The heart of the district, wide enough for a proclamation or a massacre. It has hosted both.' },
+  { name: 'Execution Square', purpose: 'The scaffold timber is still sound. The crowd-stains on the cobbles never fully washed out.' },
+  { name: 'Cathedral Forecourt', purpose: 'Holy ground, once. The doors behind it are barred from the inside.' },
+];
+
+const CITY_LANDMARK: RoomArchetype[] = [
+  { name: 'Fountain Square', purpose: 'Water still runs, which means someone maintains it. Nobody admits to being that someone.' },
+  { name: 'Market Row', purpose: 'Stalls and awnings, some still stocked. Whatever emptied the street did not come for the goods.' },
+  { name: 'Shrine Steps', purpose: 'Wax from a thousand candles, the newest less than a day old. Prayers here are getting shorter and more specific.' },
+  { name: 'Old Well Plaza', purpose: 'The neighborhood water source. Lately people draw their buckets fast and do not look down the shaft.' },
+  { name: 'Gallows Corner', purpose: 'The rope is gone. The knot-worn beam is not. Locals cross the square rather than walk beneath it.' },
+  { name: 'Hanging Garden', purpose: 'Green things climbing dead walls. Something tends it at night; the pruning cuts are too clean.' },
 ];
 
 const RIVER_LANDMARK: RoomArchetype[] = [
@@ -191,6 +218,13 @@ function archetypeFor(
   genericQueue: RoomArchetype[],
   rng: Rng,
 ): RoomArchetype {
+  if (structure === 'city') {
+    if (hasTag(room, 'spawn:party')) return pick(CITY_APPROACH, rng);
+    if (hasTag(room, 'boss')) return pick(CITY_BOSS, rng);
+    if (hasTag(room, 'landmark')) return pick(CITY_LANDMARK, rng);
+    if (hasTag(room, 'spawn:monster')) return pick(CITY_OPPOSITION, rng);
+    return pick(CITY_LANDMARK, rng);
+  }
   if (structure === 'outdoor' || room.kind === 'zone') {
     if (hasTag(room, 'hazard')) return pick(RIVER_LANDMARK, rng);
     if (hasTag(room, 'spawn:party')) return pick(OUTDOOR_APPROACH, rng);
