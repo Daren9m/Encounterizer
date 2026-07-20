@@ -3,11 +3,11 @@
 import { EncounterAssessment } from '@/lib/types';
 
 const CLASSES: Record<EncounterAssessment, string> = {
-  Trivial: 'badge-trivial',
-  Low: 'badge-low',
-  Moderate: 'badge-moderate',
-  High: 'badge-high',
-  Extreme: 'badge-extreme',
+  Trivial: 'difficulty-status-trivial',
+  Low: 'difficulty-status-low',
+  Moderate: 'difficulty-status-moderate',
+  High: 'difficulty-status-high',
+  Extreme: 'difficulty-status-extreme',
 };
 
 const TOOLTIPS: Partial<Record<EncounterAssessment, string>> = {
@@ -16,11 +16,15 @@ const TOOLTIPS: Partial<Record<EncounterAssessment, string>> = {
 };
 
 export default function DifficultyBadge({ difficulty }: { difficulty: EncounterAssessment }) {
+  const explanation = TOOLTIPS[difficulty];
+
   return (
     <span
-      className={`${CLASSES[difficulty]} px-3 py-1 rounded-full text-xs`}
-      title={TOOLTIPS[difficulty]}
+      className={`difficulty-status ${CLASSES[difficulty]}`}
+      title={explanation}
+      aria-label={explanation ? `${difficulty}. ${explanation}` : difficulty}
     >
+      <span className="difficulty-status-dot" aria-hidden="true" />
       {difficulty}
     </span>
   );

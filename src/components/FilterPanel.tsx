@@ -32,6 +32,12 @@ interface FilterPanelProps {
   onChange: (filter: MonsterFilter) => void;
   resultCount?: number;
   defaultSortBy?: NonNullable<MonsterFilter['sortBy']>;
+  /** Removes the outer card treatment when the filters already sit inside a panel. */
+  embedded?: boolean;
+  /** The encounter builder already has one authoritative environment field. */
+  hideEnvironment?: boolean;
+  /** Sorting changes list presentation, not the generator's candidate pool. */
+  hideSort?: boolean;
 }
 
 function ChipGroup<T extends string>({
@@ -69,6 +75,9 @@ export default function FilterPanel({
   onChange,
   resultCount,
   defaultSortBy = 'name',
+  embedded = false,
+  hideEnvironment = false,
+  hideSort = false,
 }: FilterPanelProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -95,11 +104,11 @@ export default function FilterPanel({
   ).length;
 
   return (
-    <div className="filter-panel card mb-4 !p-3 print:hidden">
+    <div className={`filter-panel print:hidden ${embedded ? 'p-4' : 'card mb-4 !p-3'}`}>
       {/* Search + CR range (always visible) */}
       <div className="flex flex-wrap items-end gap-2.5">
         <div className="flex-1 min-w-[200px]">
-          <label htmlFor="filter-search" className="micro-label block mb-1">
+          <label htmlFor="filter-search" className="field-label">
             Search
           </label>
           <input
@@ -112,7 +121,7 @@ export default function FilterPanel({
           />
         </div>
         <div className="w-24">
-          <label htmlFor="filter-cr-min" className="micro-label block mb-1">
+          <label htmlFor="filter-cr-min" className="field-label">
             CR Min
           </label>
           <input
@@ -127,7 +136,7 @@ export default function FilterPanel({
           />
         </div>
         <div className="w-24">
-          <label htmlFor="filter-cr-max" className="micro-label block mb-1">
+          <label htmlFor="filter-cr-max" className="field-label">
             CR Max
           </label>
           <input
@@ -147,7 +156,7 @@ export default function FilterPanel({
             onClick={() => setExpanded(!expanded)}
             aria-expanded={expanded}
             aria-controls="filter-panel-expanded"
-            className="btn-secondary !min-h-9 !px-3 text-sm"
+            className="btn-secondary px-3 text-sm"
           >
             {expanded ? 'Less Filters' : 'More Filters'}
             {activeFilterCount > 0 && (
@@ -159,8 +168,8 @@ export default function FilterPanel({
           {activeFilterCount > 0 && (
             <button
               type="button"
-              onClick={() => onChange({ sortBy: defaultSortBy })}
-              className="inline-flex min-h-9 items-center px-1 text-sm text-[var(--text-2)] underline transition-colors hover:text-[var(--bronze)]"
+              onClick={() => onChange(hideSort ? {} : { sortBy: defaultSortBy })}
+              className="btn-ghost px-2 text-sm"
             >
               Clear
             </button>
@@ -179,7 +188,9 @@ export default function FilterPanel({
         <div id="filter-panel-expanded" className="filter-groups-grid mt-3 grid gap-2.5 animate-fade-in xl:grid-cols-2">
           <ChipGroup label="Size" options={SIZES} selected={filter.sizes ?? []} onToggle={v => toggle('sizes', v)} />
           <ChipGroup label="Creature Type" options={TYPES} selected={filter.types ?? []} onToggle={v => toggle('types', v)} />
-          <ChipGroup label="Environment" options={ENVIRONMENTS} selected={filter.environments ?? []} onToggle={v => toggle('environments', v)} />
+          {!hideEnvironment && (
+            <ChipGroup label="Environment" options={ENVIRONMENTS} selected={filter.environments ?? []} onToggle={v => toggle('environments', v)} />
+          )}
           <ChipGroup label="Movement" options={MOVEMENT_MODES} selected={filter.movementModes ?? []} onToggle={v => toggle('movementModes', v)} />
           <ChipGroup label="Deals Damage Type" options={DAMAGE_TYPES} selected={filter.attackDamageTypes ?? []} onToggle={v => toggle('attackDamageTypes', v)} />
           <ChipGroup label="Attack Range" options={ATTACK_MODES} selected={filter.attackDeliveryModes ?? []} onToggle={v => toggle('attackDeliveryModes', v)} />
@@ -218,38 +229,35 @@ export default function FilterPanel({
             </label>
           </div>
 
-          {/* Sort */}
-          <div className="flex items-end gap-3 xl:col-span-2">
-            <div>
-              <label htmlFor="filter-sort-by" className="micro-label block mb-1">
-                Sort By
-              </label>
-              <select
-                id="filter-sort-by"
-                value={filter.sortBy ?? defaultSortBy}
-                onChange={e => set('sortBy', e.target.value as MonsterFilter['sortBy'])}
-              >
-                <option value="family">Related monsters</option>
-                <option value="name">Name</option>
-                <option value="cr">Challenge Rating</option>
-                <option value="hp">Hit Points</option>
-                <option value="ac">Armor Class</option>
-              </select>
+          {!hideSort && (
+            <div className="flex items-end gap-3 xl:col-span-2">
+              <div>
+                <label htmlFor="filter-sort-by" className="field-label">Sort by</label>
+                <select
+                  id="filter-sort-by"
+                  value={filter.sortBy ?? defaultSortBy}
+                  onChange={e => set('sortBy', e.target.value as MonsterFilter['sortBy'])}
+                >
+                  <option value="family">Related monsters</option>
+                  <option value="name">Name</option>
+                  <option value="cr">Challenge Rating</option>
+                  <option value="hp">Hit Points</option>
+                  <option value="ac">Armor Class</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="filter-sort-dir" className="field-label">Direction</label>
+                <select
+                  id="filter-sort-dir"
+                  value={filter.sortDir ?? 'asc'}
+                  onChange={e => set('sortDir', e.target.value as 'asc' | 'desc')}
+                >
+                  <option value="asc">Ascending</option>
+                  <option value="desc">Descending</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label htmlFor="filter-sort-dir" className="micro-label block mb-1">
-                Direction
-              </label>
-              <select
-                id="filter-sort-dir"
-                value={filter.sortDir ?? 'asc'}
-                onChange={e => set('sortDir', e.target.value as 'asc' | 'desc')}
-              >
-                <option value="asc">Ascending</option>
-                <option value="desc">Descending</option>
-              </select>
-            </div>
-          </div>
+          )}
         </div>
       )}
     </div>
