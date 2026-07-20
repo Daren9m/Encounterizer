@@ -59,6 +59,11 @@ import {
   encounterToFoundry,
   encounterToMarkdown,
 } from '@/lib/encounter-export';
+import {
+  battleFromEncounter,
+  isBattleState,
+  type BattleState,
+} from '@/lib/battle-organizer';
 
 const DIFFICULTIES: Difficulty[] = ['Trivial', 'Low', 'Moderate', 'High', 'Extreme'];
 const MAP_DENSITIES: MapFeatureDensity[] = ['Sparse', 'Balanced', 'Dense'];
@@ -799,6 +804,29 @@ function EncounterBuilder() {
     window.setTimeout(cleanup, 1000);
   }, []);
 
+  const handleRunBattle = useCallback(() => {
+    if (!encounter || encounter.monsters.length === 0) return;
+    const existing = storageLoad<BattleState | null>(
+      'battleOrganizer',
+      null,
+      (value): value is BattleState | null => value === null || isBattleState(value),
+    );
+    if (
+      existing?.combatants.length
+      && !window.confirm(`Replace the current battle “${existing.name}” with “${encounter.name}”?`)
+    ) return;
+
+    const members = partyConfig?.members.length
+      ? partyConfig.members
+      : defaultPartyConfig(partySize, partyLevel);
+    const nextBattle = battleFromEncounter(encounter, members);
+    if (!storageSave('battleOrganizer', nextBattle)) {
+      window.alert('The battle could not be saved in this browser.');
+      return;
+    }
+    window.location.assign('/battle/');
+  }, [encounter, partyConfig, partyLevel, partySize]);
+
   const handleSaveEncounter = useCallback(() => {
     if (!encounter || savingName === null) return;
     const name = savingName.trim() || encounter.name;
@@ -1221,6 +1249,14 @@ function EncounterBuilder() {
                 <h2 className="text-2xl">{encounter.name}</h2>
               )}
               <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+                <button
+                  type="button"
+                  onClick={handleRunBattle}
+                  className="btn-primary text-sm print:hidden"
+                >
+                  <Swords size={17} aria-hidden="true" />
+                  Run Battle
+                </button>
                 {summary.assessment && <DifficultyBadge difficulty={summary.assessment} />}
                 <button
                   type="button"
