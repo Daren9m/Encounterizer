@@ -1,7 +1,29 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Minus, Plus, Swords, X } from 'lucide-react';
+import {
+  BookOpen,
+  Box,
+  Check,
+  ChevronDown,
+  FileJson,
+  FileText,
+  Filter,
+  Map as MapIcon,
+  Minus,
+  Pencil,
+  Play,
+  Plus,
+  Printer,
+  Save,
+  Share2,
+  SlidersHorizontal,
+  Sparkles,
+  Swords,
+  UserRound,
+  Users,
+  X,
+} from 'lucide-react';
 import { filterMonsters } from '@/lib/monster-filter';
 import { useMonsters } from '@/app/hooks/useMonsters';
 import {
@@ -181,6 +203,12 @@ function isEnvironment(v: string | null): v is Environment {
   return v !== null && (ENVIRONMENTS as string[]).includes(v);
 }
 
+function withoutEnvironmentFilter(filter: MonsterFilter): MonsterFilter {
+  const next = { ...filter };
+  delete next.environments;
+  return next;
+}
+
 function isMapFeatureDensity(v: unknown): v is MapFeatureDensity {
   return typeof v === 'string' && (MAP_DENSITIES as string[]).includes(v);
 }
@@ -305,12 +333,15 @@ function EncounterBuilder() {
   const [simRunning, setSimRunning] = useState(false);
   const [whatIfReports, setWhatIfReports] = useState<WhatIfResult[]>([]);
   const partySetupRef = useRef<HTMLDivElement>(null);
+  const configurePartyButtonRef = useRef<HTMLButtonElement>(null);
 
   // Saved encounters + save-name input
   const [savedEncounters, setSavedEncounters, savedHydrated] =
     usePersistentState<SavedEncounter[]>('savedEncounters', []);
   const [savingName, setSavingName] = useState<string | null>(null);
   const [editingDetails, setEditingDetails] = useState(false);
+  const saveEncounterButtonRef = useRef<HTMLButtonElement>(null);
+  const editDetailsButtonRef = useRef<HTMLButtonElement>(null);
 
   // Persisted page settings. Declared BEFORE the URL-init effect so a shared
   // link's params win over remembered settings.
@@ -406,14 +437,30 @@ function EncounterBuilder() {
     });
   }, []);
 
+  const closePartySetup = useCallback(() => {
+    setShowPartySetup(false);
+    window.requestAnimationFrame(() => configurePartyButtonRef.current?.focus());
+  }, []);
+
+  const closeDetailsEditor = useCallback(() => {
+    setEditingDetails(false);
+    window.requestAnimationFrame(() => editDetailsButtonRef.current?.focus());
+  }, []);
+
+  const closeSaveEncounter = useCallback(() => {
+    setSavingName(null);
+    window.requestAnimationFrame(() => saveEncounterButtonRef.current?.focus());
+  }, []);
+
   const runGenerate = useCallback((cfg: GenerateConfig) => {
+    const generatorFilter = withoutEnvironmentFilter(cfg.filter);
     const enc = generateEncounter(
       allMonsters,
       {
         party: buildParty(cfg.partySize, cfg.partyLevel),
         difficulty: cfg.difficulty,
         environment: cfg.environment,
-        filter: cfg.filter,
+        filter: generatorFilter,
         seed: cfg.seed,
         flavorVersion: cfg.flavorVersion,
       },
@@ -426,13 +473,14 @@ function EncounterBuilder() {
         seed: cfg.seed,
       });
     }
+    setRecipeError('');
     setEncounter(enc);
     setIsSeeded(true);
     setLinkCopied(false);
     setExpandedMonster(null);
     setEditingDetails(false);
     invalidateForecast();
-    writeUrl(cfg);
+    writeUrl({ ...cfg, filter: generatorFilter });
   }, [allMonsters, invalidateForecast]);
 
   const runRecipe = useCallback((recipeId: string, cfg: GenerateConfig) => {
@@ -441,7 +489,8 @@ function EncounterBuilder() {
       setRecipeError('That recipe is not available.');
       return;
     }
-    const filteredPool = filterMonsters(allMonsters, cfg.filter);
+    const generatorFilter = withoutEnvironmentFilter(cfg.filter);
+    const filteredPool = filterMonsters(allMonsters, generatorFilter);
     const filled = fillRecipeSlots(
       recipe,
       filteredPool,
@@ -489,7 +538,7 @@ function EncounterBuilder() {
     setExpandedMonster(null);
     setEditingDetails(false);
     invalidateForecast();
-    writeUrl({ ...cfg, recipeId });
+    writeUrl({ ...cfg, filter: generatorFilter, recipeId });
   }, [allMonsters, invalidateForecast]);
 
   // One-shot hydration from a shared link (?seed=...)
@@ -597,7 +646,14 @@ function EncounterBuilder() {
   }
 
   function handleRecipe(recipeId: string) {
-    if (!partyInputsValid) return;
+    if (!partyInputsValid) {
+      setRecipeError('Fix the party details before using a recipe.');
+      const invalidId = partySizeValidation.error
+        ? 'enc-party-size'
+        : 'enc-party-level';
+      document.getElementById(invalidId)?.focus();
+      return;
+    }
     runRecipe(recipeId, {
       partySize, partyLevel, difficulty, environment,
       includeMap, mapLayout, mapScale, mapFeatureDensity, mapTerrainVariety,
@@ -608,6 +664,10 @@ function EncounterBuilder() {
   function handlePartySizeChange(value: number) {
     const nextSize = Math.max(1, Math.min(10, value));
     setPartySize(nextSize);
+    setEncounter((current) => current ? {
+      ...current,
+      difficulty: assessEncounterDifficulty(current.totalXp, buildParty(nextSize, partyLevel)),
+    } : current);
     setPartyConfig((current) => ({
       version: 1,
       members: syncPartyConfigMembers(current?.members ?? [], nextSize, partyLevel),
@@ -624,6 +684,10 @@ function EncounterBuilder() {
   function handlePartyLevelChange(value: number) {
     const nextLevel = Math.max(1, Math.min(20, value));
     setPartyLevel(nextLevel);
+    setEncounter((current) => current ? {
+      ...current,
+      difficulty: assessEncounterDifficulty(current.totalXp, buildParty(partySize, nextLevel)),
+    } : current);
     setPartyConfig((current) => ({
       version: 1,
       members: syncPartyConfigMembers(current?.members ?? [], partySize, nextLevel),
@@ -681,6 +745,7 @@ function EncounterBuilder() {
     } : prev);
     setIsSeeded(false);
     clearUrlSeed();
+    invalidateForecast();
   }
 
   const handleCopyLink = useCallback(() => {
@@ -873,8 +938,8 @@ function EncounterBuilder() {
       { id: `saved-${Date.now()}`, name, savedAt: Date.now(), encounter },
       ...prev,
     ].slice(0, MAX_SAVED_ENCOUNTERS));
-    setSavingName(null);
-  }, [encounter, savingName, setSavedEncounters]);
+    closeSaveEncounter();
+  }, [closeSaveEncounter, encounter, savingName, setSavedEncounters]);
 
   const handleLoadSaved = useCallback((saved: SavedEncounter) => {
     setEncounter(saved.encounter);
@@ -895,150 +960,222 @@ function EncounterBuilder() {
         {encounter ? `${encounter.name} ready with ${summary.monsterCount} creatures.` : ''}
       </p>
 
-      {/* Controls */}
-      <div className="card panel-accent mb-6 print:hidden">
-        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="micro-label">Encounter setup</p>
-            <h2 className="mt-1 text-xl">Shape the fight</h2>
+      {/* Step 1: establish the encounter brief. */}
+      <form
+        className="workflow-shell mb-6 print:hidden"
+        aria-labelledby="encounter-setup-heading"
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleGenerate();
+        }}
+      >
+        <header className="workflow-header">
+          <div className="workflow-title">
+            <span className="workflow-step" aria-hidden="true">1</span>
+            <div>
+              <p className="micro-label">Build the encounter</p>
+              <h2 id="encounter-setup-heading" className="mt-1 text-2xl">Set the scene</h2>
+              <p className="mt-1 max-w-2xl text-sm text-[var(--text-2)]">
+                Define the party and the kind of fight you want. Optional tools stay out of the way until you need them.
+              </p>
+            </div>
           </div>
-          <span className="text-sm text-[var(--text-3)]">
-            {partyInputsValid
-              ? `${partySize} heroes · level ${partyLevel} · ${difficulty}`
-              : 'Fix party details to generate'}
-          </span>
+          <div className="workflow-context" role="status">
+            <span className="micro-label">Current brief</span>
+            <strong>
+              {partyInputsValid
+                ? `${partySize} heroes · level ${partyLevel} · ${difficulty}`
+                : 'Party details need attention'}
+            </strong>
+          </div>
+        </header>
+
+        <div className="setup-grid">
+          <section className="setup-group" aria-labelledby="party-controls-heading">
+            <div className="setup-group-heading">
+              <span className="setup-group-icon" aria-hidden="true"><Users size={18} /></span>
+              <div>
+                <h3 id="party-controls-heading" className="text-base">Party</h3>
+                <p>Who is walking into the room?</p>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="enc-party-size" className="field-label">Heroes</label>
+                <input
+                  id="enc-party-size"
+                  type="number" min={1} max={10} step={1} inputMode="numeric"
+                  value={partySizeInput}
+                  onChange={e => handlePartySizeInputChange(e.target.value)}
+                  aria-invalid={partySizeValidation.error ? true : undefined}
+                  aria-describedby={partySizeValidation.error ? 'enc-party-size-error' : 'enc-party-size-hint'}
+                  className="w-full"
+                />
+                <p id="enc-party-size-hint" className="field-hint">1–10 characters</p>
+                {partySizeValidation.error && (
+                  <p id="enc-party-size-error" className="field-error" role="alert">
+                    {partySizeValidation.error}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="enc-party-level" className="field-label">Average level</label>
+                <input
+                  id="enc-party-level"
+                  type="number" min={1} max={20} step={1} inputMode="numeric"
+                  value={partyLevelInput}
+                  onChange={e => handlePartyLevelInputChange(e.target.value)}
+                  aria-invalid={partyLevelValidation.error ? true : undefined}
+                  aria-describedby={partyLevelValidation.error ? 'enc-party-level-error' : 'enc-party-level-hint'}
+                  className="w-full"
+                />
+                <p id="enc-party-level-hint" className="field-hint">Level 1–20</p>
+                {partyLevelValidation.error && (
+                  <p id="enc-party-level-error" className="field-error" role="alert">
+                    {partyLevelValidation.error}
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className="setup-group" aria-labelledby="encounter-controls-heading">
+            <div className="setup-group-heading">
+              <span className="setup-group-icon" aria-hidden="true"><SlidersHorizontal size={18} /></span>
+              <div>
+                <h3 id="encounter-controls-heading" className="text-base">Encounter brief</h3>
+                <p>What should the fight feel like?</p>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="enc-difficulty" className="field-label">Target difficulty</label>
+                <select id="enc-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value as Difficulty)} className="w-full">
+                  {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+                <p className="field-hint">The generator aims inside this XP band.</p>
+              </div>
+              <div>
+                <label htmlFor="enc-environment" className="field-label">Environment</label>
+                <select id="enc-environment" value={environment} onChange={e => setEnvironment(e.target.value as Environment)} className="w-full">
+                  {ENVIRONMENTS.map(e => <option key={e} value={e}>{e}</option>)}
+                </select>
+                <p className="field-hint">Shapes monster choices and the map.</p>
+              </div>
+            </div>
+          </section>
         </div>
-        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          <div>
-            <label htmlFor="enc-party-size" className="micro-label block mb-1">
-              Party Size
-            </label>
-            <input
-              id="enc-party-size"
-              type="number" min={1} max={10} step={1} inputMode="numeric"
-              value={partySizeInput}
-              onChange={e => handlePartySizeInputChange(e.target.value)}
-              aria-invalid={partySizeValidation.error ? true : undefined}
-              aria-describedby={partySizeValidation.error ? 'enc-party-size-error' : undefined}
-              className="w-full"
-            />
-            {partySizeValidation.error && (
-              <p id="enc-party-size-error" className="mt-1 text-xs text-[var(--accent-danger-light)]" role="alert">
-                {partySizeValidation.error}
-              </p>
-            )}
+
+        <div className="optional-controls">
+          <div className="optional-controls-heading">
+            <div>
+              <p className="micro-label">Optional tools</p>
+              <p className="mt-1 text-sm text-[var(--text-2)]">Add constraints only when the encounter calls for them.</p>
+            </div>
           </div>
-          <div>
-            <label htmlFor="enc-party-level" className="micro-label block mb-1">
-              Party Level
+          <div className="optional-controls-grid">
+            <button
+              type="button"
+              className={`option-card ${showRecipes ? 'is-active' : ''}`}
+              onClick={() => setShowRecipes((value) => !value)}
+              aria-expanded={showRecipes}
+              aria-controls="encounter-recipes-panel"
+            >
+              <BookOpen size={19} aria-hidden="true" />
+              <span className="option-card-copy">
+                <strong>Encounter recipes</strong>
+                <small>Start from a proven pattern</small>
+              </span>
+              <ChevronDown className="option-card-chevron" size={17} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className={`option-card ${showFilters ? 'is-active' : ''}`}
+              onClick={() => setShowFilters(!showFilters)}
+              aria-expanded={showFilters}
+              aria-controls="encounter-filters-panel"
+            >
+              <Filter size={19} aria-hidden="true" />
+              <span className="option-card-copy">
+                <strong>Monster filters</strong>
+                <small>{Object.keys(withoutEnvironmentFilter(monsterFilter)).length > 0 ? 'Custom filters applied' : 'Limit the available roster'}</small>
+              </span>
+              <ChevronDown className="option-card-chevron" size={17} aria-hidden="true" />
+            </button>
+            <label className={`option-card option-card-toggle ${includeMap ? 'is-active' : ''}`}>
+              <MapIcon size={19} aria-hidden="true" />
+              <span className="option-card-copy">
+                <strong>Battle map</strong>
+                <small>{includeMap ? 'Included with the encounter' : 'No map will be generated'}</small>
+              </span>
+              <input
+                type="checkbox"
+                 checked={includeMap}
+                 onChange={e => setIncludeMap(e.target.checked)}
+                 aria-label="Include a battle map"
+                 aria-controls="encounter-map-options"
+              />
             </label>
-            <input
-              id="enc-party-level"
-              type="number" min={1} max={20} step={1} inputMode="numeric"
-              value={partyLevelInput}
-              onChange={e => handlePartyLevelInputChange(e.target.value)}
-              aria-invalid={partyLevelValidation.error ? true : undefined}
-              aria-describedby={partyLevelValidation.error ? 'enc-party-level-error' : undefined}
-              className="w-full"
-            />
-            {partyLevelValidation.error && (
-              <p id="enc-party-level-error" className="mt-1 text-xs text-[var(--accent-danger-light)]" role="alert">
-                {partyLevelValidation.error}
-              </p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="enc-difficulty" className="micro-label block mb-1">
-              Difficulty
-            </label>
-            <select id="enc-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value as Difficulty)} className="w-full">
-              {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="enc-environment" className="micro-label block mb-1">
-              Environment
-            </label>
-            <select id="enc-environment" value={environment} onChange={e => setEnvironment(e.target.value as Environment)} className="w-full">
-              {ENVIRONMENTS.map(e => <option key={e} value={e}>{e}</option>)}
-            </select>
           </div>
         </div>
 
         {includeMap && (
-          <fieldset className="rounded-md border border-[var(--steel-800)] p-3 mb-4">
-            <legend className="micro-label px-1">Battle Map Options</legend>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <details id="encounter-map-options" className="disclosure-panel mt-3">
+            <summary>
+              <span className="disclosure-summary-copy">
+                <MapIcon size={17} aria-hidden="true" />
+                <span>
+                  <strong>Customize the battle map</strong>
+                  <small>Optional layout, scale, object density, and terrain settings</small>
+                </span>
+              </span>
+              <ChevronDown className="disclosure-chevron" size={18} aria-hidden="true" />
+            </summary>
+            <div className="grid gap-3 border-t border-[var(--line-subtle)] p-4 sm:grid-cols-2 lg:grid-cols-4">
               <div>
-                <label htmlFor="enc-map-layout" className="text-xs text-[var(--text-2)] block mb-1">Layout</label>
-                <select
-                  id="enc-map-layout" value={mapLayout}
-                  onChange={e => setMapLayout(e.target.value as MapLayout)}
-                  className="w-full"
-                >
+                <label htmlFor="enc-map-layout" className="field-label">Layout</label>
+                <select id="enc-map-layout" value={mapLayout} onChange={e => setMapLayout(e.target.value as MapLayout)} className="w-full">
                   {MAP_LAYOUT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
               <div>
-                <label htmlFor="enc-map-scale" className="text-xs text-[var(--text-2)] block mb-1">Scale</label>
-                <select
-                  id="enc-map-scale" value={mapScale}
-                  onChange={e => setMapScale(e.target.value as MapScale)}
-                  className="w-full"
-                >
+                <label htmlFor="enc-map-scale" className="field-label">Scale</label>
+                <select id="enc-map-scale" value={mapScale} onChange={e => setMapScale(e.target.value as MapScale)} className="w-full">
                   {MAP_SCALE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
               <div>
-                <label htmlFor="enc-map-density" className="text-xs text-[var(--text-2)] block mb-1">Object Density</label>
-                <select
-                  id="enc-map-density" value={mapFeatureDensity}
-                  onChange={e => setMapFeatureDensity(e.target.value as MapFeatureDensity)}
-                  className="w-full"
-                >
+                <label htmlFor="enc-map-density" className="field-label">Object density</label>
+                <select id="enc-map-density" value={mapFeatureDensity} onChange={e => setMapFeatureDensity(e.target.value as MapFeatureDensity)} className="w-full">
                   {MAP_DENSITIES.map(value => <option key={value} value={value}>{value}</option>)}
                 </select>
               </div>
               <div>
-                <label htmlFor="enc-map-variety" className="text-xs text-[var(--text-2)] block mb-1">Terrain Mix</label>
-                <select
-                  id="enc-map-variety" value={mapTerrainVariety}
-                  onChange={e => setMapTerrainVariety(e.target.value as MapTerrainVariety)}
-                  className="w-full"
-                >
+                <label htmlFor="enc-map-variety" className="field-label">Terrain mix</label>
+                <select id="enc-map-variety" value={mapTerrainVariety} onChange={e => setMapTerrainVariety(e.target.value as MapTerrainVariety)} className="w-full">
                   {MAP_VARIETIES.map(value => <option key={value} value={value}>{value}</option>)}
                 </select>
               </div>
             </div>
-          </fieldset>
+          </details>
         )}
 
-        <div className="mb-4 rounded-md border border-[var(--steel-800)]">
-          <button
-            type="button"
-            className="flex min-h-11 w-full items-center justify-between gap-3 px-3 py-2 text-left"
-            onClick={() => setShowRecipes((value) => !value)}
-            aria-expanded={showRecipes}
-          >
-            <span>
-              <span className="micro-label block">Encounter Recipes</span>
-              <span className="text-sm text-[var(--text-2)]">Start from a proven combat or narrative pattern.</span>
-            </span>
-            <span className="text-[var(--bronze)]" aria-hidden="true">{showRecipes ? '−' : '+'}</span>
-          </button>
-          {showRecipes && (
-            <div className="grid gap-4 border-t border-[var(--steel-800)] p-3 lg:grid-cols-2">
+        {showRecipes && (
+          <div id="encounter-recipes-panel" className="optional-panel mt-3 animate-fade-in">
+            <div className="optional-panel-heading">
+              <div>
+                <p className="micro-label">Encounter recipes</p>
+                <h3 className="mt-1 text-lg">Choose a starting pattern</h3>
+              </div>
+              <p>Recipes generate immediately using the party, difficulty, environment, and filters above.</p>
+            </div>
+            <div className="grid gap-5 p-4 lg:grid-cols-2">
               {(['combat', 'narrative'] as const).map((category) => (
                 <section key={category} aria-labelledby={`recipe-${category}-heading`}>
-                  <h3 id={`recipe-${category}-heading`} className="mb-2 text-base capitalize">{category} recipes</h3>
+                  <h4 id={`recipe-${category}-heading`} className="mb-2 text-sm font-semibold capitalize text-[var(--text-2)]">{category} recipes</h4>
                   <div className="space-y-2">
                     {ENCOUNTER_RECIPES.filter((recipe) => recipe.category === category).map((recipe) => (
-                      <button
-                        key={recipe.id}
-                        type="button"
-                        className="w-full rounded-lg border border-[var(--steel-800)] bg-[var(--steel-950)] p-3 text-left transition-colors hover:border-[var(--bronze)]"
-                        onClick={() => handleRecipe(recipe.id)}
-                      >
+                      <button key={recipe.id} type="button" className="selection-card" onClick={() => handleRecipe(recipe.id)}>
                         <span className="block font-semibold text-[var(--text-1)]">{recipe.name}</span>
                         <span className="mt-1 block text-xs leading-relaxed text-[var(--text-2)]">{recipe.description}</span>
                         <span className="mt-2 block text-[10px] uppercase tracking-wide text-[var(--bronze)]">
@@ -1050,159 +1187,82 @@ function EncounterBuilder() {
                 </section>
               ))}
             </div>
-          )}
-        </div>
-        {recipeError && <p className="mb-4 text-sm text-[var(--accent-danger)]" role="alert">{recipeError}</p>}
-
-        {/* Difficulty Meter */}
-        <DifficultyMeter
-          assessment={summary.assessment}
-          totalMonsterHp={summary.totalMonsterHp}
-          totalXp={summary.totalXp}
-        />
-
-        <div className="mt-5 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex flex-wrap items-center gap-3">
-            <button type="button" onClick={handleGenerate} className="btn-primary text-base sm:text-lg">
-              {encounter ? 'Generate a New Encounter' : 'Generate Encounter'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowManualAdd(!showManualAdd)}
-              aria-expanded={showManualAdd}
-              className="btn-ghost"
-            >
-              {showManualAdd ? 'Hide Manual Add' : 'Add Monsters Manually'}
-            </button>
-            <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-2 text-sm text-[var(--text-2)]">
-              <input
-                type="checkbox" checked={includeMap}
-                onChange={e => setIncludeMap(e.target.checked)}
-              />
-              Include battle map
-            </label>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowFilters(!showFilters)}
-              aria-expanded={showFilters}
-              className="btn-ghost text-sm"
-            >
-              {showFilters ? 'Hide' : 'Show'} Monster Filters
-            </button>
-            <ResetGeneratorButton onReset={handleReset} label="Reset Builder" />
-          </div>
-        </div>
-
-        {encounter && (
-          <div className="mt-4 flex flex-col gap-3 border-t border-[var(--line-subtle)] pt-4 sm:flex-row sm:items-center">
-            <span className="micro-label shrink-0">Current encounter</span>
-            <div className="flex flex-wrap items-center gap-2">
-              <button type="button" onClick={() => handleExport('json')} className="btn-secondary text-sm">
-                Export JSON
-              </button>
-              <button type="button" onClick={() => handleExport('markdown')} className="btn-secondary text-sm">
-                Export Markdown
-              </button>
-              <button type="button" onClick={() => handleExport('foundry')} className="btn-secondary text-sm">
-                Export Foundry
-              </button>
-              <button type="button" onClick={() => handleExport('player')} className="btn-secondary text-sm">
-                Player Handout
-              </button>
-              <button type="button" onClick={handlePrintPlayerHandout} className="btn-secondary text-sm">
-                Print Player View
-              </button>
-              <PrintButton label="Print / Save PDF" />
-              {encounter.monsters.length > 0 && (
-                savingName === null ? (
-                  <button
-                    type="button"
-                    onClick={() => setSavingName(encounter.name)}
-                    className="btn-secondary text-sm"
-                  >
-                    Save Encounter
-                  </button>
-                ) : (
-                  <span className="flex flex-wrap items-center gap-1">
-                    <label htmlFor="save-encounter-name" className="sr-only">
-                      Name for this saved encounter
-                    </label>
-                    <input
-                      id="save-encounter-name"
-                      type="text"
-                      className="w-44 text-sm"
-                      value={savingName}
-                      autoFocus
-                      onChange={(e) => setSavingName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleSaveEncounter();
-                        if (e.key === 'Escape') setSavingName(null);
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={handleSaveEncounter}
-                      className="btn-primary text-sm"
-                      aria-label="Save encounter"
-                    >
-                      <Check size={16} aria-hidden="true" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSavingName(null)}
-                      className="btn-secondary text-sm"
-                      aria-label="Cancel saving"
-                    >
-                      <X size={16} aria-hidden="true" />
-                    </button>
-                  </span>
-                )
-              )}
-              {isSeeded && (
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="btn-secondary text-sm"
-                  aria-describedby="share-link-description"
-                >
-                  {linkCopied ? 'Link Copied' : 'Copy Share Link'}
-                </button>
-              )}
-              <span id="share-link-description" className="sr-only">
-                The link recreates this encounter using the built-in bestiary.
-              </span>
-            </div>
           </div>
         )}
 
         {showFilters && (
-          <div className="mt-4 animate-fade-in">
-            <FilterPanel filter={monsterFilter} onChange={setMonsterFilter} />
+          <div id="encounter-filters-panel" className="optional-panel mt-3 animate-fade-in">
+            <div className="optional-panel-heading">
+              <div>
+                <p className="micro-label">Monster filters</p>
+                <h3 className="mt-1 text-lg">Narrow the roster</h3>
+              </div>
+              <p>Filters constrain both generated encounters and recipes.</p>
+            </div>
+            <FilterPanel
+              filter={monsterFilter}
+              onChange={setMonsterFilter}
+              embedded
+              hideEnvironment
+              hideSort
+            />
           </div>
         )}
-      </div>
+
+        {recipeError && <p className="mt-3 text-sm text-[var(--accent-danger)]" role="alert">{recipeError}</p>}
+
+        <footer className="workflow-action-bar">
+          <div className="workflow-primary-action">
+            <button type="submit" className="btn-primary text-base">
+              <Sparkles size={18} aria-hidden="true" />
+              {encounter ? 'Generate a new encounter' : 'Generate encounter'}
+            </button>
+            <p>Creates a complete roster from this brief.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowManualAdd(!showManualAdd)}
+              aria-expanded={showManualAdd}
+              aria-controls="manual-encounter-builder"
+              className="btn-secondary text-sm"
+            >
+              <Plus size={17} aria-hidden="true" />
+              {showManualAdd
+                ? (encounter ? 'Close monster picker' : 'Close manual builder')
+                : (encounter ? 'Add monsters' : 'Build manually')}
+            </button>
+            <ResetGeneratorButton onReset={handleReset} label="Reset" />
+          </div>
+        </footer>
+      </form>
 
       {/* Saved Encounters */}
       {savedHydrated && savedEncounters.length > 0 && (
-        <details className="card mb-6 print:hidden">
-          <summary className="cursor-pointer font-display">
-            Saved Encounters ({savedEncounters.length})
+        <details className="disclosure-panel !mx-0 mb-6 print:hidden">
+          <summary>
+            <span className="disclosure-summary-copy">
+              <Save size={17} aria-hidden="true" />
+              <span>
+                <strong>Saved encounters</strong>
+                <small>{savedEncounters.length} stored in this browser</small>
+              </span>
+            </span>
+            <ChevronDown className="disclosure-chevron" size={18} aria-hidden="true" />
           </summary>
-          <ul className="mt-3 divide-y divide-[var(--steel-800)]">
+          <ul className="divide-y divide-[var(--line-subtle)] border-t border-[var(--line-subtle)] px-4">
             {savedEncounters.map((saved) => (
-              <li key={saved.id} className="flex items-center justify-between py-2 gap-2 text-sm">
+              <li key={saved.id} className="flex flex-col gap-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <span className="font-bold">{saved.name}</span>
-                  <span className="text-[var(--text-2)] ml-2">
+                  <span className="block font-bold">{saved.name}</span>
+                  <span className="mt-0.5 block text-xs text-[var(--text-3)]">
                     {saved.encounter.difficulty} ·{' '}
                     {saved.encounter.monsters.reduce((sum, em) => sum + em.monster.hitPoints * em.count, 0).toLocaleString()} HP ·{' '}
                     {saved.encounter.monsters.reduce((s, em) => s + em.count, 0)} monsters ·{' '}
                     {new Date(saved.savedAt).toLocaleDateString()}
                   </span>
                 </div>
-                <div className="flex gap-2 shrink-0">
+                <div className="flex shrink-0 gap-2">
                   <button
                     type="button"
                     onClick={() => handleLoadSaved(saved)}
@@ -1214,7 +1274,7 @@ function EncounterBuilder() {
                     type="button"
                     onClick={() => setSavedEncounters((prev) => prev.filter((s) => s.id !== saved.id))}
                     aria-label={`Delete saved encounter ${saved.name}`}
-                    className="text-[var(--accent-danger)] hover:text-[var(--accent-danger-light)] px-1 inline-flex items-center"
+                    className="icon-button icon-button-danger"
                   >
                     <X size={16} aria-hidden="true" />
                   </button>
@@ -1227,34 +1287,53 @@ function EncounterBuilder() {
 
       {/* Manual Monster Add Panel */}
       {showManualAdd && (
-        <div className="card mb-6 animate-fade-in print:hidden">
-          <h3 className="text-lg mb-3">Add Monsters</h3>
+        <section id="manual-encounter-builder" className="card mb-6 animate-fade-in print:hidden" aria-labelledby="manual-builder-heading">
+          <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <span className="setup-group-icon" aria-hidden="true"><Plus size={18} /></span>
+              <div>
+                <p className="micro-label">{encounter ? 'Edit roster' : 'Alternate build path'}</p>
+                <h2 id="manual-builder-heading" className="mt-1 text-xl">
+                  {encounter ? 'Add monsters to this encounter' : 'Build the roster manually'}
+                </h2>
+                <p className="mt-1 text-sm text-[var(--text-3)]">
+                  Search the bestiary and add creatures one at a time{encounter ? ' to the current roster' : ''}.
+                </p>
+              </div>
+            </div>
+            <button type="button" onClick={() => setShowManualAdd(false)} className="btn-ghost text-sm">
+              <X size={16} aria-hidden="true" />
+              Close
+            </button>
+          </header>
+          <label htmlFor="enc-manual-search" className="field-label">Search monsters</label>
           <input
             id="enc-manual-search"
             type="text"
             placeholder="Search monsters by name..."
-            aria-label="Search monsters to add"
             value={manualSearch}
             onChange={e => setManualSearch(e.target.value)}
-            className="w-full mb-3"
+            className="mb-3 w-full"
           />
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
+          <div className="grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
             {manualResults.map(m => (
               <button
                 key={m.id}
                 type="button"
                 onClick={() => handleAddMonster(m)}
-                className="text-left p-2 rounded bg-[var(--steel-950)] hover:bg-[var(--steel-800)] transition-colors text-sm"
+                className="selection-card text-sm"
               >
-                <span className="font-bold">{m.name}</span>
-                <span className="text-[var(--bronze)] ml-2">CR {crDisplay(m.challengeRating)}</span>
-                <div className="text-xs text-[var(--text-2)]">
-                  {m.size} {m.type} | AC {m.armor.ac} | HP {m.hitPoints}
-                </div>
+                <span className="flex items-center justify-between gap-3">
+                  <span className="font-bold">{m.name}</span>
+                  <span className="text-xs font-semibold text-[var(--bronze)]">CR {crDisplay(m.challengeRating)}</span>
+                </span>
+                <span className="mt-1 block text-xs text-[var(--text-3)]">
+                  {m.size} {m.type} · AC {m.armor.ac} · {m.hitPoints} HP
+                </span>
               </button>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {!encounter && !showManualAdd && (
@@ -1273,118 +1352,313 @@ function EncounterBuilder() {
       {/* Results */}
       {encounter && encounter.monsters.length > 0 && (
         <div className="animate-fade-in space-y-6">
-          {/* Encounter Header */}
-          <div className="card">
-            <div className="mb-3 flex flex-col items-start justify-between gap-3 sm:flex-row">
-              {editingDetails ? (
-                <>
-                  <label htmlFor="encounter-name" className="sr-only">Encounter name</label>
-                  <input
-                    id="encounter-name"
-                    type="text"
-                    value={encounter.name}
-                    onChange={e => updateEncounterNarrative('name', e.target.value)}
-                    className="text-2xl font-bold flex-1 print:hidden"
-                  />
-                  <h2 className="text-2xl hidden print:block">{encounter.name}</h2>
-                </>
-              ) : (
-                <h2 className="text-2xl">{encounter.name}</h2>
-              )}
-              <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
-                <button
-                  type="button"
-                  onClick={handleRunBattle}
-                  className="btn-primary text-sm print:hidden"
-                >
-                  <Swords size={17} aria-hidden="true" />
-                  Run Battle
-                </button>
-                {summary.assessment && <DifficultyBadge difficulty={summary.assessment} />}
-                <button
-                  type="button"
-                  onClick={() => setEditingDetails(value => !value)}
-                  className={editingDetails ? 'btn-primary text-xs print:hidden' : 'btn-secondary text-xs print:hidden'}
-                >
-                  {editingDetails ? 'Done Editing' : 'Edit Details'}
-                </button>
+          {/* Step 2: review and manage the generated encounter. */}
+          <section className="card encounter-summary-card" aria-labelledby="encounter-summary-heading">
+            <header className="encounter-summary-header">
+              <div className="workflow-title min-w-0">
+                <span className="workflow-step" aria-hidden="true">2</span>
+                <div className="min-w-0 flex-1">
+                  <p className="micro-label">Review the encounter</p>
+                  {editingDetails ? (
+                    <>
+                      <label htmlFor="encounter-name" className="sr-only">Encounter name</label>
+                      <input
+                        id="encounter-name"
+                        type="text"
+                        value={encounter.name}
+                        onChange={e => updateEncounterNarrative('name', e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Escape') closeDetailsEditor();
+                        }}
+                        autoFocus
+                        className="mt-1 w-full text-2xl font-bold print:hidden"
+                      />
+                      <h2 id="encounter-summary-heading" className="mt-1 hidden text-2xl print:block">{encounter.name}</h2>
+                    </>
+                  ) : (
+                    <h2 id="encounter-summary-heading" className="mt-1 text-2xl sm:text-3xl">{encounter.name}</h2>
+                  )}
+                </div>
               </div>
-            </div>
+              <button
+                ref={editDetailsButtonRef}
+                type="button"
+                onClick={() => {
+                  if (editingDetails) closeDetailsEditor();
+                  else setEditingDetails(true);
+                }}
+                className={editingDetails ? 'btn-primary text-sm print:hidden' : 'btn-secondary text-sm print:hidden'}
+              >
+                {editingDetails ? <Check size={17} aria-hidden="true" /> : <Pencil size={16} aria-hidden="true" />}
+                {editingDetails ? 'Done editing' : 'Edit details'}
+              </button>
+            </header>
             {editingDetails ? (
               <>
-                <label htmlFor="encounter-description" className="micro-label block mb-1 print:hidden">Description</label>
+                <label htmlFor="encounter-description" className="field-label mt-4 print:hidden">Description</label>
                 <textarea
                   id="encounter-description"
                   value={encounter.description}
                   onChange={e => updateEncounterNarrative('description', e.target.value)}
                   rows={3}
-                  className="w-full mb-4 print:hidden"
+                  className="w-full print:hidden"
                 />
                 {encounter.description && (
-                  <p className="text-[var(--text-2)] mb-4 italic hidden print:block">{encounter.description}</p>
+                  <p className="mt-4 text-[var(--text-2)] italic hidden print:block">{encounter.description}</p>
                 )}
               </>
             ) : encounter.description && (
-              <p className="text-[var(--text-2)] mb-4 italic">{encounter.description}</p>
+              <p className="mt-4 max-w-5xl text-[var(--text-2)] italic">{encounter.description}</p>
             )}
 
-            <div className="player-handout-hidden grid sm:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="text-[var(--bronze)] font-bold">Monster HP: </span>
-                {summary.totalMonsterHp.toLocaleString()}
+            <div className="encounter-overview player-handout-hidden">
+              <div className="difficulty-readout">
+                <span className="meta-label">Calculated challenge</span>
+                {summary.assessment && <DifficultyBadge difficulty={summary.assessment} />}
+                <p>
+                  Assessed for {partySize} level-{partyLevel} heroes. The current setup target is <strong>{difficulty}</strong>.
+                </p>
               </div>
-              <div>
-                <span className="text-[var(--bronze)] font-bold">Creatures: </span>
-                {summary.monsterCount}
-              </div>
-              <div>
-                <span className="text-[var(--bronze)] font-bold">Environment: </span>
-                {encounter.environment}
-              </div>
-              <div>
-                <span className="text-[var(--text-2)] font-bold">Rules XP: </span>
-                {summary.totalXp.toLocaleString()}
-                <span className="text-xs text-[var(--text-2)] block">
-                  {difficulty} cap {summary.budgets[difficulty].toLocaleString()}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Battle Forecast */}
-          <section className="player-handout-hidden relative overflow-hidden rounded-lg border-2 border-[var(--bronze)] bg-[linear-gradient(135deg,rgba(188,138,67,0.18),rgba(49,57,72,0.92))] p-5 shadow-lg print:hidden">
-            <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[rgba(188,138,67,0.14)]" aria-hidden="true" />
-            <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <span className="rounded-full bg-[var(--bronze)] p-2 text-[var(--text-on-accent)]">
-                  <Swords size={24} aria-hidden="true" />
-                </span>
-                <div>
-                  <h3 className="text-2xl">Battle Forecast</h3>
-                  <p className="text-sm text-[var(--text-2)] max-w-2xl">
-                    Simulate 1,000 battles to see win rate, remaining party HP, likely knockouts, and the deadliest monster.
-                  </p>
+              <dl className="metric-grid">
+                <div className="metric-item">
+                  <dt>Creatures</dt>
+                  <dd>{summary.monsterCount}</dd>
                 </div>
+                <div className="metric-item">
+                  <dt>Monster HP</dt>
+                  <dd>{summary.totalMonsterHp.toLocaleString()}</dd>
+                </div>
+                <div className="metric-item">
+                  <dt>Rules XP</dt>
+                  <dd>{summary.totalXp.toLocaleString()}</dd>
+                </div>
+                <div className="metric-item">
+                  <dt>Environment</dt>
+                  <dd>{encounter.environment}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <DifficultyMeter
+              assessment={summary.assessment}
+              budgets={summary.budgets}
+              targetDifficulty={difficulty}
+              totalXp={summary.totalXp}
+            />
+
+            <div className="encounter-actions player-handout-hidden print:hidden" aria-label="Encounter actions">
+              <div className="flex flex-wrap items-center gap-2">
+                {encounter.monsters.length > 0 && savingName === null && (
+                  <button
+                    ref={saveEncounterButtonRef}
+                    type="button"
+                    onClick={() => setSavingName(encounter.name)}
+                    className="btn-secondary text-sm"
+                  >
+                    <Save size={16} aria-hidden="true" />
+                    Save
+                  </button>
+                )}
+                {isSeeded && (
+                  <button
+                    type="button"
+                    onClick={handleCopyLink}
+                    className="btn-secondary text-sm"
+                    aria-describedby="share-link-description"
+                  >
+                    {linkCopied ? <Check size={16} aria-hidden="true" /> : <Share2 size={16} aria-hidden="true" />}
+                    {linkCopied ? 'Link copied' : 'Copy share link'}
+                  </button>
+                )}
+                <span id="share-link-description" className="sr-only">
+                  The link recreates this encounter using the built-in bestiary.
+                </span>
               </div>
-              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-                <button
-                  type="button"
-                  onClick={openPartySetup}
-                  aria-expanded={showPartySetup}
-                  aria-controls="battle-forecast-party-setup"
-                  className="btn-secondary w-full whitespace-nowrap sm:w-auto"
-                >
-                  Configure Party
+
+              <details className="action-menu">
+                <summary className="btn-secondary text-sm">
+                  <FileText size={16} aria-hidden="true" />
+                  Export &amp; print
+                  <ChevronDown size={16} aria-hidden="true" className="action-menu-chevron" />
+                </summary>
+                <div className="action-menu-panel">
+                  <p className="micro-label px-3 pb-2">Export encounter</p>
+                  <div className="grid sm:grid-cols-2">
+                    <button type="button" onClick={() => handleExport('markdown')} className="menu-action">
+                      <FileText size={18} aria-hidden="true" />
+                      <span><strong>Markdown</strong><small>Readable campaign notes</small></span>
+                    </button>
+                    <button type="button" onClick={() => handleExport('foundry')} className="menu-action">
+                      <Box size={18} aria-hidden="true" />
+                      <span><strong>Foundry data</strong><small>Virtual tabletop import</small></span>
+                    </button>
+                    <button type="button" onClick={() => handleExport('json')} className="menu-action">
+                      <FileJson size={18} aria-hidden="true" />
+                      <span><strong>JSON data</strong><small>Complete encounter record</small></span>
+                    </button>
+                    <button type="button" onClick={() => handleExport('player')} className="menu-action">
+                      <UserRound size={18} aria-hidden="true" />
+                      <span><strong>Player handout</strong><small>Markdown without DM notes</small></span>
+                    </button>
+                    <button type="button" onClick={handlePrintPlayerHandout} className="menu-action">
+                      <Printer size={18} aria-hidden="true" />
+                      <span><strong>Print player view</strong><small>Player-safe paper handout</small></span>
+                    </button>
+                    <PrintButton label="Print / save PDF" variant="menu" />
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            {savingName !== null && (
+              <form
+                className="save-encounter-row player-handout-hidden print:hidden"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleSaveEncounter();
+                }}
+              >
+                <div>
+                  <label htmlFor="save-encounter-name" className="field-label">Save as</label>
+                  <input
+                    id="save-encounter-name"
+                    type="text"
+                    value={savingName}
+                    autoFocus
+                    onChange={(e) => setSavingName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') closeSaveEncounter();
+                    }}
+                  />
+                </div>
+                <button type="submit" className="btn-primary text-sm">
+                  <Check size={16} aria-hidden="true" />
+                  Save encounter
                 </button>
-                <button
-                  type="button"
-                  onClick={handleForecastClick}
-                  disabled={simRunning}
-                  className="btn-primary w-full whitespace-nowrap disabled:cursor-wait disabled:opacity-50 sm:w-auto"
-                >
-                  {simRunning ? 'Forecasting…' : report ? 'Refresh Forecast' : 'Run Battle Forecast'}
+                <button type="button" onClick={closeSaveEncounter} className="btn-ghost text-sm">
+                  Cancel
                 </button>
+              </form>
+            )}
+          </section>
+
+          {/* Review the roster before choosing a forecast or live-combat action. */}
+          <section className="card player-handout-hidden" aria-labelledby="monster-composition-heading">
+            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="micro-label">Encounter roster</p>
+                <h2 id="monster-composition-heading" className="mt-1 text-xl">Monster composition</h2>
+                <p className="mt-1 text-xs text-[var(--text-3)]">Open a stat block or adjust the creature count before forecasting.</p>
               </div>
+              <span className="meta-label">{summary.monsterCount} creatures · {encounter.monsters.length} stat blocks</span>
+            </div>
+            <div className="space-y-3">
+              {encounter.monsters.map(em => (
+                <div key={em.monster.id}>
+                  <div className="surface-inset flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <button
+                      ref={configurePartyButtonRef}
+                      type="button"
+                      onClick={() => setExpandedMonster(
+                        expandedMonster === em.monster.id ? null : em.monster.id
+                      )}
+                      aria-expanded={expandedMonster === em.monster.id}
+                      aria-controls={`monster-details-${em.monster.id}`}
+                      className="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:text-[var(--bronze-light)]"
+                    >
+                      <span className="bg-[var(--steel-800)] text-[var(--bronze)] rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                        {em.count}×
+                      </span>
+                      <div className="min-w-0">
+                        <span className="block truncate font-bold sm:inline">{em.monster.name}</span>
+                        <span className="block text-sm text-[var(--text-2)] sm:ml-2 sm:inline">
+                          CR {crDisplay(em.monster.challengeRating)} | AC {em.monster.armor.ac} | {em.monster.hitPoints} HP each
+                        </span>
+                      </div>
+                    </button>
+                    <div className="flex items-center justify-between gap-2 sm:justify-end">
+                      <span className="xp-capsule text-xs" title={`${(em.monster.xp * em.count).toLocaleString()} XP rules value`}>
+                        {(em.monster.hitPoints * em.count).toLocaleString()} total HP
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleAddMonster(em.monster)}
+                        className="icon-button print:hidden"
+                        title="Add one more"
+                        aria-label={`Add one more ${em.monster.name}`}
+                      ><Plus size={16} aria-hidden="true" /></button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMonster(em.monster.id)}
+                        className="icon-button icon-button-danger print:hidden"
+                        title="Remove one"
+                        aria-label={`Remove one ${em.monster.name}`}
+                      ><Minus size={16} aria-hidden="true" /></button>
+                    </div>
+                  </div>
+
+                  {expandedMonster === em.monster.id && (
+                    <div id={`monster-details-${em.monster.id}`} className="mt-2 animate-fade-in print:hidden sm:ml-4">
+                      <MonsterStatBlock monster={em.monster} />
+                    </div>
+                  )}
+                  <div className="encounter-stat-block-page hidden print:block mt-4 break-inside-avoid">
+                    <MonsterStatBlock monster={em.monster} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Step 3: pick a clear next action. */}
+          <section className="next-step-shell player-handout-hidden print:hidden" aria-labelledby="next-step-heading">
+            <header className="workflow-title">
+              <span className="workflow-step" aria-hidden="true">3</span>
+              <div>
+                <p className="micro-label">Choose what happens next</p>
+                <h2 id="next-step-heading" className="mt-1 text-2xl">Test it or take it to the table</h2>
+              </div>
+            </header>
+            <div className="next-step-grid">
+              <article className="next-step-card">
+                <span className="next-step-icon" aria-hidden="true"><Play size={20} /></span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg">Forecast the outcome</h3>
+                  <p>Simulate 1,000 battles to estimate win rate, remaining HP, knockouts, and the deadliest foe.</p>
+                  <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                    <button
+                      type="button"
+                      onClick={openPartySetup}
+                      aria-expanded={showPartySetup}
+                      aria-controls="battle-forecast-party-setup"
+                      className="btn-secondary w-full text-sm sm:w-auto"
+                    >
+                      <SlidersHorizontal size={16} aria-hidden="true" />
+                      Configure party
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleForecastClick}
+                      disabled={simRunning}
+                      className="btn-primary w-full text-sm sm:w-auto"
+                    >
+                      <Sparkles size={16} aria-hidden="true" />
+                      {simRunning ? 'Forecasting…' : report ? 'Refresh forecast' : 'Run forecast'}
+                    </button>
+                  </div>
+                </div>
+              </article>
+              <article className="next-step-card">
+                <span className="next-step-icon" aria-hidden="true"><Swords size={20} /></span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg">Start live combat</h3>
+                  <p>Send this roster and party to the initiative tracker for play at the table.</p>
+                  <button type="button" onClick={handleRunBattle} className="btn-primary mt-4 w-full text-sm sm:w-auto">
+                    <Swords size={16} aria-hidden="true" />
+                    Open battle organizer
+                  </button>
+                </div>
+              </article>
             </div>
           </section>
           {showPartySetup && (
@@ -1400,12 +1674,12 @@ function EncounterBuilder() {
                 onSave={(members) => {
                   const config: PartyConfig = { version: 1, members };
                   setPartyConfig(config);
-                  setShowPartySetup(false);
+                  closePartySetup();
                   if (encounter && encounter.monsters.length > 0) {
                     runForecast(config, encounter);
                   }
                 }}
-                onCancel={() => setShowPartySetup(false)}
+                onCancel={closePartySetup}
               />
             </div>
           )}
@@ -1444,10 +1718,21 @@ function EncounterBuilder() {
                 {encounter.monsters.map((entry) => (
                   <span key={entry.monster.id} className="inline-flex items-center rounded-lg border border-[var(--steel-800)] bg-[var(--steel-950)] p-1">
                     <span className="px-2 text-xs text-[var(--text-2)]">{entry.count}× {entry.monster.name}</span>
-                    <button type="button" className="btn-ghost text-xs" onClick={() => runWhatIf(entry.monster.id, 1)}>
+                    <button
+                      type="button"
+                      className="btn-ghost text-xs"
+                      aria-label={`Forecast with one more ${entry.monster.name}`}
+                      onClick={() => runWhatIf(entry.monster.id, 1)}
+                    >
                       +1
                     </button>
-                    <button type="button" className="btn-ghost text-xs" onClick={() => runWhatIf(entry.monster.id, -1)} disabled={encounter.monsters.length === 1 && entry.count === 1}>
+                    <button
+                      type="button"
+                      className="btn-ghost text-xs"
+                      aria-label={`Forecast with one fewer ${entry.monster.name}`}
+                      onClick={() => runWhatIf(entry.monster.id, -1)}
+                      disabled={encounter.monsters.length === 1 && entry.count === 1}
+                    >
                       −1
                     </button>
                   </span>
@@ -1463,65 +1748,6 @@ function EncounterBuilder() {
               )}
             </section>
           )}
-
-          {/* Monsters */}
-          <div className="card player-handout-hidden">
-            <h3 className="text-xl mb-4">Monsters</h3>
-            <div className="space-y-3">
-              {encounter.monsters.map(em => (
-                <div key={em.monster.id}>
-                  <div className="flex flex-col gap-3 rounded-lg bg-[var(--steel-950)] p-3 sm:flex-row sm:items-center sm:justify-between">
-                    <button
-                      type="button"
-                      onClick={() => setExpandedMonster(
-                        expandedMonster === em.monster.id ? null : em.monster.id
-                      )}
-                      aria-expanded={expandedMonster === em.monster.id}
-                      className="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:text-[var(--bronze-light)]"
-                    >
-                      <span className="bg-[var(--steel-800)] text-[var(--bronze)] rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
-                        {em.count}x
-                      </span>
-                      <div className="min-w-0">
-                        <span className="block truncate font-bold sm:inline">{em.monster.name}</span>
-                        <span className="block text-sm text-[var(--text-2)] sm:ml-2 sm:inline">
-                          CR {crDisplay(em.monster.challengeRating)} | AC {em.monster.armor.ac} | {em.monster.hitPoints} HP each
-                        </span>
-                      </div>
-                    </button>
-                    <div className="flex items-center justify-between gap-2 sm:justify-end">
-                      <span className="xp-capsule text-xs" title={`${(em.monster.xp * em.count).toLocaleString()} XP rules value`}>
-                        {(em.monster.hitPoints * em.count).toLocaleString()} total HP
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleAddMonster(em.monster)}
-                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--steel-800)] text-[var(--bronze)] transition-colors hover:bg-[var(--steel-700)] print:hidden"
-                        title="Add one more"
-                        aria-label={`Add one more ${em.monster.name}`}
-                      ><Plus size={16} aria-hidden="true" /></button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveMonster(em.monster.id)}
-                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--steel-800)] text-[var(--accent-danger)] transition-colors hover:bg-[var(--steel-700)] print:hidden"
-                        title="Remove one"
-                        aria-label={`Remove one ${em.monster.name}`}
-                      ><Minus size={16} aria-hidden="true" /></button>
-                    </div>
-                  </div>
-
-                  {expandedMonster === em.monster.id && (
-                    <div className="mt-2 ml-4 animate-fade-in print:hidden">
-                      <MonsterStatBlock monster={em.monster} />
-                    </div>
-                  )}
-                  <div className="encounter-stat-block-page hidden print:block mt-4 break-inside-avoid">
-                    <MonsterStatBlock monster={em.monster} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
 
           {/* Tactics */}
           {(encounter.tactics || editingDetails) && (
@@ -1560,15 +1786,15 @@ function EncounterBuilder() {
           {/* Map */}
           {encounter.map && (
             <div className="card overflow-x-auto">
-              <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h3 className="text-xl">Battle Map</h3>
                   <p className="text-xs text-[var(--text-2)] print:hidden">
-                    {encounter.map.width}×{encounter.map.height} · {mapFeatureDensity} objects · {mapTerrainVariety} terrain
+                    {encounter.map.width}×{encounter.map.height} · {encounter.map.genOptions?.featureDensity ?? mapFeatureDensity} objects · {encounter.map.genOptions?.terrainVariety ?? mapTerrainVariety} terrain
                   </p>
                 </div>
                 <button type="button" onClick={handleRegenerateMap} className="btn-secondary text-sm print:hidden">
-                  Regenerate Map
+                  Regenerate map
                 </button>
               </div>
               <MapSvg map={encounter.map} tokens={placement?.tokens} />
@@ -1604,44 +1830,56 @@ function ForecastComparison({ label, report }: { label: string; report: BattleRe
 
 function DifficultyMeter({
   assessment,
-  totalMonsterHp,
+  budgets,
+  targetDifficulty,
   totalXp,
 }: {
   assessment: Difficulty | null;
-  totalMonsterHp: number;
+  budgets: Record<Difficulty, number>;
+  targetDifficulty: Difficulty;
   totalXp: number;
 }) {
   const activeIndex = assessment ? DIFFICULTIES.indexOf(assessment) : -1;
-  const colors = ['#6f7785', '#7acb9a', '#e3c567', '#e69c55', '#d05a59'];
+  const previousCap = activeIndex > 0 ? budgets[DIFFICULTIES[activeIndex - 1]] : 0;
+  const activeCap = assessment ? budgets[assessment] : 1;
+  const progressWithinTier = activeIndex < 0
+    ? 0
+    : Math.max(0, Math.min(1, (totalXp - previousCap) / Math.max(1, activeCap - previousCap)));
+  const markerPosition = activeIndex < 0
+    ? 0
+    : Math.min(100, ((activeIndex + progressWithinTier) / DIFFICULTIES.length) * 100);
 
   return (
-    <div className="mt-3" role="group" aria-label="Encounter difficulty and monster hit points">
-      <div className="grid grid-cols-5 gap-1 text-[10px] sm:text-xs text-center text-[var(--text-2)] mb-1">
-        {DIFFICULTIES.map(level => (
-          <span key={level} className={assessment === level ? 'font-bold text-[var(--text-1)]' : ''}>
-            {level}
-          </span>
-        ))}
+    <div className="difficulty-meter player-handout-hidden" role="group" aria-label="Encounter challenge budget">
+      <div className="difficulty-meter-heading">
+        <div>
+          <span className="meta-label">Rules XP budget</span>
+          <strong>{totalXp.toLocaleString()} XP in this encounter</strong>
+        </div>
+        <p>
+          Current {targetDifficulty} target cap <strong>{budgets[targetDifficulty].toLocaleString()} XP</strong>
+        </p>
       </div>
-      <div className="grid grid-cols-5 gap-1 h-7 rounded overflow-hidden" aria-hidden="true">
+      <p className="sr-only">
+        Calculated challenge {assessment ?? 'not available'}. The encounter contains {totalXp.toLocaleString()} rules XP.
+        The selected {targetDifficulty} target caps at {budgets[targetDifficulty].toLocaleString()} XP.
+      </p>
+      <div className="difficulty-scale" aria-hidden="true">
         {DIFFICULTIES.map((level, index) => (
-          <div
+          <span
             key={level}
-            className="transition-all duration-300 border border-[var(--steel-800)]"
-            style={{
-              backgroundColor: index <= activeIndex ? colors[index] : 'var(--steel-950)',
-              opacity: index <= activeIndex ? 1 : 0.65,
-            }}
+            className={`difficulty-segment difficulty-segment-${level.toLowerCase()} ${index <= activeIndex ? 'is-filled' : ''}`}
           />
         ))}
+        <span className="difficulty-marker" style={{ left: `${markerPosition}%` }} />
       </div>
-      <div className="flex justify-between items-baseline gap-3 mt-1">
-        <span className="text-sm font-bold text-[var(--bronze)]">
-          {totalMonsterHp.toLocaleString()} monster HP
-        </span>
-        <span className="text-[10px] text-[var(--text-2)]" title="Used for the official 2024 encounter budget calculation">
-          {totalXp.toLocaleString()} rules XP
-        </span>
+      <div className="difficulty-labels">
+        {DIFFICULTIES.map(level => (
+          <span key={level} className={assessment === level ? 'is-current' : ''} aria-current={assessment === level ? 'true' : undefined}>
+            <strong>{level}</strong>
+            <small>{budgets[level].toLocaleString()}</small>
+          </span>
+        ))}
       </div>
     </div>
   );

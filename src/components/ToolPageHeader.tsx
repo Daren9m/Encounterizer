@@ -29,7 +29,7 @@ export default function ToolPageHeader({
           {description ?? route.description}
         </p>
       </div>
-      {actions && <div className="shrink-0">{actions}</div>}
+      {actions && <div className="page-header-actions">{actions}</div>}
     </header>
   );
 }
