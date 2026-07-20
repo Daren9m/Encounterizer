@@ -18,7 +18,7 @@ export interface Leverage {
 // ─── Personas ───────────────────────────────────────────────────────
 export const PERSONAS: Persona[] = [
   { archetype: 'a guild clerk drowning in ledgers', quirk: 'stacks and restacks papers when nervous', speech: 'answers questions with smaller questions' },
-  { archetype: 'a retired sell-sword turned innkeep', quirk: 'polishes the same tankard throughout', speech: 'speaks in short sentences and long pauses' },
+  { archetype: 'a retired sell-sword turned innkeep', quirk: 'polishes the same tankard throughout', speech: 'doles out short sentences between long pauses' },
   { archetype: 'a temple acolyte assigned to watch the visitors', quirk: 'touches the holy symbol before every lie', speech: 'quotes scripture that never quite fits' },
   { archetype: 'a caravan master counting losses', quirk: 'taps a tally stick against their palm', speech: 'talks in freight weights and travel days' },
   { archetype: "a minor noble's steward doing the noble's real work", quirk: 'straightens whatever is nearest before speaking', speech: 'stays formal to the point of stiffness, until provoked' },

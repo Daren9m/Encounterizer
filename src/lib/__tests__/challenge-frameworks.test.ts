@@ -128,13 +128,18 @@ describe('social framework (spec §8.2)', () => {
     }
   });
   it('every persona speech reads as a third-person verb phrase (weavable after "and …")', () => {
+    // The weave contract: speech follows "seeks you out … and ___." so
+    // it must OPEN with a third-person-singular verb. An -s suffix
+    // alone would wave through adjectives ("cautious…"), so new
+    // personas must add their opening verb here deliberately.
+    const WEAVE_VERBS = new Set([
+      'answers', 'speaks', 'quotes', 'talks', 'stays', 'trades', 'over-explains',
+      'performs', 'names', 'gives', 'prices', 'doles',
+    ]);
     for (const p of PERSONAS) {
       expect(p.speech, p.archetype).toMatch(/^[a-z]/);
       expect(p.speech.endsWith('.'), p.archetype).toBe(false);
-      // Must not be a bare adjective fragment — it follows "seeks you
-      // out … and ___", so it needs a leading verb (heuristic: the
-      // first word ends in -s, as third-person-singular verbs do).
-      expect(p.speech.split(' ')[0], p.archetype).toMatch(/s$/);
+      expect(WEAVE_VERBS.has(p.speech.split(' ')[0]), `${p.archetype}: "${p.speech}" must open with a known weave verb`).toBe(true);
     }
   });
 });

@@ -389,6 +389,21 @@ describe('contests & gauntlets', () => {
       expect(h.felt, h.name).not.toMatch(/\b(Athletics|Acrobatics|Investigation|Perception|Survival|Constitution)\b/);
     }
   });
+  it('felt and omen share no content words — the handout must not stutter (#136)', () => {
+    const STOP = new Set([
+      'the', 'and', 'with', 'that', 'than', 'then', 'this', 'from', 'into', 'onto',
+      'your', 'over', 'under', 'they', 'them', 'their', 'does', 'have', 'been',
+      'were', 'until', 'till', 'each', 'every', 'more', 'when', 'where', 'what',
+      'like', 'still', 'down', 'there', 'here', 'only', 'very',
+    ]);
+    const content = (s: string) =>
+      new Set((s.toLowerCase().match(/[a-z]+/g) ?? []).filter(w => w.length >= 4 && !STOP.has(w)));
+    for (const h of GAUNTLET_HAZARDS) {
+      const felt = content(h.felt);
+      const shared = [...content(h.omen)].filter(w => felt.has(w));
+      expect(shared, `${h.name}: felt/omen repeat ${shared.join(', ')}`).toEqual([]);
+    }
+  });
   it('player surfaces speak in scene voice, not the DM brief\'s mechanics cadence (#136)', () => {
     for (const seed of [4, 11, 209580]) {
       const out = gauntlets.generate({ levers: mkLevers('Hard', seed, { timeBudget: 'set-piece' }), rng: seededRandom(seed) });
