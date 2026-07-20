@@ -1287,18 +1287,30 @@ function EncounterBuilder() {
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={handleForecastClick}
-                disabled={simRunning}
-                className="btn-primary text-base whitespace-nowrap disabled:opacity-50 disabled:cursor-wait"
-              >
-                {simRunning ? 'Forecasting…' : report ? 'Refresh Forecast' : 'Run Battle Forecast'}
-              </button>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <button
+                  type="button"
+                  onClick={openPartySetup}
+                  aria-expanded={showPartySetup}
+                  aria-controls="battle-forecast-party-setup"
+                  className="btn-secondary w-full whitespace-nowrap sm:w-auto"
+                >
+                  Configure Party
+                </button>
+                <button
+                  type="button"
+                  onClick={handleForecastClick}
+                  disabled={simRunning}
+                  className="btn-primary w-full whitespace-nowrap disabled:cursor-wait disabled:opacity-50 sm:w-auto"
+                >
+                  {simRunning ? 'Forecasting…' : report ? 'Refresh Forecast' : 'Run Battle Forecast'}
+                </button>
+              </div>
             </div>
           </section>
           {showPartySetup && (
             <div
+              id="battle-forecast-party-setup"
               ref={partySetupRef}
               tabIndex={-1}
               className="scroll-mt-6"
