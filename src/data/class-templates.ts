@@ -337,12 +337,18 @@ export function buildSimPlayer(
   return player;
 }
 
+export const DEFAULT_PARTY_TEMPLATE_ROTATION = [
+  'fighter-champion',
+  'cleric-life',
+  'rogue-thief',
+  'wizard-evoker',
+] as const;
+
 /** Default party composition when the DM hasn't configured one. */
 export function defaultPartyConfig(size: number, level: number): PartyMemberConfig[] {
-  const rotation = ['fighter-champion', 'cleric-life', 'rogue-thief', 'wizard-evoker'];
   return Array.from({ length: size }, (_, i) => ({
     name: `Player ${i + 1}`,
-    templateId: rotation[i % rotation.length],
+    templateId: DEFAULT_PARTY_TEMPLATE_ROTATION[i % DEFAULT_PARTY_TEMPLATE_ROTATION.length],
     level,
   }));
 }

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_PARTY_TEMPLATE_ROTATION } from '@/data/class-templates';
 import {
   archiveParty,
+  buildStarterPartyMembers,
   createParty,
   deleteArchivedParty,
   duplicateParty,
@@ -37,6 +39,47 @@ function libraryFixture(createId: PartyIdFactory = deterministicIds()): PartyLib
 }
 
 describe('Party Manager domain operations', () => {
+  it.each([1, 4, 6, 10])('builds an editable quick roster for %i characters', (memberCount) => {
+    const members = buildStarterPartyMembers({ memberCount, level: 7 });
+
+    expect(members).toHaveLength(memberCount);
+    expect(members.map((member) => member.name))
+      .toEqual(Array.from({ length: memberCount }, (_, index) => `Hero ${index + 1}`));
+    expect(members.every((member) => member.level === 7)).toBe(true);
+    expect(members.map((member) => member.templateId)).toEqual(
+      Array.from(
+        { length: memberCount },
+        (_, index) => DEFAULT_PARTY_TEMPLATE_ROTATION[index % DEFAULT_PARTY_TEMPLATE_ROTATION.length],
+      ),
+    );
+  });
+
+  it('materializes party size in the roster instead of storing a second count', () => {
+    const base = libraryFixture();
+    const members = buildStarterPartyMembers({ memberCount: 6, level: 7 });
+    const created = createParty(base, { name: 'Six Seats', members }, {
+      now: 20,
+      createId: deterministicIds(),
+    });
+    const party = created.parties[1];
+
+    expect(party.members).toHaveLength(6);
+    expect(new Set(party.members.map((member) => member.id)).size).toBe(6);
+    expect(party).not.toHaveProperty('memberCount');
+    expect(base.parties).toHaveLength(1);
+  });
+
+  it('rejects invalid quick-roster counts and levels', () => {
+    for (const memberCount of [0, 11, 2.5, Number.NaN]) {
+      expect(() => buildStarterPartyMembers({ memberCount, level: 3 }))
+        .toThrow(PartyDomainError);
+    }
+    for (const level of [0, 21, 3.5]) {
+      expect(() => buildStarterPartyMembers({ memberCount: 4, level }))
+        .toThrow(PartyDomainError);
+    }
+  });
+
   it('creates and duplicates parties with globally unique, deeply isolated identities', () => {
     const base = libraryFixture();
     const created = createParty(base, {
