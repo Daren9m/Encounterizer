@@ -2574,7 +2574,7 @@ export const MONSTERS_CR_9_13: Monster[] = [
     "id": "archmage",
     "name": "Archmage",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -2649,6 +2649,10 @@ export const MONSTERS_CR_9_13: Monster[] = [
     "tags": [
       "multiattack",
       "magic resistance"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "subtype": "wizard",
     "savingThrows": {
@@ -3538,7 +3542,7 @@ export const MONSTERS_CR_9_13: Monster[] = [
     "id": "vampire",
     "name": "Vampire",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Undead",
     "alignment": "Lawful Evil",
     "armor": {
@@ -3628,6 +3632,10 @@ export const MONSTERS_CR_9_13: Monster[] = [
     "tags": [
       "multiattack",
       "grappler"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "savingThrows": {
       "dex": 9,

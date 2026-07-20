@@ -387,7 +387,7 @@ export const MONSTERS_CR_0_QUARTER: Monster[] = [
     "id": "commoner",
     "name": "Commoner",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -450,6 +450,10 @@ export const MONSTERS_CR_0_QUARTER: Monster[] = [
       "Melee"
     ],
     "tags": [],
+    "sizeOptions": [
+      "Medium",
+      "Small"
+    ],
     "specialAbilities": [
       {
         "name": "Training",
@@ -2245,7 +2249,7 @@ export const MONSTERS_CR_0_QUARTER: Monster[] = [
     "id": "bandit",
     "name": "Bandit",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -2323,7 +2327,11 @@ export const MONSTERS_CR_0_QUARTER: Monster[] = [
       "Melee",
       "Ranged"
     ],
-    "tags": []
+    "tags": [],
+    "sizeOptions": [
+      "Medium",
+      "Small"
+    ]
   },
   {
     "id": "blood-hawk",
@@ -2484,7 +2492,7 @@ export const MONSTERS_CR_0_QUARTER: Monster[] = [
     "id": "cultist",
     "name": "Cultist",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -2549,6 +2557,10 @@ export const MONSTERS_CR_0_QUARTER: Monster[] = [
       "Melee"
     ],
     "tags": [],
+    "sizeOptions": [
+      "Medium",
+      "Small"
+    ],
     "savingThrows": {
       "wis": 2
     },
@@ -2973,7 +2985,7 @@ export const MONSTERS_CR_0_QUARTER: Monster[] = [
     "id": "guard",
     "name": "Guard",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -3039,6 +3051,10 @@ export const MONSTERS_CR_0_QUARTER: Monster[] = [
       "Ranged"
     ],
     "tags": [],
+    "sizeOptions": [
+      "Medium",
+      "Small"
+    ],
     "skills": {
       "Perception": 2
     }
@@ -3372,7 +3388,7 @@ export const MONSTERS_CR_0_QUARTER: Monster[] = [
     "id": "noble",
     "name": "Noble",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -3435,6 +3451,10 @@ export const MONSTERS_CR_0_QUARTER: Monster[] = [
       "Melee"
     ],
     "tags": [],
+    "sizeOptions": [
+      "Medium",
+      "Small"
+    ],
     "skills": {
       "Deception": 5,
       "Insight": 4,
@@ -3678,7 +3698,7 @@ export const MONSTERS_CR_0_QUARTER: Monster[] = [
     "id": "warrior-infantry",
     "name": "Warrior Infantry",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -3745,6 +3765,10 @@ export const MONSTERS_CR_0_QUARTER: Monster[] = [
     ],
     "tags": [
       "pack tactics"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "specialAbilities": [
       {
@@ -5303,7 +5327,7 @@ export const MONSTERS_CR_0_QUARTER: Monster[] = [
     "id": "priest-acolyte",
     "name": "Priest Acolyte",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -5381,6 +5405,10 @@ export const MONSTERS_CR_0_QUARTER: Monster[] = [
       "Ranged"
     ],
     "tags": [],
+    "sizeOptions": [
+      "Medium",
+      "Small"
+    ],
     "subtype": "cleric",
     "skills": {
       "Medicine": 4,

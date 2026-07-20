@@ -124,6 +124,17 @@ describe('convert5eToolsMonster on verbatim SRD 5.2.1 entries', () => {
     expect(frog.proficiencyBonus).toBe(2);
   });
 
+  it('preserves flexible sizes and uses the larger size as the default', () => {
+    const priest = convert5eToolsMonster({
+      ...fixtureMonster('Frog'),
+      name: 'Priest',
+      size: ['S', 'M'],
+    });
+
+    expect(priest.size).toBe('Medium');
+    expect(priest.sizeOptions).toEqual(['Medium', 'Small']);
+  });
+
   it('maps compound planar environments and "any"', () => {
     const balor = convert5eToolsMonster(fixtureMonster('Balor'));
     expect(balor.environments).toEqual(['Planar']);

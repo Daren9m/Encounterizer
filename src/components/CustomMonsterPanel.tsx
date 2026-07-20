@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, X } from 'lucide-react';
 import { parseCustomMonsterJson, type CustomImportEntryError } from '@/lib/custom-monster-import';
+import { formatMonsterSize } from '@/lib/monster-size';
 import type { Monster } from '@/lib/types';
 import { useCustomMonsters } from '@/app/hooks/useCustomMonsters';
 
@@ -161,7 +162,7 @@ export default function CustomMonsterPanel({ allMonsters }: { allMonsters: Monst
                   <span>
                     <span className="font-bold">{m.name}</span>
                     <span className="text-[var(--text-2)] ml-2">
-                      CR {crDisplay(m.challengeRating)} · {m.size} {m.type}
+                      CR {crDisplay(m.challengeRating)} · {formatMonsterSize(m)} {m.type}
                     </span>
                   </span>
                   <button

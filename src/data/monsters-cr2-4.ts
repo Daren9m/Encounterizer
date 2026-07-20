@@ -434,7 +434,7 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "id": "bandit-captain",
     "name": "Bandit Captain",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -519,6 +519,10 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "tags": [
       "multiattack"
     ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
+    ],
     "savingThrows": {
       "str": 4,
       "dex": 5,
@@ -540,7 +544,7 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "id": "berserker",
     "name": "Berserker",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -603,6 +607,10 @@ export const MONSTERS_CR_2_4: Monster[] = [
       "Melee"
     ],
     "tags": [],
+    "sizeOptions": [
+      "Medium",
+      "Small"
+    ],
     "specialAbilities": [
       {
         "name": "Bloodied Frenzy",
@@ -944,7 +952,7 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "id": "cultist-fanatic",
     "name": "Cultist Fanatic",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -1009,6 +1017,10 @@ export const MONSTERS_CR_2_4: Monster[] = [
       "Melee"
     ],
     "tags": [],
+    "sizeOptions": [
+      "Medium",
+      "Small"
+    ],
     "savingThrows": {
       "wis": 4
     },
@@ -1039,7 +1051,7 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "id": "druid",
     "name": "Druid",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -1125,6 +1137,10 @@ export const MONSTERS_CR_2_4: Monster[] = [
     ],
     "tags": [
       "multiattack"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "skills": {
       "Medicine": 5,
@@ -3142,7 +3158,7 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "id": "priest",
     "name": "Priest",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -3228,6 +3244,10 @@ export const MONSTERS_CR_2_4: Monster[] = [
     ],
     "tags": [
       "multiattack"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "subtype": "cleric",
     "skills": {
@@ -3714,7 +3734,7 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "id": "wererat",
     "name": "Wererat",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Monstrosity",
     "alignment": "Lawful Evil",
     "armor": {
@@ -3813,6 +3833,10 @@ export const MONSTERS_CR_2_4: Monster[] = [
     ],
     "tags": [
       "multiattack"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "subtype": "lycanthrope",
     "skills": {
@@ -5250,7 +5274,7 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "id": "knight",
     "name": "Knight",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -5338,6 +5362,10 @@ export const MONSTERS_CR_2_4: Monster[] = [
     ],
     "tags": [
       "multiattack"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "savingThrows": {
       "con": 4,
@@ -5540,7 +5568,7 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "id": "mummy",
     "name": "Mummy",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Undead",
     "alignment": "Lawful Evil",
     "armor": {
@@ -5628,6 +5656,10 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "tags": [
       "multiattack",
       "frightening"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "savingThrows": {
       "wis": 3
@@ -6015,7 +6047,7 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "id": "vampire-familiar",
     "name": "Vampire Familiar",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "Neutral Evil",
     "armor": {
@@ -6099,6 +6131,10 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "tags": [
       "multiattack"
     ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
+    ],
     "savingThrows": {
       "dex": 5,
       "wis": 2
@@ -6125,7 +6161,7 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "id": "warrior-veteran",
     "name": "Warrior Veteran",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -6209,6 +6245,10 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "tags": [
       "multiattack"
     ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
+    ],
     "skills": {
       "Athletics": 5,
       "Perception": 2
@@ -6225,7 +6265,7 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "id": "werewolf",
     "name": "Werewolf",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Monstrosity",
     "alignment": "Chaotic Evil",
     "armor": {
@@ -6323,6 +6363,10 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "tags": [
       "pack tactics",
       "multiattack"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "subtype": "lycanthrope",
     "skills": {
@@ -7318,7 +7362,7 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "id": "guard-captain",
     "name": "Guard Captain",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -7402,6 +7446,10 @@ export const MONSTERS_CR_2_4: Monster[] = [
     ],
     "tags": [
       "multiattack"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "skills": {
       "Athletics": 6,
@@ -7964,7 +8012,7 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "id": "tough-boss",
     "name": "Tough Boss",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Humanoid",
     "alignment": "True Neutral",
     "armor": {
@@ -8049,6 +8097,10 @@ export const MONSTERS_CR_2_4: Monster[] = [
       "pack tactics",
       "multiattack"
     ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
+    ],
     "savingThrows": {
       "str": 5,
       "con": 5,
@@ -8065,7 +8117,7 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "id": "wereboar",
     "name": "Wereboar",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Monstrosity",
     "alignment": "Neutral Evil",
     "armor": {
@@ -8163,6 +8215,10 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "tags": [
       "multiattack"
     ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
+    ],
     "subtype": "lycanthrope",
     "skills": {
       "Perception": 2
@@ -8178,7 +8234,7 @@ export const MONSTERS_CR_2_4: Monster[] = [
     "id": "weretiger",
     "name": "Weretiger",
     "source": "SRD52",
-    "size": "Small",
+    "size": "Medium",
     "type": "Monstrosity",
     "alignment": "True Neutral",
     "armor": {
@@ -8276,6 +8332,10 @@ export const MONSTERS_CR_2_4: Monster[] = [
     ],
     "tags": [
       "multiattack"
+    ],
+    "sizeOptions": [
+      "Medium",
+      "Small"
     ],
     "subtype": "lycanthrope",
     "skills": {

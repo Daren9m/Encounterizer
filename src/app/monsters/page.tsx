@@ -26,6 +26,7 @@ import ToolPageHeader from '@/components/ToolPageHeader';
 import MonsterEditor from '@/components/MonsterEditor';
 import PinnedMonsterTray from '@/components/PinnedMonsterTray';
 import { monsterToMarkdown, safeMonsterFilename } from '@/lib/monster-export';
+import { formatMonsterSize } from '@/lib/monster-size';
 import { prioritizePinnedMonsters } from '@/lib/pinned-monsters';
 
 function crDisplay(cr: number): string {
@@ -389,7 +390,7 @@ export default function BestiaryPage() {
                       )}
                     </div>
                     <div className="hidden truncate text-[var(--text-2)] sm:col-span-2 sm:block">
-                      {monster.size} {monster.type}
+                      {formatMonsterSize(monster)} {monster.type}
                     </div>
                     <div className="text-center font-bold text-[var(--bronze)] sm:col-span-1">
                       {crDisplay(monster.challengeRating)}
@@ -581,7 +582,7 @@ function MonsterCard({
         <div className="min-w-0">
           <h3 className="truncate">{monster.name}</h3>
           <p className="text-xs text-[var(--text-2)]">
-            {monster.size} {monster.type}
+            {formatMonsterSize(monster)} {monster.type}
             {monster.subtype ? ` (${monster.subtype})` : ''}
           </p>
         </div>

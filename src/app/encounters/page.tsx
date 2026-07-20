@@ -26,6 +26,7 @@ import {
   X,
 } from 'lucide-react';
 import { filterMonsters } from '@/lib/monster-filter';
+import { formatMonsterSize } from '@/lib/monster-size';
 import { useMonsters } from '@/app/hooks/useMonsters';
 import {
   assessEncounterDifficulty,
@@ -1330,7 +1331,7 @@ function EncounterBuilder() {
                   <span className="text-xs font-semibold text-[var(--bronze)]">CR {crDisplay(m.challengeRating)}</span>
                 </span>
                 <span className="mt-1 block text-xs text-[var(--text-3)]">
-                  {m.size} {m.type} · AC {m.armor.ac} · {m.hitPoints} HP
+                  {formatMonsterSize(m)} {m.type} · AC {m.armor.ac} · {m.hitPoints} HP
                 </span>
               </button>
             ))}
