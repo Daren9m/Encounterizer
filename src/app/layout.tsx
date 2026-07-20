@@ -93,20 +93,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
 
           <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-            <div className="grid gap-8 rounded-2xl border border-[var(--steel-800)] bg-[var(--steel-950)] p-6 shadow-[var(--shadow-card)] sm:p-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] lg:items-start">
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] lg:items-start">
               <div className="max-w-xl">
                 <div className="mb-4 flex items-center gap-3">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--steel-700)] bg-[var(--steel-900)]">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--steel-800)] bg-[var(--steel-950)]">
                     <Swords size={21} className="text-[var(--bronze)]" aria-hidden="true" />
                   </span>
                   <div>
                     <div className="text-xl font-display">Encounterizer</div>
-                    <div className="micro-label mt-1">Built for Dungeon Masters</div>
+                    <div className="micro-label mt-1">Tools for game night</div>
                   </div>
                 </div>
                 <p className="text-sm leading-relaxed text-[var(--text-2)]">
-                  Prepare the session, run the table, and find rules quickly in one private
-                  toolkit using D&amp;D 5.5e / 2024 rules.
+                  Plan the session, run the table, and find answers fast. Everything stays in
+                  your browser.
                 </p>
               </div>
 
@@ -128,7 +128,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                               size={17}
                               className="text-[var(--text-3)] transition-colors group-hover:text-[var(--bronze)]"
                             />
-                            {route.label}
+                            {route.navLabel}
                           </Link>
                         </li>
                       ))}
@@ -146,7 +146,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 href="/credits"
                 className="inline-flex min-h-11 shrink-0 items-center rounded-lg px-2 font-medium text-[var(--text-2)] underline decoration-[var(--steel-700)] underline-offset-4 transition-colors hover:text-[var(--bronze)]"
               >
-                Credits &amp; licensing
+                Credits and licensing
               </Link>
             </div>
           </div>

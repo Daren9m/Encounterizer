@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import RouteIcon from '@/components/RouteIcon';
-import { TOOL_ROUTES, TOOL_SECTIONS } from '@/lib/site';
+import { TOOL_ROUTES } from '@/lib/site';
 
 export default function ToolPageHeader({
   path,
@@ -14,9 +14,6 @@ export default function ToolPageHeader({
   actions?: ReactNode;
 }) {
   const route = TOOL_ROUTES.find((item) => item.path === path);
-  const section = TOOL_SECTIONS.find((item) =>
-    item.routes.some((sectionRoute) => sectionRoute.path === path),
-  );
 
   if (!route) return null;
 
@@ -25,9 +22,7 @@ export default function ToolPageHeader({
       <div className="page-header-copy">
         <div className="eyebrow mb-2">
           <RouteIcon name={route.icon} size={14} />
-          {section?.label ?? 'DM toolkit'}
-          {section && <span aria-hidden="true">·</span>}
-          {section && <span>DM toolkit</span>}
+          DM toolkit
         </div>
         <h1 className="text-3xl leading-tight sm:text-4xl">{title ?? route.title}</h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[var(--text-2)] sm:text-base">

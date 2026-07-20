@@ -18,9 +18,11 @@ Azure Static Web Apps free tier.
   (unified puzzles & challenges — 12 verified puzzle families + 6 challenge
   frameworks behind one seeded orchestrator in `src/lib/noncombat/generate.ts`),
   `dm-screen`, `battle`, `reference` (SRD rules and conditions), and `spells`.
-  Navigation groups them as Prep, Run, and Reference; `TOOL_SECTIONS` in
-  `src/lib/site.ts` is the topology source of truth. Per-page metadata lives in each route's `layout.tsx`. Plus
-  server-rendered `/` and `/credits`.
+  Navigation groups them as Make, Run, and Find. Desktop keeps Encounters,
+  Screen, Battle, and Rules visible as direct shortcuts, with the full topology
+  under All tools. `TOOL_SECTIONS` and `NAV_SHORTCUT_ROUTES` in
+  `src/lib/site.ts` are the sources of truth. Per-page metadata lives in each
+  route's `layout.tsx`. Plus server-rendered `/` and `/credits`.
 - **Pure engine layer** — `src/lib/` functions have no side effects (no DOM,
   storage, or network). Browser concerns (localStorage, FileReader) live in
   `src/app/` hooks and `src/components/`.
@@ -55,8 +57,9 @@ Azure Static Web Apps free tier.
 - `src/app/hooks/useMonsters.ts` — the single merge point for built-in +
   custom monsters; every monster consumer reads from it. `useSpells.ts` is
   the spell equivalent.
-- `src/lib/site.ts` — site URL, section topology, flattened route list, and
-  per-route copy (nav, sitemap, homepage, footer, and metadata derive from it).
+- `src/lib/site.ts` — site URL, Make/Run/Find topology, direct navigation
+  shortcuts, flattened route list, and per-route page/navigation copy (the
+  sitemap, homepage, footer, and metadata derive from it).
 
 ## Rules
 - Use 5.5e / 2024 rules. Encounter difficulty is Low/Moderate/High
