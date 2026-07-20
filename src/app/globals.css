@@ -25,9 +25,17 @@
   /* Surfaces and borders */
   --surface-raised: rgba(30, 32, 40, 0.94);
   --surface-inset: rgba(10, 11, 15, 0.52);
+  --control-surface: rgba(10, 11, 15, 0.76);
+  --control-surface-focus: rgba(10, 11, 15, 0.96);
   --line-subtle: rgba(255, 255, 255, 0.075);
   --line-strong: rgba(255, 255, 255, 0.14);
   --control-border: #616571;
+
+  /* Foreground colors paired with filled semantic/accent surfaces. */
+  --text-on-accent: #211206;
+  --text-on-easy: #0d1a12;
+  --text-on-medium: #1c1808;
+  --text-on-hard: #1d1105;
 
   /* Semantic */
   /* Light enough to meet WCAG AA for normal text on steel-900/950. */
@@ -69,9 +77,16 @@ html[data-theme='light'] {
 
   --surface-raised: rgba(252, 250, 246, 0.96);
   --surface-inset: rgba(218, 208, 196, 0.36);
+  --control-surface: rgba(255, 253, 249, 0.9);
+  --control-surface-focus: #fffdf9;
   --line-subtle: rgba(36, 33, 29, 0.1);
   --line-strong: rgba(36, 33, 29, 0.2);
   --control-border: #8f8374;
+
+  --text-on-accent: #ffffff;
+  --text-on-easy: #ffffff;
+  --text-on-medium: #ffffff;
+  --text-on-hard: #ffffff;
 
   --accent-danger: #a53238;
   --accent-danger-light: #84242a;
@@ -153,7 +168,7 @@ p {
   transform: translateY(-180%);
   border-radius: 0.625rem;
   background: var(--bronze);
-  color: #211206;
+  color: var(--text-on-accent);
   padding: 0.7rem 1rem;
   font-weight: 700;
   transition: transform 0.15s ease;
@@ -214,16 +229,16 @@ p {
 
 /* Encounter difficulty badges (2024 tiers + Extreme assessment) */
 .badge-trivial { background-color: #6f7785; color: #ffffff; font-weight: 700; }
-.badge-low { background-color: var(--difficulty-easy); color: #0d1a12; font-weight: 700; }
-.badge-moderate { background-color: var(--difficulty-medium); color: #1c1808; font-weight: 700; }
-.badge-high { background-color: var(--difficulty-hard); color: #1d1105; font-weight: 700; }
+.badge-low { background-color: var(--difficulty-easy); color: var(--text-on-easy); font-weight: 700; }
+.badge-moderate { background-color: var(--difficulty-medium); color: var(--text-on-medium); font-weight: 700; }
+.badge-high { background-color: var(--difficulty-hard); color: var(--text-on-hard); font-weight: 700; }
 .badge-extreme { background-color: var(--difficulty-deadly); color: #ffffff; font-weight: 700; }
 
 /* Skill-check DC badges (puzzles & challenges — Easy/Medium/Hard is still
    the 2024 vocabulary for check difficulty, unlike encounter tiers) */
-.badge-easy { background-color: var(--difficulty-easy); color: #0d1a12; font-weight: 700; }
-.badge-medium { background-color: var(--difficulty-medium); color: #1c1808; font-weight: 700; }
-.badge-hard { background-color: var(--difficulty-hard); color: #1d1105; font-weight: 700; }
+.badge-easy { background-color: var(--difficulty-easy); color: var(--text-on-easy); font-weight: 700; }
+.badge-medium { background-color: var(--difficulty-medium); color: var(--text-on-medium); font-weight: 700; }
+.badge-hard { background-color: var(--difficulty-hard); color: var(--text-on-hard); font-weight: 700; }
 
 /* Button variants */
 .btn-primary {
@@ -232,7 +247,7 @@ p {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 0.75rem;
   background-color: var(--bronze);
-  color: #211206;
+  color: var(--text-on-accent);
   box-shadow: 0 8px 24px rgba(185, 111, 48, 0.2);
 }
 .btn-primary:hover {
@@ -286,7 +301,7 @@ p {
 /* Card styling */
 .card,
 .card-interactive {
-  background: linear-gradient(145deg, rgba(31, 33, 42, 0.98), rgba(24, 25, 32, 0.98));
+  background: var(--surface-raised);
   border: 1px solid var(--line-subtle);
   border-radius: 0.875rem;
   box-shadow: var(--shadow-card);
@@ -321,7 +336,7 @@ button.card:hover,
   border-color: rgba(232, 161, 94, 0.28);
   background:
     linear-gradient(135deg, rgba(232, 161, 94, 0.1), transparent 42%),
-    linear-gradient(145deg, rgba(31, 33, 42, 0.98), rgba(24, 25, 32, 0.98));
+    var(--surface-raised);
 }
 
 .eyebrow {
@@ -353,7 +368,7 @@ button.card:hover,
   border-radius: 1.25rem;
   background:
     radial-gradient(circle at 88% 20%, rgba(232, 161, 94, 0.12), transparent 22rem),
-    linear-gradient(135deg, rgba(31, 33, 42, 0.98), rgba(19, 20, 26, 0.98));
+    var(--surface-raised);
   box-shadow: var(--shadow-float);
 }
 
@@ -417,7 +432,7 @@ button.card:hover,
 
 .segmented-option[aria-pressed='true'] {
   background: var(--bronze);
-  color: #211206;
+  color: var(--text-on-accent);
   box-shadow: 0 3px 12px rgba(185, 111, 48, 0.18);
 }
 
@@ -429,18 +444,17 @@ button.card:hover,
 .empty-state {
   border: 1px dashed var(--line-strong);
   border-radius: 0.875rem;
-  background: rgba(24, 25, 32, 0.56);
+  background: var(--surface-inset);
   padding: 3rem 1.5rem;
   text-align: center;
   color: var(--text-2);
 }
 
-/* Form controls — steel-950 insets nested inside steel-900 cards. Keep every
-   text-entry surface on the same explicit palette so browser defaults cannot
-   produce white-on-white or gray-on-gray fields. */
+/* Theme-aware form insets. Keep every text-entry surface on the same explicit
+   palette so browser defaults cannot produce white-on-white or gray-on-gray fields. */
 select, textarea, input:not([type]), input[type="text"], input[type="number"] {
   min-height: 2.75rem;
-  background-color: rgba(10, 11, 15, 0.76);
+  background-color: var(--control-surface);
   border: 1px solid var(--control-border);
   color: var(--text-1);
   padding: 0.625rem 0.8rem;
@@ -456,7 +470,7 @@ textarea {
 select:focus-visible, textarea:focus-visible, input:focus-visible {
   border-color: var(--bronze);
   box-shadow: 0 0 0 2px var(--focus-ring);
-  background-color: rgba(10, 11, 15, 0.96);
+  background-color: var(--control-surface-focus);
 }
 
 input[type='checkbox'],
@@ -495,7 +509,7 @@ select optgroup {
 
 .filter-chip.active {
   background-color: var(--bronze);
-  color: #1d1105;
+  color: var(--text-on-accent);
   font-weight: 600;
   border-color: transparent;
 }
@@ -518,7 +532,7 @@ select optgroup {
   padding: 0.5rem;
   border: 1px solid var(--line-subtle);
   border-radius: 0.625rem;
-  background: rgba(10, 11, 15, 0.24);
+  background: var(--surface-inset);
 }
 
 /* The grid responds to both the chosen density and the user's explicit column

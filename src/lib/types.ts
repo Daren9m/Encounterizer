@@ -225,6 +225,12 @@ export interface MapCell {
 export type MapFeatureDensity = 'Sparse' | 'Balanced' | 'Dense';
 export type MapTerrainVariety = 'Focused' | 'Varied' | 'Wild';
 
+/** Which algorithm draws the map; 'auto' lets the environment decide. */
+export type MapLayout = 'auto' | 'dungeon' | 'cavern' | 'wilderness' | 'city' | 'building';
+
+/** Battle-scale tiers; the engine derives dimensions per layout. */
+export type MapScale = 'Skirmish' | 'Standard' | 'Large' | 'Massive';
+
 export type MapRoomTag =
   | 'spawn:party' | 'spawn:monster' | 'boss'
   | 'entrance' | 'exit' | 'treasure' | 'trap' | 'hazard' | 'landmark';
@@ -261,6 +267,8 @@ export interface EncounterMap {
     featureDensity: MapFeatureDensity;
     terrainVariety: MapTerrainVariety;
     roomCount?: number;
+    layout?: MapLayout;
+    scale?: MapScale;
   };
 }
 

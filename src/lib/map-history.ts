@@ -17,11 +17,7 @@ export interface MapHistoryStub {
   height: number;
   environment: EncounterMap['environment'];
   seed: number;
-  genOptions: {
-    featureDensity: MapFeatureDensity;
-    terrainVariety: MapTerrainVariety;
-    roomCount?: number;
-  };
+  genOptions: NonNullable<EncounterMap['genOptions']>;
 }
 
 export type MapHistoryEntry = EncounterMap | MapHistoryStub;
@@ -43,16 +39,20 @@ export function toHistoryEntry(map: EncounterMap): MapHistoryEntry {
   };
 }
 
-/** Turn a history entry back into a displayable map. */
+/** Turn a history entry back into a displayable map. Scale-generated
+ *  maps replay scale mode (their grids include the jitter draws);
+ *  explicit-dimension maps replay with exact width/height. */
 export function resolveHistoryEntry(entry: MapHistoryEntry): EncounterMap {
   if (!isStub(entry)) return entry;
   return generateMap({
     environment: entry.environment,
-    width: entry.width,
-    height: entry.height,
     seed: entry.seed,
     featureDensity: entry.genOptions.featureDensity,
     terrainVariety: entry.genOptions.terrainVariety,
+    ...(entry.genOptions.scale !== undefined
+      ? { scale: entry.genOptions.scale }
+      : { width: entry.width, height: entry.height }),
+    ...(entry.genOptions.layout !== undefined ? { layout: entry.genOptions.layout } : {}),
     ...(entry.genOptions.roomCount !== undefined
       ? { roomCount: entry.genOptions.roomCount }
       : {}),

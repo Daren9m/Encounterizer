@@ -21,10 +21,10 @@ describe('generateMap', () => {
 
   it('clamps dimensions to the supported range', () => {
     const big = generateMap({ environment: 'Forest', seed: 1, width: 100, height: 100 });
-    expect(big.width).toBe(40);
-    expect(big.height).toBe(30);
-    expect(big.grid).toHaveLength(30);
-    expect(big.grid[0]).toHaveLength(40);
+    expect(big.width).toBe(60);
+    expect(big.height).toBe(45);
+    expect(big.grid).toHaveLength(45);
+    expect(big.grid[0]).toHaveLength(60);
 
     const small = generateMap({ environment: 'Forest', seed: 1, width: 2, height: 2 });
     expect(small.width).toBe(10);

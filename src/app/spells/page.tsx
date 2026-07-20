@@ -200,7 +200,7 @@ function SpellCard({ spell, onPin, isPinned, compact }: { spell: Spell; onPin: (
         <h2 className={`${compact ? 'text-base' : 'text-xl'}`}>{spell.name}</h2>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => onPin(spell)} aria-pressed={isPinned} title={isPinned ? 'Unpin' : 'Pin for comparison'}
-            className={`min-h-11 rounded-lg px-3 text-sm ${isPinned ? 'bg-[var(--bronze)] text-[#1d1105]' : 'bg-[var(--steel-800)] text-[var(--text-2)]'}`}>
+            className={`min-h-11 rounded-lg px-3 text-sm ${isPinned ? 'bg-[var(--bronze)] text-[var(--text-on-accent)]' : 'bg-[var(--steel-800)] text-[var(--text-2)]'}`}>
             {isPinned ? 'Pinned' : 'Pin'}
           </button>
           <span className="text-sm font-bold text-[var(--bronze)]">{levelLabel(spell.level)}</span>

@@ -108,7 +108,7 @@ describe('buildMapScene', () => {
   });
 
   it('labels rooms and chambers but not zones', () => {
-    const dungeon = generateMap({ environment: 'Urban', seed: 42, width: 32, height: 24 });
+    const dungeon = generateMap({ environment: 'Urban', layout: 'dungeon', seed: 42, width: 32, height: 24 });
     const scene = buildMapScene(dungeon);
     const labelable = dungeon.rooms!.filter((room) => room.kind !== 'zone');
     expect(scene.roomLabels).toHaveLength(labelable.length);
@@ -155,9 +155,13 @@ describe('sceneToSvgString', () => {
   });
 
   it('draws room number chips when labels are on', () => {
-    // Rulers off so row-label "1" text can't shadow the room chip "1".
-    const withLabels = sceneToSvgString(scene, DARK_PALETTE, { showRoomLabels: true, showRulers: false });
-    const without = sceneToSvgString(scene, DARK_PALETTE, { showRoomLabels: false, showRulers: false });
+    // Chips need rooms/chambers (city zones are keyed off-map), and
+    // rulers off so row-label "1" text can't shadow the room chip "1".
+    const dungeonScene = buildMapScene(
+      generateMap({ environment: 'Urban', layout: 'dungeon', seed: 42 }),
+    );
+    const withLabels = sceneToSvgString(dungeonScene, DARK_PALETTE, { showRoomLabels: true, showRulers: false });
+    const without = sceneToSvgString(dungeonScene, DARK_PALETTE, { showRoomLabels: false, showRulers: false });
     expect(withLabels).toContain('>1</text>');
     expect(without).not.toContain('</text>');
   });

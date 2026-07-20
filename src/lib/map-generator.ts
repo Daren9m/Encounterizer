@@ -1,31 +1,36 @@
 import type {
-  EncounterMap, MapCell, MapFeatureDensity, MapRoom, MapRoomTag,
-  MapTerrainVariety, TerrainType, Environment,
+  EncounterMap, MapCell, MapFeatureDensity, MapLayout, MapRoom, MapRoomTag,
+  MapScale, MapTerrainVariety, TerrainType, Environment,
 } from './types';
 import { seededRandom } from './random';
 import { FLAVOR_STREAM_SALT, flavorRooms, type MapStructure } from './map-flavor';
 
 // ─── Procedural Map Generator ────────────────────────────────────
-// BSP (Binary Space Partition) dungeons, cellular-automata caves,
-// and outdoor scatter fields, tuned per environment.
+// BSP dungeons, cellular-automata caverns, outdoor scatter fields,
+// and city street lattices, selected by layout and flavored by
+// environment.
 //
 // FROZEN GRID DRAW ORDER — shareable ?seed= links replay the grid
 // stream, so the rng draw sequence below is a compatibility contract
 // (like the generator registry order in noncombat/generate.ts).
-// Per map: (1) structure coin flip (Mountain only), (2) layout — BSP
-// splits + room carving + corridors / CA fill + smoothing / outdoor
-// scatter + river, (3) feature scatter (caves scatter BEFORE
-// connectivity so hazards can never sever the map), (4) doors
-// (dungeons), (5) entrance/exit/stairs. Connectivity enforcement,
-// chamber detection, zone building, and room tagging draw NOTHING.
-// Room flavor draws from a SEPARATE stream (see map-flavor.ts), and
-// token placement (token-placement.ts) from a third — neither can
-// shift the grid. Change the order above only with a versioning plan
-// for existing links; the grid-hash tests pin it.
+// Per map: (1) layout resolution (Mountain auto coin flip only),
+// (2) dimension jitter (scale mode only — skipped entirely when
+// width/height are given), (3) layout generation — BSP splits +
+// carving + corridors / CA fill + smoothing / outdoor scatter +
+// river / city streets + blocks, (4) feature scatter (caves scatter
+// BEFORE connectivity so hazards can never sever the map), (5) doors,
+// (6) entrance/exit/stairs. Connectivity enforcement, chamber
+// detection, zone building, and room tagging draw NOTHING. Room
+// flavor draws from a SEPARATE stream (see map-flavor.ts), and token
+// placement (token-placement.ts) from a third — neither can shift
+// the grid. Change the order above only with a versioning plan for
+// existing links; the grid-hash tests pin it.
 
-export type { MapFeatureDensity, MapTerrainVariety } from './types';
+export type { MapFeatureDensity, MapLayout, MapScale, MapTerrainVariety } from './types';
 
 export interface MapOptions {
+  /** Exact dimensions — legacy links and JSON callers. When either is
+   *  set, `scale` is ignored and no jitter draws occur. */
   width?: number;
   height?: number;
   environment: Environment;
@@ -33,7 +38,45 @@ export interface MapOptions {
   seed?: number;
   featureDensity?: MapFeatureDensity;
   terrainVariety?: MapTerrainVariety;
+  /** Which algorithm draws the map; 'auto' lets environment decide. */
+  layout?: MapLayout;
+  /** Battle-scale tier used when width/height are absent. */
+  scale?: MapScale;
 }
+
+/** Engine ceiling — exports stay VTT-exact up to here (4096px cap). */
+export const MAX_MAP_WIDTH = 60;
+export const MAX_MAP_HEIGHT = 45;
+
+const SCALE_DIMS: Record<MapScale, readonly [number, number]> = {
+  Skirmish: [16, 12],
+  Standard: [26, 20],
+  Large: [40, 30],
+  Massive: [60, 45],
+};
+
+// UI option lists (noncombat's THEME_OPTIONS precedent): one source
+// for both the maps page and the encounter builder.
+export const MAP_LAYOUT_OPTIONS: Array<{ value: MapLayout; label: string; hint: string }> = [
+  { value: 'auto', label: 'Auto', hint: 'Let the environment decide' },
+  { value: 'dungeon', label: 'Dungeon', hint: 'Rooms, corridors, and doors' },
+  { value: 'cavern', label: 'Cavern', hint: 'Organic cave systems' },
+  { value: 'wilderness', label: 'Wilderness', hint: 'Open terrain and features' },
+  { value: 'city', label: 'City Streets', hint: 'Blocks, plazas, and locked doors' },
+  { value: 'building', label: 'Building Interior', hint: 'A single floor, room by room' },
+];
+
+export const MAP_SCALE_OPTIONS: Array<{ value: MapScale; label: string; hint: string }> = [
+  { value: 'Skirmish', label: 'Skirmish', hint: 'about 16×12 cells' },
+  { value: 'Standard', label: 'Standard', hint: 'about 26×20 cells' },
+  { value: 'Large', label: 'Large', hint: 'about 40×30 cells' },
+  { value: 'Massive', label: 'Massive', hint: 'about 60×45 cells' },
+];
+
+export const isMapLayout = (v: unknown): v is MapLayout =>
+  MAP_LAYOUT_OPTIONS.some(o => o.value === v);
+export const isMapScale = (v: unknown): v is MapScale =>
+  MAP_SCALE_OPTIONS.some(o => o.value === v);
 
 const FEATURE_CHANCE: Record<MapFeatureDensity, number> = {
   Sparse: 0.035,
@@ -686,21 +729,451 @@ function generateOutdoor(
   return { grid, rooms };
 }
 
+// ─── City Streets ────────────────────────────────────────────────
+
+interface CityBlock {
+  rect: Rect;
+  type: 'building' | 'plaza' | 'market' | 'grove';
+}
+
+function generateCity(
+  w: number,
+  h: number,
+  rng: () => number,
+  featureDensity: MapFeatureDensity,
+  terrainVariety: MapTerrainVariety,
+): GenResult {
+  const grid = createGrid(w, h, 'floor');
+
+  // Street lattice: full-run 2-wide streets at jittered intervals cut
+  // the map into blocks. Streets span edge to edge, so the street
+  // network is connected by construction.
+  const cutPositions = (extent: number): number[] => {
+    const lines: number[] = [];
+    let pos = 3 + Math.floor(rng() * 3);
+    while (pos < extent - 4) {
+      lines.push(pos);
+      pos += 2 + 4 + Math.floor(rng() * 4); // street + block of 4–7
+    }
+    return lines;
+  };
+  const xCuts = cutPositions(w);
+  const yCuts = cutPositions(h);
+
+  // Block rectangles between streets (and the map border).
+  const spans = (cuts: number[], extent: number): Array<[number, number]> => {
+    const result: Array<[number, number]> = [];
+    let start = 0;
+    for (const cut of cuts) {
+      if (cut - start >= 3) result.push([start, cut - 1]);
+      start = cut + 2;
+    }
+    if (extent - start >= 3) result.push([start, extent - 1]);
+    return result;
+  };
+
+  const blocks: CityBlock[] = [];
+  for (const [y0, y1] of spans(yCuts, h)) {
+    for (const [x0, x1] of spans(xCuts, w)) {
+      const rect: Rect = { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+      const roll = rng();
+      const type: CityBlock['type'] = roll < 0.62 ? 'building'
+        : roll < 0.78 ? 'plaza'
+          : roll < 0.9 ? 'market'
+            : 'grove';
+      blocks.push({ rect, type });
+
+      if (type === 'building') {
+        for (let y = rect.y; y <= y1; y++) {
+          for (let x = rect.x; x <= x1; x++) {
+            grid[y][x].terrain = 'wall';
+          }
+        }
+        // Street-facing door: perimeter cells whose outward neighbor is
+        // open street (never the map border).
+        const candidates: Array<[number, number]> = [];
+        for (let x = rect.x; x <= x1; x++) {
+          if (rect.y > 0) candidates.push([x, rect.y]);
+          if (y1 < h - 1) candidates.push([x, y1]);
+        }
+        for (let y = rect.y; y <= y1; y++) {
+          if (rect.x > 0) candidates.push([rect.x, y]);
+          if (x1 < w - 1) candidates.push([x1, y]);
+        }
+        if (candidates.length > 0) {
+          const [dx, dy] = candidates[Math.floor(rng() * candidates.length)];
+          grid[dy][dx] = { terrain: 'door', label: 'Locked Door' };
+        }
+      } else if (type === 'plaza') {
+        const cx = rect.x + Math.floor(rect.w / 2);
+        const cy = rect.y + Math.floor(rect.h / 2);
+        if (rect.w >= 4 && rect.h >= 4) {
+          const centerpiece = rng();
+          if (centerpiece < 0.5) {
+            grid[cy][cx] = { terrain: 'water', label: 'Fountain' };
+          } else if (centerpiece < 0.8) {
+            grid[cy][cx] = { terrain: 'altar', label: 'Statue' };
+          }
+        }
+      } else if (type === 'market') {
+        for (let y = rect.y; y <= y1; y++) {
+          for (let x = rect.x; x <= x1; x++) {
+            if (rng() < 0.18 * DENSITY_MULTIPLIER[featureDensity]) {
+              grid[y][x].terrain = rng() < 0.6 ? 'rubble' : 'difficult';
+            }
+          }
+        }
+      } else {
+        const chance = terrainVariety === 'Focused' ? 0.15 : 0.25;
+        for (let y = rect.y; y <= y1; y++) {
+          for (let x = rect.x; x <= x1; x++) {
+            if (rng() < chance) grid[y][x].terrain = 'vegetation';
+          }
+        }
+      }
+    }
+  }
+
+  // Entrance: nearest open cell to bottom-center (deterministic scan).
+  let entranceX = Math.floor(w / 2);
+  let entranceY = h - 1;
+  outer: for (let radius = 0; radius < Math.max(w, h); radius++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      const x = Math.floor(w / 2) + dx;
+      const y = h - 1 - (radius - Math.abs(dx));
+      if (x < 0 || x >= w || y < 0 || y >= h) continue;
+      if (isPassable(grid[y][x].terrain) && grid[y][x].terrain !== 'door') {
+        entranceX = x;
+        entranceY = y;
+        break outer;
+      }
+    }
+  }
+  grid[entranceY][entranceX] = { terrain: 'entrance', label: 'City Gate' };
+
+  // Zones (no rng draws).
+  const openCellsIn = (rect: Rect): number[] => {
+    const cells: number[] = [];
+    for (let y = rect.y; y < rect.y + rect.h; y++) {
+      for (let x = rect.x; x < rect.x + rect.w; x++) {
+        if (isPassable(grid[y][x].terrain)) cells.push(y * w + x);
+      }
+    }
+    return cells;
+  };
+
+  const rooms: ProtoRoom[] = [];
+  const gateRect: Rect = {
+    x: Math.max(0, entranceX - 2), y: Math.max(0, entranceY - 2),
+    w: Math.min(5, w - Math.max(0, entranceX - 2)),
+    h: Math.min(5, h - Math.max(0, entranceY - 2)),
+  };
+  rooms.push({
+    kind: 'zone', bounds: gateRect, cells: openCellsIn(gateRect),
+    tags: ['entrance', 'spawn:party'],
+  });
+
+  // Far ward: the open street/plaza cells of the top quarter host the
+  // opposition even when every block rolled 'building'.
+  const farRect: Rect = { x: 0, y: 0, w, h: Math.max(3, Math.floor(h / 4)) };
+  rooms.push({
+    kind: 'zone', bounds: farRect, cells: openCellsIn(farRect),
+    tags: ['spawn:monster'],
+  });
+
+  let bossBlock: CityBlock | null = null;
+  for (const block of blocks) {
+    if (block.type === 'building') continue;
+    const tags: MapRoomTag[] = ['landmark'];
+    if (block.rect.y + block.rect.h <= h / 2) tags.push('spawn:monster');
+    rooms.push({
+      kind: 'zone', bounds: block.rect, cells: openCellsIn(block.rect), tags,
+    });
+    if (block.type === 'plaza'
+      && (!bossBlock || block.rect.w * block.rect.h > bossBlock.rect.w * bossBlock.rect.h)) {
+      bossBlock = block;
+    }
+  }
+  if (bossBlock) {
+    const zone = rooms.find(r => r.bounds === bossBlock!.rect);
+    if (zone && !zone.tags.includes('boss')) {
+      zone.tags.push('boss');
+      if (!zone.tags.includes('spawn:monster')) zone.tags.push('spawn:monster');
+    }
+  }
+
+  return { grid, rooms };
+}
+
+// ─── Building Interior ───────────────────────────────────────────
+
+function generateBuilding(
+  w: number,
+  h: number,
+  rng: () => number,
+  featureDensity: MapFeatureDensity,
+  roomCount: number,
+): GenResult {
+  const grid = createGrid(w, h, 'wall');
+  const interior: Rect = { x: 2, y: 2, w: w - 4, h: h - 4 };
+  for (let y = interior.y; y < interior.y + interior.h; y++) {
+    for (let x = interior.x; x < interior.x + interior.w; x++) {
+      grid[y][x].terrain = 'floor';
+    }
+  }
+
+  // Optional wing: a party wall splits main house from a shorter wing,
+  // the dead corner returns to exterior mass — an L-shaped floor plan.
+  // Its door joins the same deferred door pass as the partition walls.
+  const plans: Rect[] = [];
+  const partyWalls: Array<{ vertical: boolean; pos: number; from: number; to: number }> = [];
+  const wingRoll = rng();
+  if (wingRoll < 0.45 && interior.w >= 14 && interior.h >= 10) {
+    const wingW = 5 + Math.floor(rng() * Math.max(1, Math.floor(interior.w / 3) - 4));
+    const mainW = interior.w - wingW - 1;
+    const wingH = Math.max(6, Math.floor(interior.h * (0.5 + rng() * 0.3)));
+    const wallX = interior.x + mainW;
+    for (let y = interior.y; y < interior.y + interior.h; y++) {
+      grid[y][wallX].terrain = 'wall';
+    }
+    for (let y = interior.y + wingH; y < interior.y + interior.h; y++) {
+      for (let x = wallX; x < interior.x + interior.w; x++) {
+        grid[y][x].terrain = 'wall';
+      }
+    }
+    partyWalls.push({ vertical: true, pos: wallX, from: interior.y, to: interior.y + wingH - 1 });
+    plans.push({ x: interior.x, y: interior.y, w: mainW, h: interior.h });
+    plans.push({ x: wallX + 1, y: interior.y, w: interior.w - mainW - 1, h: wingH });
+  } else {
+    plans.push(interior);
+  }
+
+  // Recursive partition: each cut is a 1-cell wall line; the split
+  // tree is the connectivity spanning tree. Doors are punched in a
+  // SECOND pass, after every descendant wall exists — punching during
+  // the split let a child wall land flush against a parent's door and
+  // seal a room (found by the seed-14 connectivity test).
+  const roomRects: Rect[] = [];
+  const wallLines: Array<{ vertical: boolean; pos: number; from: number; to: number }> = [];
+  const split = (r: Rect, budget: number): void => {
+    const canV = r.w >= 7;
+    const canH = r.h >= 7;
+    if (budget <= 1 || (!canV && !canH)) {
+      roomRects.push(r);
+      return;
+    }
+    const vertical = canV && canH
+      ? (r.w > r.h ? true : r.h > r.w ? false : rng() > 0.5)
+      : canV;
+    if (vertical) {
+      const pos = r.x + 3 + Math.floor(rng() * (r.w - 6));
+      for (let y = r.y; y < r.y + r.h; y++) grid[y][pos].terrain = 'wall';
+      wallLines.push({ vertical: true, pos, from: r.y, to: r.y + r.h - 1 });
+      const leftShare = Math.max(1, Math.round(budget * ((pos - r.x) / r.w)));
+      split({ x: r.x, y: r.y, w: pos - r.x, h: r.h }, leftShare);
+      split({ x: pos + 1, y: r.y, w: r.x + r.w - pos - 1, h: r.h }, Math.max(1, budget - leftShare));
+    } else {
+      const pos = r.y + 3 + Math.floor(rng() * (r.h - 6));
+      for (let x = r.x; x < r.x + r.w; x++) grid[pos][x].terrain = 'wall';
+      wallLines.push({ vertical: false, pos, from: r.x, to: r.x + r.w - 1 });
+      const topShare = Math.max(1, Math.round(budget * ((pos - r.y) / r.h)));
+      split({ x: r.x, y: r.y, w: r.w, h: pos - r.y }, topShare);
+      split({ x: r.x, y: pos + 1, w: r.w, h: r.y + r.h - pos - 1 }, Math.max(1, budget - topShare));
+    }
+  };
+  const totalArea = plans.reduce((sum, p) => sum + p.w * p.h, 0);
+  for (const plan of plans) {
+    split(plan, Math.max(1, Math.round(roomCount * ((plan.w * plan.h) / totalArea))));
+  }
+
+  // Door pass: one per wall line, at a spot open on BOTH sides.
+  for (const wall of [...partyWalls, ...wallLines]) {
+    const candidates: Array<[number, number]> = [];
+    for (let i = wall.from; i <= wall.to; i++) {
+      const [x, y] = wall.vertical ? [wall.pos, i] : [i, wall.pos];
+      const sideA = wall.vertical ? grid[y][x - 1] : grid[y - 1]?.[x];
+      const sideB = wall.vertical ? grid[y][x + 1] : grid[y + 1]?.[x];
+      if (sideA && sideB && isPassable(sideA.terrain) && isPassable(sideB.terrain)) {
+        candidates.push([x, y]);
+      }
+    }
+    if (candidates.length > 0) {
+      const [dx, dy] = candidates[Math.floor(rng() * candidates.length)];
+      grid[dy][dx] = { terrain: 'door', label: 'Door' };
+    }
+  }
+
+  // Front door on the bottom shell, opening into the main house.
+  const doorCandidates: number[] = [];
+  for (let x = plans[0].x; x < plans[0].x + plans[0].w; x++) {
+    if (grid[h - 3]?.[x] && isPassable(grid[h - 3][x].terrain)) doorCandidates.push(x);
+  }
+  const entranceX = doorCandidates.length > 0
+    ? doorCandidates[Math.floor(rng() * doorCandidates.length)]
+    : plans[0].x;
+  const entranceY = h - 2;
+  grid[entranceY][entranceX] = { terrain: 'entrance', label: 'Front Door' };
+
+  // Furnishings: hearth, sparse columns/treasure/traps, one cellar stair.
+  const roomTags: Set<MapRoomTag>[] = roomRects.map(() => new Set());
+  const hearthIdx = Math.floor(rng() * roomRects.length);
+  const cellarIdx = Math.floor(rng() * roomRects.length);
+  roomRects.forEach((room, i) => {
+    const cx = room.x + Math.floor(room.w / 2);
+    const cy = room.y + Math.floor(room.h / 2);
+    if (i === hearthIdx && grid[cy][cx].terrain === 'floor') {
+      grid[cy][cx] = { terrain: 'altar', label: 'Hearth' };
+    }
+    if (i === cellarIdx) {
+      const sx = room.x + Math.floor(rng() * room.w);
+      const sy = room.y + Math.floor(rng() * room.h);
+      if (grid[sy]?.[sx]?.terrain === 'floor') {
+        grid[sy][sx] = { terrain: 'stairs', label: 'Cellar Stair' };
+      }
+    }
+    if (room.w >= 6 && room.h >= 6 && rng() < 0.4 * DENSITY_MULTIPLIER[featureDensity]) {
+      if (grid[cy][cx + 1]?.terrain === 'floor') grid[cy][cx + 1].terrain = 'pillar';
+    }
+    if (rng() < 0.15 * DENSITY_MULTIPLIER[featureDensity]) {
+      const tx = room.x + Math.floor(rng() * room.w);
+      const ty = room.y + Math.floor(rng() * room.h);
+      if (grid[ty]?.[tx]?.terrain === 'floor') {
+        grid[ty][tx] = { terrain: 'trap', label: 'Trap' };
+        roomTags[i].add('trap');
+      }
+    }
+    if (rng() < 0.2 * DENSITY_MULTIPLIER[featureDensity]) {
+      const tx = room.x + Math.floor(rng() * room.w);
+      const ty = room.y + Math.floor(rng() * room.h);
+      if (grid[ty]?.[tx]?.terrain === 'floor') {
+        grid[ty][tx] = { terrain: 'treasure', label: 'Treasure' };
+        roomTags[i].add('treasure');
+      }
+    }
+  });
+
+  // Tagging (no draws): party at the door, boss deepest, far half hostile.
+  const inRoom = (i: number, x: number, y: number) =>
+    x >= roomRects[i].x && x < roomRects[i].x + roomRects[i].w
+    && y >= roomRects[i].y && y < roomRects[i].y + roomRects[i].h;
+  let entranceRoom = 0;
+  for (let i = 0; i < roomRects.length; i++) {
+    if (inRoom(i, entranceX, entranceY - 1)) { entranceRoom = i; break; }
+  }
+  roomTags[entranceRoom].add('entrance');
+  roomTags[entranceRoom].add('spawn:party');
+
+  const dist = new Int32Array(w * h).fill(-1);
+  const start = entranceY * w + entranceX;
+  dist[start] = 0;
+  let frontier = [start];
+  let maxDist = 0;
+  while (frontier.length > 0) {
+    const next: number[] = [];
+    for (const cell of frontier) {
+      const cx = cell % w;
+      const cy = Math.floor(cell / w);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+        const nx = cx + dx;
+        const ny = cy + dy;
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+        const idx = ny * w + nx;
+        if (dist[idx] !== -1 || !isPassable(grid[ny][nx].terrain)) continue;
+        dist[idx] = dist[cell] + 1;
+        maxDist = Math.max(maxDist, dist[idx]);
+        next.push(idx);
+      }
+    }
+    frontier = next;
+  }
+  let bossIdx = -1;
+  let bossDist = -1;
+  roomRects.forEach((room, i) => {
+    if (i === entranceRoom) return;
+    const cx = room.x + Math.floor(room.w / 2);
+    const cy = room.y + Math.floor(room.h / 2);
+    const d = dist[cy * w + cx];
+    if (d > bossDist) { bossDist = d; bossIdx = i; }
+    if (d >= 0.55 * maxDist) roomTags[i].add('spawn:monster');
+  });
+  if (bossIdx >= 0) {
+    roomTags[bossIdx].add('boss');
+    roomTags[bossIdx].add('spawn:monster');
+  }
+
+  const rooms: ProtoRoom[] = roomRects.map((r, i) => ({
+    kind: 'room',
+    bounds: r,
+    tags: [...roomTags[i]],
+  }));
+  if (!rooms.some(r => r.tags.includes('spawn:monster'))) {
+    rooms.push(zoneAround(grid, entranceX, Math.max(2, entranceY - 4), w, h, ['spawn:monster']));
+  }
+
+  return { grid, rooms };
+}
+
 // ─── Public API ──────────────────────────────────────────────────
+
+/** Layout resolution + dimension derivation — draws 1–3 of the grid
+ *  stream (see the contract at the top of this file). */
+function resolveLayout(
+  layout: MapLayout,
+  environment: Environment,
+  rng: () => number,
+): Exclude<MapLayout, 'auto'> {
+  if (layout !== 'auto') return layout;
+  switch (environment) {
+    case 'Urban': return 'city';
+    case 'Underdark':
+    case 'Planar': return 'cavern';
+    case 'Mountain': return rng() < 0.5 ? 'cavern' : 'wilderness';
+    case 'Any': return 'dungeon';
+    default: return 'wilderness';
+  }
+}
+
+function resolveDimensions(
+  layout: Exclude<MapLayout, 'auto'>,
+  scale: MapScale,
+  rng: () => number,
+): [number, number] {
+  let [tw, th] = SCALE_DIMS[scale];
+  if (layout === 'city') { tw = Math.round(tw * 1.1); th = Math.round(th * 0.95); }
+  if (layout === 'building') { tw = Math.round(tw * 0.6); th = Math.round(th * 0.65); }
+  // ±8% seeded jitter so same-tier maps vary in silhouette.
+  const jw = 0.92 + rng() * 0.16;
+  const jh = 0.92 + rng() * 0.16;
+  return [
+    Math.max(10, Math.min(MAX_MAP_WIDTH, Math.round(tw * jw))),
+    Math.max(10, Math.min(MAX_MAP_HEIGHT, Math.round(th * jh))),
+  ];
+}
 
 export function generateMap(options: MapOptions): EncounterMap {
   const {
-    width = 24,
-    height = 18,
     environment,
     seed = Date.now(),
     featureDensity = 'Balanced',
     terrainVariety = 'Varied',
+    layout = 'auto',
+    scale = 'Standard',
   } = options;
 
   const rng = seededRandom(seed);
-  const w = Math.max(10, Math.min(40, width));
-  const h = Math.max(10, Math.min(30, height));
+  const resolved = resolveLayout(layout, environment, rng);
+
+  // Exact dimensions (legacy links, JSON callers) skip the jitter
+  // draws entirely; scale mode derives dimensions per layout.
+  let w: number;
+  let h: number;
+  if (options.width !== undefined || options.height !== undefined) {
+    w = Math.max(10, Math.min(MAX_MAP_WIDTH, options.width ?? 24));
+    h = Math.max(10, Math.min(MAX_MAP_HEIGHT, options.height ?? 18));
+  } else {
+    [w, h] = resolveDimensions(resolved, scale, rng);
+  }
+
   const requestedRooms = options.roomCount !== undefined
     ? Math.max(3, Math.min(14, Math.round(options.roomCount)))
     : undefined;
@@ -710,52 +1183,35 @@ export function generateMap(options: MapOptions): EncounterMap {
   let name: string;
   let structure: MapStructure;
 
-  // Choose generation strategy based on environment
-  switch (environment) {
-    case 'Underdark':
+  switch (resolved) {
+    case 'cavern':
       result = generateCave(w, h, environment, rng, featureDensity, terrainVariety);
-      name = 'Underdark Cavern';
+      name = environment === 'Underdark' ? 'Underdark Cavern'
+        : environment === 'Planar' ? 'Planar Rift'
+          : environment === 'Mountain' ? 'Mountain Cave'
+            : `${environment} Cavern`;
       structure = 'cave';
       break;
-    case 'Mountain': {
-      // One draw decides both the grid and the name.
-      const isCave = rng() < 0.5;
-      if (isCave) {
-        result = generateCave(w, h, environment, rng, featureDensity, terrainVariety);
-        name = 'Mountain Cave';
-        structure = 'cave';
-      } else {
-        result = generateOutdoor(w, h, environment, rng, featureDensity, terrainVariety);
-        name = 'Mountain Pass';
-        structure = 'outdoor';
-      }
-      break;
-    }
-    case 'Urban':
-      result = generateDungeon(w, h, rng, featureDensity, terrainVariety, roomCount);
-      name = 'City Ruins';
-      structure = 'dungeon';
-      break;
-    case 'Planar':
-      result = generateCave(w, h, environment, rng, featureDensity, terrainVariety);
-      name = 'Planar Rift';
-      structure = 'cave';
-      break;
-    case 'Forest':
-    case 'Grassland':
-    case 'Hill':
-    case 'Desert':
-    case 'Arctic':
-    case 'Coastal':
-    case 'Swamp':
-    case 'Underwater':
+    case 'wilderness':
       result = generateOutdoor(w, h, environment, rng, featureDensity, terrainVariety);
-      name = `${environment} Battlefield`;
+      name = environment === 'Mountain' ? 'Mountain Pass' : `${environment} Battlefield`;
       structure = 'outdoor';
       break;
+    case 'city':
+      result = generateCity(w, h, rng, featureDensity, terrainVariety);
+      name = environment === 'Urban' ? 'City Streets' : `${environment} Settlement`;
+      structure = 'city';
+      break;
+    case 'building': {
+      result = generateBuilding(w, h, rng, featureDensity, roomCount);
+      const area = w * h;
+      name = area < 260 ? 'Townhouse' : area < 950 ? 'Manor Floor' : 'Grand Hall';
+      structure = 'building';
+      break;
+    }
     default:
       result = generateDungeon(w, h, rng, featureDensity, terrainVariety, roomCount);
-      name = 'Dungeon';
+      name = environment === 'Any' ? 'Dungeon' : `${environment} Dungeon`;
       structure = 'dungeon';
   }
 
@@ -785,6 +1241,8 @@ export function generateMap(options: MapOptions): EncounterMap {
       featureDensity,
       terrainVariety,
       ...(requestedRooms !== undefined ? { roomCount: requestedRooms } : {}),
+      ...(layout !== 'auto' ? { layout } : {}),
+      ...(options.width === undefined && options.height === undefined ? { scale } : {}),
     },
   };
 }
