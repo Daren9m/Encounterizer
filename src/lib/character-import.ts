@@ -1,7 +1,8 @@
-import type { PartyMemberConfig, SimPlayer } from './battle-sim-types';
+import type { SimPlayer } from './battle-sim-types';
+import type { PartyMemberDraft } from './party';
 
 export type CharacterImportResult =
-  | { ok: true; member: PartyMemberConfig; warnings: string[] }
+  | { ok: true; member: PartyMemberDraft; warnings: string[] }
   | { ok: false; error: string };
 
 const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
@@ -58,20 +59,61 @@ function ddbAbilityScores(source: Record<string, unknown>): Record<Ability, numb
   })) as Record<Ability, number>;
 }
 
-function classInfo(source: Record<string, unknown>): { name: string; level: number } {
+function classInfo(source: Record<string, unknown>): {
+  name: string;
+  level: number;
+  classNames: string[];
+} {
   const classes = Array.isArray(source.classes) ? source.classes.map(record).filter(Boolean) : [];
   const level = finite(source.level)
     ?? classes.reduce((sum, entry) => sum + (finite(entry?.level) ?? 0), 0)
     ?? 1;
-  const firstDefinition = record(classes[0]?.definition);
-  const name = text(source.className) ?? text(firstDefinition?.name) ?? 'Fighter';
-  return { name, level: Math.max(1, Math.min(20, Math.round(level || 1))) };
+  const classNames = classes
+    .map((entry) => text(record(entry?.definition)?.name))
+    .filter((name): name is string => Boolean(name));
+  const name = text(source.className) ?? classNames[0] ?? 'Fighter';
+  return {
+    name,
+    level: Math.max(1, Math.min(20, Math.round(level || 1))),
+    classNames,
+  };
 }
 
-function templateFor(className: string): string {
+function templateFor(className: string): { templateId: string; mapped: boolean } {
   const normalized = className.toLowerCase();
-  return Object.entries(TEMPLATE_BY_CLASS).find(([name]) => normalized.includes(name))?.[1]
-    ?? 'fighter-champion';
+  const templateId = Object.entries(TEMPLATE_BY_CLASS)
+    .find(([name]) => normalized.includes(name))?.[1];
+  return templateId
+    ? { templateId, mapped: true }
+    : { templateId: 'fighter-champion', mapped: false };
+}
+
+function normalizeBounded(
+  value: number,
+  label: string,
+  min: number,
+  max: number,
+  warnings: string[],
+  integer = false,
+): number {
+  const normalized = Math.max(min, Math.min(max, integer ? Math.round(value) : value));
+  if (normalized !== value) {
+    warnings.push(`${label} was adjusted to ${normalized} to fit Encounterizer's supported range.`);
+  }
+  return normalized;
+}
+
+function boundedImportedText(
+  value: unknown,
+  label: string,
+  maxLength: number,
+  warnings: string[],
+): string | undefined {
+  const imported = text(value);
+  if (!imported) return undefined;
+  if (imported.length <= maxLength) return imported;
+  warnings.push(`${label} was shortened to ${maxLength} characters.`);
+  return imported.slice(0, maxLength).trimEnd();
 }
 
 function ddbArmorClass(source: Record<string, unknown>, dexMod: number): number {
@@ -125,17 +167,32 @@ export function importCharacterJson(json: string): CharacterImportResult {
   const source = record(root?.data) ?? record(root?.character) ?? root;
   if (!source) return { ok: false, error: 'The JSON file does not contain a character object.' };
 
-  const name = text(source.name);
+  const warnings: string[] = [];
+  const name = boundedImportedText(source.name, 'Character name', 120, warnings);
   if (!name) return { ok: false, error: 'The character is missing a name.' };
 
-  const { name: className, level } = classInfo(source);
+  const { name: className, level, classNames } = classInfo(source);
+  const template = templateFor(className);
+  if (classNames.length > 1) {
+    warnings.push(`This is a multiclass character (${classNames.join(' / ')}); the ${className} template is only a starting point.`);
+  }
+  if (!template.mapped) {
+    warnings.push(`The class “${className}” is not mapped yet, so the Champion Fighter template was used as a starting point.`);
+  }
   const scores = ddbAbilityScores(source);
   const proficiency = 2 + Math.floor((level - 1) / 4);
   const primary = Math.max(abilityMod(scores.str), abilityMod(scores.dex), abilityMod(scores.int), abilityMod(scores.wis), abilityMod(scores.cha));
   const saveBonuses = Object.fromEntries(['dex', 'con', 'wis'].map((ability) => {
     const key = ability as 'dex' | 'con' | 'wis';
     const explicit = finite(record(source.saveBonuses)?.[key]);
-    const value = explicit ?? abilityMod(scores[key]) + (hasSaveProficiency(source, key) ? proficiency : 0);
+    const value = normalizeBounded(
+      explicit ?? abilityMod(scores[key]) + (hasSaveProficiency(source, key) ? proficiency : 0),
+      `${ability.toUpperCase()} save bonus`,
+      -50,
+      100,
+      warnings,
+      true,
+    );
     return [key, value];
   })) as SimPlayer['saveBonuses'];
 
@@ -149,7 +206,6 @@ export function importCharacterJson(json: string): CharacterImportResult {
   const attacksPerRound = finite(source.attacksPerRound)
     ?? (className.toLowerCase().includes('fighter') && level >= 11 ? 3 : martialExtraAttack ? 2 : 1);
 
-  const warnings: string[] = [];
   if (finite(source.ac) === undefined && finite(source.armorClass) === undefined) {
     warnings.push('Armor Class was derived from equipped armor and Dexterity; verify it before saving.');
   }
@@ -157,21 +213,92 @@ export function importCharacterJson(json: string): CharacterImportResult {
     warnings.push('Average damage was estimated because the export did not include a combat-profile value.');
   }
 
-  const member: PartyMemberConfig = {
+  const initiativeSource = finite(source.initiativeBonus) ?? finite(source.initiativeModifier);
+  const passivePerceptionSource = finite(source.passivePerception)
+    ?? finite(source.passiveWisdomPerception);
+  const initiativeBonus = initiativeSource === undefined
+    ? undefined
+    : normalizeBounded(initiativeSource, 'Initiative bonus', -30, 30, warnings, true);
+  const passivePerception = passivePerceptionSource === undefined
+    ? undefined
+    : normalizeBounded(passivePerceptionSource, 'Passive Perception', 0, 100, warnings, true);
+  const playerName = boundedImportedText(source.playerName, 'Player name', 120, warnings);
+  const classLabel = boundedImportedText(source.classLabel, 'Class label', 120, warnings)
+    ?? boundedImportedText(className, 'Class label', 120, warnings);
+  const notes = boundedImportedText(source.notes, 'Notes', 2_000, warnings);
+
+  const member: PartyMemberDraft = {
     name,
-    templateId: templateFor(className),
+    templateId: template.templateId,
     level,
+    ...(playerName ? { playerName } : {}),
+    ...(classLabel ? { classLabel } : {}),
+    ...(initiativeBonus !== undefined ? { initiativeBonus } : {}),
+    ...(passivePerception !== undefined ? { passivePerception } : {}),
+    ...(notes ? { notes } : {}),
     overrides: {
-      ac: Math.max(1, Math.round(ddbArmorClass(source, abilityMod(scores.dex)))),
-      maxHp: Math.max(1, Math.round(maxHp)),
-      attackBonus: Math.round(finite(source.attackBonus) ?? proficiency + primary),
-      attacksPerRound: Math.max(1, Math.round(attacksPerRound)),
-      avgDamagePerHit: Math.max(1, finite(source.avgDamagePerHit) ?? 4.5 + primary),
+      ac: normalizeBounded(
+        ddbArmorClass(source, abilityMod(scores.dex)),
+        'Armor Class',
+        1,
+        100,
+        warnings,
+        true,
+      ),
+      maxHp: normalizeBounded(maxHp, 'Maximum HP', 1, 1_000_000, warnings, true),
+      attackBonus: normalizeBounded(
+        finite(source.attackBonus) ?? proficiency + primary,
+        'Attack bonus',
+        -50,
+        100,
+        warnings,
+        true,
+      ),
+      attacksPerRound: normalizeBounded(
+        attacksPerRound,
+        'Attacks per round',
+        1,
+        100,
+        warnings,
+        true,
+      ),
+      avgDamagePerHit: normalizeBounded(
+        finite(source.avgDamagePerHit) ?? 4.5 + primary,
+        'Average damage per hit',
+        0,
+        1_000_000,
+        warnings,
+      ),
       saveBonuses,
-      ...(finite(source.healingPerRound) !== undefined ? { healingPerRound: finite(source.healingPerRound) } : {}),
-      ...(finite(source.spellDc) !== undefined ? { spellDc: finite(source.spellDc) } : {}),
+      ...(finite(source.healingPerRound) !== undefined ? {
+        healingPerRound: normalizeBounded(
+          finite(source.healingPerRound)!,
+          'Healing per round',
+          0,
+          1_000_000,
+          warnings,
+        ),
+      } : {}),
+      ...(finite(source.spellDc) !== undefined ? {
+        spellDc: normalizeBounded(
+          finite(source.spellDc)!,
+          'Spell save DC',
+          1,
+          100,
+          warnings,
+          true,
+        ),
+      } : {}),
       ...(finite(source.avgSpellDamagePerRound) !== undefined
-        ? { avgSpellDamagePerRound: finite(source.avgSpellDamagePerRound) }
+        ? {
+            avgSpellDamagePerRound: normalizeBounded(
+              finite(source.avgSpellDamagePerRound)!,
+              'Average spell damage per round',
+              0,
+              1_000_000,
+              warnings,
+            ),
+          }
         : {}),
     },
   };

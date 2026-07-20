@@ -23,6 +23,7 @@ export type RouteIconName =
   | 'map'
   | 'puzzle'
   | 'sparkles'
+  | 'users'
   | 'screen'
   | 'battle'
   | 'book';
@@ -53,8 +54,16 @@ export const TOOL_SECTIONS: ToolSection[] = [
   {
     id: 'prep',
     label: 'Make',
-    description: 'Encounters, maps, and challenges.',
+    description: 'Parties, encounters, maps, and challenges.',
     routes: [
+      {
+        path: '/party',
+        navLabel: 'Party',
+        title: 'Party Manager',
+        description: 'Keep your adventuring party ready once, then bring it into your planning workflow.',
+        navDescription: 'Create and keep reusable adventuring parties.',
+        icon: 'users',
+      },
       {
         path: '/encounters',
         navLabel: 'Encounters',
@@ -160,6 +169,9 @@ export const NAV_SHORTCUT_ROUTES: RouteInfo[] = NAV_SHORTCUT_PATHS.map((path) =>
 export const DM_SCREEN_TOOL_ROUTES: RouteInfo[] = TOOL_ROUTES.filter(
   (route) => route.path !== '/dm-screen',
 );
+
+/** Adding a route to Make should not silently change the DM Screen's starter tool. */
+export const DM_SCREEN_DEFAULT_TOOL_PATH = '/encounters' as const;
 
 /** Every indexable route — drives sitemap.xml. */
 export const ALL_ROUTE_PATHS: string[] = [

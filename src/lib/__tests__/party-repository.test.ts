@@ -7,7 +7,7 @@ import {
   type PartyCommitNotifier,
   type PartyDocumentStore,
 } from '@/lib/party-repository';
-import type { PartyIdFactory, PartyLibrary } from '@/lib/party';
+import { createPartyLibrary, type PartyIdFactory, type PartyLibrary } from '@/lib/party';
 
 function legacyParty(name: string): LegacyPartyReadResult {
   return {
@@ -176,6 +176,34 @@ describe('PartyLibraryRepository', () => {
     first.close();
     second.close();
     third.close();
+  });
+
+  it('commits a version-one migration with a new revision and notification', async () => {
+    const factory = new IDBFactory();
+    const store = new IndexedDbPartyDocumentStore(factory);
+    const current = createPartyLibrary('Old Library', [
+      { name: 'Aria', templateId: 'fighter-champion', level: 5 },
+    ], { now: 100, createId: deterministicIds('old') });
+    const versionOne = { ...current, version: 1, revision: 5 };
+    await store.transact(() => versionOne);
+    const notifier = new RecordingNotifier();
+    const repository = createPartyLibraryRepository({
+      store,
+      notifier,
+      readLegacy: () => legacyParty('Must not be imported'),
+      now: () => 600,
+      createId: deterministicIds('ignored'),
+    });
+
+    await repository.initialize();
+
+    expect(repository.getSnapshot()).toMatchObject({
+      status: 'saved',
+      library: { version: 2, revision: 6 },
+    });
+    expect(await store.read()).toMatchObject({ version: 2, revision: 6 });
+    expect(notifier.published).toEqual([6]);
+    repository.close();
   });
 
   it.each([

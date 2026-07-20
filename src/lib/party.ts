@@ -3,7 +3,7 @@
 // HP, conditions, encounter attendance, and similar session details) must stay
 // outside this document and be derived as snapshots through party-adapters.ts.
 
-export const PARTY_LIBRARY_VERSION = 1 as const;
+export const PARTY_LIBRARY_VERSION = 2 as const;
 
 export interface PartySaveBonuses {
   dex: number;
@@ -43,6 +43,8 @@ export interface PartyProfile {
   name: string;
   createdAt: number;
   updatedAt: number;
+  /** Present when the party is hidden from active tool flows but recoverable. */
+  archivedAt?: number;
   members: PartyMemberProfile[];
 }
 
@@ -63,6 +65,12 @@ export type PartyIdKind = 'party' | 'member';
 export type PartyIdFactory = (kind: PartyIdKind) => string;
 
 export type NewPartyMember = Omit<PartyMemberProfile, 'id'> & { id?: string };
+
+/** A genuinely new member never supplies durable identity. */
+export type NewPartyMemberInput = Omit<PartyMemberProfile, 'id'>;
+
+/** Existing roster rows carry identity; imports and newly-added rows do not. */
+export type PartyMemberDraft = Omit<PartyMemberProfile, 'id'> & { id?: string };
 
 export type PartyDocumentReadResult =
   | { ok: true; library: PartyLibrary; migrated: boolean }
@@ -165,6 +173,8 @@ export function isPartyProfile(value: unknown): value is PartyProfile {
     || !nonEmptyText(party.name, 120)
     || !integerInRange(party.createdAt, 0, Number.MAX_SAFE_INTEGER)
     || !integerInRange(party.updatedAt, party.createdAt, Number.MAX_SAFE_INTEGER)
+    || (party.archivedAt !== undefined
+      && !integerInRange(party.archivedAt, party.createdAt, party.updatedAt as number))
     || !Array.isArray(party.members)
     || !party.members.every(isPartyMemberProfile)
   ) return false;
@@ -189,9 +199,12 @@ export function isPartyLibrary(value: unknown): value is PartyLibrary {
   const memberIds = library.parties.flatMap((party) => party.members.map((member) => member.id));
   if (new Set(memberIds).size !== memberIds.length) return false;
 
-  return library.parties.length === 0
+  const availablePartyIds = library.parties
+    .filter((party) => party.archivedAt === undefined)
+    .map((party) => party.id);
+  return availablePartyIds.length === 0
     ? library.activePartyId === null
-    : library.activePartyId !== null && partyIds.includes(library.activePartyId);
+    : library.activePartyId !== null && availablePartyIds.includes(library.activePartyId);
 }
 
 function cloneOverrides(overrides: PartyCombatOverrides | undefined): PartyCombatOverrides | undefined {
@@ -281,7 +294,9 @@ export function movePartyMember(
 
 export function getActiveParty(library: PartyLibrary): PartyProfile | null {
   if (!library.activePartyId) return null;
-  return library.parties.find((party) => party.id === library.activePartyId) ?? null;
+  return library.parties.find((party) => (
+    party.id === library.activePartyId && party.archivedAt === undefined
+  )) ?? null;
 }
 
 /** Selection keeps the party's display order; memberIds only controls attendance. */
@@ -304,6 +319,21 @@ interface PartyLibraryV0 {
   version: 0;
   activePartyId: string | null;
   parties: PartyProfileV0[];
+}
+
+interface PartyProfileV1 {
+  id: string;
+  name: string;
+  createdAt: number;
+  updatedAt: number;
+  members: PartyMemberProfile[];
+}
+
+interface PartyLibraryV1 {
+  version: 1;
+  revision: number;
+  activePartyId: string | null;
+  parties: PartyProfileV1[];
 }
 
 function isPartyProfileV0(value: unknown): value is PartyProfileV0 {
@@ -331,6 +361,31 @@ function isPartyLibraryV0(value: unknown): value is PartyLibraryV0 {
   return library.parties.length === 0
     ? library.activePartyId === null
     : library.activePartyId !== null && ids.includes(library.activePartyId);
+}
+
+function isPartyProfileV1(value: unknown): value is PartyProfileV1 {
+  const party = record(value);
+  if (!party || party.archivedAt !== undefined) return false;
+  return isPartyProfile(party);
+}
+
+function isPartyLibraryV1(value: unknown): value is PartyLibraryV1 {
+  const library = record(value);
+  if (!library
+    || library.version !== 1
+    || !integerInRange(library.revision, 0, Number.MAX_SAFE_INTEGER)
+    || !(library.activePartyId === null || nonEmptyText(library.activePartyId, 200))
+    || !Array.isArray(library.parties)
+    || !library.parties.every(isPartyProfileV1)
+  ) return false;
+
+  const partyIds = library.parties.map((party) => party.id);
+  if (new Set(partyIds).size !== partyIds.length) return false;
+  const memberIds = library.parties.flatMap((party) => party.members.map((member) => member.id));
+  if (new Set(memberIds).size !== memberIds.length) return false;
+  return library.parties.length === 0
+    ? library.activePartyId === null
+    : library.activePartyId !== null && partyIds.includes(library.activePartyId);
 }
 
 /**
@@ -365,6 +420,35 @@ export function migratePartyLibraryDocument(
           ok: false,
           reason: 'invalid',
           message: 'The saved Party Library has invalid fields and was left untouched.',
+        };
+  }
+
+  if (candidate.version === 1 && isPartyLibraryV1(candidate)) {
+    if (candidate.revision >= Number.MAX_SAFE_INTEGER) {
+      return {
+        ok: false,
+        reason: 'invalid',
+        message: 'The saved Party Library revision cannot be upgraded safely and was left untouched.',
+      };
+    }
+    const migrated: PartyLibrary = {
+      version: PARTY_LIBRARY_VERSION,
+      revision: candidate.revision + 1,
+      activePartyId: candidate.activePartyId,
+      parties: candidate.parties.map((party) => ({
+        ...party,
+        members: party.members.map((member) => ({
+          ...member,
+          ...(member.overrides ? { overrides: cloneOverrides(member.overrides) } : {}),
+        })),
+      })),
+    };
+    return isPartyLibrary(migrated)
+      ? { ok: true, library: migrated, migrated: true }
+      : {
+          ok: false,
+          reason: 'invalid',
+          message: 'The saved Party Library could not be upgraded and was left untouched.',
         };
   }
 

@@ -127,7 +127,7 @@ describe('Party Library domain', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.migrated).toBe(true);
-    expect(result.library).toMatchObject({ version: 1, revision: 1 });
+    expect(result.library).toMatchObject({ version: 2, revision: 1 });
     expect(result.library.parties[0]).toMatchObject({ createdAt: 500, updatedAt: 500 });
     result.library.parties[0].members[0].overrides!.saveBonuses!.dex = 99;
     expect(versionZero.parties[0].members[0].overrides!.saveBonuses!.dex).toBe(3);
@@ -161,5 +161,44 @@ describe('Party Library domain', () => {
     expect(result.migrated).toBe(false);
     result.library.parties[0].members[0].overrides!.saveBonuses!.con = 20;
     expect(stored.parties[0].members[0].overrides!.saveBonuses!.con).toBe(5);
+  });
+
+  it('upgrades a version-one library, preserving identity and incrementing its revision', () => {
+    const current = libraryFixture();
+    const versionOne = {
+      ...current,
+      version: 1,
+      revision: 7,
+    };
+
+    const result = migratePartyLibraryDocument(versionOne, 900);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result).toMatchObject({ migrated: true });
+    expect(result.library).toMatchObject({ version: 2, revision: 8 });
+    expect(result.library.activePartyId).toBe(current.activePartyId);
+    expect(result.library.parties[0].members.map((member) => member.id))
+      .toEqual(current.parties[0].members.map((member) => member.id));
+  });
+
+  it('allows an archived-only library but never allows an archived active party', () => {
+    const library = libraryFixture();
+    const archivedParty = {
+      ...library.parties[0],
+      updatedAt: 200,
+      archivedAt: 200,
+    };
+
+    expect(isPartyLibrary({
+      ...library,
+      activePartyId: archivedParty.id,
+      parties: [archivedParty],
+    })).toBe(false);
+    expect(isPartyLibrary({
+      ...library,
+      activePartyId: null,
+      parties: [archivedParty],
+    })).toBe(true);
   });
 });

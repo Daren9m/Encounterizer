@@ -1,63 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import type { PartyMemberConfig } from '@/lib/battle-sim-types';
 import {
-  buildSimPlayer,
-  CLASS_TEMPLATES,
-  type ClassTemplate,
-} from '@/data/class-templates';
+  PartyClassTemplateSelect,
+  PartyCombatProfileFields,
+  PartyCombatStatPreview,
+} from '@/components/PartyCombatProfileFields';
 import { importCharacterJson } from '@/lib/character-import';
-
-const ROLES: ClassTemplate['role'][] = ['Martial', 'Caster', 'Hybrid'];
-
-function StatPreview({ member, index }: { member: PartyMemberConfig; index: number }) {
-  const player = buildSimPlayer(member, index);
-  const parts = [
-    `AC ${player.ac}`,
-    `HP ${player.maxHp}`,
-    `${player.attacksPerRound} atk${player.attacksPerRound > 1 ? 's' : ''} +${player.attackBonus}, ~${player.avgDamagePerHit} dmg`,
-  ];
-  if (player.avgSpellDamagePerRound) parts.push(`~${player.avgSpellDamagePerRound} spell dmg/rd`);
-  if (player.healingPerRound) parts.push(`heals ${player.healingPerRound}/rd`);
-  if (player.special?.sneakDamage) parts.push(`sneak +${player.special.sneakDamage}`);
-  if (player.special?.rage) parts.push('rage');
-  if (player.special?.evasion) parts.push('evasion');
-  return (
-    <p className="text-xs text-[var(--text-2)]">{parts.join(' · ')}</p>
-  );
-}
-
-interface OverrideFieldProps {
-  idSuffix: string;
-  label: string;
-  value: number | undefined;
-  placeholder: number;
-  onChange: (value: number | undefined) => void;
-}
-
-function OverrideField({ idSuffix, label, value, placeholder, onChange }: OverrideFieldProps) {
-  const id = `override-${idSuffix}-${label.replace(/\W+/g, '-').toLowerCase()}`;
-  return (
-    <div>
-      <label htmlFor={id} className="field-label">
-        {label}
-      </label>
-      <input
-        id={id}
-        type="number"
-        className="w-full text-sm"
-        value={value ?? ''}
-        placeholder={String(placeholder)}
-        onChange={(e) => {
-          const raw = e.target.value;
-          onChange(raw === '' ? undefined : Number(raw));
-        }}
-      />
-    </div>
-  );
-}
 
 export default function PartySetupPanel({
   members,
@@ -71,30 +22,22 @@ export default function PartySetupPanel({
   const [draft, setDraft] = useState<PartyMemberConfig[]>(members);
   const [customizing, setCustomizing] = useState<number | null>(null);
   const [importMessage, setImportMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   function updateMember(index: number, patch: Partial<PartyMemberConfig>) {
     setDraft((prev) => prev.map((m, i) => (i === index ? { ...m, ...patch } : m)));
   }
 
-  function updateOverride<K extends keyof NonNullable<PartyMemberConfig['overrides']>>(
-    index: number,
-    key: K,
-    value: NonNullable<PartyMemberConfig['overrides']>[K] | undefined,
-  ) {
-    setDraft((prev) =>
-      prev.map((m, i) => {
-        if (i !== index) return m;
-        const overrides = { ...m.overrides };
-        if (value === undefined) delete overrides[key];
-        else overrides[key] = value;
-        return { ...m, overrides: Object.keys(overrides).length > 0 ? overrides : undefined };
-      }),
-    );
-  }
-
   async function handleCharacterFile(file: File | undefined) {
     if (!file) return;
-    const result = importCharacterJson(await file.text());
+    let contents: string;
+    try {
+      contents = await file.text();
+    } catch {
+      setImportMessage({ kind: 'error', text: 'That character file could not be read.' });
+      return;
+    }
+    const result = importCharacterJson(contents);
     if (!result.ok) {
       setImportMessage({ kind: 'error', text: result.error });
       return;
@@ -140,20 +83,11 @@ export default function PartySetupPanel({
                 <label htmlFor={`member-template-${index}`} className="field-label">
                   Class template
                 </label>
-                <select
+                <PartyClassTemplateSelect
                   id={`member-template-${index}`}
-                  className="w-full text-sm"
                   value={member.templateId}
-                  onChange={(e) => updateMember(index, { templateId: e.target.value, overrides: undefined })}
-                >
-                  {ROLES.map((role) => (
-                    <optgroup key={role} label={role}>
-                      {CLASS_TEMPLATES.filter((t) => t.role === role).map((t) => (
-                        <option key={t.id} value={t.id}>{t.name}</option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
+                  onChange={(templateId) => updateMember(index, { templateId, overrides: undefined })}
+                />
               </div>
               <div>
                 <label htmlFor={`member-level-${index}`} className="field-label">
@@ -190,20 +124,17 @@ export default function PartySetupPanel({
               </div>
             </div>
 
-            <StatPreview member={member} index={index} />
+            <PartyCombatStatPreview member={member} index={index} />
 
             {customizing === index && (
-              <div id={`party-member-customization-${index}`} className="grid grid-cols-2 gap-3 border-t border-[var(--line-subtle)] pt-3 animate-fade-in sm:grid-cols-3 lg:grid-cols-6">
-                <OverrideField idSuffix={`${index}-ac`} label="AC" value={member.overrides?.ac} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).ac} onChange={(v) => updateOverride(index, 'ac', v)} />
-                <OverrideField idSuffix={`${index}-hp`} label="Max HP" value={member.overrides?.maxHp} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).maxHp} onChange={(v) => updateOverride(index, 'maxHp', v)} />
-                <OverrideField idSuffix={`${index}-attack`} label="Atk Bonus" value={member.overrides?.attackBonus} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).attackBonus} onChange={(v) => updateOverride(index, 'attackBonus', v)} />
-                <OverrideField idSuffix={`${index}-attacks`} label="Attacks" value={member.overrides?.attacksPerRound} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).attacksPerRound} onChange={(v) => updateOverride(index, 'attacksPerRound', v)} />
-                <OverrideField idSuffix={`${index}-damage`} label="Dmg/Hit" value={member.overrides?.avgDamagePerHit} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).avgDamagePerHit} onChange={(v) => updateOverride(index, 'avgDamagePerHit', v)} />
-                <OverrideField idSuffix={`${index}-healing`} label="Heal/Rd" value={member.overrides?.healingPerRound} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).healingPerRound ?? 0} onChange={(v) => updateOverride(index, 'healingPerRound', v)} />
-                <OverrideField idSuffix={`${index}-dex-save`} label="DEX Save" value={member.overrides?.saveBonuses?.dex} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).saveBonuses.dex} onChange={(v) => updateOverride(index, 'saveBonuses', { ...buildSimPlayer(member, index).saveBonuses, dex: v ?? buildSimPlayer({ ...member, overrides: undefined }, index).saveBonuses.dex })} />
-                <OverrideField idSuffix={`${index}-con-save`} label="CON Save" value={member.overrides?.saveBonuses?.con} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).saveBonuses.con} onChange={(v) => updateOverride(index, 'saveBonuses', { ...buildSimPlayer(member, index).saveBonuses, con: v ?? buildSimPlayer({ ...member, overrides: undefined }, index).saveBonuses.con })} />
-                <OverrideField idSuffix={`${index}-wis-save`} label="WIS Save" value={member.overrides?.saveBonuses?.wis} placeholder={buildSimPlayer({ ...member, overrides: undefined }, index).saveBonuses.wis} onChange={(v) => updateOverride(index, 'saveBonuses', { ...buildSimPlayer(member, index).saveBonuses, wis: v ?? buildSimPlayer({ ...member, overrides: undefined }, index).saveBonuses.wis })} />
-              </div>
+              <PartyCombatProfileFields
+                member={member}
+                index={index}
+                idPrefix={`party-member-customization-${index}`}
+                containerId={`party-member-customization-${index}`}
+                className="grid grid-cols-2 gap-3 border-t border-[var(--line-subtle)] pt-3 animate-fade-in sm:grid-cols-3 lg:grid-cols-6"
+                onChange={(overrides) => updateMember(index, { overrides })}
+              />
             )}
           </div>
         ))}
@@ -223,18 +154,23 @@ export default function PartySetupPanel({
           <Plus size={16} aria-hidden="true" />
           Add player
         </button>
-        <label className="btn-secondary inline-flex min-h-11 cursor-pointer items-center text-sm">
+        <button
+          type="button"
+          className="btn-secondary inline-flex min-h-11 items-center text-sm"
+          onClick={() => importInputRef.current?.click()}
+        >
           Import character JSON
-          <input
-            type="file"
-            accept="application/json,.json"
-            className="sr-only"
-            onChange={(event) => {
-              void handleCharacterFile(event.target.files?.[0]);
-              event.currentTarget.value = '';
-            }}
-          />
-        </label>
+        </button>
+        <input
+          ref={importInputRef}
+          type="file"
+          accept="application/json,.json"
+          hidden
+          onChange={(event) => {
+            void handleCharacterFile(event.target.files?.[0]);
+            event.currentTarget.value = '';
+          }}
+        />
         <div className="flex-1" />
         <button type="button" className="btn-ghost text-sm" onClick={onCancel}>
           Cancel
