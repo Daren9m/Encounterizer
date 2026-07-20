@@ -43,6 +43,16 @@ describe('resolveHistoryEntry', () => {
     expect(resolved).toEqual(MAP);
   });
 
+  it('replays scale mode for scale-generated maps (jitter draws included)', () => {
+    // A scale-mode map consumed jitter draws; regenerating with explicit
+    // width/height would skip them and produce a different grid.
+    const scaled = generateMap({
+      environment: 'Urban', seed: 777, layout: 'city', scale: 'Large',
+    });
+    expect(scaled.genOptions?.scale).toBe('Large');
+    expect(resolveHistoryEntry(toHistoryEntry(scaled))).toEqual(scaled);
+  });
+
   it('returns full maps untouched', () => {
     const legacy = legacyMap();
     expect(resolveHistoryEntry(legacy)).toBe(legacy);

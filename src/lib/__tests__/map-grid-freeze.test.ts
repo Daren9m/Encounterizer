@@ -26,21 +26,27 @@ function gridHash(options: MapOptions): string {
   return (hash >>> 0).toString(16).padStart(8, '0');
 }
 
+// Draw order v3 (layouts & scale, 2026-07-19): jitter draws precede
+// layout generation and Urban auto-maps to city. Hashes re-recorded
+// once for the accepted break, frozen again thereafter.
 const PINNED: Array<{ label: string; options: MapOptions; hash: string }> = [
-  { label: 'dungeon (Urban)', options: { environment: 'Urban', seed: 42 }, hash: 'e15cf87f' },
+  { label: 'dungeon (explicit layout)', options: { environment: 'Urban', layout: 'dungeon', seed: 42, width: 32, height: 24 }, hash: '53560dfb' },
   {
     label: 'dungeon with roomCount',
-    options: { environment: 'Urban', seed: 7, width: 32, height: 24, roomCount: 6 },
+    options: { environment: 'Any', seed: 7, width: 32, height: 24, roomCount: 6 },
     hash: 'd376383d',
   },
-  { label: 'cave (Underdark)', options: { environment: 'Underdark', seed: 1 }, hash: '6150f7fd' },
+  { label: 'cave (Underdark)', options: { environment: 'Underdark', seed: 1 }, hash: 'e34f8ab1' },
   {
     label: 'cave with lava pool (Planar)',
     options: { environment: 'Planar', seed: 3, featureDensity: 'Dense', terrainVariety: 'Wild' },
-    hash: '1c117e9c',
+    hash: 'b099c851',
   },
-  { label: 'outdoor with river (Forest)', options: { environment: 'Forest', seed: 12345 }, hash: '513e4f62' },
-  { label: 'mountain coin flip', options: { environment: 'Mountain', seed: 9 }, hash: '381ee76b' },
+  { label: 'outdoor with river (Forest)', options: { environment: 'Forest', seed: 12345 }, hash: 'e0d7b8a9' },
+  { label: 'mountain coin flip', options: { environment: 'Mountain', seed: 9 }, hash: '9973ab02' },
+  { label: 'city streets (Urban auto)', options: { environment: 'Urban', seed: 42 }, hash: '603b8fad' },
+  { label: 'scale mode with jitter', options: { environment: 'Forest', seed: 4242, scale: 'Large' }, hash: 'c56351b4' },
+  { label: 'massive city', options: { environment: 'Urban', layout: 'city', seed: 11, scale: 'Massive' }, hash: 'f1c3fa1b' },
 ];
 
 describe('grid stream freeze', () => {

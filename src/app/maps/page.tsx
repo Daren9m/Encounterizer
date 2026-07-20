@@ -4,6 +4,10 @@ import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   generateMap,
+  isMapLayout,
+  isMapScale,
+  MAP_LAYOUT_OPTIONS,
+  MAP_SCALE_OPTIONS,
   TERRAIN_INFO,
   type MapFeatureDensity,
   type MapTerrainVariety,
@@ -13,7 +17,7 @@ import { LIGHT_PALETTE } from '@/lib/map-render/palettes';
 import { sceneToSvgString } from '@/lib/map-render/svg';
 import { randomSeed } from '@/lib/random';
 import { usePersistentState } from '@/lib/use-persistent-state';
-import type { EncounterMap, Environment } from '@/lib/types';
+import type { EncounterMap, Environment, MapLayout, MapScale } from '@/lib/types';
 import { mapToMarkdown } from '@/lib/map-export-text';
 import {
   isMapHistoryArray, resolveHistoryEntry, toHistoryEntry, type MapHistoryEntry,
@@ -34,8 +38,9 @@ const ENVIRONMENTS: Environment[] = [
 const isMapEnvironment = (v: unknown): v is Environment =>
   typeof v === 'string' && (ENVIRONMENTS as string[]).includes(v);
 const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
-const isMapWidth = (v: unknown): v is number => isNumber(v) && v >= 10 && v <= 40;
-const isMapHeight = (v: unknown): v is number => isNumber(v) && v >= 10 && v <= 30;
+
+const LAYOUT_OPTIONS = MAP_LAYOUT_OPTIONS;
+const SCALE_OPTIONS = MAP_SCALE_OPTIONS;
 const isFeatureDensity = (v: unknown): v is MapFeatureDensity =>
   v === 'Sparse' || v === 'Balanced' || v === 'Dense';
 const isTerrainVariety = (v: unknown): v is MapTerrainVariety =>
@@ -43,7 +48,7 @@ const isTerrainVariety = (v: unknown): v is MapTerrainVariety =>
 
 const ENV_DESCRIPTIONS: Partial<Record<Environment, string>> = {
   Underdark: 'Cellular automata caverns with organic tunnels',
-  Urban: 'BSP dungeon rooms connected by corridors',
+  Urban: 'City streets, blocks, and plazas',
   Forest: 'Open terrain with vegetation, streams, and bridges',
   Mountain: 'Caves or elevated passes with chasms and rubble',
   Swamp: 'Waterlogged terrain with difficult ground',
@@ -56,25 +61,34 @@ const ENV_DESCRIPTIONS: Partial<Record<Environment, string>> = {
   Planar: 'Otherworldly caverns and rifts',
 };
 
-function clampDimension(value: number, min: number, max: number, fallback: number): number {
-  if (!Number.isFinite(value)) return fallback;
-  return Math.max(min, Math.min(max, Math.round(value)));
-}
 
 // ─── Share link ───────────────────────────────────────────────────
-// `?seed&env&mw&mh&md&mv[&mr]` reproduces a map exactly (same param
-// names the encounter builder uses for its embedded map). This URL
+// `?seed&env&(ms|mw&mh)&md&mv[&ml][&mr]` reproduces a map exactly.
+// Scale-mode maps serialize `ms` (regeneration must replay the jitter
+// draws); legacy links carry exact `mw`/`mh` and skip them. This URL
 // contract is permanent.
+
+/** Export scaling: VTT-standard 70 px/cell until the 4096px raster cap
+ *  bites, then exact integer px/cell so grid alignment never drifts. */
+function exportPpg(map: EncounterMap): number {
+  return Math.min(70, Math.floor(4096 / Math.max(map.width, map.height)));
+}
 
 function mapShareParams(m: EncounterMap): URLSearchParams {
   const params = new URLSearchParams();
   params.set('seed', String(m.seed ?? 0));
   params.set('env', m.environment);
-  params.set('mw', String(m.width));
-  params.set('mh', String(m.height));
+  if (m.genOptions?.scale) {
+    // Scale-generated maps replay scale mode (jitter draws included).
+    params.set('ms', m.genOptions.scale);
+  } else {
+    params.set('mw', String(m.width));
+    params.set('mh', String(m.height));
+  }
   if (m.genOptions) {
     params.set('md', m.genOptions.featureDensity);
     params.set('mv', m.genOptions.terrainVariety);
+    if (m.genOptions.layout) params.set('ml', m.genOptions.layout);
     if (m.genOptions.roomCount) params.set('mr', String(m.genOptions.roomCount));
   }
   return params;
@@ -95,8 +109,8 @@ export default function MapsPage() {
 
 function MapsBuilder() {
   const [environment, setEnvironment] = usePersistentState<Environment>('mapEnvironment', 'Underdark', isMapEnvironment);
-  const [width, setWidth] = usePersistentState<number>('mapWidth', 24, isMapWidth);
-  const [height, setHeight] = usePersistentState<number>('mapHeight', 18, isMapHeight);
+  const [layout, setLayout] = usePersistentState<MapLayout>('mapLayout', 'auto', isMapLayout);
+  const [scale, setScale] = usePersistentState<MapScale>('mapScale', 'Standard', isMapScale);
   const [featureDensity, setFeatureDensity] = usePersistentState<MapFeatureDensity>(
     'mapFeatureDensity', 'Balanced', isFeatureDensity,
   );
@@ -111,14 +125,18 @@ function MapsBuilder() {
   const [history, setHistory] = usePersistentState<MapHistoryEntry[]>('mapHistory', [], isMapHistoryArray);
 
   const runGenerate = useCallback((opts: {
-    environment: Environment; width: number; height: number;
+    environment: Environment; layout: MapLayout; scale: MapScale;
     featureDensity: MapFeatureDensity; terrainVariety: MapTerrainVariety;
     roomCount: number; seed: number;
+    /** Legacy links only — exact dimensions bypass scale mode. */
+    width?: number; height?: number;
   }) => {
     const result = generateMap({
       environment: opts.environment,
-      width: opts.width,
-      height: opts.height,
+      layout: opts.layout,
+      scale: opts.scale,
+      ...(opts.width !== undefined ? { width: opts.width } : {}),
+      ...(opts.height !== undefined ? { height: opts.height } : {}),
       featureDensity: opts.featureDensity,
       terrainVariety: opts.terrainVariety,
       ...(opts.roomCount > 0 ? { roomCount: opts.roomCount } : {}),
@@ -146,49 +164,52 @@ function MapsBuilder() {
     if (seedParam === null) return;
     const envParam = searchParams.get('env');
     const env = isMapEnvironment(envParam) ? envParam : 'Underdark';
-    const mw = clampInt(searchParams.get('mw'), 10, 40) ?? 24;
-    const mh = clampInt(searchParams.get('mh'), 10, 30) ?? 18;
+    const mlParam = searchParams.get('ml');
+    const ml = isMapLayout(mlParam) ? mlParam : 'auto';
+    const msParam = searchParams.get('ms');
+    const ms = isMapScale(msParam) ? msParam : 'Standard';
+    // Legacy links carry exact dimensions (mw/mh) instead of a scale.
+    const mw = clampInt(searchParams.get('mw'), 10, 60);
+    const mh = clampInt(searchParams.get('mh'), 10, 45);
+    const legacyDims = msParam === null && (mw !== null || mh !== null);
     const mdParam = searchParams.get('md');
     const md = isFeatureDensity(mdParam) ? mdParam : 'Balanced';
     const mvParam = searchParams.get('mv');
     const mv = isTerrainVariety(mvParam) ? mvParam : 'Varied';
     const mr = clampInt(searchParams.get('mr'), 3, 14) ?? 0;
     setEnvironment(env);
-    setWidth(mw);
-    setHeight(mh);
+    setLayout(ml);
+    setScale(ms);
     setFeatureDensity(md);
     setTerrainVariety(mv);
     setRoomCount(mr);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot share-link hydration must render the exact seeded map.
     runGenerate({
-      environment: env, width: mw, height: mh,
+      environment: env, layout: ml, scale: ms,
+      ...(legacyDims ? { width: mw ?? 24, height: mh ?? 18 } : {}),
       featureDensity: md, terrainVariety: mv, roomCount: mr, seed: seedParam,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleGenerate = useCallback(() => {
-    const safeWidth = clampDimension(width, 10, 40, 24);
-    const safeHeight = clampDimension(height, 10, 30, 18);
-    if (safeWidth !== width) setWidth(safeWidth);
-    if (safeHeight !== height) setHeight(safeHeight);
     runGenerate({
-      environment, width: safeWidth, height: safeHeight,
+      environment, layout, scale,
       featureDensity, terrainVariety, roomCount,
       seed: randomSeed(),
     });
-  }, [environment, width, height, featureDensity, terrainVariety, roomCount, runGenerate, setHeight, setWidth]);
+  }, [environment, layout, scale, featureDensity, terrainVariety, roomCount, runGenerate]);
 
   const handleReset = useCallback(() => {
     setEnvironment('Underdark');
-    setWidth(24);
-    setHeight(18);
+    setLayout('auto');
+    setScale('Standard');
     setFeatureDensity('Balanced');
     setTerrainVariety('Varied');
     setRoomCount(0);
     setMap(null);
     window.history.replaceState(null, '', window.location.pathname);
-  }, [setEnvironment, setFeatureDensity, setHeight, setRoomCount, setTerrainVariety, setWidth]);
+  }, [setEnvironment, setFeatureDensity, setLayout, setRoomCount, setScale, setTerrainVariety]);
 
   const handleShare = useCallback(() => {
     if (!map) return;
@@ -201,7 +222,7 @@ function MapsBuilder() {
   const handleExportPng = useCallback(async () => {
     if (!map) return;
     const svg = sceneToSvgString(buildMapScene(map), LIGHT_PALETTE);
-    const blob = await rasterizeSvg(svg, map.width * 70);
+    const blob = await rasterizeSvg(svg, map.width * exportPpg(map));
     downloadBlob(blob, `${map.name.toLowerCase().replace(/\s+/g, '-')}-${map.seed ?? map.id}.png`);
   }, [map]);
 
@@ -235,8 +256,9 @@ function MapsBuilder() {
     const svg = sceneToSvgString(
       buildMapScene(map), LIGHT_PALETTE, { showRulers: false, showRoomLabels: false },
     );
-    const image = await svgToPngBase64(svg, map.width * 70);
-    const doc = buildUvtt(map, image, 70);
+    const ppg = exportPpg(map);
+    const image = await svgToPngBase64(svg, map.width * ppg);
+    const doc = buildUvtt(map, image, ppg);
     downloadBlob(
       new Blob([JSON.stringify(doc)], { type: 'application/json' }),
       `${map.name.toLowerCase().replace(/\s+/g, '-')}.dd2vtt`,
@@ -276,48 +298,40 @@ function MapsBuilder() {
             </p>
           </div>
           <div>
-            <label htmlFor="map-width" className="micro-label block mb-1">
-              Width (cells)
+            <label htmlFor="map-layout" className="micro-label block mb-1">
+              Layout
             </label>
-            <input
-              id="map-width"
-              type="number"
-              min={10}
-              max={40}
-              value={width}
-              onChange={e => setWidth(clampDimension(Number(e.target.value), 10, 40, 24))}
+            <select
+              id="map-layout"
+              value={layout}
+              onChange={e => setLayout(e.target.value as MapLayout)}
               className="w-full"
-            />
-            <div className="segmented-control mt-2" role="group" aria-label="Common map widths">
-              {[16, 24, 32].map(w => (
-                <button key={w} type="button" onClick={() => setWidth(w)}
-                  aria-pressed={width === w}
-                  className="segmented-option"
-                >{w}</button>
+            >
+              {LAYOUT_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
               ))}
-            </div>
+            </select>
+            <p className="mt-1 text-xs text-[var(--text-3)]">
+              {LAYOUT_OPTIONS.find(o => o.value === layout)?.hint}
+            </p>
           </div>
           <div>
-            <label htmlFor="map-height" className="micro-label block mb-1">
-              Height (cells)
+            <label htmlFor="map-scale" className="micro-label block mb-1">
+              Scale
             </label>
-            <input
-              id="map-height"
-              type="number"
-              min={10}
-              max={30}
-              value={height}
-              onChange={e => setHeight(clampDimension(Number(e.target.value), 10, 30, 18))}
+            <select
+              id="map-scale"
+              value={scale}
+              onChange={e => setScale(e.target.value as MapScale)}
               className="w-full"
-            />
-            <div className="segmented-control mt-2" role="group" aria-label="Common map heights">
-              {[12, 18, 24].map(h => (
-                <button key={h} type="button" onClick={() => setHeight(h)}
-                  aria-pressed={height === h}
-                  className="segmented-option"
-                >{h}</button>
+            >
+              {SCALE_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
               ))}
-            </div>
+            </select>
+            <p className="mt-1 text-xs text-[var(--text-3)]">
+              {SCALE_OPTIONS.find(o => o.value === scale)?.hint}, varied per seed
+            </p>
           </div>
           <div>
             <label htmlFor="map-density" className="micro-label block mb-1">

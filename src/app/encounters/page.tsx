@@ -13,7 +13,13 @@ import {
 } from '@/lib/encounter-generator';
 import {
   generateMap,
+  isMapLayout,
+  isMapScale,
+  MAP_LAYOUT_OPTIONS,
+  MAP_SCALE_OPTIONS,
   type MapFeatureDensity,
+  type MapLayout,
+  type MapScale,
   type MapTerrainVariety,
 } from '@/lib/map-generator';
 import { randomSeed, seededRandom } from '@/lib/random';
@@ -95,13 +101,28 @@ interface GenerateConfig {
   difficulty: Difficulty;
   environment: Environment;
   includeMap: boolean;
-  mapWidth: number;
-  mapHeight: number;
+  mapLayout: MapLayout;
+  mapScale: MapScale;
+  /** Legacy shared links only — exact dimensions bypass scale mode. */
+  mapWidth?: number;
+  mapHeight?: number;
   mapFeatureDensity: MapFeatureDensity;
   mapTerrainVariety: MapTerrainVariety;
   filter: MonsterFilter;
   seed: number;
   recipeId?: string;
+}
+
+/** MapOptions fragment shared by every generateMap call site. */
+function mapOptionsFrom(cfg: GenerateConfig) {
+  return {
+    layout: cfg.mapLayout,
+    scale: cfg.mapScale,
+    ...(cfg.mapWidth !== undefined ? { width: cfg.mapWidth } : {}),
+    ...(cfg.mapHeight !== undefined ? { height: cfg.mapHeight } : {}),
+    featureDensity: cfg.mapFeatureDensity,
+    terrainVariety: cfg.mapTerrainVariety,
+  };
 }
 
 function writeUrl(cfg: GenerateConfig): void {
@@ -112,8 +133,14 @@ function writeUrl(cfg: GenerateConfig): void {
   params.set('env', cfg.environment);
   if (cfg.includeMap) {
     params.set('map', '1');
-    params.set('mw', String(cfg.mapWidth));
-    params.set('mh', String(cfg.mapHeight));
+    if (cfg.mapWidth !== undefined && cfg.mapHeight !== undefined) {
+      // Legacy exact dimensions round-trip unchanged.
+      params.set('mw', String(cfg.mapWidth));
+      params.set('mh', String(cfg.mapHeight));
+    } else {
+      params.set('ms', cfg.mapScale);
+    }
+    if (cfg.mapLayout !== 'auto') params.set('ml', cfg.mapLayout);
     params.set('md', cfg.mapFeatureDensity);
     params.set('mv', cfg.mapTerrainVariety);
   }
@@ -169,8 +196,11 @@ interface EncounterSettings {
   difficulty: Difficulty;
   environment: Environment;
   includeMap: boolean;
+  /** Pre-layouts persisted shape — accepted, no longer written. */
   mapWidth?: number;
   mapHeight?: number;
+  mapLayout?: MapLayout;
+  mapScale?: MapScale;
   mapFeatureDensity?: MapFeatureDensity;
   mapTerrainVariety?: MapTerrainVariety;
 }
@@ -186,6 +216,8 @@ function isEncounterSettings(v: unknown): v is EncounterSettings {
     && typeof s.includeMap === 'boolean'
     && (s.mapWidth === undefined || typeof s.mapWidth === 'number')
     && (s.mapHeight === undefined || typeof s.mapHeight === 'number')
+    && (s.mapLayout === undefined || isMapLayout(s.mapLayout))
+    && (s.mapScale === undefined || isMapScale(s.mapScale))
     && (s.mapFeatureDensity === undefined || isMapFeatureDensity(s.mapFeatureDensity))
     && (s.mapTerrainVariety === undefined || isMapTerrainVariety(s.mapTerrainVariety))
   );
@@ -242,8 +274,8 @@ function EncounterBuilder() {
   const [monsterFilter, setMonsterFilter] = useState<MonsterFilter>({});
   const [expandedMonster, setExpandedMonster] = useState<string | null>(null);
   const [includeMap, setIncludeMap] = useState(true);
-  const [mapWidth, setMapWidth] = useState(24);
-  const [mapHeight, setMapHeight] = useState(18);
+  const [mapLayout, setMapLayout] = useState<MapLayout>('auto');
+  const [mapScale, setMapScale] = useState<MapScale>('Standard');
   const [mapFeatureDensity, setMapFeatureDensity] = useState<MapFeatureDensity>('Balanced');
   const [mapTerrainVariety, setMapTerrainVariety] = useState<MapTerrainVariety>('Varied');
   const [showManualAdd, setShowManualAdd] = useState(false);
@@ -296,8 +328,8 @@ function EncounterBuilder() {
       setDifficulty(stored.difficulty);
       setEnvironment(stored.environment);
       setIncludeMap(stored.includeMap);
-      setMapWidth(stored.mapWidth ?? 24);
-      setMapHeight(stored.mapHeight ?? 18);
+      setMapLayout(stored.mapLayout ?? 'auto');
+      setMapScale(stored.mapScale ?? 'Standard');
       setMapFeatureDensity(stored.mapFeatureDensity ?? 'Balanced');
       setMapTerrainVariety(stored.mapTerrainVariety ?? 'Varied');
     }
@@ -307,11 +339,11 @@ function EncounterBuilder() {
     if (!settingsHydrated.current) return;
     storageSave('encounterSettings', {
       partySize, partyLevel, difficulty, environment, includeMap,
-      mapWidth, mapHeight, mapFeatureDensity, mapTerrainVariety,
+      mapLayout, mapScale, mapFeatureDensity, mapTerrainVariety,
     } satisfies EncounterSettings);
   }, [
     partySize, partyLevel, difficulty, environment, includeMap,
-    mapWidth, mapHeight, mapFeatureDensity, mapTerrainVariety,
+    mapLayout, mapScale, mapFeatureDensity, mapTerrainVariety,
   ]);
 
   // Bring a persisted forecast party up to the builder's current party size
@@ -388,10 +420,7 @@ function EncounterBuilder() {
     if (cfg.includeMap) {
       enc.map = generateMap({
         environment: cfg.environment,
-        width: cfg.mapWidth,
-        height: cfg.mapHeight,
-        featureDensity: cfg.mapFeatureDensity,
-        terrainVariety: cfg.mapTerrainVariety,
+        ...mapOptionsFrom(cfg),
         seed: cfg.seed,
       });
     }
@@ -447,10 +476,7 @@ function EncounterBuilder() {
     if (cfg.includeMap) {
       next.map = generateMap({
         environment: cfg.environment,
-        width: cfg.mapWidth,
-        height: cfg.mapHeight,
-        featureDensity: cfg.mapFeatureDensity,
-        terrainVariety: cfg.mapTerrainVariety,
+        ...mapOptionsFrom(cfg),
         seed: cfg.seed,
       });
     }
@@ -477,8 +503,15 @@ function EncounterBuilder() {
     const seed = clampInt(searchParams.get('seed'), 0, 0x7fffffff);
     const recipeId = searchParams.get('recipe');
     const withMap = searchParams.get('map') === '1';
-    const sharedMapWidth = clampInt(searchParams.get('mw'), 10, 40) ?? 24;
-    const sharedMapHeight = clampInt(searchParams.get('mh'), 10, 30) ?? 18;
+    const sharedMapLayout = isMapLayout(searchParams.get('ml'))
+      ? searchParams.get('ml') as MapLayout : 'auto';
+    const sharedMapScale = isMapScale(searchParams.get('ms'))
+      ? searchParams.get('ms') as MapScale : 'Standard';
+    // Legacy links carry exact dimensions; new links carry a scale.
+    const legacyMapWidth = searchParams.get('ms') === null
+      ? clampInt(searchParams.get('mw'), 10, 60) : null;
+    const legacyMapHeight = searchParams.get('ms') === null
+      ? clampInt(searchParams.get('mh'), 10, 45) : null;
     const sharedMapDensity = isMapFeatureDensity(searchParams.get('md'))
       ? searchParams.get('md') as MapFeatureDensity : 'Balanced';
     const sharedMapVariety = isMapTerrainVariety(searchParams.get('mv'))
@@ -511,8 +544,8 @@ function EncounterBuilder() {
     if (Object.keys(filter).length > 0) setMonsterFilter(filter);
     if (seed !== null) setIncludeMap(withMap);
     if (seed !== null && withMap) {
-      setMapWidth(sharedMapWidth);
-      setMapHeight(sharedMapHeight);
+      setMapLayout(sharedMapLayout);
+      setMapScale(sharedMapScale);
       setMapFeatureDensity(sharedMapDensity);
       setMapTerrainVariety(sharedMapVariety);
     }
@@ -524,8 +557,10 @@ function EncounterBuilder() {
         difficulty: diff,
         environment: env,
         includeMap: withMap,
-        mapWidth: sharedMapWidth,
-        mapHeight: sharedMapHeight,
+        mapLayout: sharedMapLayout,
+        mapScale: sharedMapScale,
+        ...(legacyMapWidth !== null ? { mapWidth: legacyMapWidth } : {}),
+        ...(legacyMapHeight !== null ? { mapHeight: legacyMapHeight } : {}),
         mapFeatureDensity: sharedMapDensity,
         mapTerrainVariety: sharedMapVariety,
         filter,
@@ -547,7 +582,7 @@ function EncounterBuilder() {
 
     runGenerate({
       partySize, partyLevel, difficulty, environment,
-      includeMap, mapWidth, mapHeight, mapFeatureDensity, mapTerrainVariety,
+      includeMap, mapLayout, mapScale, mapFeatureDensity, mapTerrainVariety,
       filter: monsterFilter, seed: randomSeed(),
     });
   }
@@ -556,7 +591,7 @@ function EncounterBuilder() {
     if (!partyInputsValid) return;
     runRecipe(recipeId, {
       partySize, partyLevel, difficulty, environment,
-      includeMap, mapWidth, mapHeight, mapFeatureDensity, mapTerrainVariety,
+      includeMap, mapLayout, mapScale, mapFeatureDensity, mapTerrainVariety,
       filter: monsterFilter, seed: randomSeed(), recipeId,
     });
   }
@@ -601,8 +636,8 @@ function EncounterBuilder() {
     setDifficulty('Moderate');
     setEnvironment('Forest');
     setIncludeMap(true);
-    setMapWidth(24);
-    setMapHeight(18);
+    setMapLayout('auto');
+    setMapScale('Standard');
     setMapFeatureDensity('Balanced');
     setMapTerrainVariety('Varied');
     setMonsterFilter({});
@@ -628,8 +663,8 @@ function EncounterBuilder() {
       ...prev,
       map: generateMap({
         environment: prev.environment,
-        width: mapWidth,
-        height: mapHeight,
+        layout: mapLayout,
+        scale: mapScale,
         featureDensity: mapFeatureDensity,
         terrainVariety: mapTerrainVariety,
         seed: randomSeed(),
@@ -903,20 +938,24 @@ function EncounterBuilder() {
             <legend className="micro-label px-1">Battle Map Options</legend>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div>
-                <label htmlFor="enc-map-width" className="text-xs text-[var(--text-2)] block mb-1">Width</label>
-                <input
-                  id="enc-map-width" type="number" min={10} max={40} value={mapWidth}
-                  onChange={e => setMapWidth(Math.max(10, Math.min(40, Number(e.target.value))))}
+                <label htmlFor="enc-map-layout" className="text-xs text-[var(--text-2)] block mb-1">Layout</label>
+                <select
+                  id="enc-map-layout" value={mapLayout}
+                  onChange={e => setMapLayout(e.target.value as MapLayout)}
                   className="w-full"
-                />
+                >
+                  {MAP_LAYOUT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
               </div>
               <div>
-                <label htmlFor="enc-map-height" className="text-xs text-[var(--text-2)] block mb-1">Height</label>
-                <input
-                  id="enc-map-height" type="number" min={10} max={30} value={mapHeight}
-                  onChange={e => setMapHeight(Math.max(10, Math.min(30, Number(e.target.value))))}
+                <label htmlFor="enc-map-scale" className="text-xs text-[var(--text-2)] block mb-1">Scale</label>
+                <select
+                  id="enc-map-scale" value={mapScale}
+                  onChange={e => setMapScale(e.target.value as MapScale)}
                   className="w-full"
-                />
+                >
+                  {MAP_SCALE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
               </div>
               <div>
                 <label htmlFor="enc-map-density" className="text-xs text-[var(--text-2)] block mb-1">Object Density</label>
@@ -1485,7 +1524,7 @@ function EncounterBuilder() {
                 <div>
                   <h3 className="text-xl">Battle Map</h3>
                   <p className="text-xs text-[var(--text-2)] print:hidden">
-                    {mapWidth}×{mapHeight} · {mapFeatureDensity} objects · {mapTerrainVariety} terrain
+                    {encounter.map.width}×{encounter.map.height} · {mapFeatureDensity} objects · {mapTerrainVariety} terrain
                   </p>
                 </div>
                 <button type="button" onClick={handleRegenerateMap} className="btn-secondary text-sm print:hidden">
