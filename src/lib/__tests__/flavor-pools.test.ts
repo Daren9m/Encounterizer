@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getFlavorPools } from '@/lib/flavor-pools';
+import { getFlavorPools, parseFlavorVersionParam } from '@/lib/flavor-pools';
 
 // These pins freeze the v1 flavor pools VERBATIM. The strings below were
 // copied character-for-character from the inline pools that lived in
@@ -72,6 +72,25 @@ describe('getFlavorPools(1) — frozen v1 content', () => {
     expect(pools.namePrefixes).toHaveLength(10);
     expect(pools.namePrefixes[0]).toBe('Ambush');
     expect(pools.namePrefixes[9]).toBe('Battle');
+  });
+});
+
+describe('parseFlavorVersionParam', () => {
+  it('maps fv=2 to version 2', () => {
+    expect(parseFlavorVersionParam('2')).toBe(2);
+  });
+
+  it('maps an absent param to version 1 (pre-versioning share links replay v1)', () => {
+    expect(parseFlavorVersionParam(null)).toBe(1);
+  });
+
+  it('maps any other value to version 1', () => {
+    expect(parseFlavorVersionParam('1')).toBe(1);
+    expect(parseFlavorVersionParam('3')).toBe(1);
+    expect(parseFlavorVersionParam('02')).toBe(1);
+    expect(parseFlavorVersionParam('2extra')).toBe(1);
+    expect(parseFlavorVersionParam('')).toBe(1);
+    expect(parseFlavorVersionParam('abc')).toBe(1);
   });
 });
 

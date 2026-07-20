@@ -16,6 +16,7 @@ import {
   type MapFeatureDensity,
   type MapTerrainVariety,
 } from '@/lib/map-generator';
+import { parseFlavorVersionParam, type FlavorVersion } from '@/lib/flavor-pools';
 import { randomSeed, seededRandom } from '@/lib/random';
 import {
   ENCOUNTER_RECIPES,
@@ -101,6 +102,7 @@ interface GenerateConfig {
   mapTerrainVariety: MapTerrainVariety;
   filter: MonsterFilter;
   seed: number;
+  flavorVersion: FlavorVersion;
   recipeId?: string;
 }
 
@@ -118,6 +120,7 @@ function writeUrl(cfg: GenerateConfig): void {
     params.set('mv', cfg.mapTerrainVariety);
   }
   params.set('seed', String(cfg.seed));
+  if (cfg.flavorVersion !== 1) params.set('fv', String(cfg.flavorVersion));
   if (cfg.recipeId) params.set('recipe', cfg.recipeId);
   if (Object.keys(cfg.filter).length > 0) params.set('f', JSON.stringify(cfg.filter));
   window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
@@ -382,6 +385,7 @@ function EncounterBuilder() {
         environment: cfg.environment,
         filter: cfg.filter,
         seed: cfg.seed,
+        flavorVersion: cfg.flavorVersion,
       },
       filterMonsters,
     );
@@ -475,6 +479,7 @@ function EncounterBuilder() {
     const diff = searchParams.get('diff');
     const env = searchParams.get('env');
     const seed = clampInt(searchParams.get('seed'), 0, 0x7fffffff);
+    const sharedFlavorVersion = parseFlavorVersionParam(searchParams.get('fv'));
     const recipeId = searchParams.get('recipe');
     const withMap = searchParams.get('map') === '1';
     const sharedMapWidth = clampInt(searchParams.get('mw'), 10, 40) ?? 24;
@@ -530,6 +535,7 @@ function EncounterBuilder() {
         mapTerrainVariety: sharedMapVariety,
         filter,
         seed,
+        flavorVersion: sharedFlavorVersion,
       };
       if (recipeId && getRecipeById(recipeId)) runRecipe(recipeId, sharedConfig);
       else runGenerate(sharedConfig);
@@ -548,7 +554,7 @@ function EncounterBuilder() {
     runGenerate({
       partySize, partyLevel, difficulty, environment,
       includeMap, mapWidth, mapHeight, mapFeatureDensity, mapTerrainVariety,
-      filter: monsterFilter, seed: randomSeed(),
+      filter: monsterFilter, seed: randomSeed(), flavorVersion: 2,
     });
   }
 
@@ -557,7 +563,7 @@ function EncounterBuilder() {
     runRecipe(recipeId, {
       partySize, partyLevel, difficulty, environment,
       includeMap, mapWidth, mapHeight, mapFeatureDensity, mapTerrainVariety,
-      filter: monsterFilter, seed: randomSeed(), recipeId,
+      filter: monsterFilter, seed: randomSeed(), flavorVersion: 2, recipeId,
     });
   }
 

@@ -160,3 +160,12 @@ const POOLS_BY_VERSION: Record<FlavorVersion, FlavorPools> = {
 export function getFlavorPools(version: FlavorVersion): FlavorPools {
   return POOLS_BY_VERSION[version];
 }
+
+/**
+ * Map the encounters page's `fv` URL param to a FlavorVersion.
+ * `fv=2` → 2; absent or anything else → 1, so pre-versioning share links
+ * (which carry no `fv`) keep replaying their original v1 prose.
+ */
+export function parseFlavorVersionParam(raw: string | null): FlavorVersion {
+  return raw === '2' ? 2 : 1;
+}
