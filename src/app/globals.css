@@ -1309,7 +1309,7 @@ button.option-card:hover,
 
 /* Theme-aware form insets. Keep every text-entry surface on the same explicit
    palette so browser defaults cannot produce white-on-white or gray-on-gray fields. */
-select, textarea, input:not([type]), input[type="text"], input[type="number"] {
+select, textarea, input:not([type]), input[type="text"], input[type="search"], input[type="number"] {
   min-height: 2.75rem;
   background-color: var(--control-surface);
   border: 1px solid var(--control-border);
@@ -1340,6 +1340,7 @@ input[type='radio'] {
 textarea::placeholder,
 input:not([type])::placeholder,
 input[type="text"]::placeholder,
+input[type="search"]::placeholder,
 input[type="number"]::placeholder {
   color: var(--text-3);
   opacity: 1;
@@ -1369,6 +1370,10 @@ select optgroup {
   color: var(--text-on-accent);
   font-weight: 600;
   border-color: transparent;
+}
+
+.rules-reference .filter-chip {
+  min-height: 2.75rem;
 }
 
 /* Dense bestiary controls: preserve comfortable mobile targets while fitting

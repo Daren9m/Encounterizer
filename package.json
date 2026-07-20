@@ -2,7 +2,7 @@
   "name": "encounterizer",
   "version": "1.0.0",
   "private": true,
-  "description": "Free D&D 5.5e encounter toolkit — balanced encounters, battle forecasts, bestiary, maps, puzzles, and spells",
+  "description": "Free D&D 5.5e toolkit — encounter prep, live battle tools, and searchable SRD references",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

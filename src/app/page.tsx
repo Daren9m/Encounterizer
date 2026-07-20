@@ -1,11 +1,9 @@
 import Link from 'next/link';
 import { BESTIARY_META } from '@/data/bestiary-meta';
 import { SPELLS_META } from '@/data/spells-meta';
+import { RULES_REFERENCE_ENTRIES } from '@/data/rules-reference';
 import RouteIcon from '@/components/RouteIcon';
-import { TOOL_ROUTES, type RouteInfo } from '@/lib/site';
-
-const encounterTool = TOOL_ROUTES.find((route) => route.path === '/encounters')!;
-const supportingTools = TOOL_ROUTES.filter((route) => route.path !== '/encounters');
+import { TOOL_SECTIONS, type ToolSection } from '@/lib/site';
 
 export default function HomePage() {
   return (
@@ -36,10 +34,10 @@ export default function HomePage() {
               <span aria-hidden="true">→</span>
             </Link>
             <Link
-              href="/monsters"
+              href="/reference"
               className="btn-secondary inline-flex min-h-12 items-center justify-center px-6 text-base"
             >
-              Browse the Bestiary
+              Open DM Reference
             </Link>
           </div>
 
@@ -67,23 +65,15 @@ export default function HomePage() {
             </h2>
           </div>
           <p className="max-w-xl text-sm leading-relaxed text-[var(--text-2)] sm:text-right">
-            Start with the main event, then reach for maps, puzzles, challenges, and rules
-            references without leaving your prep flow.
+            Move from session prep to live play, then find an answer without scanning a wall
+            of unrelated tools.
           </p>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(18rem,0.9fr)_minmax(0,1.6fr)]">
-          <PrimaryToolCard route={encounterTool} />
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            {supportingTools.map((route, index) => (
-              <CompactToolCard
-                key={route.path}
-                route={route}
-                wide={supportingTools.length % 2 === 1 && index === supportingTools.length - 1}
-              />
-            ))}
-          </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          {TOOL_SECTIONS.map((section, index) => (
+            <ToolSectionCard key={section.id} section={section} step={index + 1} />
+          ))}
         </div>
       </section>
 
@@ -97,15 +87,15 @@ export default function HomePage() {
             Built for fast decisions at the table
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-2)]">
-            Accurate SRD references, 2024 encounter budgets, printable handouts, and shareable
-            encounters—without tracking, accounts, or server-side storage.
+            Searchable SRD rules, 2024 encounter budgets, printable handouts, and shareable
+            encounters—without accounts or server-side storage.
           </p>
         </div>
 
         <dl className="grid grid-cols-3 gap-3 text-center sm:min-w-[22rem]">
           <Stat value={BESTIARY_META.count.toLocaleString()} label="Monsters" />
           <Stat value={SPELLS_META.count.toLocaleString()} label="Spells" />
-          <Stat value={BESTIARY_META.creatureTypes.toLocaleString()} label="Creature types" />
+          <Stat value={RULES_REFERENCE_ENTRIES.length.toLocaleString()} label="Rules references" />
         </dl>
       </section>
     </div>
@@ -180,61 +170,46 @@ function PreviewMetric({ value, label }: { value: string; label: string }) {
   );
 }
 
-function PrimaryToolCard({ route }: { route: RouteInfo }) {
+function ToolSectionCard({ section, step }: { section: ToolSection; step: number }) {
   return (
-    <Link
-      href={route.path}
-      className="card-interactive group relative flex min-h-[22rem] flex-col overflow-hidden p-6 sm:p-7"
-    >
-      <div
-        aria-hidden="true"
-        className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[rgba(230,156,85,0.1)] blur-2xl transition-transform duration-300 group-hover:scale-125"
-      />
-      <div className="relative flex h-12 w-12 items-center justify-center rounded-lg border border-[rgba(230,156,85,0.35)] bg-[rgba(230,156,85,0.1)]">
-        <RouteIcon name={route.icon} size={26} className="text-[var(--bronze)]" />
-      </div>
-      <p className="eyebrow relative mt-8">Start here</p>
-      <h3 className="relative mt-2 text-3xl">{route.title}</h3>
-      <p className="relative mt-3 max-w-lg text-sm leading-relaxed text-[var(--text-2)]">
-        {route.description}
-      </p>
-
-      <div className="surface-inset relative mt-6 grid grid-cols-3 gap-2 p-3 text-center text-xs text-[var(--text-2)]">
-        <span>Set the party</span>
-        <span>Shape the fight</span>
-        <span>Forecast it</span>
-      </div>
-
-      <span className="relative mt-auto inline-flex items-center gap-2 pt-7 font-semibold text-[var(--bronze)]">
-        Open the builder
-        <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span>
-      </span>
-    </Link>
-  );
-}
-
-function CompactToolCard({ route, wide }: { route: RouteInfo; wide?: boolean }) {
-  return (
-    <Link
-      href={route.path}
-      className={`card-interactive group flex min-h-[10rem] flex-col p-5 ${wide ? 'sm:col-span-2' : ''}`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[var(--steel-800)]">
-          <RouteIcon name={route.icon} size={19} className="text-[var(--bronze)]" />
+    <article className="flex h-full flex-col rounded-xl border border-[var(--steel-800)] bg-[var(--steel-900)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+      <div className="flex items-start gap-3 border-b border-[var(--steel-800)] pb-4">
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[rgba(230,156,85,0.35)] bg-[rgba(230,156,85,0.1)] text-sm font-bold text-[var(--bronze)]">
+          {step}
         </span>
-        <span
-          aria-hidden="true"
-          className="text-lg text-[var(--text-3)] transition-all group-hover:translate-x-1 group-hover:text-[var(--bronze)]"
-        >
-          →
-        </span>
+        <div>
+          <h3 className="text-2xl">{section.label}</h3>
+          <p className="mt-1 text-sm leading-relaxed text-[var(--text-2)]">{section.description}</p>
+        </div>
       </div>
-      <h3 className="mt-4 text-lg">{route.title}</h3>
-      <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-[var(--text-2)]">
-        {route.description}
-      </p>
-    </Link>
+
+      <ul className="mt-3 space-y-1">
+        {section.routes.map((route) => (
+          <li key={route.path}>
+            <Link
+              href={route.path}
+              className="group flex min-h-16 items-center gap-3 rounded-lg border border-transparent px-2 py-2 transition-colors hover:border-[var(--steel-800)] hover:bg-[var(--steel-950)]"
+            >
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--steel-800)]">
+                <RouteIcon name={route.icon} size={18} className="text-[var(--bronze)]" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <strong className="block text-sm text-[var(--text-1)]">{route.label}</strong>
+                <span className="mt-0.5 block line-clamp-1 text-xs text-[var(--text-3)]">
+                  {route.description}
+                </span>
+              </span>
+              <span
+                aria-hidden="true"
+                className="text-[var(--text-3)] transition-all group-hover:translate-x-0.5 group-hover:text-[var(--bronze)]"
+              >
+                →
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </article>
   );
 }
 

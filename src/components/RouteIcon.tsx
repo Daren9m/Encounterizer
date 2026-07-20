@@ -1,4 +1,4 @@
-import { LayoutDashboard, Map, Puzzle, Shield, Skull, Sparkles, Swords, type LucideIcon } from 'lucide-react';
+import { BookOpen, LayoutDashboard, Map, Puzzle, Shield, Skull, Sparkles, Swords, type LucideIcon } from 'lucide-react';
 import type { RouteIconName } from '@/lib/site';
 
 const ICONS: Record<RouteIconName, LucideIcon> = {
@@ -9,6 +9,7 @@ const ICONS: Record<RouteIconName, LucideIcon> = {
   sparkles: Sparkles,
   screen: LayoutDashboard,
   battle: Shield,
+  book: BookOpen,
 };
 
 /** Renders a route's Lucide icon by name. Works in both server and client components. */

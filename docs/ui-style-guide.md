@@ -41,6 +41,36 @@ Rules:
 - Destructive actions use danger color and must not be adjacent to the primary
   action without separation.
 
+## Site topology and navigation
+
+Every tool belongs to one stable, user-centered section:
+
+| Section | User intent | Destinations |
+| --- | --- | --- |
+| Prep | Make the session | Encounters, Maps, Puzzles & Challenges |
+| Run | Manage the live table | DM Screen, Battle Organizer |
+| Reference | Find an answer | DM Reference, Bestiary, Spells |
+
+The route metadata in `src/lib/site.ts` is the source of truth. Navigation,
+homepage discovery, page-header context, footer links, recovery links, and the
+sitemap derive from it. Existing destination URLs stay stable when the
+taxonomy changes; section names organize links and do not add empty landing
+pages.
+
+Desktop navigation uses one disclosure button per section. Its panel contains
+ordinary lists of links—never ARIA `menu`/`menuitem` roles. The button exposes
+`aria-expanded` and `aria-controls`; only the current destination link receives
+`aria-current="page"`. Escape closes a disclosure and returns focus to its
+trigger. Outside pointer/focus, route changes, and breakpoint changes close it
+without moving focus unless the focused control disappears at the breakpoint;
+in that case, focus moves to the corresponding trigger in the visible mode.
+
+Mobile navigation shows all three sections under visible headings inside one
+bounded, vertically scrollable panel. Do not nest another accordion layer in
+that panel. Theme selection remains a top-level header action so it cannot be
+stranded below a long link list. Credits and licensing remain footer-only;
+player handouts remain outside global chrome and the sitemap.
+
 ## Workflow composition
 
 Complex generators use three explicit regions:

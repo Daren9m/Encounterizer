@@ -5,7 +5,7 @@ import { Spectral, IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
 import NavBar from '@/components/NavBar';
 import RouteIcon from '@/components/RouteIcon';
-import { SITE_DESCRIPTION, SITE_URL, TOOL_ROUTES } from '@/lib/site';
+import { SITE_DESCRIPTION, SITE_URL, TOOL_SECTIONS } from '@/lib/site';
 
 // Self-hosted at build time by next/font — zero runtime requests.
 const spectral = Spectral({
@@ -93,7 +93,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
 
           <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-            <div className="grid gap-8 rounded-2xl border border-[var(--steel-800)] bg-[var(--steel-950)] p-6 shadow-[var(--shadow-card)] sm:p-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-center">
+            <div className="grid gap-8 rounded-2xl border border-[var(--steel-800)] bg-[var(--steel-950)] p-6 shadow-[var(--shadow-card)] sm:p-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] lg:items-start">
               <div className="max-w-xl">
                 <div className="mb-4 flex items-center gap-3">
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--steel-700)] bg-[var(--steel-900)]">
@@ -105,25 +105,35 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </div>
                 </div>
                 <p className="text-sm leading-relaxed text-[var(--text-2)]">
-                  Build encounters, forecast battles, and prep the rest of the session in one
-                  fast, private toolkit using D&amp;D 5.5e / 2024 rules.
+                  Prepare the session, run the table, and find rules quickly in one private
+                  toolkit using D&amp;D 5.5e / 2024 rules.
                 </p>
               </div>
 
-              <nav aria-label="Footer tools" className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {TOOL_ROUTES.map((route) => (
-                  <Link
-                    key={route.path}
-                    href={route.path}
-                    className="group inline-flex min-h-11 items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-sm text-[var(--text-2)] transition-colors hover:border-[var(--steel-800)] hover:bg-[var(--steel-900)] hover:text-[var(--text-1)]"
-                  >
-                    <RouteIcon
-                      name={route.icon}
-                      size={17}
-                      className="text-[var(--text-3)] transition-colors group-hover:text-[var(--bronze)]"
-                    />
-                    {route.label}
-                  </Link>
+              <nav aria-label="Footer tools" className="grid gap-5 sm:grid-cols-3">
+                {TOOL_SECTIONS.map((section) => (
+                  <section key={section.id} aria-labelledby={`footer-${section.id}`}>
+                    <h2 id={`footer-${section.id}`} className="micro-label px-2">
+                      {section.label}
+                    </h2>
+                    <ul className="mt-2 space-y-1">
+                      {section.routes.map((route) => (
+                        <li key={route.path}>
+                          <Link
+                            href={route.path}
+                            className="group inline-flex min-h-11 w-full items-center gap-2 rounded-lg border border-transparent px-2 py-2 text-sm text-[var(--text-2)] transition-colors hover:border-[var(--steel-800)] hover:bg-[var(--steel-900)] hover:text-[var(--text-1)]"
+                          >
+                            <RouteIcon
+                              name={route.icon}
+                              size={17}
+                              className="text-[var(--text-3)] transition-colors group-hover:text-[var(--bronze)]"
+                            />
+                            {route.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
                 ))}
               </nav>
             </div>
