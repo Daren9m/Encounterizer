@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { EMPTY_BATTLE } from '@/lib/battle-organizer';
+import { DM_SCREEN_TOOL_ROUTES } from '@/lib/site';
 import {
   EMPTY_DM_SCREEN,
   dmScreenToMarkdown,
@@ -15,6 +16,11 @@ const nested: DmScreenSection[] = [{
 }];
 
 describe('DM screen', () => {
+  it('never offers the DM Screen as a tool inside itself', () => {
+    expect(DM_SCREEN_TOOL_ROUTES.map((route) => route.path)).not.toContain('/dm-screen');
+    expect(DM_SCREEN_TOOL_ROUTES.map((route) => route.path)).toContain('/battle');
+  });
+
   it('updates and removes deeply nested sections', () => {
     const updated = updateSectionTree(nested, 'child', (section) => ({ ...section, title: 'Updated' }));
     expect(updated[0].children[0].title).toBe('Updated');

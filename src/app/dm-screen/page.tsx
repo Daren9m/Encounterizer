@@ -39,7 +39,7 @@ import {
   type DmScreenSection,
   type DmScreenState,
 } from '@/lib/dm-screen';
-import { TOOL_ROUTES } from '@/lib/site';
+import { DM_SCREEN_TOOL_ROUTES } from '@/lib/site';
 import type { Monster } from '@/lib/types';
 import { usePersistentState } from '@/lib/use-persistent-state';
 
@@ -78,7 +78,7 @@ export default function DmScreenPage() {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [resourceQuery, setResourceQuery] = useState('');
-  const [toolPath, setToolPath] = useState(TOOL_ROUTES[0].path);
+  const [toolPath, setToolPath] = useState(DM_SCREEN_TOOL_ROUTES[0].path);
   const selectedTargetSectionId = sectionOptions.some((section) => section.id === targetSectionId)
     ? targetSectionId
     : sectionOptions[0]?.id ?? '';
@@ -137,7 +137,7 @@ export default function DmScreenPage() {
       addItem({ id: id('note'), kind: 'note', title: title.trim() || 'Note', body: body.trim(), collapsed: false, hidden: false, origin: 'manual' });
     }
     if (addKind === 'tool') {
-      const route = TOOL_ROUTES.find((candidate) => candidate.path === toolPath)!;
+      const route = DM_SCREEN_TOOL_ROUTES.find((candidate) => candidate.path === toolPath)!;
       addItem({ id: id('tool'), kind: 'tool', title: title.trim() || route.title, body: body.trim() || route.description, href: route.path, collapsed: false, hidden: false, origin: 'manual' });
     }
     if (addKind === 'initiative') {
@@ -209,7 +209,7 @@ export default function DmScreenPage() {
         </div>
         {(addKind === 'monster' || addKind === 'spell') && resourceResults.length > 0 && <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{resourceResults.map((result) => <button key={result.id} type="button" className="rounded-lg border border-[var(--steel-800)] p-3 text-left hover:border-[var(--bronze)]" onClick={() => addResource(result.id, result.name)}><span className="block font-semibold">{result.name}</span><span className="text-xs text-[var(--text-3)]">{result.detail}</span></button>)}</div>}
         {addKind === 'note' && <textarea className="mt-3 w-full" rows={3} value={body} onChange={(event) => setBody(event.target.value)} placeholder="Rules reminder, boxed text, NPC notes, session beats…" />}
-        {addKind === 'tool' && <div className="mt-3 grid gap-2 md:grid-cols-[1fr_2fr]"><select value={toolPath} onChange={(event) => setToolPath(event.target.value)}>{TOOL_ROUTES.map((route) => <option key={route.path} value={route.path}>{route.title}</option>)}</select><input value={body} onChange={(event) => setBody(event.target.value)} placeholder="Optional reminder about how you’ll use this tool" /></div>}
+        {addKind === 'tool' && <div className="mt-3 grid gap-2 md:grid-cols-[1fr_2fr]"><select value={toolPath} onChange={(event) => setToolPath(event.target.value)}>{DM_SCREEN_TOOL_ROUTES.map((route) => <option key={route.path} value={route.path}>{route.title}</option>)}</select><input value={body} onChange={(event) => setBody(event.target.value)} placeholder="Optional reminder about how you’ll use this tool" /></div>}
         {(addKind === 'note' || addKind === 'tool' || addKind === 'rules' || addKind === 'initiative') && <button type="button" className="btn-primary mt-3" onClick={addConfiguredItem}><Plus size={17} aria-hidden="true" /> Add {addKind === 'initiative' ? 'tracker' : addKind === 'rules' ? 'reference' : addKind}</button>}
       </> : <div className="rounded-lg border border-dashed border-[var(--steel-700)] p-5 text-center text-sm text-[var(--text-2)]">Create a section first, then fill it with anything you need at the table.</div>}
     </section>
