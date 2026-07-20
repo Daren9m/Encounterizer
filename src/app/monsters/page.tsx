@@ -336,7 +336,7 @@ export default function BestiaryPage() {
         {/* Monster List */}
         <div ref={resultsRef} tabIndex={-1} aria-label="Monster results" className="bestiary-results min-w-0 print:hidden">
           {viewMode === 'grid' ? (
-            <div className="bestiary-grid items-start gap-3" data-card-size={cardSize} data-columns={columnCount}>
+            <div className="bestiary-grid auto-rows-fr items-stretch gap-3" data-card-size={cardSize} data-columns={columnCount}>
               {orderedResults.map(monster => (
                 <MonsterCard
                   key={monster.id}
@@ -559,7 +559,7 @@ function MonsterCard({
 
   return (
     <article
-      className={`card relative w-full overflow-hidden transition-all hover:-translate-y-0.5 hover:border-[rgba(232,161,94,0.55)] ${paddingClass} ${
+      className={`card relative h-full w-full overflow-hidden transition-all hover:-translate-y-0.5 hover:border-[rgba(232,161,94,0.55)] ${paddingClass} ${
         isSelected ? 'border-[var(--bronze)] ring-1 ring-[var(--bronze)]' : ''
       }`}
     >
@@ -568,15 +568,15 @@ function MonsterCard({
         onClick={() => onSelect(monster)}
         aria-pressed={isSelected}
         aria-label={`View ${monster.name} stat block`}
-        className="w-full cursor-pointer pr-7 text-left"
+        className="h-full w-full cursor-pointer pr-7 text-left"
       >
-      <div className={`flex items-start ${cardSize === 'compact' ? 'gap-2.5' : 'gap-3'}`}>
+      <div className={`flex h-full items-start ${cardSize === 'compact' ? 'gap-2.5' : 'gap-3'}`}>
         <MonsterPortrait
           monsterId={monster.id}
           sizes="128px"
           className={`aspect-[4/5] shrink-0 rounded-lg ${portraitClass}`}
         />
-        <div className="min-w-0 flex-1">
+        <div className="flex h-full min-w-0 flex-1 flex-col">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h3 className="truncate">{monster.name}</h3>
@@ -633,19 +633,21 @@ function MonsterCard({
         </div>
       )}
 
-      {/* Stats row */}
-      <div className="mt-2 flex flex-wrap gap-3 text-xs text-[var(--text-2)]">
-        <span>AC {monster.armor.ac}</span>
-        <span>HP {monster.hitPoints}</span>
-        <span>{monster.xp.toLocaleString()} XP</span>
-      </div>
-
-      {/* Environments */}
-      {cardSize !== 'compact' && (
-        <div className="mt-1 truncate text-[10px] text-[var(--text-3)]">
-          {monster.environments.join(' · ')}
+      <div className="mt-auto pt-2">
+        {/* Stats row */}
+        <div className="flex flex-wrap gap-3 text-xs text-[var(--text-2)]">
+          <span>AC {monster.armor.ac}</span>
+          <span>HP {monster.hitPoints}</span>
+          <span>{monster.xp.toLocaleString()} XP</span>
         </div>
-      )}
+
+        {/* Environments */}
+        {cardSize !== 'compact' && (
+          <div className="mt-1 truncate text-[10px] text-[var(--text-3)]">
+            {monster.environments.join(' · ')}
+          </div>
+        )}
+      </div>
         </div>
       </div>
       </button>
