@@ -29,7 +29,8 @@ place. No accounts, no server, no cost. Everything runs in your browser.
   weather forecast, not a promise — but no mainstream encounter builder
   does it.
 - **🐉 Monster Bestiary** — **331 monsters from the SRD 5.2.1** (genuine
-  2024 stat blocks) with deep filtering: CR, type, size, environment,
+  2024 stat blocks), each with a dedicated portrait, plus deep filtering:
+  CR, type, size, environment,
   movement modes, damage types dealt, resistances, immunities, conditions,
   legendary/spellcaster/lair toggles. **Import your own monsters** from
   5etools bestiary JSON or Encounterizer exports — stored locally in your
