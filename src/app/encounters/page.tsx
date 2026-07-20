@@ -1316,7 +1316,7 @@ function EncounterBuilder() {
             <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[rgba(188,138,67,0.14)]" aria-hidden="true" />
             <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-start gap-3">
-                <span className="rounded-full bg-[var(--bronze)] p-2 text-[#1d1105]">
+                <span className="rounded-full bg-[var(--bronze)] p-2 text-[var(--text-on-accent)]">
                   <Swords size={24} aria-hidden="true" />
                 </span>
                 <div>
