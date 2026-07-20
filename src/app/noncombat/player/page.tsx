@@ -1,7 +1,6 @@
 'use client';
 
-import { Suspense, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import { generateNoncombat, getNoncombatKinds } from '@/lib/noncombat/generate';
 import type { NoncombatKind } from '@/lib/noncombat/generate';
 import { toPlayerView } from '@/lib/noncombat/player-view';
@@ -14,29 +13,26 @@ import PrintButton from '@/components/PrintButton';
 const DIFFICULTIES: Difficulty[] = ['Easy', 'Medium', 'Hard'];
 
 export default function PlayerPage() {
-  // useSearchParams requires a Suspense boundary under static prerendering.
-  return (
-    <Suspense
-      fallback={(
-        <div className="empty-state" role="status" aria-live="polite">
-          Preparing the handout…
-        </div>
-      )}
-    >
-      <PlayerScreen />
-    </Suspense>
-  );
+  return <PlayerScreen />;
 }
 
 function PlayerScreen() {
-  const searchParams = useSearchParams();
-  const query = searchParams.toString();
+  // The query is read from the location after mount (and on back/forward)
+  // rather than via next/navigation's useSearchParams, which suspends
+  // hydration and under `next dev` left hard-loaded links permanently
+  // dehydrated. `null` means "not read yet" — the prerendered HTML and the
+  // first client render both show the preparing state, so hydration matches.
+  const [query, setQuery] = useState<string | null>(null);
+  useEffect(() => {
+    const read = () => setQuery(window.location.search);
+    read();
+    window.addEventListener('popstate', read);
+    return () => window.removeEventListener('popstate', read);
+  }, []);
 
-  // The player view is a pure projection of the DM share URL. Deriving it
-  // during render avoids a second synchronization render and keeps browser
-  // navigation responsive when the query changes.
+  // The player view is a pure projection of the DM share URL.
   const { view, missing } = useMemo<{ view: PlayerView | null; missing: boolean }>(() => {
-    const params = new URLSearchParams(query);
+    const params = new URLSearchParams(query ?? '');
     const clampInt = (raw: string | null, lo: number, hi: number): number | null => {
       if (raw === null) return null;
       const n = Number(raw);
@@ -66,6 +62,13 @@ function PlayerScreen() {
     return { view: toPlayerView(r), missing: false };
   }, [query]);
 
+  if (query === null) {
+    return (
+      <div className="empty-state" role="status" aria-live="polite">
+        Preparing the handout…
+      </div>
+    );
+  }
   if (missing) {
     return (
       <div className="empty-state" role="status" aria-live="polite">

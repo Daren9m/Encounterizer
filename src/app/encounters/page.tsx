@@ -1,7 +1,6 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BookOpen,
   Box,
@@ -286,16 +285,10 @@ function encounterSignature(encounter: Encounter | null): string {
 // ─── Page ─────────────────────────────────────────────────────────
 
 export default function EncounterPage() {
-  // useSearchParams requires a Suspense boundary under static prerendering.
-  return (
-    <Suspense fallback={null}>
-      <EncounterBuilder />
-    </Suspense>
-  );
+  return <EncounterBuilder />;
 }
 
 function EncounterBuilder() {
-  const searchParams = useSearchParams();
   const { all: allMonsters } = useMonsters();
 
   const [partySize, setPartySize] = useState(4);
@@ -555,6 +548,11 @@ function EncounterBuilder() {
     if (didInit.current) return;
     didInit.current = true;
 
+    // Read params from the location directly: effects only run client-side,
+    // and unlike useSearchParams this never suspends hydration (which under
+    // `next dev` left hard-loaded share links permanently dehydrated).
+    const searchParams = new URLSearchParams(window.location.search);
+
     const size = clampInt(searchParams.get('size'), 1, 10);
     const level = clampInt(searchParams.get('level'), 1, 20);
     const diff = searchParams.get('diff');
@@ -630,7 +628,7 @@ function EncounterBuilder() {
       if (recipeId && getRecipeById(recipeId)) runRecipe(recipeId, sharedConfig);
       else runGenerate(sharedConfig);
     }
-  }, [searchParams, runGenerate, runRecipe]);
+  }, [runGenerate, runRecipe]);
 
   function handleGenerate() {
     if (!partyInputsValid) {
