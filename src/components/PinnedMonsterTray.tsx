@@ -26,12 +26,12 @@ export default function PinnedMonsterTray({
   onSelect: (monster: Monster) => void;
   onUnpin: (monsterId: string) => void;
 }) {
-  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(() => new Set());
-  const allExpanded = monsters.every((monster) => !collapsedIds.has(monster.id));
-  const allCollapsed = monsters.every((monster) => collapsedIds.has(monster.id));
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+  const allExpanded = monsters.every((monster) => expandedIds.has(monster.id));
+  const allCollapsed = monsters.every((monster) => !expandedIds.has(monster.id));
 
   function toggleMonster(monsterId: string) {
-    setCollapsedIds((current) => {
+    setExpandedIds((current) => {
       const next = new Set(current);
       if (next.has(monsterId)) next.delete(monsterId);
       else next.add(monsterId);
@@ -40,7 +40,7 @@ export default function PinnedMonsterTray({
   }
 
   function handleUnpin(monsterId: string) {
-    setCollapsedIds((current) => {
+    setExpandedIds((current) => {
       if (!current.has(monsterId)) return current;
       const next = new Set(current);
       next.delete(monsterId);
@@ -77,7 +77,7 @@ export default function PinnedMonsterTray({
             <p className="mr-auto text-xs text-[var(--text-3)]">Full stat blocks · newest pin first</p>
             <button
               type="button"
-              onClick={() => setCollapsedIds(new Set())}
+              onClick={() => setExpandedIds(new Set(monsters.map((monster) => monster.id)))}
               disabled={allExpanded}
               className="btn-ghost !min-h-8 !px-2.5 text-xs disabled:cursor-default disabled:opacity-40"
             >
@@ -85,7 +85,7 @@ export default function PinnedMonsterTray({
             </button>
             <button
               type="button"
-              onClick={() => setCollapsedIds(new Set(monsters.map((monster) => monster.id)))}
+              onClick={() => setExpandedIds(new Set())}
               disabled={allCollapsed}
               className="btn-ghost !min-h-8 !px-2.5 text-xs disabled:cursor-default disabled:opacity-40"
             >
@@ -95,7 +95,7 @@ export default function PinnedMonsterTray({
 
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain p-2 [scrollbar-gutter:stable] sm:p-3">
             {monsters.map((monster) => {
-              const isExpanded = !collapsedIds.has(monster.id);
+              const isExpanded = expandedIds.has(monster.id);
               const contentId = `pinned-monster-${monster.id}-details`;
               const labelId = `pinned-monster-${monster.id}-label`;
 
