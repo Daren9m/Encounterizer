@@ -76,8 +76,11 @@ export function buildUvtt(
       map_size: { x: map.width, y: map.height },
       pixels_per_grid: pixelsPerGrid,
     },
-    line_of_sight: wallBoundaries(map),
-    objects_line_of_sight: pillars,
+    // Pillars ride with the walls: the reference Foundry importer
+    // (moo-man/FVTT-DD-Import) never reads objects_line_of_sight, and
+    // our pillars are solid columns, not furniture.
+    line_of_sight: [...wallBoundaries(map), ...pillars],
+    objects_line_of_sight: [],
     portals,
     environment: { baked_lighting: false, ambient_light: 'ffffffff' },
     lights: [],

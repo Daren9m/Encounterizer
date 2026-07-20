@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { generateMap } from '@/lib/map-generator';
 import { mapToMarkdown } from '@/lib/map-export-text';
+import { wallBoundaries } from '@/lib/map-render/wall-geometry';
 import { buildUvtt } from '@/lib/uvtt-export';
 import type { EncounterMap } from '@/lib/types';
 
@@ -82,9 +83,23 @@ describe('buildUvtt', () => {
     }
   });
 
-  it('closes pillar occluders and survives a JSON round trip', () => {
-    for (const shape of doc.objects_line_of_sight) {
-      expect(shape[0]).toEqual(shape[shape.length - 1]);
+  it('emits pillars as closed wall loops in line_of_sight', () => {
+    // Foundry's Universal Battlemap Importer (moo-man/FVTT-DD-Import)
+    // never reads objects_line_of_sight, so pillars placed there would
+    // silently vanish on import. Our pillars are solid columns — they
+    // belong with the walls.
+    const pillars: Array<{ x: number; y: number }> = [];
+    DUNGEON.grid.forEach((row, y) => row.forEach((cell, x) => {
+      if (cell.terrain === 'pillar') pillars.push({ x, y });
+    }));
+    expect(pillars.length, 'fixture must contain pillars').toBeGreaterThan(0);
+    expect(doc.objects_line_of_sight).toEqual([]);
+    expect(doc.line_of_sight).toHaveLength(wallBoundaries(DUNGEON).length + pillars.length);
+    for (const p of pillars) {
+      expect(doc.line_of_sight).toContainEqual([
+        { x: p.x, y: p.y }, { x: p.x + 1, y: p.y },
+        { x: p.x + 1, y: p.y + 1 }, { x: p.x, y: p.y + 1 }, { x: p.x, y: p.y },
+      ]);
     }
     expect(JSON.parse(JSON.stringify(doc))).toEqual(doc);
   });
