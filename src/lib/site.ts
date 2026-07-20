@@ -23,7 +23,9 @@ export type RouteIconName =
   | 'skull'
   | 'map'
   | 'puzzle'
-  | 'sparkles';
+  | 'sparkles'
+  | 'screen'
+  | 'battle';
 
 export interface RouteInfo {
   path: string;
@@ -73,6 +75,22 @@ export const TOOL_ROUTES: RouteInfo[] = [
     description:
       'Every SRD 5.2.1 spell, levels 0–9, with mechanics-first summaries, full rules text, filters for level, school, class, concentration, and side-by-side pinning.',
     icon: 'sparkles',
+  },
+  {
+    path: '/dm-screen',
+    label: 'DM Screen',
+    title: 'DM Screen',
+    description:
+      'Build a private, collapsible command screen from monsters, spells, notes, tool links, and a live battle tracker—then export the complete setup.',
+    icon: 'screen',
+  },
+  {
+    path: '/battle',
+    label: 'Battle',
+    title: 'Battle Organizer',
+    description:
+      'Gather initiative, call next up and on deck, track HP, conditions, concentration, reactions, legendary actions, rounds, and the flow of a live battle.',
+    icon: 'battle',
   },
 ];
 
