@@ -1,7 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { generateNoncombat, getNoncombatKinds } from '@/lib/noncombat/generate';
 import type { NoncombatKind, NoncombatResult } from '@/lib/noncombat/generate';
@@ -49,18 +48,7 @@ function buildPlayerUrl(r: NoncombatResult): string {
 }
 
 export default function NoncombatPage() {
-  // useSearchParams requires a Suspense boundary under static prerendering.
-  return (
-    <Suspense
-      fallback={(
-        <div className="empty-state" role="status" aria-live="polite">
-          Loading the scene generator…
-        </div>
-      )}
-    >
-      <NoncombatBuilder />
-    </Suspense>
-  );
+  return <NoncombatBuilder />;
 }
 
 function NoncombatBuilder() {
@@ -122,11 +110,14 @@ function NoncombatBuilder() {
   // state above is declared first so a shared link's params win over
   // remembered preferences.
   const KINDS = kinds.map(k => k.value);
-  const searchParams = useSearchParams();
   const hydratedRef = useRef(false);
   useEffect(() => {
     if (hydratedRef.current) return;
     hydratedRef.current = true;
+    // Read params from the location directly: effects only run client-side,
+    // and unlike useSearchParams this never suspends hydration (which under
+    // `next dev` left hard-loaded share links permanently dehydrated).
+    const searchParams = new URLSearchParams(window.location.search);
     const clampInt = (raw: string | null, lo: number, hi: number): number | null => {
       if (raw === null) return null;
       const n = Number(raw);

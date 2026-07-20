@@ -1,7 +1,6 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   generateMap,
   isMapLayout,
@@ -99,12 +98,7 @@ function buildShareUrl(m: EncounterMap): string {
 }
 
 export default function MapsPage() {
-  // useSearchParams requires a Suspense boundary under static prerendering.
-  return (
-    <Suspense fallback={null}>
-      <MapsBuilder />
-    </Suspense>
-  );
+  return <MapsBuilder />;
 }
 
 function MapsBuilder() {
@@ -150,11 +144,14 @@ function MapsBuilder() {
   // One-shot hydration from a shared link (?seed=...). Persisted lever
   // state above is declared first so a link's params win over
   // remembered preferences.
-  const searchParams = useSearchParams();
   const hydratedRef = useRef(false);
   useEffect(() => {
     if (hydratedRef.current) return;
     hydratedRef.current = true;
+    // Read params from the location directly: effects only run client-side,
+    // and unlike useSearchParams this never suspends hydration (which under
+    // `next dev` left hard-loaded share links permanently dehydrated).
+    const searchParams = new URLSearchParams(window.location.search);
     const clampInt = (raw: string | null, lo: number, hi: number): number | null => {
       if (raw === null) return null;
       const n = Number(raw);
