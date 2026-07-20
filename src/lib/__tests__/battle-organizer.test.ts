@@ -125,12 +125,24 @@ describe('battle organizer', () => {
       id: 'ambush', name: 'Road Ambush', description: '', environment: 'Forest',
       difficulty: 'Moderate', monsters: [{ monster: goblin, count: 2 }], totalXp: 100, seed: 1,
     };
-    const battle = battleFromEncounter(encounter, [{ name: 'Aria', templateId: 'fighter-champion', level: 5 }]);
+    const battle = battleFromEncounter(encounter, [{
+      id: 'member-aria',
+      name: 'Aria',
+      templateId: 'fighter-champion',
+      level: 5,
+      initiativeBonus: 7,
+    }]);
     expect(battle.name).toBe('Road Ambush');
     expect(battle.started).toBe(false);
     expect(battle.phase).toBe('setup');
     expect(battle.combatants.map((entry) => entry.name)).toEqual(['Aria', 'Goblin 1', 'Goblin 2']);
-    expect(battle.combatants[0]).toMatchObject({ kind: 'player', armorClass: 18 });
+    expect(battle.combatants[0]).toMatchObject({
+      id: 'party-member-aria',
+      sourcePartyMemberId: 'member-aria',
+      kind: 'player',
+      armorClass: 18,
+      dexterity: 10,
+    });
     expect(battle.combatants[1]).toMatchObject({ kind: 'enemy', maxHp: 10, armorClass: 15, dexterity: 14 });
   });
 });

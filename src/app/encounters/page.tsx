@@ -27,6 +27,7 @@ import {
 import { filterMonsters } from '@/lib/monster-filter';
 import { formatMonsterSize } from '@/lib/monster-size';
 import { useMonsters } from '@/app/hooks/useMonsters';
+import { usePartyLibrary } from '@/app/hooks/usePartyLibrary';
 import {
   assessEncounterDifficulty,
   generateEncounter,
@@ -63,6 +64,7 @@ import RoomKeyPanel from '@/components/RoomKeyPanel';
 import { placeTokens } from '@/lib/token-placement';
 import FilterPanel from '@/components/FilterPanel';
 import PartySetupPanel from '@/components/PartySetupPanel';
+import PartyPersistenceStatus from '@/components/PartyPersistenceStatus';
 import BattleReportCard from '@/components/BattleReportCard';
 import PrintButton from '@/components/PrintButton';
 import ResetGeneratorButton from '@/components/ResetGeneratorButton';
@@ -93,6 +95,9 @@ import {
   isBattleState,
   type BattleState,
 } from '@/lib/battle-organizer';
+import { mergeForecastMembersIntoPartyLibrary } from '@/lib/party-migration';
+import { getActiveParty } from '@/lib/party';
+import { partyToForecastConfig } from '@/lib/party-adapters';
 
 const DIFFICULTIES: Difficulty[] = ['Trivial', 'Low', 'Moderate', 'High', 'Extreme'];
 const MAP_DENSITIES: MapFeatureDensity[] = ['Sparse', 'Balanced', 'Dense'];
@@ -290,6 +295,12 @@ export default function EncounterPage() {
 
 function EncounterBuilder() {
   const { all: allMonsters } = useMonsters();
+  const {
+    library: partyLibrary,
+    hydrated: partyLibraryHydrated,
+    updateLibrary,
+  } = usePartyLibrary();
+  const durableParty = partyLibrary ? getActiveParty(partyLibrary) : null;
 
   const [partySize, setPartySize] = useState(4);
   const [partyLevel, setPartyLevel] = useState(3);
@@ -436,6 +447,7 @@ function EncounterBuilder() {
   }, []);
 
   const openPartySetup = useCallback(() => {
+    if (!partyLibraryHydrated) return;
     setShowPartySetup(true);
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
@@ -448,7 +460,7 @@ function EncounterBuilder() {
         partySetupRef.current?.focus({ preventScroll: true });
       });
     });
-  }, []);
+  }, [partyLibraryHydrated]);
 
   const closePartySetup = useCallback(() => {
     setShowPartySetup(false);
@@ -969,6 +981,7 @@ function EncounterBuilder() {
         path="/encounters"
         description="Set the party, shape the battlefield, and generate a balanced encounter using the 2024 rules—then forecast how it is likely to play out."
       />
+      <PartyPersistenceStatus errorsOnly />
       <p className="sr-only" aria-live="polite">
         {encounter ? `${encounter.name} ready with ${summary.monsterCount} creatures.` : ''}
       </p>
@@ -1639,20 +1652,24 @@ function EncounterBuilder() {
                 <p className="mt-1 text-xs leading-relaxed text-[var(--text-3)]">
                   Used for both the combat forecast and the initiative tracker.
                 </p>
+                <PartyPersistenceStatus hideErrors />
               </div>
               <button
                 ref={configurePartyButtonRef}
                 type="button"
                 onClick={openPartySetup}
+                disabled={!partyLibraryHydrated}
                 aria-expanded={showPartySetup}
                 aria-controls="encounter-party-setup"
                 className="btn-secondary w-full text-sm sm:w-auto"
               >
                 <SlidersHorizontal size={16} aria-hidden="true" />
-                {showPartySetup ? 'Editing party' : 'Configure party'}
+                {!partyLibraryHydrated
+                  ? 'Loading party…'
+                  : showPartySetup ? 'Editing party' : 'Configure party'}
               </button>
             </div>
-            {showPartySetup && (
+            {showPartySetup && partyLibraryHydrated && (
               <div
                 id="encounter-party-setup"
                 ref={partySetupRef}
@@ -1661,9 +1678,13 @@ function EncounterBuilder() {
                 aria-label="Encounter party setup"
               >
                 <PartySetupPanel
-                  members={partyConfig?.members ?? defaultPartyConfig(partySize, partyLevel)}
+                  members={durableParty
+                    ? partyToForecastConfig(durableParty).members
+                    : partyConfig?.members ?? defaultPartyConfig(partySize, partyLevel)}
                   onSave={(members) => {
                     setPartyConfig({ version: 1, members });
+                    void updateLibrary((library) =>
+                      mergeForecastMembersIntoPartyLibrary(library, members));
                     invalidateForecast();
                     closePartySetup();
                   }}

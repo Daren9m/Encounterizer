@@ -2,6 +2,8 @@
 // Kept separate from types.ts so the simulator can evolve without
 // touching the core monster type system.
 
+import type { PartyCombatOverrides } from './party';
+
 export type SimAbility = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
 
 /** Parsed dice expression, e.g. 2d8+4 → { n: 2, d: 8, mod: 4 } */
@@ -169,23 +171,13 @@ export interface BattleReport {
 // ─── Party configuration (persisted) ─────────────────────────────
 
 export interface PartyMemberConfig {
+  /** Present when projected from the durable Party Library. */
+  id?: string;
   name: string;
   templateId: string;
   level: number;
-  overrides?: Partial<
-    Pick<
-      SimPlayer,
-      | 'ac'
-      | 'maxHp'
-      | 'attackBonus'
-      | 'attacksPerRound'
-      | 'avgDamagePerHit'
-      | 'healingPerRound'
-      | 'saveBonuses'
-      | 'spellDc'
-      | 'avgSpellDamagePerRound'
-    >
-  >;
+  initiativeBonus?: number;
+  overrides?: PartyCombatOverrides;
 }
 
 export interface PartyConfig {
