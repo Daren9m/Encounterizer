@@ -3,6 +3,7 @@ import {
   Environment, MonsterFilter, XP_BUDGET_PER_CHARACTER,
 } from './types';
 import { seededRandom, shuffleArray, pickRandom, randomSeed } from './random';
+import { FlavorPools, FlavorVersion, getFlavorPools } from './flavor-pools';
 
 // ─── XP Budgets (2024 DMG) ───────────────────────────────────────
 
@@ -96,6 +97,7 @@ interface GenerateOptions {
   maxMonsterTypes?: number; // max distinct monster stat blocks
   maxTotalMonsters?: number;
   seed?: number;           // replay a seed to reproduce an encounter exactly
+  flavorVersion?: FlavorVersion; // which frozen flavor-pool set to draw prose from (default 1)
 }
 
 export function selectMonstersForBudget(
@@ -185,129 +187,8 @@ export function selectMonstersForBudget(
 }
 
 // ─── Scenario Hooks ──────────────────────────────────────────────
-
-const SCENARIO_HOOKS = [
-  'The party stumbles upon {monsters} while traveling through the {environment}.',
-  'A local village has been terrorized by {monsters} lurking in the nearby {environment}.',
-  'Screams echo through the {environment} — {monsters} have ambushed a merchant caravan.',
-  'The entrance to the dungeon is guarded by {monsters}, who seem agitated.',
-  'A mysterious fog rolls in as {monsters} emerge from the shadows of the {environment}.',
-  'The party discovers the remains of an adventuring group, slain by {monsters}.',
-  'A bounty board lists a reward for clearing {monsters} from the {environment}.',
-  '{monsters} have established a lair and are raiding nearby settlements.',
-  'An ancient shrine in the {environment} has attracted {monsters} drawn to its power.',
-  'The party interrupts {monsters} in the middle of a dark ritual.',
-  'Territorial {monsters} block the only path through the {environment}.',
-  'A dying scout warns the party of {monsters} ahead in the {environment}.',
-  'The ground trembles as {monsters} emerge from beneath the {environment}.',
-  'A trap set by {monsters} separates the party in the {environment}.',
-  'The party is hired to escort a prisoner through {environment} infested with {monsters}.',
-  'An earthquake has disturbed {monsters} from their slumber in the {environment}.',
-  '{monsters} are fighting over a magical artifact when the party arrives.',
-  'The party must negotiate passage through territory claimed by {monsters}.',
-  'A portal tears open, unleashing {monsters} into the {environment}.',
-  'The ruins in the {environment} are not as abandoned as they appear — {monsters} lurk within.',
-];
-
-const TACTICS_BY_TYPE: Record<string, string[]> = {
-  Beast: [
-    'These creatures fight on instinct — they flee when reduced below half HP.',
-    'The pack targets the weakest-looking party member first.',
-    'They use hit-and-run tactics, retreating into cover between attacks.',
-  ],
-  Undead: [
-    'Mindless undead attack the nearest living creature relentlessly.',
-    'The undead press forward without regard for their own survival.',
-    'They focus on isolating party members from the group.',
-  ],
-  Humanoid: [
-    'They use coordinated tactics, flanking and focusing fire on spellcasters.',
-    'A leader barks orders — taking them down may cause morale to break.',
-    'They attempt to parley if the fight turns against them.',
-  ],
-  Dragon: [
-    'Uses breath weapon immediately, then takes flight to recharge.',
-    'Targets clustered party members with area attacks.',
-    'Uses lair actions to reshape the battlefield each round.',
-  ],
-  Fiend: [
-    'Focuses on corrupting or tempting party members before combat.',
-    'Targets the cleric or paladin first to eliminate radiant damage threats.',
-    'Uses darkness and fear to split the party.',
-  ],
-  Aberration: [
-    'Uses bizarre, alien tactics that are hard to predict.',
-    'Targets the character with the highest Intelligence for psychic assaults.',
-    'Attempts to dominate or charm a party member to fight their allies.',
-  ],
-  Elemental: [
-    'Fights with single-minded purpose, ignoring pain and fear.',
-    'Uses the environment to its advantage — fire near flammables, water near cliffs.',
-    'Retreats to its native element if available on the map.',
-  ],
-  Monstrosity: [
-    'Ambushes from hiding, using surprise to devastating effect.',
-    'Uses special movement (fly, burrow, climb) to stay out of melee range.',
-    'Guards its territory fiercely and fights to the death.',
-  ],
-  Giant: [
-    'Hurls boulders from range before closing to melee.',
-    'Targets the smallest party member, underestimating them.',
-    'Uses the environment as improvised weapons.',
-  ],
-  Construct: [
-    'Follows its orders to the letter, ignoring all other stimuli.',
-    'Cannot be reasoned with, bribed, or intimidated.',
-    'Fights until destroyed, never retreating.',
-  ],
-  Ooze: [
-    'Moves slowly but relentlessly toward the nearest creature.',
-    'Splits when hit with slashing damage (if applicable).',
-    'Squeezes through tight spaces to ambush from unexpected directions.',
-  ],
-  Celestial: [
-    'Attempts to warn intruders before resorting to violence.',
-    'Focuses radiant attacks on fiends and undead first.',
-    'Fights with divine purpose, retreating only if ordered by a higher power.',
-  ],
-  Fey: [
-    'Uses illusions and trickery to confuse the party.',
-    'Targets the party member with the lowest Wisdom for charm effects.',
-    'May offer a deal or riddle instead of fighting.',
-  ],
-  Plant: [
-    'Remains motionless until prey enters reach, then strikes.',
-    'Uses entangling vines and difficult terrain to trap victims.',
-    'Focuses on grappling and restraining rather than direct damage.',
-  ],
-};
-
-const TREASURE_BY_CR: Record<string, string[]> = {
-  low: [
-    '2d6 GP in loose coin',
-    'A battered trinket worth 5 GP and a healing potion',
-    '3d6 GP scattered among the remains',
-    'A crude map leading to a nearby point of interest',
-  ],
-  mid: [
-    '4d6 × 10 GP, 1d6 gems worth 50 GP each',
-    'A +1 weapon or suit of armor (DM\'s choice)',
-    'A scroll of a 3rd-level spell and 100 GP',
-    'An uncommon magic item from the DMG random tables',
-  ],
-  high: [
-    '2d6 × 100 GP, 2d6 gems worth 100 GP each',
-    'A rare magic item and 500 GP',
-    'A spell scroll (5th level), potion of greater healing, and 300 GP',
-    'An art object worth 750 GP and a rare magic item',
-  ],
-  legendary: [
-    'A very rare or legendary magic item',
-    '10d6 × 100 GP, 3d6 gems worth 500 GP each',
-    'A legendary artifact with a storied history',
-    'An immense hoard: 5,000+ GP in mixed treasure and 2 rare magic items',
-  ],
-};
+// Prose pools live in flavor-pools.ts, versioned behind getFlavorPools()
+// so seeded replay links keep drawing from the exact frozen arrays.
 
 function formatMonsterList(monsters: EncounterMonster[]): string {
   return monsters
@@ -319,15 +200,20 @@ function formatMonsterList(monsters: EncounterMonster[]): string {
 function generateScenarioHook(
   monsters: EncounterMonster[],
   environment: Environment,
-  rng: () => number
+  rng: () => number,
+  pools: FlavorPools,
 ): string {
-  const template = pickRandom(SCENARIO_HOOKS, rng);
+  const template = pickRandom(pools.scenarioHooks, rng);
   return template
     .replace('{monsters}', formatMonsterList(monsters))
     .replace('{environment}', environment.toLowerCase());
 }
 
-function generateTactics(monsters: EncounterMonster[], rng: () => number): string {
+function generateTactics(
+  monsters: EncounterMonster[],
+  rng: () => number,
+  pools: FlavorPools,
+): string {
   const lines: string[] = [];
   const seenTypes = new Set<string>();
 
@@ -336,21 +222,25 @@ function generateTactics(monsters: EncounterMonster[], rng: () => number): strin
     if (seenTypes.has(type)) continue;
     seenTypes.add(type);
 
-    const tactics = TACTICS_BY_TYPE[type] ?? TACTICS_BY_TYPE['Monstrosity']!;
+    const tactics = pools.tacticsByType[type] ?? pools.tacticsByType['Monstrosity']!;
     lines.push(`**${em.monster.name}** (${type}): ${pickRandom(tactics, rng)}`);
   }
 
   return lines.join('\n');
 }
 
-export function generateTreasure(cr: number, rng: () => number): string {
-  let tier: string;
+export function generateTreasure(
+  cr: number,
+  rng: () => number,
+  flavorVersion: FlavorVersion = 1,
+): string {
+  let tier: 'low' | 'mid' | 'high' | 'legendary';
   if (cr <= 4) tier = 'low';
   else if (cr <= 10) tier = 'mid';
   else if (cr <= 17) tier = 'high';
   else tier = 'legendary';
 
-  return pickRandom(TREASURE_BY_CR[tier]!, rng);
+  return pickRandom(getFlavorPools(flavorVersion).treasureByTier[tier], rng);
 }
 
 // ─── Main Generator ──────────────────────────────────────────────
@@ -369,9 +259,11 @@ export function generateEncounter(
     maxMonsterTypes = 4,
     maxTotalMonsters = 12,
     seed = randomSeed(),
+    flavorVersion = 1,
   } = options;
 
   const rng = seededRandom(seed);
+  const pools = getFlavorPools(flavorVersion);
 
   // Generate near the center of the requested band. The full budget remains
   // the assessment cap, but is intentionally not treated as a target.
@@ -407,33 +299,30 @@ export function generateEncounter(
 
   // Build the encounter
   const env = environment ?? 'Forest';
-  const encounterName = generateEncounterName(selectedMonsters, env, rng);
+  const encounterName = generateEncounterName(selectedMonsters, env, rng, pools);
 
   return {
     id: `enc-${seed}`,
     name: encounterName,
-    description: generateScenarioHook(selectedMonsters, env, rng),
+    description: generateScenarioHook(selectedMonsters, env, rng, pools),
     environment: env,
     difficulty: assessEncounterDifficulty(totalXp, party),
     monsters: selectedMonsters,
     totalXp,
     seed,
-    scenarioHook: generateScenarioHook(selectedMonsters, env, rng),
-    tactics: generateTactics(selectedMonsters, rng),
-    treasure: generateTreasure(maxCr, rng),
+    scenarioHook: generateScenarioHook(selectedMonsters, env, rng, pools),
+    tactics: generateTactics(selectedMonsters, rng, pools),
+    treasure: generateTreasure(maxCr, rng, flavorVersion),
   };
 }
 
 function generateEncounterName(
   monsters: EncounterMonster[],
   environment: Environment,
-  rng: () => number
+  rng: () => number,
+  pools: FlavorPools,
 ): string {
-  const prefixes = [
-    'Ambush', 'Siege', 'Skirmish', 'Raid', 'Assault',
-    'Standoff', 'Hunt', 'Clash', 'Confrontation', 'Battle',
-  ];
-  const prefix = pickRandom(prefixes, rng);
+  const prefix = pickRandom(pools.namePrefixes, rng);
   const envName = environment === 'Any' ? 'the Wilds' : `the ${environment}`;
 
   // An over-filtered pool can produce zero monsters — never crash on it.

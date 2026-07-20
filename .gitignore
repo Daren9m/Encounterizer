@@ -40,3 +40,7 @@ scripts/vendor/
 # SDD scratch ledger + generated flavor candidates (working files)
 .superpowers/
 scripts/flavor/out/
+
+# local SRD reference extracts (build-time only, same rationale as scripts/vendor/)
+docs/dnd.srd.5.2.1/
+docs/SRD_CC_v5.2.1.pdf

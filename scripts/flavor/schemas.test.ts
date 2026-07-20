@@ -9,8 +9,8 @@
 // minItems/maxItems/pattern/$ref (unsupported — a 400 in production).
 // Length rules live in LENGTH_LIMITS (data for the audit layer, #88).
 
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { getFlavorPools } from '../../src/lib/flavor-pools';
 import { THEME_PACKS } from '../../src/data/noncombat-themes';
 import * as castPools from '../../src/data/noncombat-cast';
 import * as scenarioPools from '../../src/data/noncombat-scenarios';
@@ -18,23 +18,11 @@ import { KIND_INSTRUCTIONS, POOL_KINDS, type PoolKind } from './prompt-spec';
 import { LENGTH_LIMITS, POOL_ITEM_SCHEMAS } from './schemas';
 
 // ─── Helpers ─────────────────────────────────────────────────────
-
-/** Keys of a module-private `const NAME: Record<string, string[]> = {...}`
- *  pool, extracted from the engine source text. TACTICS_BY_TYPE and
- *  TREASURE_BY_CR are not exported (and the scope fence forbids touching
- *  src/), so the cross-check reads the real source of truth directly. */
-function extractRecordKeys(constName: string): string[] {
-  const source = readFileSync(
-    new URL('../../src/lib/encounter-generator.ts', import.meta.url),
-    'utf8',
-  );
-  const start = source.indexOf(`const ${constName}`);
-  expect(start, `${constName} not found in encounter-generator.ts`).toBeGreaterThanOrEqual(0);
-  const end = source.indexOf('\n};', start);
-  expect(end, `${constName} block not terminated`).toBeGreaterThan(start);
-  const block = source.slice(start, end);
-  return [...block.matchAll(/^ {2}(\w+): \[/gm)].map((m) => m[1]!);
-}
+// The tactics/treasure cross-checks originally scraped the raw source of
+// encounter-generator.ts because the pools were module-private consts and
+// Task B's scope fence forbade touching src/. Issue #89 extracted the
+// pools into src/lib/flavor-pools.ts behind getFlavorPools(), so the
+// cross-checks now import the real frozen v1 pools directly.
 
 type AnyRecord = Record<string, unknown>;
 
@@ -187,14 +175,14 @@ describe('item shapes', () => {
 // ─── Vocab cross-checks against the engine ───────────────────────
 
 describe('engine vocab cross-checks', () => {
-  it('tactics-type creatureType enum === TACTICS_BY_TYPE keys', () => {
+  it('tactics-type creatureType enum === v1 tacticsByType keys', () => {
     expect(enumOf('tactics-type', 'creatureType').sort())
-      .toEqual(extractRecordKeys('TACTICS_BY_TYPE').sort());
+      .toEqual(Object.keys(getFlavorPools(1).tacticsByType).sort());
   });
 
-  it('treasure tier enum === TREASURE_BY_CR keys', () => {
+  it('treasure tier enum === v1 treasureByTier keys', () => {
     expect(enumOf('treasure', 'tier').sort())
-      .toEqual(extractRecordKeys('TREASURE_BY_CR').sort());
+      .toEqual(Object.keys(getFlavorPools(1).treasureByTier).sort());
   });
 
   it('theme-entry themeId enum === THEME_PACKS ids', () => {

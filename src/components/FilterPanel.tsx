@@ -27,6 +27,25 @@ const CONDITIONS: Condition[] = [
   'Poisoned', 'Prone', 'Restrained', 'Stunned', 'Unconscious',
 ];
 
+const SORT_SELECTIONS = {
+  'family:asc': { sortBy: 'family', sortDir: 'asc' },
+  'family:desc': { sortBy: 'family', sortDir: 'desc' },
+  'name:asc': { sortBy: 'name', sortDir: 'asc' },
+  'name:desc': { sortBy: 'name', sortDir: 'desc' },
+  'cr:asc': { sortBy: 'cr', sortDir: 'asc' },
+  'cr:desc': { sortBy: 'cr', sortDir: 'desc' },
+  'hp:asc': { sortBy: 'hp', sortDir: 'asc' },
+  'hp:desc': { sortBy: 'hp', sortDir: 'desc' },
+  'ac:asc': { sortBy: 'ac', sortDir: 'asc' },
+  'ac:desc': { sortBy: 'ac', sortDir: 'desc' },
+} as const satisfies Record<string, Pick<MonsterFilter, 'sortBy' | 'sortDir'>>;
+
+type SortSelection = keyof typeof SORT_SELECTIONS;
+
+function isSortSelection(value: string): value is SortSelection {
+  return value in SORT_SELECTIONS;
+}
+
 interface FilterPanelProps {
   filter: MonsterFilter;
   onChange: (filter: MonsterFilter) => void;
@@ -96,6 +115,14 @@ export default function FilterPanel({
     onChange({ ...filter, [key]: value });
   }
 
+  function setSort(value: string) {
+    if (!isSortSelection(value)) return;
+    onChange({ ...filter, ...SORT_SELECTIONS[value] });
+  }
+
+  const sortSelection = `${filter.sortBy ?? defaultSortBy}:${filter.sortDir ?? 'asc'}`;
+  const selectedSort = isSortSelection(sortSelection) ? sortSelection : `${defaultSortBy}:asc`;
+
   const activeFilterCount = Object.entries(filter).filter(
     ([key, value]) => !['sortBy', 'sortDir'].includes(key)
       && value !== undefined
@@ -150,6 +177,40 @@ export default function FilterPanel({
             className="filter-control w-full"
           />
         </div>
+        {!hideSort && (
+          <div className="w-full sm:w-60">
+            <label htmlFor="filter-sort" className="field-label">
+              Sort
+            </label>
+            <select
+              id="filter-sort"
+              value={selectedSort}
+              onChange={e => setSort(e.target.value)}
+              className="filter-control w-full"
+            >
+              <optgroup label="Related monsters">
+                <option value="family:asc">Related monsters: A–Z</option>
+                <option value="family:desc">Related monsters: Z–A</option>
+              </optgroup>
+              <optgroup label="Name">
+                <option value="name:asc">Name: A–Z</option>
+                <option value="name:desc">Name: Z–A</option>
+              </optgroup>
+              <optgroup label="Challenge rating">
+                <option value="cr:asc">CR: low to high</option>
+                <option value="cr:desc">CR: high to low</option>
+              </optgroup>
+              <optgroup label="Hit points">
+                <option value="hp:asc">HP: low to high</option>
+                <option value="hp:desc">HP: high to low</option>
+              </optgroup>
+              <optgroup label="Armor class">
+                <option value="ac:asc">AC: low to high</option>
+                <option value="ac:desc">AC: high to low</option>
+              </optgroup>
+            </select>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -158,7 +219,7 @@ export default function FilterPanel({
             aria-controls="filter-panel-expanded"
             className="btn-secondary px-3 text-sm"
           >
-            {expanded ? 'Less Filters' : 'More Filters'}
+            {expanded ? 'Fewer filters' : 'More filters'}
             {activeFilterCount > 0 && (
               <span className="ml-1 bg-[var(--steel-950)] text-[var(--bronze)] font-bold rounded-full px-1.5 text-xs">
                 {activeFilterCount}
@@ -168,7 +229,10 @@ export default function FilterPanel({
           {activeFilterCount > 0 && (
             <button
               type="button"
-              onClick={() => onChange(hideSort ? {} : { sortBy: defaultSortBy })}
+              onClick={() => onChange(hideSort ? {} : {
+                sortBy: filter.sortBy ?? defaultSortBy,
+                sortDir: filter.sortDir,
+              })}
               className="btn-ghost px-2 text-sm"
             >
               Clear
@@ -229,35 +293,6 @@ export default function FilterPanel({
             </label>
           </div>
 
-          {!hideSort && (
-            <div className="flex items-end gap-3 xl:col-span-2">
-              <div>
-                <label htmlFor="filter-sort-by" className="field-label">Sort by</label>
-                <select
-                  id="filter-sort-by"
-                  value={filter.sortBy ?? defaultSortBy}
-                  onChange={e => set('sortBy', e.target.value as MonsterFilter['sortBy'])}
-                >
-                  <option value="family">Related monsters</option>
-                  <option value="name">Name</option>
-                  <option value="cr">Challenge Rating</option>
-                  <option value="hp">Hit Points</option>
-                  <option value="ac">Armor Class</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="filter-sort-dir" className="field-label">Direction</label>
-                <select
-                  id="filter-sort-dir"
-                  value={filter.sortDir ?? 'asc'}
-                  onChange={e => set('sortDir', e.target.value as 'asc' | 'desc')}
-                >
-                  <option value="asc">Ascending</option>
-                  <option value="desc">Descending</option>
-                </select>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>
