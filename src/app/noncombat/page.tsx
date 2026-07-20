@@ -1,7 +1,19 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  BookOpen,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  FileJson,
+  FileText,
+  Share2,
+  SlidersHorizontal,
+  Sparkles,
+  UserRound,
+  Users,
+} from 'lucide-react';
 import { generateNoncombat, getNoncombatKinds } from '@/lib/noncombat/generate';
 import type { NoncombatKind, NoncombatResult } from '@/lib/noncombat/generate';
 import { THEME_OPTIONS, TONE_OPTIONS, TIME_OPTIONS } from '@/lib/noncombat/theming';
@@ -17,6 +29,13 @@ import ResetGeneratorButton from '@/components/ResetGeneratorButton';
 import ToolPageHeader from '@/components/ToolPageHeader';
 
 const DIFFICULTIES: Difficulty[] = ['Easy', 'Medium', 'Hard'];
+const PUZZLE_KINDS = new Set<NoncombatKind>(['logic', 'word', 'physical', 'minigame', 'environmental']);
+
+function difficultyStatusClass(difficulty: Difficulty): string {
+  if (difficulty === 'Easy') return 'status-readout-success';
+  if (difficulty === 'Medium') return 'status-readout-warning';
+  return 'status-readout-danger';
+}
 
 // ─── Share link ───────────────────────────────────────────────────
 // Serializes exactly the levers a shared link needs to reproduce the
@@ -396,6 +415,8 @@ function NoncombatBuilder() {
     URL.revokeObjectURL(url);
   }
 
+  const selectedKindLabel = kinds.find(option => option.value === kind)?.label ?? 'Any puzzle or challenge';
+
   return (
     <div className="animate-fade-in">
       <ToolPageHeader
@@ -406,473 +427,694 @@ function NoncombatBuilder() {
         {statusMessage}
       </p>
 
-      {/* Controls */}
-      <div className="card panel-accent mb-6 print:hidden">
-        <div className="mb-5">
-          <p className="micro-label">Scene setup</p>
-          <h2 className="mt-1 text-xl">Set the pressure, tone, and pace</h2>
-        </div>
-        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          <div>
-            <label htmlFor="noncombat-kind" className="micro-label block mb-1">Kind</label>
-            <select id="noncombat-kind" value={kind} onChange={e => setKind(e.target.value as NoncombatKind | '')} className="w-full">
-              <option value="">Any</option>
-              {kinds.map(k => <option key={k.value} value={k.value}>{k.label}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="noncombat-difficulty" className="micro-label block mb-1">Difficulty</label>
-            <select id="noncombat-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value as Difficulty | '')} className="w-full">
-              <option value="">Any</option>
-              {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="noncombat-party-level" className="micro-label block mb-1">Party Level</label>
-            <input
-              id="noncombat-party-level"
-              type="number"
-              min={1}
-              max={20}
-              step={1}
-              inputMode="numeric"
-              value={partyLevelInput}
-              onChange={e => handlePartyLevelInputChange(e.target.value)}
-              aria-invalid={partyLevelValidation.error ? true : undefined}
-              aria-describedby={partyLevelValidation.error ? 'noncombat-party-level-error' : undefined}
-              className="w-full"
-            />
-            {partyLevelValidation.error && (
-              <p id="noncombat-party-level-error" className="mt-1 text-xs text-[var(--accent-danger-light)]" role="alert">
-                {partyLevelValidation.error}
+      {/* Step 1: establish the scene brief. */}
+      <form
+        className="workflow-shell mb-6 print:hidden"
+        aria-labelledby="noncombat-setup-heading"
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleGenerate();
+        }}
+      >
+        <header className="workflow-header">
+          <div className="workflow-title">
+            <span className="workflow-step" aria-hidden="true">1</span>
+            <div>
+              <p className="micro-label">Build the scene</p>
+              <h2 id="noncombat-setup-heading" className="mt-1 text-2xl">Shape the challenge</h2>
+              <p className="mt-1 max-w-2xl text-sm text-[var(--text-2)]">
+                Set the party, pressure, and table time. Choose a specific format or leave it open for a seeded surprise.
               </p>
-            )}
+            </div>
           </div>
-          <div>
-            <label htmlFor="noncombat-party-size" className="micro-label block mb-1">Party Size</label>
-            <input
-              id="noncombat-party-size"
-              type="number"
-              min={1}
-              max={8}
-              step={1}
-              inputMode="numeric"
-              value={partySizeInput}
-              onChange={e => handlePartySizeInputChange(e.target.value)}
-              aria-invalid={partySizeValidation.error ? true : undefined}
-              aria-describedby={partySizeValidation.error ? 'noncombat-party-size-error' : undefined}
-              className="w-full"
-            />
-            {partySizeValidation.error && (
-              <p id="noncombat-party-size-error" className="mt-1 text-xs text-[var(--accent-danger-light)]" role="alert">
-                {partySizeValidation.error}
-              </p>
-            )}
+          <div className="workflow-context" role="status">
+            <span className="micro-label">Current brief</span>
+            <strong>
+              {partyInputsValid
+                ? `${selectedKindLabel} · ${difficulty || 'Any difficulty'} · ${partySize} level-${partyLevel} heroes`
+                : 'Party details need attention'}
+            </strong>
           </div>
-          <div>
-            <label htmlFor="noncombat-theme" className="micro-label block mb-1">Theme</label>
-            <select id="noncombat-theme" value={theme} onChange={e => setTheme(e.target.value as ThemeChoice)} className="w-full">
-              {THEME_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="noncombat-tone" className="micro-label block mb-1">Tone</label>
-            <select id="noncombat-tone" value={tone} onChange={e => setTone(e.target.value as Tone)} className="w-full">
-              {TONE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="noncombat-time" className="micro-label block mb-1">Time Budget</label>
-            <select id="noncombat-time" value={timeBudget} onChange={e => setTimeBudget(e.target.value as TimeBudget)} className="w-full">
-              {TIME_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-          </div>
-        </div>
-        {/* Kind quick-cards */}
-        <div
-          className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4"
-          role="group"
-          aria-label="Generate by scene kind"
-        >
-          {kinds.map(k => (
-            <button key={k.value} type="button" onClick={() => { setKind(k.value); handleGenerate(undefined, k.value); }}
-              aria-pressed={kind === k.value}
-              className={`card-interactive p-3 text-left text-xs ${kind === k.value ? 'border-[var(--bronze)] ring-1 ring-[var(--bronze)]' : ''}`}>
-              <div className="font-bold text-[var(--text-1)]">{k.label}</div>
-              <div className="text-[var(--text-2)]">{k.description}</div>
-            </button>
-          ))}
-        </div>
-        <div className="flex flex-wrap items-center gap-3 border-t border-[var(--line-subtle)] pt-4">
-          <button type="button" onClick={() => handleGenerate()} className="btn-primary text-lg">
-            {result ? 'Generate a New Scene' : 'Generate Scene'}
-          </button>
-          <ResetGeneratorButton onReset={handleReset} label="Reset Generator" />
-          {result && (
-            <>
-              <button type="button" onClick={() => handleGenerate()} className="btn-secondary">Regenerate</button>
-              <button type="button" onClick={handleExport} className="btn-secondary">Export Markdown</button>
-              <button type="button" onClick={handleCopyLink} className="btn-secondary">
-                {linkCopied ? 'Copied ✓' : 'Share Link'}
-              </button>
-              <PrintButton label={result.resultKind === 'puzzle' ? 'Print Puzzle' : 'Print Challenge'} />
-            </>
-          )}
-        </div>
-      </div>
+        </header>
 
-      {/* Result Display */}
-      {result && (
-        <section
-          aria-labelledby="noncombat-result-title"
-          className="space-y-4 animate-fade-in"
-        >
-          {/* Shared header */}
-          <div className="card">
-            <div className="mb-2 flex flex-col items-start justify-between gap-3 sm:flex-row">
-              <h2
-                id="noncombat-result-title"
-                ref={resultRef}
-                tabIndex={-1}
-                className="scroll-mt-24 text-2xl"
-              >
-                {result.name}
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                <span className={`px-3 py-1 rounded-full text-xs self-center ${
-                  result.difficulty === 'Easy' ? 'badge-easy' : result.difficulty === 'Medium' ? 'badge-medium' : 'badge-hard'
-                }`}>{result.difficulty}</span>
-                <span className="px-3 py-1 rounded-full text-sm bg-[var(--steel-800)] text-[var(--text-2)]">
-                  {kinds.find(k => k.value === result.kind)?.label}
+        <div className="setup-grid">
+          <section className="setup-group" aria-labelledby="noncombat-party-heading">
+            <div className="setup-group-heading">
+              <span className="setup-group-icon" aria-hidden="true"><Users size={18} /></span>
+              <div>
+                <h3 id="noncombat-party-heading" className="text-base">Party</h3>
+                <p>Who will face this scene?</p>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="noncombat-party-size" className="field-label">Heroes</label>
+                <input
+                  id="noncombat-party-size"
+                  type="number"
+                  min={1}
+                  max={8}
+                  step={1}
+                  inputMode="numeric"
+                  value={partySizeInput}
+                  onChange={e => handlePartySizeInputChange(e.target.value)}
+                  aria-invalid={partySizeValidation.error ? true : undefined}
+                  aria-describedby={partySizeValidation.error ? 'noncombat-party-size-error' : 'noncombat-party-size-hint'}
+                  className="w-full"
+                />
+                <p id="noncombat-party-size-hint" className="field-hint">1–8 characters</p>
+                {partySizeValidation.error && (
+                  <p id="noncombat-party-size-error" className="field-error" role="alert">
+                    {partySizeValidation.error}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="noncombat-party-level" className="field-label">Average level</label>
+                <input
+                  id="noncombat-party-level"
+                  type="number"
+                  min={1}
+                  max={20}
+                  step={1}
+                  inputMode="numeric"
+                  value={partyLevelInput}
+                  onChange={e => handlePartyLevelInputChange(e.target.value)}
+                  aria-invalid={partyLevelValidation.error ? true : undefined}
+                  aria-describedby={partyLevelValidation.error ? 'noncombat-party-level-error' : 'noncombat-party-level-hint'}
+                  className="w-full"
+                />
+                <p id="noncombat-party-level-hint" className="field-hint">Level 1–20</p>
+                {partyLevelValidation.error && (
+                  <p id="noncombat-party-level-error" className="field-error" role="alert">
+                    {partyLevelValidation.error}
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className="setup-group" aria-labelledby="noncombat-brief-heading">
+            <div className="setup-group-heading">
+              <span className="setup-group-icon" aria-hidden="true"><SlidersHorizontal size={18} /></span>
+              <div>
+                <h3 id="noncombat-brief-heading" className="text-base">Scene brief</h3>
+                <p>What should happen at the table?</p>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="noncombat-kind" className="field-label">Scene format</label>
+                <select id="noncombat-kind" value={kind} onChange={e => setKind(e.target.value as NoncombatKind | '')} className="w-full">
+                  <option value="">Any puzzle or challenge</option>
+                  <optgroup label="Puzzles">
+                    {kinds.filter(option => PUZZLE_KINDS.has(option.value)).map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Challenges">
+                    {kinds.filter(option => !PUZZLE_KINDS.has(option.value)).map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </optgroup>
+                </select>
+                <p className="field-hint">Leave open to draw from every verified format.</p>
+              </div>
+              <div>
+                <label htmlFor="noncombat-difficulty" className="field-label">Target difficulty</label>
+                <select id="noncombat-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value as Difficulty | '')} className="w-full">
+                  <option value="">Any difficulty</option>
+                  {DIFFICULTIES.map(option => <option key={option} value={option}>{option}</option>)}
+                </select>
+                <p className="field-hint">Sets check DCs, complexity, and consequences.</p>
+              </div>
+              <div className="sm:col-span-2">
+                <label htmlFor="noncombat-time" className="field-label">Table time</label>
+                <select id="noncombat-time" value={timeBudget} onChange={e => setTimeBudget(e.target.value as TimeBudget)} className="w-full">
+                  {TIME_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                </select>
+                <p className="field-hint">Controls the number of stages and expected running time.</p>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div className="optional-controls">
+          <div className="optional-controls-heading">
+            <div>
+              <p className="micro-label">Optional tools</p>
+              <p className="mt-1 text-sm text-[var(--text-2)]">Browse the formats or add a stronger narrative direction.</p>
+            </div>
+          </div>
+
+          <details className="disclosure-panel disclosure-panel-flush">
+            <summary>
+              <span className="disclosure-summary-copy">
+                <BookOpen size={17} aria-hidden="true" />
+                <span>
+                  <strong>Browse scene formats</strong>
+                  <small>{kind ? `${selectedKindLabel} selected` : 'Compare puzzle and challenge structures'}</small>
                 </span>
+              </span>
+              <ChevronDown className="disclosure-chevron" size={18} aria-hidden="true" />
+            </summary>
+            <div className="grid gap-5 border-t border-[var(--line-subtle)] p-4 lg:grid-cols-2">
+              {([
+                { label: 'Puzzle formats', puzzle: true },
+                { label: 'Challenge formats', puzzle: false },
+              ] as const).map(group => (
+                <section key={group.label} aria-labelledby={`noncombat-${group.puzzle ? 'puzzle' : 'challenge'}-formats-heading`}>
+                  <h3 id={`noncombat-${group.puzzle ? 'puzzle' : 'challenge'}-formats-heading`} className="mb-2 text-sm font-semibold text-[var(--text-2)]">
+                    {group.label}
+                  </h3>
+                  <div className="space-y-2">
+                    {kinds.filter(option => PUZZLE_KINDS.has(option.value) === group.puzzle).map(option => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setKind(option.value)}
+                        aria-pressed={kind === option.value}
+                        className={`selection-card ${kind === option.value ? 'border-[var(--bronze)] bg-[var(--bronze-wash)]' : ''}`}
+                      >
+                        <span className="block font-semibold text-[var(--text-1)]">{option.label}</span>
+                        <span className="mt-1 block text-xs leading-relaxed text-[var(--text-2)]">{option.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </details>
+
+          <details className="disclosure-panel disclosure-panel-flush mt-3">
+            <summary>
+              <span className="disclosure-summary-copy">
+                <Sparkles size={17} aria-hidden="true" />
+                <span>
+                  <strong>Theme &amp; tone</strong>
+                  <small>Flavor the scene without changing its basic structure</small>
+                </span>
+              </span>
+              <ChevronDown className="disclosure-chevron" size={18} aria-hidden="true" />
+            </summary>
+            <div className="grid gap-3 border-t border-[var(--line-subtle)] p-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="noncombat-theme" className="field-label">Theme</label>
+                <select id="noncombat-theme" value={theme} onChange={e => setTheme(e.target.value as ThemeChoice)} className="w-full">
+                  {THEME_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                </select>
+                <p className="field-hint">Sets the setting, imagery, and names.</p>
+              </div>
+              <div>
+                <label htmlFor="noncombat-tone" className="field-label">Tone</label>
+                <select id="noncombat-tone" value={tone} onChange={e => setTone(e.target.value as Tone)} className="w-full">
+                  {TONE_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                </select>
+                <p className="field-hint">Adjusts how the generated prose feels.</p>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="micro-label">
-                {THEME_OPTIONS.find(o => o.value === result.theme)?.label ?? result.theme}
+          </details>
+        </div>
+
+        <footer className="workflow-action-bar">
+          <div className="workflow-primary-action">
+            <button type="submit" className="btn-primary text-base">
+              <Sparkles size={18} aria-hidden="true" />
+              {result ? 'Generate a new scene' : 'Generate scene'}
+            </button>
+            <p>Creates a complete, seeded scene from this brief.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <ResetGeneratorButton onReset={handleReset} label="Reset" />
+          </div>
+        </footer>
+      </form>
+
+      {/* Recent scenes stay available without becoming another page-level card wall. */}
+      {history.length > 0 && !(history.length === 1 && result?.id === history[0].id) && (
+        <details className="disclosure-panel mb-6 print:hidden">
+          <summary>
+            <span className="disclosure-summary-copy">
+              <BookOpen size={17} aria-hidden="true" />
+              <span>
+                <strong>Recent puzzles &amp; challenges</strong>
+                <small>Return to one of the last {history.length} generated scenes</small>
               </span>
-              <span className="text-xs text-[var(--text-2)]">
-                · Party {result.partySize} × level {result.partyLevel}
-              </span>
+            </span>
+            <ChevronDown className="disclosure-chevron" size={18} aria-hidden="true" />
+          </summary>
+          <div className="grid gap-2 border-t border-[var(--line-subtle)] p-4 sm:grid-cols-2 lg:grid-cols-3">
+            {history.map(historyResult => (
               <button
+                key={historyResult.id}
                 type="button"
-                onClick={() => handleReroll()}
-                className="min-h-11 rounded-full bg-[var(--steel-800)] px-3 py-1 text-xs text-[var(--text-2)] transition-colors hover:text-[var(--bronze)]"
-                aria-label={`Reroll ${result.name} with a fresh seed and the same settings`}
-                title="Reroll with a fresh seed, same levers"
+                onClick={() => handleLoadHistory(historyResult)}
+                aria-current={result?.id === historyResult.id ? 'true' : undefined}
+                className={`selection-card ${result?.id === historyResult.id ? 'border-[var(--bronze)] bg-[var(--bronze-wash)]' : ''}`}
               >
-                Seed: {result.seed}
+                <span className="block font-semibold text-[var(--text-1)]">{historyResult.name}</span>
+                <span className="mt-1 block text-xs text-[var(--text-2)]">
+                  {kinds.find(option => option.value === historyResult.kind)?.label} · {historyResult.difficulty} · {THEME_OPTIONS.find(option => option.value === historyResult.theme)?.label ?? historyResult.theme} · {TIME_OPTIONS.find(option => option.value === historyResult.timeBudget)?.label ?? historyResult.timeBudget}
+                </span>
               </button>
-            </div>
+            ))}
           </div>
-
-          {/* Player view — spoiler-safe surface for the table */}
-          <div className="card print:hidden">
-            <div className="flex flex-wrap items-center gap-3">
-              <h3 className="text-lg mr-auto">Player View</h3>
-              <button type="button" onClick={handleOpenPlayerView} className="btn-secondary">Open Player View</button>
-              <button type="button" onClick={handleCopyPlayerMarkdown} className="btn-secondary">Copy Player Markdown</button>
-              <button type="button" onClick={handleDownloadPlayerJson} className="btn-secondary">Download JSON</button>
-            </div>
-            <p className="mt-2 text-xs text-[var(--text-2)]">
-              Read-aloud and handout only — open it on a shared screen or send the link to your players. Print lives on the player view.
-            </p>
-          </div>
-
-          {result.resultKind === 'puzzle' ? (
-            <>
-              {/* DM Brief */}
-              <div className="card border-l-4 border-l-[var(--accent-danger)]">
-                <h3 className="text-lg mb-2">DM Brief (eyes only) · ~{result.estimatedMinutes} min</h3>
-                <p className="text-sm">{result.dmBrief}</p>
-                {result.dmAdjudication && (
-                  <div className="mt-3">
-                    <h4 className="text-sm font-bold text-[var(--bronze)]">Adjudication</h4>
-                    <p className="text-sm">{result.dmAdjudication}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Read Aloud */}
-              <div className="card border-l-4 border-l-[var(--bronze)]">
-                <h3 className="text-lg mb-2">Read Aloud</h3>
-                <p className="text-sm italic whitespace-pre-line">{result.readAloud}</p>
-              </div>
-
-              {/* Player Handout */}
-              {result.handout && <PuzzleHandout spec={result.handout} />}
-
-              {/* Stages */}
-              {result.stages && result.stages.length > 0 && (
-                <>
-                  {result.stages.map((stage, i) => (
-                    <div key={i} className="card border-l-4 border-l-[var(--bronze)]">
-                      <h3 className="text-lg mb-2">{stage.title}</h3>
-                      <p className="text-sm whitespace-pre-line">{stage.text}</p>
-                    </div>
-                  ))}
-                </>
-              )}
-
-              {/* Hints */}
-              <div className="card print:hidden">
-                <h3 className="text-lg mb-2">Hints (reveal as needed)</h3>
-                <div className="space-y-2">
-                  {result.hints.map((hint, i) => (
-                    <HintReveal key={`${result.id}-${i}`} index={i + 1} hint={hint} />
-                  ))}
-                </div>
-              </div>
-
-              {/* Solution (hidden by default) */}
-              <div className="card print:hidden">
-                <button
-                  type="button"
-                  onClick={() => setShowSolution(!showSolution)}
-                  aria-expanded={showSolution}
-                  aria-controls="noncombat-solution"
-                  className="flex min-h-11 items-center gap-2 text-lg font-bold text-[var(--bronze)]"
-                >
-                  {showSolution
-                    ? <ChevronDown size={18} aria-hidden="true" />
-                    : <ChevronRight size={18} aria-hidden="true" />} Solution
-                </button>
-                {showSolution && (
-                  <div id="noncombat-solution" className="mt-3 space-y-3 animate-fade-in">
-                    <div>
-                      <h4 className="text-sm">Answer</h4>
-                      <p className="text-sm">{result.solution}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm">On Failure</h4>
-                      <p className="text-sm">{result.failureConsequence}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm">Reward</h4>
-                      <p className="text-sm">{result.reward}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Print-only: everything expanded for the DM's paper copy */}
-              <div className="hidden print:block space-y-4">
-                <div className="card">
-                  <h3 className="text-lg mb-2">Hints</h3>
-                  <ol className="text-sm list-decimal list-inside space-y-1">
-                    {result.hints.map((hint, i) => (
-                      <li key={i}>{hint}</li>
-                    ))}
-                  </ol>
-                </div>
-                <div className="card">
-                  <h3 className="text-lg mb-2">Solution</h3>
-                  <p className="text-sm">{result.solution}</p>
-                  <h4 className="text-sm mt-3">On Failure</h4>
-                  <p className="text-sm">{result.failureConsequence}</p>
-                  <h4 className="text-sm mt-3">Reward</h4>
-                  <p className="text-sm">{result.reward}</p>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Read Aloud */}
-              <div className="card border-l-4 border-l-[var(--bronze)]">
-                <h3 className="text-lg mb-2">Read Aloud</h3>
-                <p className="text-sm italic">{result.readAloud}</p>
-              </div>
-
-              {/* Situation & Stakes */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="card">
-                  <h3 className="text-lg mb-2">Situation</h3>
-                  <p className="text-sm whitespace-pre-line">{result.situation}</p>
-                </div>
-                <div className="card">
-                  <h3 className="text-lg mb-2">Stakes</h3>
-                  <p className="text-sm whitespace-pre-line">{result.stakes}</p>
-                </div>
-              </div>
-
-              {/* Skill Checks */}
-              <div className="card">
-                <h3 className="text-lg mb-3">Skill Checks</h3>
-                <div className="space-y-3">
-                  {result.skillChecks.map((sc, i) => (
-                    <div key={i} className="p-3 rounded bg-[var(--steel-950)]">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-bold text-[var(--text-1)]">{sc.skill}</span>
-                        <span className="text-sm font-bold text-[var(--bronze)]">DC {sc.dc}</span>
-                      </div>
-                      <div className="grid sm:grid-cols-2 gap-2 text-xs">
-                        <div><span className="text-[var(--difficulty-easy)] font-bold">Success:</span> {sc.onSuccess}</div>
-                        <div><span className="text-[var(--accent-danger)] font-bold">Failure:</span> {sc.onFailure}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Challenge Structure */}
-              {result.structure && (
-                <div className="card">
-                  <h3 className="text-lg mb-3">Challenge Structure</h3>
-                  <p className="text-sm mb-3">
-                    {result.structure.successesNeeded} successes needed · {result.structure.failuresAllowed} failures allowed
-                  </p>
-                  <div className="space-y-2">
-                    {result.structure.phases.map((phase, i) => (
-                      <div key={i} className="p-3 rounded bg-[var(--steel-950)] text-sm">
-                        <span className="font-bold text-[var(--text-1)]">{phase.title}</span>
-                        {' · '}{phase.successes} success{phase.successes === 1 ? '' : 'es'}{' · '}{phase.primarySkills.join(', ')}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Stages */}
-              {result.stages && result.stages.length > 0 && (
-                <>
-                  {result.stages.map((stage, i) => (
-                    <div key={i} className="card border-l-4 border-l-[var(--bronze)]">
-                      <h3 className="text-lg mb-2">{stage.title}</h3>
-                      <p className="text-sm whitespace-pre-line">{stage.text}</p>
-                    </div>
-                  ))}
-                </>
-              )}
-
-              {/* Attitude Track */}
-              {result.attitudeTrack && (
-                <div className="card">
-                  <h3 className="text-lg mb-3">Attitude Track</h3>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="micro-label">Starting attitude</span>
-                    <span className="px-3 py-1 rounded-full text-xs bg-[var(--steel-800)] text-[var(--text-2)]">{result.attitudeTrack.start}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {result.attitudeTrack.stages.map((stage, i) => (
-                      <div key={i} className="p-3 rounded bg-[var(--steel-950)] text-sm">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold text-[var(--text-1)]">{stage.attitude}</span>
-                          <span className="text-xs font-bold text-[var(--bronze)]">Influence DC {stage.influenceDc}</span>
-                        </div>
-                        <p className="text-xs mb-1"><span className="text-[var(--text-2)] font-bold">Unlocks:</span> {stage.unlocks}</p>
-                        <div className="grid sm:grid-cols-2 gap-2 text-xs">
-                          <div><span className="text-[var(--difficulty-easy)] font-bold">Shift up:</span> {stage.shiftUp}</div>
-                          <div><span className="text-[var(--accent-danger)] font-bold">Shift down:</span> {stage.shiftDown}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Chase Rounds */}
-              {result.chase && (
-                <div className="card">
-                  <h3 className="text-lg mb-3">Chase Rounds</h3>
-                  <p className="text-sm mb-3">{result.chase.rounds} rounds</p>
-                  <div className="space-y-2 mb-3">
-                    {result.chase.complications.map((c, i) => (
-                      <div key={i} className="p-3 rounded bg-[var(--steel-950)] text-sm">
-                        <span className="font-bold text-[var(--bronze)]">Round {c.round}</span>{' · '}{c.text}{' · '}<span className="text-xs text-[var(--text-2)]">{c.check}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-2 text-xs">
-                    <div><span className="text-[var(--difficulty-easy)] font-bold">Escape:</span> {result.chase.escapeCondition}</div>
-                    <div><span className="text-[var(--accent-danger)] font-bold">Catch:</span> {result.chase.catchCondition}</div>
-                  </div>
-                </div>
-              )}
-
-              {/* Clue Web (DM eyes only) */}
-              {result.clueWeb && (
-                <div className="card border-l-4 border-l-[var(--accent-danger)]">
-                  <h3 className="text-lg mb-2">Clue Web (eyes only)</h3>
-                  <p className="text-sm mb-3">
-                    <span className="font-bold text-[var(--bronze)]">Truth:</span> {result.clueWeb.truth.culprit} — {result.clueWeb.truth.method}, motive: {result.clueWeb.truth.motive}
-                  </p>
-                  <div className="space-y-2 mb-3">
-                    {result.clueWeb.nodes.map((node, i) => (
-                      <div key={i} className="p-3 rounded bg-[var(--steel-950)] text-sm">
-                        <div className="font-bold text-[var(--text-1)] mb-1">{node.revelation}</div>
-                        <ul className="text-xs space-y-1">
-                          {node.clues.map((clue, j) => (
-                            <li key={j}><span className="uppercase tracking-wide text-[var(--text-2)]">[{clue.vector}]</span> {clue.text} <span className="text-[var(--text-2)]">→ {clue.pointsTo}</span></li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs">
-                    <span className="font-bold text-[var(--text-2)]">Red herring:</span> {result.clueWeb.redHerring.text}{' '}
-                    <span className="font-bold text-[var(--text-2)]">Disconfirmed by:</span> {result.clueWeb.redHerring.disconfirmedBy}
-                  </p>
-                </div>
-              )}
-
-              {/* Player Handout */}
-              {result.handout && <PuzzleHandout spec={result.handout} />}
-
-              {/* Complication */}
-              <div className="card border-l-4 border-l-[var(--accent-danger)]">
-                <h3 className="text-lg mb-2">Complication</h3>
-                <p className="text-sm">{result.complication}</p>
-              </div>
-
-              {/* Outcomes */}
-              <div className="card">
-                <h3 className="text-lg mb-3">Possible Outcomes</h3>
-                <div className="space-y-2">
-                  {result.outcomes.map((o, i) => (
-                    <div key={i} className="p-3 rounded bg-[var(--steel-950)]">
-                      <span className="font-bold text-[var(--bronze)]">{o.label}:</span>{' '}
-                      <span className="text-sm">{o.description}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Reward */}
-              <div className="card border-l-4 border-l-[var(--difficulty-easy)]">
-                <h3 className="text-lg mb-2">Reward</h3>
-                <p className="text-sm">{result.reward}</p>
-              </div>
-            </>
-          )}
-        </section>
+        </details>
       )}
 
       {!result && (
         <div className="empty-state print:hidden">
-          <p className="micro-label">Scene preview</p>
+          <p className="micro-label">Scene workspace</p>
           <h2 className="mt-2 text-xl">Give the party something worth solving</h2>
           <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--text-3)]">
-            Choose a scene type for an instant themed result, or leave the kind open and let the seeded generator surprise you.
+            Generate a specific format above, or leave it open and let the seeded generator surprise you.
           </p>
         </div>
       )}
 
-      {/* History (persists across visits) */}
-      {history.length > 0 && !(history.length === 1 && result?.id === history[0].id) && (
-        <div className="mt-6 print:hidden">
-          <h2 className="text-lg mb-3">Recent Puzzles &amp; Challenges</h2>
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {history.map(h => (
-              <button key={h.id} type="button" onClick={() => handleLoadHistory(h)}
-                aria-pressed={result?.id === h.id}
-                className={`card-interactive p-4 text-left text-sm ${result?.id === h.id ? 'border-[var(--bronze)]' : ''}`}>
-                <div className="font-bold text-[var(--text-1)]">{h.name}</div>
-                <div className="text-xs text-[var(--text-2)]">
-                  {kinds.find(k => k.value === h.kind)?.label} · {h.difficulty} · {THEME_OPTIONS.find(o => o.value === h.theme)?.label ?? h.theme} · {TIME_OPTIONS.find(o => o.value === h.timeBudget)?.label ?? h.timeBudget}
+      {result && (
+        <div className="space-y-6 animate-fade-in">
+          {/* Step 2: review the scene before presenting it. */}
+          <section className="card workflow-review-card" aria-labelledby="noncombat-result-title">
+            <header className="workflow-review-header">
+              <div className="workflow-title min-w-0">
+                <span className="workflow-step" aria-hidden="true">2</span>
+                <div className="min-w-0">
+                  <p className="micro-label">Review the scene</p>
+                  <h2
+                    id="noncombat-result-title"
+                    ref={resultRef}
+                    tabIndex={-1}
+                    className="mt-1 scroll-mt-24 text-2xl sm:text-3xl"
+                  >
+                    {result.name}
+                  </h2>
                 </div>
-              </button>
-            ))}
-          </div>
+              </div>
+              <div className="workflow-review-actions print:hidden">
+                <button type="button" onClick={handleReroll} className="btn-secondary text-sm">
+                  <Sparkles size={16} aria-hidden="true" />
+                  Regenerate with a new seed
+                </button>
+              </div>
+            </header>
+
+            <div className="workflow-review-overview">
+              <div className="difficulty-readout">
+                <span className="meta-label">Difficulty</span>
+                <span className={`status-readout mt-2 ${difficultyStatusClass(result.difficulty)}`}>
+                  <span className="status-readout-dot" aria-hidden="true" />
+                  {result.difficulty}
+                </span>
+                <p>The generated checks, complexity, and consequences use this difficulty.</p>
+              </div>
+              <dl className="metric-grid">
+                <div className="metric-item">
+                  <dt>Scene format</dt>
+                  <dd>{kinds.find(option => option.value === result.kind)?.label ?? result.kind}</dd>
+                </div>
+                <div className="metric-item">
+                  <dt>Party</dt>
+                  <dd>{result.partySize} × level {result.partyLevel}</dd>
+                </div>
+                <div className="metric-item">
+                  <dt>Table time</dt>
+                  <dd>{result.resultKind === 'puzzle' ? `~${result.estimatedMinutes} min` : (TIME_OPTIONS.find(option => option.value === result.timeBudget)?.label ?? result.timeBudget)}</dd>
+                </div>
+                <div className="metric-item">
+                  <dt>Theme</dt>
+                  <dd>{THEME_OPTIONS.find(option => option.value === result.theme)?.label ?? result.theme}</dd>
+                </div>
+                <div className="metric-item">
+                  <dt>Tone</dt>
+                  <dd>{TONE_OPTIONS.find(option => option.value === result.tone)?.label ?? result.tone}</dd>
+                </div>
+                <div className="metric-item">
+                  <dt>Seed</dt>
+                  <dd>{result.seed}</dd>
+                </div>
+              </dl>
+            </div>
+          </section>
+
+          <section className="content-panel" aria-labelledby="noncombat-preparation-heading">
+            <header className="content-panel-heading">
+              <div>
+                <p className="micro-label">DM preparation</p>
+                <h2 id="noncombat-preparation-heading" className="mt-1 text-xl">Understand the scene</h2>
+              </div>
+              <p>Review the premise and player-facing material before bringing it to the table.</p>
+            </header>
+
+            {result.resultKind === 'puzzle' ? (
+              <div className="divide-y divide-[var(--line-subtle)]">
+                <div className="grid gap-5 p-4 lg:grid-cols-2">
+                  <section aria-labelledby="noncombat-dm-brief-heading">
+                    <h3 id="noncombat-dm-brief-heading" className="text-lg">DM brief <span className="text-sm text-[var(--accent-danger-light)]">(eyes only)</span></h3>
+                    <p className="mt-2 text-sm whitespace-pre-line">{result.dmBrief}</p>
+                    {result.dmAdjudication && (
+                      <div className="surface-inset mt-4 p-3">
+                        <h4 className="text-sm font-bold text-[var(--bronze)]">Adjudication</h4>
+                        <p className="mt-1 text-sm">{result.dmAdjudication}</p>
+                      </div>
+                    )}
+                  </section>
+                  <section aria-labelledby="noncombat-read-aloud-heading">
+                    <h3 id="noncombat-read-aloud-heading" className="text-lg">Read aloud</h3>
+                    <p className="mt-2 text-sm italic whitespace-pre-line">{result.readAloud}</p>
+                  </section>
+                </div>
+                {result.handout && (
+                  <div className="p-4">
+                    <PuzzleHandout spec={result.handout} embedded />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="divide-y divide-[var(--line-subtle)]">
+                <section className="p-4" aria-labelledby="noncombat-read-aloud-heading">
+                  <h3 id="noncombat-read-aloud-heading" className="text-lg">Read aloud</h3>
+                  <p className="mt-2 text-sm italic whitespace-pre-line">{result.readAloud}</p>
+                </section>
+                <div className="grid gap-5 p-4 md:grid-cols-2">
+                  <section aria-labelledby="noncombat-situation-heading">
+                    <h3 id="noncombat-situation-heading" className="text-lg">Situation</h3>
+                    <p className="mt-2 text-sm whitespace-pre-line">{result.situation}</p>
+                  </section>
+                  <section aria-labelledby="noncombat-stakes-heading">
+                    <h3 id="noncombat-stakes-heading" className="text-lg">Stakes</h3>
+                    <p className="mt-2 text-sm whitespace-pre-line">{result.stakes}</p>
+                  </section>
+                </div>
+                {result.handout && (
+                  <div className="p-4">
+                    <PuzzleHandout spec={result.handout} embedded />
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+
+          {/* Step 3: present the scene or run it from this screen. */}
+          <section className="next-step-shell" aria-labelledby="noncombat-next-step-heading">
+            <header className="workflow-title print:hidden">
+              <span className="workflow-step" aria-hidden="true">3</span>
+              <div>
+                <p className="micro-label">Take it to the table</p>
+                <h2 id="noncombat-next-step-heading" className="mt-1 text-2xl">Present it or run it here</h2>
+              </div>
+            </header>
+
+            <div className="next-step-grid print:hidden">
+              <article className="next-step-card">
+                <span className="next-step-icon" aria-hidden="true"><UserRound size={20} /></span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg">Present to players</h3>
+                  <p>Open a spoiler-safe view containing only the read-aloud text and player handout. It opens in a new tab.</p>
+                  <div className="mt-4 grid gap-2">
+                    <button type="button" onClick={handleOpenPlayerView} className="btn-primary w-full text-sm sm:w-auto">
+                      <UserRound size={16} aria-hidden="true" />
+                      Open player view
+                    </button>
+                    <details className="action-menu action-menu-flow">
+                      <summary className="btn-secondary text-sm">
+                        <FileText size={16} aria-hidden="true" />
+                        Share, export &amp; print
+                        <ChevronDown size={16} aria-hidden="true" className="action-menu-chevron" />
+                      </summary>
+                      <div className="action-menu-panel">
+                        <p className="micro-label px-3 pb-2">Scene utilities</p>
+                        <div className="grid">
+                          <button type="button" onClick={handleCopyPlayerMarkdown} className="menu-action">
+                            <FileText size={18} aria-hidden="true" />
+                            <span><strong>Player Markdown</strong><small>Copy spoiler-safe handout text</small></span>
+                          </button>
+                          <button type="button" onClick={handleDownloadPlayerJson} className="menu-action">
+                            <FileJson size={18} aria-hidden="true" />
+                            <span><strong>Player JSON</strong><small>Download structured player data</small></span>
+                          </button>
+                          <button type="button" onClick={handleExport} className="menu-action">
+                            <FileText size={18} aria-hidden="true" />
+                            <span><strong>DM Markdown</strong><small>Download the complete scene</small></span>
+                          </button>
+                          <button type="button" onClick={handleCopyLink} className="menu-action">
+                            {linkCopied ? <Check size={18} aria-hidden="true" /> : <Share2 size={18} aria-hidden="true" />}
+                            <span><strong>{linkCopied ? 'Link copied' : 'Copy share link'}</strong><small>Recreate this seeded scene</small></span>
+                          </button>
+                          <PrintButton
+                            label={result.resultKind === 'puzzle' ? 'Print puzzle / save PDF' : 'Print challenge / save PDF'}
+                            variant="menu"
+                            menuDescription="Full DM scene with solutions and outcomes"
+                          />
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                </div>
+              </article>
+
+              <article className="next-step-card">
+                <span className="next-step-icon" aria-hidden="true"><BookOpen size={20} /></span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg">Run from this screen</h3>
+                  <p>
+                    {result.resultKind === 'puzzle'
+                      ? 'Move through stages, reveal hints only when needed, then resolve the answer and consequences.'
+                      : 'Follow the checks and scene structure in play order, then apply the complication and outcomes.'}
+                  </p>
+                  <a href="#noncombat-table-runner" className="btn-primary mt-4 w-full text-sm sm:w-auto">
+                    <BookOpen size={16} aria-hidden="true" />
+                    Open table runner
+                  </a>
+                </div>
+              </article>
+            </div>
+
+            <section id="noncombat-table-runner" className="content-panel mt-5 scroll-mt-24" aria-labelledby="noncombat-runner-heading">
+              <header className="content-panel-heading">
+                <div>
+                  <p className="micro-label">Table runner</p>
+                  <h2 id="noncombat-runner-heading" className="mt-1 text-xl">
+                    {result.resultKind === 'puzzle' ? 'Run the puzzle' : 'Run the challenge'}
+                  </h2>
+                </div>
+                <p>{result.resultKind === 'puzzle' ? 'Reveal information in order and keep the solution concealed.' : 'Use the checks, tracks, and outcomes in play order.'}</p>
+              </header>
+
+              {result.resultKind === 'puzzle' ? (
+                <div className="divide-y divide-[var(--line-subtle)]">
+                  {result.stages && result.stages.length > 0 && (
+                    <section className="p-4" aria-labelledby="noncombat-stages-heading">
+                      <h3 id="noncombat-stages-heading" className="text-lg">Scene stages</h3>
+                      <div className="mt-3 space-y-2">
+                        {result.stages.map((stage, index) => (
+                          <article key={index} className="surface-inset p-3">
+                            <h4 className="text-sm font-bold text-[var(--text-1)]">{stage.title}</h4>
+                            <p className="mt-1 text-sm whitespace-pre-line">{stage.text}</p>
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  <section className="p-4 print:hidden" aria-labelledby="noncombat-hints-heading">
+                    <h3 id="noncombat-hints-heading" className="text-lg">Hints</h3>
+                    <p className="mt-1 text-xs text-[var(--text-3)]">Reveal one at a time when the party stalls.</p>
+                    <div className="mt-2 space-y-2">
+                      {result.hints.map((hint, index) => (
+                        <HintReveal key={`${result.id}-${index}`} index={index + 1} hint={hint} />
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="p-4 print:hidden" aria-labelledby="noncombat-resolution-heading">
+                    <h3 id="noncombat-resolution-heading" className="sr-only">Puzzle resolution</h3>
+                    <button
+                      type="button"
+                      onClick={() => setShowSolution(!showSolution)}
+                      aria-expanded={showSolution}
+                      aria-controls="noncombat-solution"
+                      className="flex min-h-11 items-center gap-2 text-lg font-bold text-[var(--bronze)]"
+                    >
+                      {showSolution
+                        ? <ChevronDown size={18} aria-hidden="true" />
+                        : <ChevronRight size={18} aria-hidden="true" />}
+                      {showSolution ? 'Hide solution & resolution' : 'Reveal solution & resolution'}
+                    </button>
+                    {showSolution && (
+                      <div id="noncombat-solution" className="mt-3 grid gap-3 animate-fade-in md:grid-cols-3">
+                        <div className="surface-inset p-3">
+                          <h4 className="text-sm font-bold text-[var(--text-1)]">Answer</h4>
+                          <p className="mt-1 text-sm">{result.solution}</p>
+                        </div>
+                        <div className="surface-inset p-3">
+                          <h4 className="text-sm font-bold text-[var(--accent-danger-light)]">On failure</h4>
+                          <p className="mt-1 text-sm">{result.failureConsequence}</p>
+                        </div>
+                        <div className="surface-inset p-3">
+                          <h4 className="text-sm font-bold text-[var(--difficulty-easy)]">Reward</h4>
+                          <p className="mt-1 text-sm">{result.reward}</p>
+                        </div>
+                      </div>
+                    )}
+                  </section>
+
+                  <div className="hidden p-4 print:block">
+                    <h3 className="text-lg">Hints</h3>
+                    <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
+                      {result.hints.map((hint, index) => <li key={index}>{hint}</li>)}
+                    </ol>
+                    <h3 className="mt-5 text-lg">Solution</h3>
+                    <p className="mt-1 text-sm">{result.solution}</p>
+                    <h4 className="mt-3 text-sm">On failure</h4>
+                    <p className="text-sm">{result.failureConsequence}</p>
+                    <h4 className="mt-3 text-sm">Reward</h4>
+                    <p className="text-sm">{result.reward}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="divide-y divide-[var(--line-subtle)]">
+                  <section className="p-4" aria-labelledby="noncombat-skill-checks-heading">
+                    <h3 id="noncombat-skill-checks-heading" className="text-lg">1. Call for checks</h3>
+                    <div className="mt-3 space-y-2">
+                      {result.skillChecks.map((skillCheck, index) => (
+                        <article key={index} className="surface-inset p-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h4 className="font-bold text-[var(--text-1)]">{skillCheck.skill}</h4>
+                            <span className="text-sm font-bold text-[var(--bronze)]">DC {skillCheck.dc}</span>
+                          </div>
+                          <div className="mt-2 grid gap-2 text-xs sm:grid-cols-2">
+                            <p><span className="font-bold text-[var(--difficulty-easy)]">Success:</span> {skillCheck.onSuccess}</p>
+                            <p><span className="font-bold text-[var(--accent-danger)]">Failure:</span> {skillCheck.onFailure}</p>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+
+                  {result.structure && (
+                    <section className="p-4" aria-labelledby="noncombat-structure-heading">
+                      <h3 id="noncombat-structure-heading" className="text-lg">Challenge structure</h3>
+                      <p className="mt-1 text-sm">
+                        {result.structure.successesNeeded} successes needed · {result.structure.failuresAllowed} failures allowed
+                      </p>
+                      <div className="mt-3 space-y-2">
+                        {result.structure.phases.map((phase, index) => (
+                          <div key={index} className="surface-inset p-3 text-sm">
+                            <span className="font-bold text-[var(--text-1)]">{phase.title}</span>
+                            {' · '}{phase.successes} success{phase.successes === 1 ? '' : 'es'}{' · '}{phase.primarySkills.join(', ')}
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {result.stages && result.stages.length > 0 && (
+                    <section className="p-4" aria-labelledby="noncombat-challenge-stages-heading">
+                      <h3 id="noncombat-challenge-stages-heading" className="text-lg">Scene stages</h3>
+                      <div className="mt-3 space-y-2">
+                        {result.stages.map((stage, index) => (
+                          <article key={index} className="surface-inset p-3">
+                            <h4 className="text-sm font-bold text-[var(--text-1)]">{stage.title}</h4>
+                            <p className="mt-1 text-sm whitespace-pre-line">{stage.text}</p>
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {result.attitudeTrack && (
+                    <section className="p-4" aria-labelledby="noncombat-attitude-heading">
+                      <h3 id="noncombat-attitude-heading" className="text-lg">Attitude track</h3>
+                      <p className="mt-1 text-sm"><span className="font-bold text-[var(--text-2)]">Starting attitude:</span> {result.attitudeTrack.start}</p>
+                      <div className="mt-3 space-y-2">
+                        {result.attitudeTrack.stages.map((stage, index) => (
+                          <article key={index} className="surface-inset p-3 text-sm">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="font-bold text-[var(--text-1)]">{stage.attitude}</h4>
+                              <span className="text-xs font-bold text-[var(--bronze)]">Influence DC {stage.influenceDc}</span>
+                            </div>
+                            <p className="mt-1 text-xs"><span className="font-bold text-[var(--text-2)]">Unlocks:</span> {stage.unlocks}</p>
+                            <div className="mt-2 grid gap-2 text-xs sm:grid-cols-2">
+                              <p><span className="font-bold text-[var(--difficulty-easy)]">Shift up:</span> {stage.shiftUp}</p>
+                              <p><span className="font-bold text-[var(--accent-danger)]">Shift down:</span> {stage.shiftDown}</p>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {result.chase && (
+                    <section className="p-4" aria-labelledby="noncombat-chase-heading">
+                      <h3 id="noncombat-chase-heading" className="text-lg">Chase plan</h3>
+                      <p className="mt-1 text-sm">Run for {result.chase.rounds} rounds.</p>
+                      <div className="mt-3 space-y-2">
+                        {result.chase.complications.map((complication, index) => (
+                          <article key={index} className="surface-inset p-3 text-sm">
+                            <span className="font-bold text-[var(--bronze)]">Round {complication.round}</span>{' · '}{complication.text}{' · '}
+                            <span className="text-xs text-[var(--text-2)]">{complication.check}</span>
+                          </article>
+                        ))}
+                      </div>
+                      <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
+                        <p><span className="font-bold text-[var(--difficulty-easy)]">Escape:</span> {result.chase.escapeCondition}</p>
+                        <p><span className="font-bold text-[var(--accent-danger)]">Catch:</span> {result.chase.catchCondition}</p>
+                      </div>
+                    </section>
+                  )}
+
+                  {result.clueWeb && (
+                    <section className="p-4" aria-labelledby="noncombat-clue-web-heading">
+                      <h3 id="noncombat-clue-web-heading" className="text-lg">Clue web <span className="text-sm text-[var(--accent-danger-light)]">(eyes only)</span></h3>
+                      <p className="mt-2 text-sm">
+                        <span className="font-bold text-[var(--bronze)]">Truth:</span> {result.clueWeb.truth.culprit} — {result.clueWeb.truth.method}, motive: {result.clueWeb.truth.motive}
+                      </p>
+                      <div className="mt-3 space-y-2">
+                        {result.clueWeb.nodes.map((node, index) => (
+                          <article key={index} className="surface-inset p-3 text-sm">
+                            <h4 className="font-bold text-[var(--text-1)]">{node.revelation}</h4>
+                            <ul className="mt-1 space-y-1 text-xs">
+                              {node.clues.map((clue, clueIndex) => (
+                                <li key={clueIndex}><span className="uppercase tracking-wide text-[var(--text-2)]">[{clue.vector}]</span> {clue.text} <span className="text-[var(--text-2)]">→ {clue.pointsTo}</span></li>
+                              ))}
+                            </ul>
+                          </article>
+                        ))}
+                      </div>
+                      <p className="mt-3 text-xs">
+                        <span className="font-bold text-[var(--text-2)]">Red herring:</span> {result.clueWeb.redHerring.text}{' '}
+                        <span className="font-bold text-[var(--text-2)]">Disconfirmed by:</span> {result.clueWeb.redHerring.disconfirmedBy}
+                      </p>
+                    </section>
+                  )}
+
+                  <section className="p-4" aria-labelledby="noncombat-resolution-heading">
+                    <h3 id="noncombat-resolution-heading" className="text-lg">2. Resolve the scene</h3>
+                    <div className="mt-3 grid gap-3 lg:grid-cols-2">
+                      <div className="surface-inset p-3">
+                        <h4 className="text-sm font-bold text-[var(--accent-danger-light)]">Complication</h4>
+                        <p className="mt-1 text-sm">{result.complication}</p>
+                      </div>
+                      <div className="surface-inset p-3">
+                        <h4 className="text-sm font-bold text-[var(--difficulty-easy)]">Reward</h4>
+                        <p className="mt-1 text-sm">{result.reward}</p>
+                      </div>
+                    </div>
+                    <h4 className="mt-4 text-sm font-bold text-[var(--text-1)]">Possible outcomes</h4>
+                    <div className="mt-2 space-y-2">
+                      {result.outcomes.map((outcome, index) => (
+                        <div key={index} className="surface-inset p-3">
+                          <span className="font-bold text-[var(--bronze)]">{outcome.label}:</span>{' '}
+                          <span className="text-sm">{outcome.description}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+              )}
+            </section>
+          </section>
         </div>
       )}
     </div>

@@ -251,9 +251,10 @@ p {
   color: var(--bronze);
 }
 
-/* Encounter challenge is a readout, not an action. The dot-and-label treatment
-   intentionally avoids button height, borders, hover states, and filled pills. */
-.difficulty-status {
+/* Status is a readout, not an action. The dot-and-label treatment intentionally
+   avoids button height, borders, hover states, and filled pills. */
+.difficulty-status,
+.status-readout {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
@@ -263,9 +264,11 @@ p {
   line-height: 1.2;
 }
 
-.difficulty-status-dot {
+.difficulty-status-dot,
+.status-readout-dot {
   width: 0.65rem;
   height: 0.65rem;
+  flex: 0 0 auto;
   border-radius: 999px;
   background: currentColor;
   box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 14%, transparent);
@@ -276,6 +279,10 @@ p {
 .difficulty-status-moderate { color: var(--difficulty-medium); }
 .difficulty-status-high { color: var(--difficulty-hard); }
 .difficulty-status-extreme { color: var(--status-danger); }
+.status-readout-neutral { color: var(--text-2); }
+.status-readout-success { color: var(--status-success); }
+.status-readout-warning { color: var(--status-warning); }
+.status-readout-danger { color: var(--status-danger); }
 
 /* Skill-check DC badges (puzzles & challenges — Easy/Medium/Hard is still
    the 2024 vocabulary for check difficulty, unlike encounter tiers) */
@@ -639,6 +646,10 @@ button.option-card:hover,
   background: var(--surface-subtle);
 }
 
+.disclosure-panel-flush {
+  margin-inline: 0;
+}
+
 .disclosure-panel > summary {
   display: flex;
   min-height: var(--control-height);
@@ -718,6 +729,35 @@ button.option-card:hover,
   background: var(--surface-interactive);
 }
 
+/* Flat, nested reading surface for generated guidance and live-tool content.
+   Unlike .card, this intentionally has no elevation or hover movement. */
+.content-panel {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  background: var(--surface-subtle);
+}
+
+.content-panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.content-panel-heading > div {
+  min-width: 0;
+}
+
+.content-panel-heading p {
+  margin-top: 0.2rem;
+  color: var(--text-3);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
 .workflow-action-bar {
   display: flex;
   flex-direction: column;
@@ -741,19 +781,22 @@ button.option-card:hover,
   font-size: 0.7rem;
 }
 
-.encounter-summary-card {
+.encounter-summary-card,
+.workflow-review-card {
   padding: 1.25rem;
   border-color: var(--border-default);
 }
 
-.encounter-summary-header {
+.encounter-summary-header,
+.workflow-review-header {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 1rem;
 }
 
-.encounter-overview {
+.encounter-overview,
+.workflow-review-overview {
   display: grid;
   gap: 1rem;
   margin-top: 1.25rem;
@@ -912,7 +955,8 @@ button.option-card:hover,
   color: var(--text-1);
 }
 
-.encounter-actions {
+.encounter-actions,
+.workflow-review-actions {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -925,6 +969,19 @@ button.option-card:hover,
 
 .action-menu {
   position: relative;
+}
+
+/* Use an in-flow disclosure when a utility menu sits inside a narrow or
+   left-aligned card. This prevents wide floating panels from crossing the
+   viewport edge while keeping low-frequency actions grouped. */
+.action-menu-flow {
+  width: 100%;
+}
+
+.action-menu-flow .action-menu-panel {
+  position: static;
+  width: 100%;
+  max-width: none;
 }
 
 .action-menu > summary {
@@ -1053,7 +1110,9 @@ button.option-card:hover,
   }
 
   .encounter-summary-header,
-  .encounter-actions {
+  .workflow-review-header,
+  .encounter-actions,
+  .workflow-review-actions {
     flex-direction: row;
     align-items: flex-start;
     justify-content: space-between;
@@ -1107,7 +1166,8 @@ button.option-card:hover,
     gap: 0.8rem;
   }
 
-  .encounter-overview {
+  .encounter-overview,
+  .workflow-review-overview {
     grid-template-columns: minmax(14rem, 0.65fr) minmax(0, 1.35fr);
     align-items: stretch;
   }
@@ -1117,12 +1177,14 @@ button.option-card:hover,
     border-right: 1px solid var(--border-subtle);
   }
 
-  .metric-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .next-step-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .metric-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -1505,9 +1567,23 @@ select optgroup {
     --steel-700: #dddddd;
     --bronze: #b06f33;
     --bronze-light: #b06f33;
+    --bronze-wash: #f5eadf;
     --text-1: #1c1a16;
     --text-2: #1c1a16;
     --text-3: #4a4740;
+    --surface-raised: #ffffff;
+    --surface-inset: #f4f1eb;
+    --control-surface: #ffffff;
+    --control-surface-focus: #ffffff;
+    --line-subtle: #d8d1c7;
+    --line-strong: #999999;
+    --control-border: #777777;
+    --surface-panel: #ffffff;
+    --surface-subtle: #f4f1eb;
+    --surface-interactive: #eee8df;
+    --border-subtle: #d8d1c7;
+    --border-default: #999999;
+    --border-interactive: #777777;
     --accent-danger: #a53f3e;
     --status-success: #245c39;
     --status-warning: #685600;
@@ -1551,9 +1627,30 @@ select optgroup {
   }
 
   .difficulty-status,
+  .status-readout,
   .badge-easy, .badge-medium, .badge-hard {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+  }
+
+  .content-panel {
+    break-inside: avoid;
+    border-color: #999999;
+    background: #ffffff;
+    color: #1c1a16;
+  }
+
+  .battle-log-panel > summary {
+    display: none !important;
+  }
+
+  .battle-log-panel > :not(summary) {
+    display: block !important;
+  }
+
+  .battle-log-panel ol {
+    max-height: none;
+    overflow: visible;
   }
 
 

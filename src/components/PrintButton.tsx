@@ -6,9 +6,11 @@ import { Printer } from 'lucide-react';
 export default function PrintButton({
   label = 'Print',
   variant = 'button',
+  menuDescription = 'Full DM encounter sheet',
 }: {
   label?: string;
   variant?: 'button' | 'menu';
+  menuDescription?: string;
 }) {
   return (
     <button
@@ -23,7 +25,7 @@ export default function PrintButton({
       {variant === 'menu' ? (
         <span>
           <strong>{label}</strong>
-          <small>Full DM encounter sheet</small>
+          <small>{menuDescription}</small>
         </span>
       ) : label}
     </button>

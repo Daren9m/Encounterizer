@@ -57,10 +57,48 @@ Use these shared classes:
 - `optional-controls`, `optional-controls-grid`, `option-card`
 - `disclosure-panel`, `optional-panel`, `selection-card`
 - `workflow-action-bar`, `workflow-primary-action`
-- `encounter-overview`, `metric-grid`, `metric-item`
+- `workflow-review-card`, `workflow-review-header`, `workflow-review-overview`
+- `workflow-review-actions`, `metric-grid`, `metric-item`
 - `next-step-shell`, `next-step-grid`, `next-step-card`
+- `content-panel`, `content-panel-heading` for flat sections inside a review or
+  live-workflow surface
+- `action-menu-flow` when a wide utility menu is inside a narrow or left-aligned
+  card and must expand in the document flow instead of floating
 
 The numbered step marker communicates reading order; it is never interactive.
+The three regions describe responsibilities, not a mandatory page count. A live
+tool can use **Set up → Run → Finish** when its review happens inside setup.
+Finish contains closure, summary, export, or reset actions; it must not compete
+with the action that advances the live workflow.
+
+### Puzzles and challenges
+
+1. **Set up** — choose the scene kind, target difficulty, table time, and party.
+   Theme, tone, format browsing, and recent scenes are optional controls.
+2. **Review** — show the generated title, visibly labeled difficulty, party and
+   duration metrics, followed by the DM brief and flat content sections.
+3. **Present or run** — make the player view the primary presentation action.
+   Group share, Markdown, JSON, and print utilities in one menu. Keep staged
+   checks, hints, and the solution next to the moment when the DM needs them,
+   with spoilers behind disclosures.
+
+Kind cards either select a kind or immediately generate one; they never do both.
+When cards are selections, use `selection-card` and a single Generate action.
+
+### Battles
+
+1. **Set up and review** — name the battle, build the roster through clearly
+   labeled manual and bestiary paths, then review sorted initiative. Starting
+   the battle is the region's only primary action.
+2. **Run** — prioritize round, acting combatant, next up, and on deck, followed
+   by HP and condition controls. Preparation controls collapse or become a
+   secondary “Edit roster” path while combat is live.
+3. **Finish** — show an end-state summary and place export, print, clear, and
+   new-battle utilities away from the live turn controls.
+
+The compact initiative tracker embedded in the DM screen mirrors the same
+phases but omits participant building and finish utilities such as export,
+delete, and starting a replacement battle.
 
 ## Typography roles
 
@@ -111,7 +149,9 @@ temporary menu or an interactive home-page card.
 These are different objects:
 
 - **Status:** noninteractive readout with a visible label. Encounter challenge
-  uses `difficulty-status` plus a colored dot.
+  uses `difficulty-status` plus a colored dot. Other tools use
+  `status-readout`, `status-readout-dot`, and a neutral, success, warning, or
+  danger modifier.
 - **Chip:** compact selected filter with an obvious selected/unselected state.
 - **Toggle:** changes a Boolean setting and contains a real checkbox or switch.
 - **Button:** performs an action and has hover, focus, and pressed feedback.
