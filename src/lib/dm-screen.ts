@@ -2,8 +2,9 @@ import { battleToMarkdown, type BattleState } from './battle-organizer';
 import { monsterToMarkdown } from './monster-export';
 import type { Monster } from './types';
 import type { Spell } from '../data/spells';
+import { rulesReferenceToMarkdown } from '../data/rules-reference';
 
-export type DmScreenItemKind = 'note' | 'monster' | 'spell' | 'tool' | 'initiative' | 'battle';
+export type DmScreenItemKind = 'note' | 'monster' | 'spell' | 'tool' | 'rules' | 'initiative' | 'battle';
 
 export interface DmScreenItem {
   id: string;
@@ -38,7 +39,20 @@ export const EMPTY_DM_SCREEN: DmScreenState = {
   title: 'Tonight’s DM Screen',
   autoAddPinnedMonsters: true,
   autoAddPinnedSpells: true,
-  sections: [],
+  sections: [{
+    id: 'quick-reference',
+    title: 'Quick Reference',
+    collapsed: false,
+    items: [{
+      id: 'core-rules-reference',
+      kind: 'rules',
+      title: 'Table Rules Reference',
+      collapsed: false,
+      hidden: false,
+      origin: 'manual',
+    }],
+    children: [],
+  }],
 };
 
 export function updateSectionTree(
@@ -139,6 +153,9 @@ function itemMarkdown(
   if (item.kind === 'initiative' || item.kind === 'battle') {
     return [`### ${item.title}${visibility}`, '', nestedMarkdown(battleToMarkdown(battle)), ''];
   }
+  if (item.kind === 'rules') {
+    return [`### ${item.title}${visibility}`, '', nestedMarkdown(rulesReferenceToMarkdown()), ''];
+  }
   if (item.kind === 'tool') return [`### ${item.title}${visibility}`, '', item.href ?? '', ''];
   return [`### ${item.title}${visibility}`, '', item.body ?? '', ''];
 }
@@ -194,7 +211,7 @@ function isItem(value: unknown): value is DmScreenItem {
   const item = value as Partial<DmScreenItem>;
   return typeof item.id === 'string'
     && typeof item.title === 'string'
-    && ['note', 'monster', 'spell', 'tool', 'initiative', 'battle'].includes(item.kind ?? '')
+    && ['note', 'monster', 'spell', 'tool', 'rules', 'initiative', 'battle'].includes(item.kind ?? '')
     && typeof item.collapsed === 'boolean'
     && typeof item.hidden === 'boolean';
 }
