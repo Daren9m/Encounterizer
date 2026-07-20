@@ -4,9 +4,15 @@
 import type { JSX } from 'react';
 import type { HandoutSpec } from '@/lib/noncombat/types';
 
-export default function PuzzleHandout({ spec }: { spec: HandoutSpec }) {
+export default function PuzzleHandout({
+  spec,
+  embedded = false,
+}: {
+  spec: HandoutSpec;
+  embedded?: boolean;
+}) {
   return (
-    <div className="card light-island">
+    <div className={embedded ? 'light-island rounded-[var(--radius-panel)] border p-4' : 'card light-island'}>
       <h3 className="text-lg mb-2 text-[var(--statblock-light-accent)]">Player Handout</h3>
       <HandoutBody spec={spec} />
     </div>
@@ -29,26 +35,28 @@ function HandoutBody({ spec }: { spec: HandoutSpec }): JSX.Element {
     case 'logic-grid':
       return (
         <div className="space-y-3">
-          <table className="text-xs border-collapse">
-            <thead>
-              <tr>
-                <th scope="col" className="border px-2 py-1 text-left">{spec.categories[0]}</th>
-                {spec.categories.slice(1).map(c => (
-                  <th key={c} scope="col" className="border px-2 py-1 text-left">{c}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {spec.items[0].map(anchor => (
-                <tr key={anchor}>
-                  <td className="border px-2 py-1 font-bold">{anchor}</td>
+          <div className="max-w-full overflow-x-auto pb-1" role="region" tabIndex={0} aria-label="Scrollable logic grid">
+            <table className="min-w-max text-xs border-collapse">
+              <thead>
+                <tr>
+                  <th scope="col" className="border px-2 py-1 text-left">{spec.categories[0]}</th>
                   {spec.categories.slice(1).map(c => (
-                    <td key={c} className="border px-2 py-1 min-w-16" />
+                    <th key={c} scope="col" className="border px-2 py-1 text-left">{c}</th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {spec.items[0].map(anchor => (
+                  <tr key={anchor}>
+                    <td className="border px-2 py-1 font-bold">{anchor}</td>
+                    {spec.categories.slice(1).map(c => (
+                      <td key={c} className="border px-2 py-1 min-w-16" />
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <div className="text-xs">
             {spec.categories.map((c, i) => (
               <div key={c}><span className="font-bold">{c}:</span> {spec.items[i].join(', ')}</div>
@@ -87,27 +95,29 @@ function HandoutBody({ spec }: { spec: HandoutSpec }): JSX.Element {
     case 'grid-diagram':
       return (
         <div className="space-y-2">
-          <div className="inline-grid gap-1" style={{ gridTemplateColumns: `repeat(${spec.cols}, minmax(2rem, auto))` }}>
-            {spec.cells.map((c, i) => (
-              <div
-                key={i}
-                role="img"
-                aria-label={
-                  c.state === 'on' ? 'lit plate'
-                  : c.state === 'off' ? 'dark plate'
-                  : c.state === 'masked' ? 'empty socket'
-                  : c.label ?? 'tile'
-                }
-                className={`aspect-square flex items-center justify-center rounded border text-sm font-bold ${
-                  c.state === 'on' ? 'bg-[var(--bronze)] text-[var(--steel-950)]'
-                  : c.state === 'off' ? 'bg-[var(--steel-950)] text-[var(--text-2)]'
-                  : c.state === 'masked' ? 'border-dashed'
-                  : ''
-                }`}
-              >
-                {c.label ?? ''}
-              </div>
-            ))}
+          <div className="max-w-full overflow-x-auto pb-1" role="region" tabIndex={0} aria-label="Scrollable puzzle diagram">
+            <div className="inline-grid min-w-max gap-1" style={{ gridTemplateColumns: `repeat(${spec.cols}, minmax(2rem, auto))` }}>
+              {spec.cells.map((c, i) => (
+                <div
+                  key={i}
+                  role="img"
+                  aria-label={
+                    c.state === 'on' ? 'lit plate'
+                    : c.state === 'off' ? 'dark plate'
+                    : c.state === 'masked' ? 'empty socket'
+                    : c.label ?? 'tile'
+                  }
+                  className={`aspect-square flex items-center justify-center rounded border text-sm font-bold ${
+                    c.state === 'on' ? 'bg-[var(--bronze)] text-[var(--steel-950)]'
+                    : c.state === 'off' ? 'bg-[var(--steel-950)] text-[var(--text-2)]'
+                    : c.state === 'masked' ? 'border-dashed'
+                    : ''
+                  }`}
+                >
+                  {c.label ?? ''}
+                </div>
+              ))}
+            </div>
           </div>
           {spec.legend && (
             <ul className="text-xs space-y-0.5">

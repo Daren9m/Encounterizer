@@ -4,6 +4,7 @@ import type { PartyMemberConfig } from './battle-sim-types';
 import { buildSimPlayer } from '../data/class-templates';
 
 export type CombatantKind = 'player' | 'ally' | 'enemy';
+export type BattlePhase = 'setup' | 'active' | 'complete';
 
 export interface BattleCombatant {
   id: string;
@@ -31,6 +32,8 @@ export interface BattleLogEntry {
 
 export interface BattleState {
   version: 1;
+  /** Optional only so battles saved before phases were introduced still load. */
+  phase?: BattlePhase;
   name: string;
   round: number;
   currentId?: string;
@@ -41,6 +44,7 @@ export interface BattleState {
 
 export const EMPTY_BATTLE: BattleState = {
   version: 1,
+  phase: 'setup',
   name: 'New battle',
   round: 1,
   started: false,
@@ -96,12 +100,21 @@ export function battleFromEncounter(
 
   return {
     version: 1,
+    phase: 'setup',
     name: encounter.name,
     round: 1,
     started: false,
     combatants: [...players, ...enemies],
     log: [],
   };
+}
+
+/** Resolve legacy version-1 records into the explicit workflow phase. */
+export function getBattlePhase(state: BattleState): BattlePhase {
+  if (state.phase === 'setup' || state.phase === 'active' || state.phase === 'complete') {
+    return state.phase;
+  }
+  return state.started ? 'active' : 'setup';
 }
 
 export function sortCombatants(combatants: readonly BattleCombatant[]): BattleCombatant[] {
@@ -117,6 +130,7 @@ export function getTurnCallouts(state: BattleState): {
   next?: BattleCombatant;
   onDeck?: BattleCombatant;
 } {
+  if (getBattlePhase(state) !== 'active') return {};
   const ordered = sortCombatants(state.combatants);
   if (ordered.length === 0) return {};
   const currentIndex = Math.max(0, ordered.findIndex((combatant) => combatant.id === state.currentId));
@@ -139,12 +153,12 @@ function log(state: BattleState, message: string): BattleState {
 export function startBattle(state: BattleState): BattleState {
   const ordered = sortCombatants(state.combatants);
   if (ordered.length === 0) return state;
-  return log({ ...state, started: true, round: 1, currentId: ordered[0].id }, `${ordered[0].name} starts the battle.`);
+  return log({ ...state, phase: 'active', started: true, round: 1, currentId: ordered[0].id }, `${ordered[0].name} starts the battle.`);
 }
 
 export function advanceTurn(state: BattleState): BattleState {
   const ordered = sortCombatants(state.combatants);
-  if (!state.started || ordered.length === 0) return state;
+  if (getBattlePhase(state) !== 'active' || !state.started || ordered.length === 0) return state;
   const currentIndex = Math.max(0, ordered.findIndex((combatant) => combatant.id === state.currentId));
   const nextIndex = (currentIndex + 1) % ordered.length;
   const wrapped = nextIndex === 0;
@@ -163,6 +177,7 @@ export function advanceTurn(state: BattleState): BattleState {
 }
 
 export function setCurrentTurn(state: BattleState, combatantId: string): BattleState {
+  if (getBattlePhase(state) !== 'active') return state;
   const combatant = state.combatants.find((entry) => entry.id === combatantId);
   if (!combatant) return state;
   return log({
@@ -173,6 +188,71 @@ export function setCurrentTurn(state: BattleState, combatantId: string): BattleS
       ? { ...entry, reactionUsed: false }
       : entry),
   }, `${combatant.name} takes the turn.`);
+}
+
+/** Remove a combatant while preserving turn and round bookkeeping. */
+export function removeBattleCombatant(state: BattleState, combatantId: string): BattleState {
+  const target = state.combatants.find((combatant) => combatant.id === combatantId);
+  if (!target) return state;
+
+  const phase = getBattlePhase(state);
+  const ordered = sortCombatants(state.combatants);
+  const currentIndex = ordered.findIndex((combatant) => combatant.id === combatantId);
+  const combatants = state.combatants.filter((combatant) => combatant.id !== combatantId);
+
+  if (combatants.length === 0) {
+    return {
+      ...state,
+      phase: 'setup',
+      round: 1,
+      currentId: undefined,
+      started: false,
+      combatants: [],
+      log: [],
+    };
+  }
+
+  if (phase !== 'active') return { ...state, combatants };
+  if (state.currentId !== combatantId) {
+    return log({ ...state, combatants }, `${target.name} leaves the battle.`);
+  }
+
+  const wrapped = currentIndex === ordered.length - 1;
+  const next = wrapped ? ordered[0] : ordered[currentIndex + 1];
+  const nextRound = wrapped ? state.round + 1 : state.round;
+  const nextState: BattleState = {
+    ...state,
+    phase: 'active',
+    started: true,
+    round: nextRound,
+    currentId: next.id,
+    combatants: combatants.map((combatant) => ({
+      ...combatant,
+      reactionUsed: combatant.id === next.id ? false : combatant.reactionUsed,
+      legendaryActionsUsed: wrapped ? 0 : combatant.legendaryActionsUsed,
+    })),
+  };
+  return log(nextState, `${target.name} leaves the battle; ${next.name} is up${wrapped ? ` — round ${nextRound}` : ''}.`);
+}
+
+export function finishBattle(state: BattleState): BattleState {
+  if (getBattlePhase(state) !== 'active') return state;
+  return log(
+    { ...state, phase: 'complete', started: false },
+    `Battle finished after round ${state.round}.`,
+  );
+}
+
+export function resumeBattle(state: BattleState): BattleState {
+  if (getBattlePhase(state) !== 'complete' || state.combatants.length === 0) return state;
+  const ordered = sortCombatants(state.combatants);
+  const currentId = state.currentId && state.combatants.some((combatant) => combatant.id === state.currentId)
+    ? state.currentId
+    : ordered[0].id;
+  return log(
+    { ...state, phase: 'active', started: true, currentId },
+    'Battle resumed.',
+  );
 }
 
 export function applyDamage(state: BattleState, combatantId: string, amount: number): BattleState {
@@ -204,14 +284,18 @@ export function applyHealing(state: BattleState, combatantId: string, amount: nu
 }
 
 export function battleToMarkdown(state: BattleState): string {
+  const phase = getBattlePhase(state);
   const callouts = getTurnCallouts(state);
   const lines = [
     `# ${state.name}`,
     '',
+    `- Status: ${phase === 'setup' ? 'Preparing initiative' : phase === 'active' ? 'In progress' : 'Complete'}`,
     `- Round: ${state.round}`,
-    `- Acting: ${callouts.current?.name ?? 'Not started'}`,
-    `- Next up: ${callouts.next?.name ?? '—'}`,
-    `- On deck: ${callouts.onDeck?.name ?? '—'}`,
+    ...(phase === 'active' ? [
+      `- Acting: ${callouts.current?.name ?? '—'}`,
+      `- Next up: ${callouts.next?.name ?? '—'}`,
+      `- On deck: ${callouts.onDeck?.name ?? '—'}`,
+    ] : []),
     '',
     '## Initiative',
     '',
@@ -221,6 +305,14 @@ export function battleToMarkdown(state: BattleState): string {
       `| ${combatant.initiative} | ${combatant.name} | ${combatant.kind} | ${combatant.currentHp}/${combatant.maxHp}${combatant.tempHp ? ` (+${combatant.tempHp})` : ''} | ${combatant.armorClass ?? '—'} | ${combatant.conditions.join(', ') || '—'} | ${combatant.notes || '—'} |`,
     ),
   ];
+  if (state.log.length > 0) {
+    lines.push(
+      '',
+      '## Battle log',
+      '',
+      ...[...state.log].reverse().map((entry) => `- **Round ${entry.round}:** ${entry.message}`),
+    );
+  }
   return lines.join('\n');
 }
 
@@ -228,6 +320,7 @@ export function isBattleState(value: unknown): value is BattleState {
   if (!value || typeof value !== 'object') return false;
   const state = value as Partial<BattleState>;
   return state.version === 1
+    && (state.phase === undefined || state.phase === 'setup' || state.phase === 'active' || state.phase === 'complete')
     && typeof state.name === 'string'
     && typeof state.round === 'number'
     && typeof state.started === 'boolean'
