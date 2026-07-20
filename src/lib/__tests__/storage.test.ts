@@ -60,6 +60,20 @@ describe('storage', () => {
     expect(() => storageRemove('anything')).not.toThrow();
   });
 
+  it('treats a restricted localStorage getter as unavailable', () => {
+    const restrictedWindow = {} as Window;
+    Object.defineProperty(restrictedWindow, 'localStorage', {
+      get: () => {
+        throw new DOMException('blocked', 'SecurityError');
+      },
+    });
+    vi.stubGlobal('window', restrictedWindow);
+
+    expect(storageLoad('anything', 'fallback')).toBe('fallback');
+    expect(storageSave('anything', 1)).toBe(false);
+    expect(() => storageRemove('anything')).not.toThrow();
+  });
+
   it('tolerates quota errors on save', () => {
     stubWindow(
       fakeLocalStorage({

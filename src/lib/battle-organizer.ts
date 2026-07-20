@@ -8,6 +8,8 @@ export type BattlePhase = 'setup' | 'active' | 'complete';
 
 export interface BattleCombatant {
   id: string;
+  /** Durable identity this fresh battle snapshot was seeded from. */
+  sourcePartyMemberId?: string;
   name: string;
   kind: CombatantKind;
   initiative: number;
@@ -60,11 +62,14 @@ export function battleFromEncounter(
   const players: BattleCombatant[] = partyMembers.map((member, index) => {
     const simulated = buildSimPlayer(member, index);
     return {
-      id: `encounter-player-${index + 1}`,
+      id: member.id ? `party-${member.id}` : `encounter-player-${index + 1}`,
+      ...(member.id ? { sourcePartyMemberId: member.id } : {}),
       name: simulated.name,
       kind: 'player',
       initiative: 0,
-      dexterity: Math.max(1, 10 + simulated.initiativeMod * 2),
+      // The forecast config has an optional initiative bonus, not an ability
+      // score. Use a neutral tie-breaker until the DM enters Dexterity.
+      dexterity: 10,
       armorClass: simulated.ac,
       maxHp: simulated.maxHp,
       currentHp: simulated.maxHp,

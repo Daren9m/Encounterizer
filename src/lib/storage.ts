@@ -4,14 +4,19 @@
 // incompatibly (old keys are simply ignored — tolerant readers mean no
 // migration code).
 
-const PREFIX = 'encounterizer:v1:';
+export const STORAGE_PREFIX = 'encounterizer:v1:';
 
-function fullKey(key: string): string {
-  return `${PREFIX}${key}`;
+export function storageKey(key: string): string {
+  return `${STORAGE_PREFIX}${key}`;
 }
 
-function isBrowser(): boolean {
-  return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+function browserStorage(): Storage | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage ?? null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -25,9 +30,10 @@ export function storageLoad<T>(
   fallback: T,
   validate?: (value: unknown) => value is T,
 ): T {
-  if (!isBrowser()) return fallback;
+  const storage = browserStorage();
+  if (!storage) return fallback;
   try {
-    const raw = window.localStorage.getItem(fullKey(key));
+    const raw = storage.getItem(storageKey(key));
     if (raw === null) return fallback;
     const parsed: unknown = JSON.parse(raw);
     if (validate && !validate(parsed)) return fallback;
@@ -43,9 +49,10 @@ export function storageLoad<T>(
  * e.g. QuotaExceededError or private-browsing restrictions.
  */
 export function storageSave(key: string, value: unknown): boolean {
-  if (!isBrowser()) return false;
+  const storage = browserStorage();
+  if (!storage) return false;
   try {
-    window.localStorage.setItem(fullKey(key), JSON.stringify(value));
+    storage.setItem(storageKey(key), JSON.stringify(value));
     return true;
   } catch {
     return false;
@@ -54,9 +61,10 @@ export function storageSave(key: string, value: unknown): boolean {
 
 /** Remove a stored value. Safe to call anywhere. */
 export function storageRemove(key: string): void {
-  if (!isBrowser()) return;
+  const storage = browserStorage();
+  if (!storage) return;
   try {
-    window.localStorage.removeItem(fullKey(key));
+    storage.removeItem(storageKey(key));
   } catch {
     // ignore — removal is best-effort
   }

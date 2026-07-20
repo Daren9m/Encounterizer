@@ -294,7 +294,7 @@ export function buildSimPlayer(
   const tier = template.tiers[tierForLevel(level)];
 
   const player: SimPlayer = {
-    id: `player-${index}`,
+    id: config.id ?? `player-${index}`,
     name: config.name || `Player ${index + 1}`,
     templateId: template.id,
     level,
@@ -304,7 +304,7 @@ export function buildSimPlayer(
     attackBonus: tier.attackBonus,
     avgDamagePerHit: tier.avgDamagePerHit,
     saveBonuses: { ...tier.saveBonuses },
-    initiativeMod: tier.saveBonuses.dex,
+    initiativeMod: config.initiativeBonus ?? tier.saveBonuses.dex,
     speedCells: Math.round((TEMPLATE_SPEED_FT[template.id] ?? 30) / 5),
     rangeCells: Math.max(1, Math.round((TEMPLATE_RANGE_FT[template.id] ?? 5) / 5)),
   };
