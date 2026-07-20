@@ -410,6 +410,18 @@ function EncounterBuilder() {
     [encounter, party],
   );
 
+  const configuredPartySummary = useMemo(() => {
+    const members = partyConfig?.members ?? defaultPartyConfig(partySize, partyLevel);
+    const levels = members.map((member) => member.level);
+    const lowestLevel = Math.min(...levels);
+    const highestLevel = Math.max(...levels);
+    const levelLabel = lowestLevel === highestLevel
+      ? `level ${lowestLevel}`
+      : `levels ${lowestLevel}\u2013${highestLevel}`;
+
+    return `${members.length} adventurer${members.length === 1 ? '' : 's'} \u00b7 ${levelLabel}`;
+  }, [partyConfig, partyLevel, partySize]);
+
   // Monsters for manual add search
   const manualResults = useMemo(() => {
     if (!manualSearch.trim()) return allMonsters.slice(0, 20);
@@ -1558,7 +1570,6 @@ function EncounterBuilder() {
                 <div key={em.monster.id}>
                   <div className="surface-inset flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
                     <button
-                      ref={configurePartyButtonRef}
                       type="button"
                       onClick={() => setExpandedMonster(
                         expandedMonster === em.monster.id ? null : em.monster.id
@@ -1620,6 +1631,46 @@ function EncounterBuilder() {
                 <h2 id="next-step-heading" className="mt-1 text-2xl">Test it or take it to the table</h2>
               </div>
             </header>
+            <div className="surface-inset mt-4 flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+              <span className="next-step-icon" aria-hidden="true"><Users size={20} /></span>
+              <div className="min-w-0 flex-1">
+                <p className="micro-label">Your adventuring party</p>
+                <h3 className="mt-1 text-lg">{configuredPartySummary}</h3>
+                <p className="mt-1 text-xs leading-relaxed text-[var(--text-3)]">
+                  Used for both the combat forecast and the initiative tracker.
+                </p>
+              </div>
+              <button
+                ref={configurePartyButtonRef}
+                type="button"
+                onClick={openPartySetup}
+                aria-expanded={showPartySetup}
+                aria-controls="encounter-party-setup"
+                className="btn-secondary w-full text-sm sm:w-auto"
+              >
+                <SlidersHorizontal size={16} aria-hidden="true" />
+                {showPartySetup ? 'Editing party' : 'Configure party'}
+              </button>
+            </div>
+            {showPartySetup && (
+              <div
+                id="encounter-party-setup"
+                ref={partySetupRef}
+                tabIndex={-1}
+                className="mt-4 scroll-mt-6"
+                aria-label="Encounter party setup"
+              >
+                <PartySetupPanel
+                  members={partyConfig?.members ?? defaultPartyConfig(partySize, partyLevel)}
+                  onSave={(members) => {
+                    setPartyConfig({ version: 1, members });
+                    invalidateForecast();
+                    closePartySetup();
+                  }}
+                  onCancel={closePartySetup}
+                />
+              </div>
+            )}
             <div className="next-step-grid">
               <article className="next-step-card">
                 <span className="next-step-icon" aria-hidden="true"><Play size={20} /></span>
@@ -1627,16 +1678,6 @@ function EncounterBuilder() {
                   <h3 className="text-lg">Forecast the outcome</h3>
                   <p>Simulate 1,000 battles to estimate win rate, remaining HP, knockouts, and the deadliest foe.</p>
                   <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                    <button
-                      type="button"
-                      onClick={openPartySetup}
-                      aria-expanded={showPartySetup}
-                      aria-controls="battle-forecast-party-setup"
-                      className="btn-secondary w-full text-sm sm:w-auto"
-                    >
-                      <SlidersHorizontal size={16} aria-hidden="true" />
-                      Configure party
-                    </button>
                     <button
                       type="button"
                       onClick={handleForecastClick}
@@ -1662,28 +1703,6 @@ function EncounterBuilder() {
               </article>
             </div>
           </section>
-          {showPartySetup && (
-            <div
-              id="battle-forecast-party-setup"
-              ref={partySetupRef}
-              tabIndex={-1}
-              className="scroll-mt-6"
-              aria-label="Battle forecast party setup"
-            >
-              <PartySetupPanel
-                members={partyConfig?.members ?? defaultPartyConfig(partySize, partyLevel)}
-                onSave={(members) => {
-                  const config: PartyConfig = { version: 1, members };
-                  setPartyConfig(config);
-                  closePartySetup();
-                  if (encounter && encounter.monsters.length > 0) {
-                    runForecast(config, encounter);
-                  }
-                }}
-                onCancel={closePartySetup}
-              />
-            </div>
-          )}
           {simRunning && (
             <div className="card animate-pulse" role="status" aria-label="Running battle forecast">
               <h3 className="text-xl mb-2">Battle Forecast</h3>
