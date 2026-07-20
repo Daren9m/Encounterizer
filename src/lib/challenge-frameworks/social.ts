@@ -61,10 +61,13 @@ export const social: ChallengeFramework = {
     const interruption = pick(INTERRUPTIONS, rng);
     return {
       name: `The ${pick(['Proposition', 'Petition', 'Bargain', 'Confession', 'Overture', 'Reckoning'], rng)}`,
-      readAloud: `${cap(persona.archetype)} seeks you out — ${pack.sensory[0]}.`,
+      // Speech style is audible in-world, so it belongs in the boxed text
+      // (spec §4.2); PERSONAS.speech strings are third-person verb
+      // phrases authored to follow "… and ___." — the tell stays DM-side.
+      readAloud: `${cap(persona.archetype)} seeks you out — ${pack.sensory[0]} — and ${persona.speech}.`,
       situation: [
         `${cap(persona.archetype)} wants: ${want}. Their manner: starts ${track.start}.`,
-        `Voice: ${persona.speech}. Tell: ${persona.quirk}.`,
+        `Tell: ${persona.quirk}.`,
         `Leverage (${leverage.kind}): ${leverage.approach}. Backfires: ${leverage.counter}.`,
         ...sides,
       ].join('\n'),
