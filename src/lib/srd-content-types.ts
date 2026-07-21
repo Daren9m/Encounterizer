@@ -74,6 +74,75 @@ export interface Species {
   source: SrdDocument;
 }
 
+export interface SrdTextSection {
+  heading?: string;
+  text: string;
+}
+
+export type SrdRuleGroup =
+  | 'Playing the Game'
+  | 'Character Creation'
+  | 'Equipment Rules'
+  | 'Spellcasting Rules'
+  | 'Rules Glossary'
+  | 'Gameplay Toolbox'
+  | 'Magic Item Rules';
+
+export interface SrdReferenceArticle {
+  id: string;
+  name: string;
+  group: SrdRuleGroup;
+  summary: string;
+  sections: SrdTextSection[];
+  source: SrdDocument;
+}
+
+export interface SrdClassEntry {
+  id: string;
+  name: string;
+  kind: 'Class' | 'Subclass';
+  className: string;
+  summary: string;
+  sections: SrdTextSection[];
+  source: SrdDocument;
+}
+
+export type SrdEquipmentCategory =
+  | 'Weapon'
+  | 'Armor'
+  | 'Adventuring Gear'
+  | 'Tool'
+  | 'Mount'
+  | 'Tack and Vehicle'
+  | 'Large Vehicle';
+
+export interface SrdEquipmentFact {
+  label: string;
+  value: string;
+}
+
+export interface SrdEquipmentItem {
+  id: string;
+  name: string;
+  category: SrdEquipmentCategory;
+  cost?: string;
+  weight?: string;
+  summary: string;
+  facts: SrdEquipmentFact[];
+  description: string;
+  source: SrdDocument;
+}
+
+export interface SrdReferenceContentMeta {
+  rules: number;
+  classes: number;
+  equipment: number;
+  source: SrdDocument;
+  license: 'CC-BY-4.0';
+  sourceRepository: string;
+  sourceCommit: string;
+}
+
 export interface SrdContentMeta {
   count: number;
   source: SrdDocument;

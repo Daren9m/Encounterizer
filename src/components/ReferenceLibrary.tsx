@@ -5,8 +5,10 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Bookmark,
   BookmarkCheck,
+  Backpack,
   BookOpen,
   ChevronLeft,
+  GraduationCap,
   PackageOpen,
   Search,
   ShieldCheck,
@@ -17,9 +19,10 @@ import { useSpells } from '@/app/hooks/useSpells';
 import CustomSpellPanel from '@/components/CustomSpellPanel';
 import PrintButton from '@/components/PrintButton';
 import ToolPageHeader from '@/components/ToolPageHeader';
-import { SRD_5_2_1_URL } from '@/data/rules-reference';
 import { levelLabel, type Spell } from '@/data/spells';
 import {
+  CLASS_NAMES,
+  EQUIPMENT_CATEGORIES,
   FEAT_CATEGORIES,
   filterReferenceLibrary,
   getReferenceCategoryLabel,
@@ -28,7 +31,7 @@ import {
   MAGIC_ITEM_CATEGORIES,
   MAGIC_ITEM_RARITIES,
   REFERENCE_CATEGORIES,
-  RULE_CATEGORY_OPTIONS,
+  RULE_GROUP_OPTIONS,
   SPELL_CLASSES,
   SPELL_SCHOOLS,
   buildReferenceLibraryEntries,
@@ -37,7 +40,16 @@ import {
   type ReferenceLibraryFilters,
 } from '@/lib/reference-library';
 import { storageLoad } from '@/lib/storage';
-import type { Background, Feat, MagicItem, Species } from '@/lib/srd-content-types';
+import type {
+  Background,
+  Feat,
+  MagicItem,
+  Species,
+  SrdClassEntry,
+  SrdEquipmentItem,
+  SrdReferenceArticle,
+  SrdTextSection,
+} from '@/lib/srd-content-types';
 import { usePersistentState } from '@/lib/use-persistent-state';
 
 function initialFilters(category: ReferenceCategoryFilter): ReferenceLibraryFilters {
@@ -89,12 +101,15 @@ export default function ReferenceLibrary({
   }, [results, selectedKey]);
   const hasFilters = filters.query.trim() !== ''
     || filters.category !== initialCategory
-    || Boolean(filters.ruleCategory)
+    || Boolean(filters.ruleGroup)
+    || Boolean(filters.classKind)
+    || Boolean(filters.className)
     || filters.spellLevel !== undefined
     || Boolean(filters.spellSchool)
     || Boolean(filters.spellClass)
     || Boolean(filters.concentration)
     || Boolean(filters.ritual)
+    || Boolean(filters.equipmentCategory)
     || Boolean(filters.magicItemRarity)
     || Boolean(filters.magicItemCategory)
     || Boolean(filters.attunement)
@@ -129,7 +144,7 @@ export default function ReferenceLibrary({
     <div className="animate-fade-in">
       <ToolPageHeader
         path="/reference"
-        description="Search rules, spells, magic items, feats, backgrounds, and species in one table-ready reference."
+        description="Search rules, classes, spells, equipment, magic items, feats, backgrounds, and species in one table-ready reference."
         actions={(
           <div className="flex flex-col items-end gap-2">
             <span className="text-sm text-[var(--text-2)]">{entries.length} references</span>
@@ -148,7 +163,7 @@ export default function ReferenceLibrary({
           <input
             type="search"
             aria-label="Search the reference library"
-            placeholder="Search rules, spells, traits, items, effects..."
+            placeholder="Search rules, classes, equipment, spells, traits, effects..."
             value={filters.query}
             onChange={(event) => setFilters((current) => ({ ...current, query: event.target.value }))}
             className="w-full pl-10 text-base"
@@ -322,20 +337,45 @@ function ContextFilters({
     return (
       <div className="mt-3 max-w-sm">
         <select
-          aria-label="Filter rules by category"
-          value={filters.ruleCategory ?? ''}
+          aria-label="Filter rules by source section"
+          value={filters.ruleGroup ?? ''}
           onChange={(event) => setFilters((current) => ({
             ...current,
-            ruleCategory: event.target.value
-              ? event.target.value as ReferenceLibraryFilters['ruleCategory']
+            ruleGroup: event.target.value
+              ? event.target.value as ReferenceLibraryFilters['ruleGroup']
               : undefined,
           }))}
           className="w-full"
         >
-          <option value="">All rule categories</option>
-          {RULE_CATEGORY_OPTIONS.map((category) => (
-            <option key={category.id} value={category.id}>{category.label}</option>
-          ))}
+          <option value="">All rule sections</option>
+          {RULE_GROUP_OPTIONS.map((group) => <option key={group}>{group}</option>)}
+        </select>
+      </div>
+    );
+  }
+
+  if (filters.category === 'classes') {
+    return (
+      <div className="mt-3 grid gap-2 sm:max-w-2xl sm:grid-cols-2">
+        <select
+          aria-label="Filter classes and subclasses"
+          value={filters.classKind ?? ''}
+          onChange={(event) => setFilters((current) => ({
+            ...current,
+            classKind: event.target.value ? event.target.value as ReferenceLibraryFilters['classKind'] : undefined,
+          }))}
+        >
+          <option value="">Classes and subclasses</option>
+          <option value="Class">Classes only</option>
+          <option value="Subclass">Subclasses only</option>
+        </select>
+        <select
+          aria-label="Filter by parent class"
+          value={filters.className ?? ''}
+          onChange={(event) => setFilters((current) => ({ ...current, className: event.target.value || undefined }))}
+        >
+          <option value="">All parent classes</option>
+          {CLASS_NAMES.map((className) => <option key={className}>{className}</option>)}
         </select>
       </div>
     );
@@ -453,6 +493,27 @@ function ContextFilters({
     );
   }
 
+  if (filters.category === 'equipment') {
+    return (
+      <div className="mt-3 max-w-sm">
+        <select
+          aria-label="Filter equipment by category"
+          value={filters.equipmentCategory ?? ''}
+          onChange={(event) => setFilters((current) => ({
+            ...current,
+            equipmentCategory: event.target.value
+              ? event.target.value as ReferenceLibraryFilters['equipmentCategory']
+              : undefined,
+          }))}
+          className="w-full"
+        >
+          <option value="">All equipment categories</option>
+          {EQUIPMENT_CATEGORIES.map((category) => <option key={category}>{category}</option>)}
+        </select>
+      </div>
+    );
+  }
+
   if (filters.category === 'feats') {
     return (
       <div className="mt-3 max-w-sm">
@@ -487,43 +548,14 @@ function ResourceDetail({
   onToggleBookmark: () => void;
 }) {
   switch (entry.category) {
-    case 'rules': {
-      const rule = entry.resource;
-      return (
-        <article className="card">
-          <DetailHeader
-            eyebrow={RULE_CATEGORY_OPTIONS.find((category) => category.id === rule.category)?.label ?? 'Rule'}
-            title={rule.title}
-            icon={<BookOpen size={20} aria-hidden="true" />}
-            bookmarked={bookmarked}
-            onToggleBookmark={onToggleBookmark}
-          />
-          <p className="my-4 text-base font-semibold leading-relaxed">{rule.summary}</p>
-          <ul className="space-y-2 text-sm leading-relaxed">
-            {rule.details.map((detail) => (
-              <li key={detail} className="border-l-2 border-[var(--bronze)] pl-3">{detail}</li>
-            ))}
-          </ul>
-          <footer className="mt-6 border-t border-[var(--line-subtle)] pt-3 text-xs text-[var(--text-3)]">
-            {rule.sources.map((source, index) => (
-              <span key={`${source.section}:${source.page}`}>
-                {index > 0 && ' · '}
-                <a
-                  href={`${SRD_5_2_1_URL}#page=${source.page}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline hover:text-[var(--bronze-light)]"
-                >
-                  {source.section}, p. {source.page}
-                </a>
-              </span>
-            ))}
-          </footer>
-        </article>
-      );
-    }
+    case 'rules':
+      return <RuleDetail rule={entry.resource} bookmarked={bookmarked} onToggleBookmark={onToggleBookmark} />;
+    case 'classes':
+      return <ClassDetail characterClass={entry.resource} bookmarked={bookmarked} onToggleBookmark={onToggleBookmark} />;
     case 'spells':
       return <SpellDetail spell={entry.resource} bookmarked={bookmarked} onToggleBookmark={onToggleBookmark} />;
+    case 'equipment':
+      return <EquipmentDetail equipment={entry.resource} bookmarked={bookmarked} onToggleBookmark={onToggleBookmark} />;
     case 'magic-items':
       return <MagicItemDetail item={entry.resource} bookmarked={bookmarked} onToggleBookmark={onToggleBookmark} />;
     case 'feats':
@@ -533,6 +565,65 @@ function ResourceDetail({
     case 'species':
       return <SpeciesDetail species={entry.resource} bookmarked={bookmarked} onToggleBookmark={onToggleBookmark} />;
   }
+}
+
+function RuleDetail({ rule, bookmarked, onToggleBookmark }: { rule: SrdReferenceArticle; bookmarked: boolean; onToggleBookmark: () => void }) {
+  return (
+    <article className="card">
+      <DetailHeader eyebrow={rule.group} title={rule.name} icon={<BookOpen size={20} aria-hidden="true" />} bookmarked={bookmarked} onToggleBookmark={onToggleBookmark}>
+        <p className="mt-1 text-sm text-[var(--text-2)]">{rule.summary}</p>
+      </DetailHeader>
+      <TextSections sections={rule.sections} />
+      <SourceFooter />
+    </article>
+  );
+}
+
+function ClassDetail({ characterClass, bookmarked, onToggleBookmark }: { characterClass: SrdClassEntry; bookmarked: boolean; onToggleBookmark: () => void }) {
+  return (
+    <article className="card">
+      <DetailHeader eyebrow={`${characterClass.className} ${characterClass.kind}`} title={characterClass.name} icon={<GraduationCap size={20} aria-hidden="true" />} bookmarked={bookmarked} onToggleBookmark={onToggleBookmark}>
+        <p className="mt-1 text-sm text-[var(--text-2)]">{characterClass.summary}</p>
+      </DetailHeader>
+      <TextSections sections={characterClass.sections} />
+      <SourceFooter />
+    </article>
+  );
+}
+
+function EquipmentDetail({ equipment, bookmarked, onToggleBookmark }: { equipment: SrdEquipmentItem; bookmarked: boolean; onToggleBookmark: () => void }) {
+  const facts = [
+    ...(equipment.cost ? [{ label: 'Cost', value: equipment.cost }] : []),
+    ...(equipment.weight ? [{ label: 'Weight', value: equipment.weight }] : []),
+    ...equipment.facts,
+  ];
+  return (
+    <article className="card">
+      <DetailHeader eyebrow={equipment.category} title={equipment.name} icon={<Backpack size={20} aria-hidden="true" />} bookmarked={bookmarked} onToggleBookmark={onToggleBookmark}>
+        <p className="mt-1 text-sm text-[var(--text-2)]">{equipment.summary}</p>
+      </DetailHeader>
+      {facts.length > 0 && (
+        <dl className="my-4 grid gap-2 sm:grid-cols-2">
+          {facts.map((item) => <Fact key={item.label} term={item.label}>{item.value}</Fact>)}
+        </dl>
+      )}
+      {equipment.description && <Prose text={equipment.description} />}
+      <SourceFooter />
+    </article>
+  );
+}
+
+function TextSections({ sections }: { sections: SrdTextSection[] }) {
+  return (
+    <div className="mt-4 space-y-5">
+      {sections.map((section, index) => (
+        <section key={`${index}:${section.heading ?? section.text.slice(0, 30)}`}>
+          {section.heading && <h3 className="mb-2 text-lg">{section.heading}</h3>}
+          {section.text && <Prose text={section.text} />}
+        </section>
+      ))}
+    </div>
+  );
 }
 
 function DetailHeader({

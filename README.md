@@ -43,10 +43,11 @@ in one place. No accounts, no server, no cost. Everything runs in your browser.
   rules, notes, tool links, and a compact live battle tracker.
 - **⚔️ Battle Organizer** — Sort initiative and track HP, conditions,
   concentration, reactions, legendary actions, rounds, and turn flow.
-- **📖 Reference Library** — One searchable home for 33 concise table rules,
-  **all 339 SRD spells**, **257 magic items, 17 feats, 4 backgrounds, and 9
-  species**. Use category-specific filters, open focused printable details,
-  and bookmark anything for later. **Import your own spells** from 5etools
+- **📖 Reference Library** — One searchable home for **200 SRD rule articles,
+  12 classes, 12 subclasses, 339 spells, 182 equipment entries, 257 magic
+  items, 17 feats, 4 backgrounds, and 9 species**. Use category-specific
+  filters, open focused printable details, and bookmark anything for later.
+  **Import your own spells** from 5etools
   spell JSON or Encounterizer exports — stored locally in your browser.
 
 Every prep page has a **Print** button with a dedicated print stylesheet —
@@ -61,7 +62,7 @@ localStorage between visits.
 | Framework | Next.js 16 (App Router, static export) |
 | Language | TypeScript (strict) |
 | Styling | Tailwind CSS + CSS custom properties (Dusksteel tokens), Spectral + IBM Plex Sans via next/font, Lucide icons |
-| Data | Generated TypeScript bestiary, spells, magic items, feats, and origins from SRD 5.2.1; client-side 5etools importers |
+| Data | Generated TypeScript bestiary, rules, classes, spells, equipment, magic items, feats, and origins from SRD 5.2.1; client-side 5etools importers |
 | Testing | Vitest (140+ tests: rules math, importer, Monte Carlo statistics) |
 | CI/CD | GitHub Actions → Azure Static Web Apps (free tier) |
 | Hosting cost | $0 |
@@ -78,7 +79,7 @@ src/
     noncombat/               # Puzzles & Challenges
     dm-screen/               # Configurable DM command screen
     battle/                  # Live initiative and combat organizer
-    reference/               # Unified rules, spells, items, and character reference
+    reference/               # Unified rules, classes, gear, spells, items, and character reference
     compendium/, spells/     # Compatibility routes into the unified reference
     credits/                 # SRD attribution + licensing
     icon.svg, opengraph-image.png, robots.ts, sitemap.ts
@@ -112,6 +113,9 @@ src/
     spells-l*.ts             # AUTO-GENERATED SRD 5.2.1 spells (4 level bands)
     spells-meta.ts           # Generated count + source commit
     spell-summaries.ts       # Hand-curated effect summary overrides
+    reference-articles.ts    # AUTO-GENERATED SRD rules and toolbox chapters
+    classes.ts               # AUTO-GENERATED SRD classes and subclasses
+    equipment.ts             # AUTO-GENERATED SRD weapons, armor, gear, tools, and vehicles
     magic-items-*.ts         # AUTO-GENERATED SRD magic items (rarity bands)
     feats.ts                 # AUTO-GENERATED SRD feats
     backgrounds.ts           # AUTO-GENERATED SRD backgrounds
@@ -119,7 +123,7 @@ src/
 scripts/
   import-bestiary.ts         # Regenerates monster data from 5etools (npm run import:bestiary)
   import-spells.ts           # Regenerates spell data from 5etools (npm run import:spells)
-  import-srd-content.ts       # Regenerates magic items, feats, and origins from pinned Markdown
+  import-srd-content.ts       # Regenerates rules, classes, equipment, items, feats, and origins
 ```
 
 ## Getting Started
@@ -178,13 +182,17 @@ The bold one-line effect summaries are layered: hand-curated overrides in
 
 ## Structured SRD Library
 
-The same reference contains **257 magic items, 17 feats, 4 backgrounds, and
-9 species** from SRD 5.2.1. `scripts/import-srd-content.ts`
-parses per-entry Markdown from a pinned SRD-reForged commit, applies a small
-audited correction ledger for known PDF transcription boundaries, and emits
-typed, formatting-free records. The `/reference` route exposes the complete
-corpus with full-text search, resource filters, focused printable detail
-views, and browser-local bookmarks. See the [pipeline documentation](docs/srd-content-pipeline.md).
+The same reference contains the complete structured rules corpus: **200 rule
+articles (including Playing the Game, Character Creation, Equipment Rules,
+Spellcasting Rules, the Rules Glossary, the Gameplay Toolbox, and Magic Item
+Rules), 12 classes, 12 subclasses, 182 equipment entries, 257 magic items,
+17 feats, 4 backgrounds, and 9 species** from SRD 5.2.1. Together with the
+339 spells, that is 1,032 built-in references. `scripts/import-srd-content.ts`
+parses the pinned SRD-reForged Markdown, applies a small audited correction
+ledger for known PDF transcription boundaries, and emits typed,
+formatting-free records. The `/reference` route exposes the complete corpus
+with full-text search, resource filters, focused printable detail views, and
+browser-local bookmarks. See the [pipeline documentation](docs/srd-content-pipeline.md).
 
 Like the bestiary, the Reference Library imports additional spells from **5etools
 spell JSON** or Encounterizer exports — converted and validated entirely in

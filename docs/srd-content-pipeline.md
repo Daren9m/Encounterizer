@@ -1,6 +1,8 @@
 # Structured SRD content pipeline
 
-Encounterizer's Wave 1 structured library is generated from the per-entry Markdown in [`oldmanumby/dnd.srd.5.2.1`](https://github.com/oldmanumby/dnd.srd.5.2.1) at commit `af537072cc95f362544c71ad14d56046a9aa065a`. The generated files are committed; neither the site nor CI needs the upstream repository at runtime.
+Encounterizer's structured reference library is generated from the Markdown in [`oldmanumby/dnd.srd.5.2.1`](https://github.com/oldmanumby/dnd.srd.5.2.1) at commit `af537072cc95f362544c71ad14d56046a9aa065a`. The generated files are committed; neither the site nor CI needs the upstream repository at runtime.
+
+The importer covers the SRD's Playing the Game, Character Creation, Equipment, Spells, Rules Glossary, Gameplay Toolbox, Classes, and Magic Items chapters. The output supplies 1,032 built-in Reference Library entries: 200 rule articles, 24 classes and subclasses, 339 spells, 182 equipment entries, 257 magic items, 17 feats, 4 backgrounds, and 9 species.
 
 ## Regeneration
 
@@ -32,6 +34,8 @@ Each result was checked against the [official SRD 5.2.1 PDF](https://media.dndbe
 
 ## Generated outputs
 
+- `src/data/reference-articles.ts`, `classes.ts`, and `equipment.ts`
+- `src/data/reference-content-meta.ts`
 - `src/data/magic-items-*.ts` and `magic-items-meta.ts`
 - `src/data/feats.ts` and `feats-meta.ts`
 - `src/data/backgrounds.ts`, `species.ts`, and `origins-meta.ts`

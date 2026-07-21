@@ -1,11 +1,15 @@
 import { ALL_MONSTERS } from '../../src/data';
 import { BACKGROUNDS } from '../../src/data/backgrounds';
 import { BESTIARY_META } from '../../src/data/bestiary-meta';
+import { SRD_CLASSES } from '../../src/data/classes';
+import { SRD_EQUIPMENT } from '../../src/data/equipment';
 import { FEATS } from '../../src/data/feats';
 import { FEATS_META } from '../../src/data/feats-meta';
 import { MAGIC_ITEMS } from '../../src/data/magic-items';
 import { MAGIC_ITEMS_META } from '../../src/data/magic-items-meta';
 import { ORIGINS_META } from '../../src/data/origins-meta';
+import { REFERENCE_CONTENT_META } from '../../src/data/reference-content-meta';
+import { SRD_REFERENCE_ARTICLES } from '../../src/data/reference-articles';
 import { SPECIES } from '../../src/data/species';
 import { SRD_SPELLS } from '../../src/data/spells';
 import { SPELLS_META } from '../../src/data/spells-meta';
@@ -15,6 +19,9 @@ import { SRD_REFORGED_REPOSITORY, SRD_REFORGED_SHA } from './source';
 const EXPECTED = {
   monsters: 331,
   spells: 339,
+  rules: 200,
+  classes: 24,
+  equipment: 182,
   magicItems: 257,
   feats: 17,
   backgrounds: 4,
@@ -46,6 +53,9 @@ export function auditSrdContent(): SrdAuditFailure[] {
 
   count('monsters', ALL_MONSTERS.length);
   count('spells', SRD_SPELLS.length);
+  count('rules', SRD_REFERENCE_ARTICLES.length);
+  count('classes', SRD_CLASSES.length);
+  count('equipment', SRD_EQUIPMENT.length);
   count('magicItems', MAGIC_ITEMS.length);
   count('feats', FEATS.length);
   count('backgrounds', BACKGROUNDS.length);
@@ -56,7 +66,10 @@ export function auditSrdContent(): SrdAuditFailure[] {
   if (MAGIC_ITEMS_META.count !== EXPECTED.magicItems) fail('(meta)', 'magic-item count is stale');
   if (FEATS_META.count !== EXPECTED.feats) fail('(meta)', 'feat count is stale');
   if (ORIGINS_META.count !== EXPECTED.backgrounds + EXPECTED.species) fail('(meta)', 'origin count is stale');
-  for (const meta of [MAGIC_ITEMS_META, FEATS_META, ORIGINS_META]) {
+  if (REFERENCE_CONTENT_META.rules !== EXPECTED.rules) fail('(meta)', 'rules count is stale');
+  if (REFERENCE_CONTENT_META.classes !== EXPECTED.classes) fail('(meta)', 'class count is stale');
+  if (REFERENCE_CONTENT_META.equipment !== EXPECTED.equipment) fail('(meta)', 'equipment count is stale');
+  for (const meta of [MAGIC_ITEMS_META, FEATS_META, ORIGINS_META, REFERENCE_CONTENT_META]) {
     if (meta.sourceRepository !== SRD_REFORGED_REPOSITORY) fail('(meta)', 'unexpected SRD-reForged repository');
     if (meta.sourceCommit !== SRD_REFORGED_SHA) fail('(meta)', 'unexpected SRD-reForged commit');
   }
@@ -64,6 +77,8 @@ export function auditSrdContent(): SrdAuditFailure[] {
   const collections: Array<[string, Array<{ id: string; name: string }>, boolean]> = [
     ['monster', ALL_MONSTERS, false],
     ['spell', SRD_SPELLS, false],
+    ['class', SRD_CLASSES, true],
+    ['equipment', SRD_EQUIPMENT, true],
     ['magic item', MAGIC_ITEMS, true],
     ['feat', FEATS, true],
     ['background', BACKGROUNDS, true],
@@ -81,6 +96,12 @@ export function auditSrdContent(): SrdAuditFailure[] {
         fail(entry.name, `unstable slug ${entry.id}`);
       }
     }
+  }
+
+  const ruleIds = new Set<string>();
+  for (const article of SRD_REFERENCE_ARTICLES) {
+    if (ruleIds.has(article.id)) fail(article.name, `duplicate rule id ${article.id}`);
+    ruleIds.add(article.id);
   }
 
   const spellIds = new Set(SRD_SPELLS.map((spell) => spell.id));
@@ -101,6 +122,29 @@ export function auditSrdContent(): SrdAuditFailure[] {
     auditText(item.name, 'description', item.description);
     if (item.rarities.length === 0) fail(item.name, 'rarities is empty');
     if (!item.category) fail(item.name, 'category is empty');
+  }
+  for (const article of SRD_REFERENCE_ARTICLES) {
+    auditText(article.name, 'summary', article.summary);
+    if (article.sections.length === 0) fail(article.name, 'sections is empty');
+    for (const section of article.sections) {
+      if (section.heading) auditText(article.name, 'section heading', section.heading);
+      if (section.text) auditText(article.name, 'section text', section.text);
+    }
+  }
+  for (const characterClass of SRD_CLASSES) {
+    auditText(characterClass.name, 'summary', characterClass.summary);
+    if (characterClass.sections.length === 0) fail(characterClass.name, 'sections is empty');
+    for (const section of characterClass.sections) {
+      if (section.heading) auditText(characterClass.name, 'section heading', section.heading);
+      if (section.text) auditText(characterClass.name, 'section text', section.text);
+    }
+  }
+  for (const equipment of SRD_EQUIPMENT) {
+    auditText(equipment.name, 'summary', equipment.summary);
+    if (equipment.description) auditText(equipment.name, 'description', equipment.description);
+    for (const equipmentFact of equipment.facts) {
+      auditText(equipment.name, equipmentFact.label, equipmentFact.value);
+    }
   }
   for (const feat of FEATS) auditText(feat.name, 'description', feat.description);
   for (const background of BACKGROUNDS) {
@@ -135,6 +179,22 @@ export function auditSrdContent(): SrdAuditFailure[] {
     fail('Staff of the Python', 'Staff of Power residue remains');
   }
 
+  if (SRD_CLASSES.filter((entry) => entry.kind === 'Class').length !== 12) {
+    fail('(classes)', 'expected 12 base classes');
+  }
+  if (SRD_CLASSES.filter((entry) => entry.kind === 'Subclass').length !== 12) {
+    fail('(classes)', 'expected 12 subclasses');
+  }
+  if (SRD_REFERENCE_ARTICLES.filter((entry) => entry.group === 'Rules Glossary').length !== 154) {
+    fail('(rules)', 'expected 154 Rules Glossary entries');
+  }
+  if (SRD_REFERENCE_ARTICLES.filter((entry) => entry.group === 'Gameplay Toolbox').length !== 8) {
+    fail('(rules)', 'expected 8 Gameplay Toolbox articles');
+  }
+  if (SRD_EQUIPMENT.filter((entry) => entry.category === 'Weapon').length !== 38) {
+    fail('(equipment)', 'expected 38 weapons');
+  }
+
   return failures;
 }
 
@@ -148,6 +208,7 @@ function main(): void {
   }
   console.log(
     `SRD audit passed: ${EXPECTED.monsters} monsters, ${EXPECTED.spells} spells, `
+      + `${EXPECTED.rules} rules, ${EXPECTED.classes} classes/subclasses, ${EXPECTED.equipment} equipment entries, `
       + `${EXPECTED.magicItems} magic items, ${EXPECTED.feats} feats, `
       + `${EXPECTED.backgrounds} backgrounds, ${EXPECTED.species} species.`,
   );
