@@ -96,6 +96,16 @@ export interface DmScreenMergeResult {
   itemIdRemaps: DmScreenIdRemap[];
 }
 
+export type DmScreenGridAction =
+  | { type: 'set-columns'; columns: DmScreenColumns }
+  | { type: 'set-density'; density: DmScreenDensity };
+
+export type DmScreenPanelDisplayAction =
+  | { type: 'set-width'; width: DmScreenPanelWidth }
+  | { type: 'set-collapsed'; collapsed: boolean }
+  | { type: 'set-stashed'; stashed: boolean }
+  | { type: 'set-print-excluded'; excludedFromPrint: boolean };
+
 function defaultId(kind: DmScreenIdKind): string {
   const suffix = globalThis.crypto?.randomUUID?.()
     ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
@@ -172,6 +182,79 @@ export function appendItemToSectionTree(
     return { ...section, collapsed: false, children };
   });
   return changed ? next : sections;
+}
+
+/** Persist a board-level grid preference without touching panel state. */
+export function reduceDmScreenGrid(
+  state: DmScreenState,
+  action: DmScreenGridAction,
+): DmScreenState {
+  if (action.type === 'set-columns') {
+    if (state.layout.columns === action.columns) return state;
+    return { ...state, layout: { ...state.layout, columns: action.columns } };
+  }
+
+  if (state.layout.density === action.density) return state;
+  return { ...state, layout: { ...state.layout, density: action.density } };
+}
+
+/**
+ * Persist one panel display choice while preserving its position and every
+ * unrelated display flag. Focused panel and tray state deliberately live in
+ * the workspace instead of this portable document.
+ */
+export function reduceDmScreenPanelDisplay(
+  state: DmScreenState,
+  itemId: string,
+  action: DmScreenPanelDisplayAction,
+): DmScreenState {
+  function updateItem(item: DmScreenItem): DmScreenItem {
+    if (item.id !== itemId) return item;
+    if (action.type === 'set-width') {
+      if (item.layout.width === action.width) return item;
+      return { ...item, layout: { ...item.layout, width: action.width } };
+    }
+    if (action.type === 'set-collapsed') {
+      if (item.collapsed === action.collapsed) return item;
+      return { ...item, collapsed: action.collapsed };
+    }
+    if (action.type === 'set-stashed') {
+      if (item.layout.stashed === action.stashed) return item;
+      return { ...item, layout: { ...item.layout, stashed: action.stashed } };
+    }
+    if (item.layout.excludedFromPrint === action.excludedFromPrint) return item;
+    return {
+      ...item,
+      layout: { ...item.layout, excludedFromPrint: action.excludedFromPrint },
+    };
+  }
+
+  function updateSections(
+    sections: DmScreenSection[],
+  ): { sections: DmScreenSection[]; changed: boolean } {
+    let changed = false;
+    const next = sections.map((section) => {
+      const items = section.items.map(updateItem);
+      const children = updateSections(section.children);
+      const itemsChanged = items.some((item, index) => item !== section.items[index]);
+      if (!itemsChanged && !children.changed) return section;
+      changed = true;
+      return {
+        ...section,
+        collapsed: action.type === 'set-stashed'
+          && action.stashed === false
+          && (itemsChanged || children.changed)
+          ? false
+          : section.collapsed,
+        items: itemsChanged ? items : section.items,
+        children: children.changed ? children.sections : section.children,
+      };
+    });
+    return { sections: changed ? next : sections, changed };
+  }
+
+  const result = updateSections(state.sections);
+  return result.changed ? { ...state, sections: result.sections } : state;
 }
 
 export function removeSectionTree(sections: DmScreenSection[], sectionId: string): DmScreenSection[] {

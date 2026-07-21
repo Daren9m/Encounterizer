@@ -12,6 +12,8 @@ import {
   isDmScreenState,
   mergeDmScreenDocuments,
   parseDmScreenDocument,
+  reduceDmScreenGrid,
+  reduceDmScreenPanelDisplay,
   removeSectionTree,
   syncDmPartySnapshot,
   syncPinnedItems,
@@ -115,6 +117,69 @@ describe('DM screen', () => {
     expect(updated[0].children[0].items).toEqual([added]);
     expect(appendItemToSectionTree(sections, 'missing', added)).toBe(sections);
     expect(sections[0].collapsed).toBe(true);
+  });
+
+  it('persists grid choices without changing panel state', () => {
+    const document = screen([{
+      id: 'section', title: 'Section', collapsed: false,
+      items: [note('panel', { layout: layout({ width: 'wide', stashed: true }) })],
+      children: [],
+    }]);
+
+    const fourColumns = reduceDmScreenGrid(document, { type: 'set-columns', columns: 4 });
+    const compact = reduceDmScreenGrid(fourColumns, { type: 'set-density', density: 'compact' });
+
+    expect(compact.layout).toEqual({ columns: 4, density: 'compact' });
+    expect(compact.sections).toBe(document.sections);
+    expect(compact.sections[0].items[0].layout).toEqual({
+      width: 'wide', stashed: true, excludedFromPrint: false,
+    });
+    expect(reduceDmScreenGrid(compact, { type: 'set-density', density: 'compact' })).toBe(compact);
+  });
+
+  it('updates nested panel display state without changing its order or unrelated flags', () => {
+    const before = note('before');
+    const target = note('target', {
+      collapsed: true,
+      layout: layout({ width: 'compact', excludedFromPrint: true }),
+    });
+    const after = note('after');
+    const document = screen([{
+      id: 'outer', title: 'Outer', collapsed: true, items: [],
+      children: [{
+        id: 'inner', title: 'Inner', collapsed: true,
+        items: [before, target, after], children: [],
+      }],
+    }]);
+
+    const resized = reduceDmScreenPanelDisplay(document, target.id, {
+      type: 'set-width', width: 'full',
+    });
+    const stashed = reduceDmScreenPanelDisplay(resized, target.id, {
+      type: 'set-stashed', stashed: true,
+    });
+    const restored = reduceDmScreenPanelDisplay(stashed, target.id, {
+      type: 'set-stashed', stashed: false,
+    });
+    const expanded = reduceDmScreenPanelDisplay(restored, target.id, {
+      type: 'set-collapsed', collapsed: false,
+    });
+    const printable = reduceDmScreenPanelDisplay(expanded, target.id, {
+      type: 'set-print-excluded', excludedFromPrint: false,
+    });
+    const panels = printable.sections[0].children[0].items;
+
+    expect(panels.map((item) => item.id)).toEqual(['before', 'target', 'after']);
+    expect(panels[1]).toMatchObject({
+      collapsed: false,
+      layout: { width: 'full', stashed: false, excludedFromPrint: false },
+    });
+    expect(printable.sections[0].collapsed).toBe(false);
+    expect(printable.sections[0].children[0].collapsed).toBe(false);
+    expect(printable.sections[0].items).toBe(document.sections[0].items);
+    expect(reduceDmScreenPanelDisplay(printable, 'missing', {
+      type: 'set-collapsed', collapsed: false,
+    })).toBe(printable);
   });
 
   it('duplicates a nested manual panel beside its source with a fresh global ID', () => {
