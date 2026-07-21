@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { BESTIARY_META } from '@/data/bestiary-meta';
+import { FEATS_META } from '@/data/feats-meta';
+import { MAGIC_ITEMS_META } from '@/data/magic-items-meta';
+import { ORIGINS_META } from '@/data/origins-meta';
 import { SPELLS_META } from '@/data/spells-meta';
 
 export const metadata: Metadata = {
@@ -43,7 +46,9 @@ export default function CreditsPage() {
         <p className="text-sm text-[var(--text-2)]">
           The bestiary contains {BESTIARY_META.count} monster stat blocks derived from the SRD
           5.2.1 ({BESTIARY_META.license}). The spell reference contains {SPELLS_META.count} spells
-          with verbatim SRD 5.2.1 descriptions ({SPELLS_META.license}).
+          with verbatim SRD 5.2.1 descriptions ({SPELLS_META.license}). The structured reference
+          data also contains {MAGIC_ITEMS_META.count} magic items, {FEATS_META.count} feats, and{' '}
+          {ORIGINS_META.count} backgrounds and species.
         </p>
       </section>
 
