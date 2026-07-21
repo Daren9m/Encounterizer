@@ -114,7 +114,7 @@ export const MAGIC_ITEMS_VERY_RARE: MagicItem[] = [
     "rarities": [
       "Very Rare"
     ],
-    "rarityText": "Longsword, Rapier, Scimitar, or Shortsword), Very Rare",
+    "rarityText": "Very Rare",
     "requiresAttunement": true,
     "description": "You can take a Bonus Action to toss this magic weapon into the air. When you do so, the weapon begins to hover, flies up to 30 feet, and attacks one creature of your choice within 5 feet of itself. The weapon uses your attack roll and adds your ability modifier to damage rolls.\n\nWhile the weapon hovers, you can take a Bonus Action to cause it to fly up to 30 feet to another spot within 30 feet of you. As part of the same Bonus Action, you can cause the weapon to attack one creature within 5 feet of the weapon.\n\nAfter the hovering weapon attacks for the fourth time, it flies back to you and tries to return to your hand. If you have no hand free, the weapon falls to the ground in your space. If the weapon has no unobstructed path to you, it moves as close to you as it can and then falls to the ground. It also ceases to hover if you grasp it or are more than 30 feet away from it.",
     "source": "SRD 5.2.1"
@@ -127,7 +127,7 @@ export const MAGIC_ITEMS_VERY_RARE: MagicItem[] = [
     "rarities": [
       "Very Rare"
     ],
-    "rarityText": "Medium, or Heavy), Very Rare",
+    "rarityText": "Very Rare",
     "requiresAttunement": true,
     "description": "While wearing this armor, you gain a +1 bonus to Armor Class, and you know Abyssal. In addition, the armor's clawed gauntlets allow your Unarmed Strikes to deal 1d8 Slashing damage instead of the usual Bludgeoning damage, and you gain a +1 bonus to the attack and damage rolls of your Unarmed Strikes.\n\nCurse. Once you don this cursed armor, you can't doff it unless you are targeted by a Remove Curse spell or similar magic. While wearing the armor, you have Disadvantage on attack rolls against demons and on saving throws against their spells and special abilities.",
     "source": "SRD 5.2.1"
@@ -205,7 +205,7 @@ export const MAGIC_ITEMS_VERY_RARE: MagicItem[] = [
     "rarities": [
       "Very Rare"
     ],
-    "rarityText": "Greatsword, Longsword, Rapier, Scimitar, or Shortsword), Very Rare",
+    "rarityText": "Very Rare",
     "requiresAttunement": true,
     "description": "When you hit with an attack roll using this magic weapon, the target takes an extra 1d6 Cold damage. In addition, while you hold the weapon, you have Resistance to Fire damage.\n\nIn freezing temperatures, the weapon sheds Bright Light in a 10-foot radius and Dim Light for an additional 10 feet.\n\nWhen you draw this weapon, you can extinguish all nonmagical flames within 30 feet of yourself. Once used, this property can't be used again for\n\n1 hour.",
     "source": "SRD 5.2.1"
@@ -624,7 +624,7 @@ export const MAGIC_ITEMS_VERY_RARE: MagicItem[] = [
     "rarities": [
       "Very Rare"
     ],
-    "rarityText": "Greatsword, Longsword, or Scimitar), Very Rare",
+    "rarityText": "Very Rare",
     "requiresAttunement": true,
     "description": "When you attack an object with this magic weapon and hit, maximize your weapon damage dice against the target.\n\nWhen you attack a creature with this weapon and roll a 20 on the d20 for the attack roll, that target takes an extra 14 Slashing damage and gains\n\n1 Exhaustion level.",
     "source": "SRD 5.2.1"

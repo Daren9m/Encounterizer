@@ -70,10 +70,17 @@ export function convertMagicItem(path: string, rawMarkdown: string): MagicItem {
   );
   if (!category) throw new Error(`${entry.name}: unknown magic-item category in "${entry.subtitle}".`);
 
-  const categoryDetail = entry.subtitle.match(new RegExp(`^${category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} \\(([^)]+)\\)`))?.[1];
+  const categoryDetailMatch = entry.subtitle.match(
+    new RegExp(`^${category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} \\(([^)]+)\\)`),
+  );
+  const categoryDetail = categoryDetailMatch?.[1];
   const attunementMatch = entry.subtitle.match(/\(Requires Attunement(?: by ([^)]+))?\)/);
+  const categorySegment = categoryDetailMatch?.[0] ?? category;
+  if (entry.subtitle.at(categorySegment.length) !== ',') {
+    throw new Error(`${entry.name}: missing rarity separator in "${entry.subtitle}".`);
+  }
   const rarityText = entry.subtitle
-    .slice(entry.subtitle.indexOf(',') + 1)
+    .slice(categorySegment.length + 1)
     .replace(/\s*\(Requires Attunement(?: by [^)]+)?\)\s*$/, '')
     .trim();
   const rarityMatches = rarityText.match(/Rarity Varies|Very Rare|Uncommon|Common|Legendary|Artifact|Rare/g) ?? [];

@@ -28,7 +28,7 @@ export const MAGIC_ITEMS_RARE: MagicItem[] = [
     "rarities": [
       "Rare"
     ],
-    "rarityText": "Medium, or Heavy), Rare",
+    "rarityText": "Rare",
     "requiresAttunement": true,
     "description": "You have Resistance to one type of damage while you wear this armor. The DM chooses the type or determines it randomly by rolling on the following table.\n\n1d10 — Damage Type — 1d10 — Damage Type\n1 — Acid — 6 — Necrotic\n2 — Cold — 7 — Poison\n3 — Fire — 8 — Psychic\n4 — Force — 9 — Radiant\n5 — Lightning — 10 — Thunder",
     "source": "SRD 5.2.1"
@@ -41,7 +41,7 @@ export const MAGIC_ITEMS_RARE: MagicItem[] = [
     "rarities": [
       "Rare"
     ],
-    "rarityText": "Medium, or Heavy), Rare",
+    "rarityText": "Rare",
     "requiresAttunement": true,
     "description": "While wearing this armor, you have Resistance to one of the following damage types: Bludgeoning, Piercing, or Slashing. The GM chooses the type or determines it randomly.\n\nCurse. This armor is cursed, a fact that is revealed only when the Identify spell is cast on the armor or you attune to it. Attuning to the armor curses you until you are targeted by a Remove Curse spell or similar magic; removing the armor fails to end the curse. While cursed, you have Vulnerability to two of the three damage types associated with the armor (not the one to which it grants Resistance).",
     "source": "SRD 5.2.1"
@@ -56,7 +56,7 @@ export const MAGIC_ITEMS_RARE: MagicItem[] = [
       "Very Rare",
       "Legendary"
     ],
-    "rarityText": "Medium, or Heavy), Rare (+1), Very Rare (+2), or Legendary (+3)",
+    "rarityText": "Rare (+1), Very Rare (+2), or Legendary (+3)",
     "requiresAttunement": false,
     "description": "You have a bonus to Armor Class while wearing this armor. The bonus is determined by its rarity.",
     "source": "SRD 5.2.1"
@@ -118,7 +118,7 @@ export const MAGIC_ITEMS_RARE: MagicItem[] = [
     "rarities": [
       "Rare"
     ],
-    "rarityText": "Greataxe, or Halberd), Rare",
+    "rarityText": "Rare",
     "requiresAttunement": true,
     "description": "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon. In addition, while you are attuned to this weapon, your Hit Point maximum increases by 1 for each level you have attained.\n\nCurse. This weapon is cursed, and becoming attuned to it extends the curse to you. As long as you remain cursed, you are unwilling to part with the weapon, keeping it within reach at all times. You also have Disadvantage on attack rolls with weapons other than this one.\n\nWhenever another creature damages you while the weapon is in your possession, you must succeed on a DC 15 Wisdom saving throw or go berserk. This berserk state ends when you start your turn and there are no creatures within 60 feet of you that you can see or hear.\n\nWhile berserk, you regard the creature nearest to you that you can see or hear as your enemy. If there are multiple possible creatures, choose one at random. On each of your turns, you must move as close to the creature as possible and take the Attack action, targeting the creature. If you're unable to get close enough to the creature to attack it with the weapon, your turn ends after you've used up all your available movement. If the creature dies or can no longer be seen or heard by you, the next nearest creature that you can see or hear becomes your new target.",
     "source": "SRD 5.2.1"
@@ -917,7 +917,7 @@ export const MAGIC_ITEMS_RARE: MagicItem[] = [
     "rarities": [
       "Rare"
     ],
-    "rarityText": "Greatsword, Longsword, Rapier, Scimitar, or Shortsword), Rare",
+    "rarityText": "Rare",
     "requiresAttunement": true,
     "description": "When you attack a creature with this magic weapon and roll a 20 on the d20 for the attack roll, that target takes an extra 15 Necrotic damage if it isn't a Construct or an Undead, and you gain Temporary Hit Points equal to the amount of Necrotic damage taken.",
     "source": "SRD 5.2.1"
@@ -930,7 +930,7 @@ export const MAGIC_ITEMS_RARE: MagicItem[] = [
     "rarities": [
       "Rare"
     ],
-    "rarityText": "Greatsword, Longsword, Rapier, Scimitar, or Shortsword), Rare",
+    "rarityText": "Rare",
     "requiresAttunement": true,
     "description": "When you hit a creature with an attack using this magic weapon, the target takes an extra 2d6 Necrotic damage and must succeed on a DC 15\n\nConstitution saving throw or be unable to regain Hit Points for 1 hour. The target repeats the save at the end of each of its turns, ending the effect on itself on a success.",
     "source": "SRD 5.2.1"

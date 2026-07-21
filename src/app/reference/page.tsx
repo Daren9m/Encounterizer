@@ -64,6 +64,9 @@ export default function ReferencePage() {
         <Link href="/spells" className="font-medium text-[var(--text-2)] hover:text-[var(--bronze-light)]">
           Spells
         </Link>
+        <Link href="/compendium" className="font-medium text-[var(--text-2)] hover:text-[var(--bronze-light)]">
+          Items &amp; character options
+        </Link>
         <a
           href={SRD_5_2_1_URL}
           target="_blank"
