@@ -7,7 +7,7 @@ export const SITE_NAME = 'Encounterizer';
 
 export const SITE_DESCRIPTION =
   'Free, private tools for D&D 5.5e DMs: build encounters, generate maps and challenges, '
-  + 'run combat, and search SRD rules, monsters, spells, items, feats, backgrounds, and species.';
+  + 'run combat, and search SRD rules, classes, monsters, spells, equipment, and character options.';
 
 /** Set the SITE_URL repo variable once the Azure Static Web App exists.
  *  `||` (not `??`) on purpose: when the repo variable is unset, GitHub
@@ -121,8 +121,8 @@ export const TOOL_SECTIONS: ToolSection[] = [
         path: '/reference',
         navLabel: 'Reference',
         title: 'Reference Library',
-        description: 'Search rules, spells, magic items, feats, backgrounds, and species in one place.',
-        navDescription: 'Search rules, spells, items, and character options.',
+        description: 'Search SRD rules, classes, spells, equipment, magic items, and character options in one place.',
+        navDescription: 'Search rules, classes, gear, spells, and more.',
         icon: 'book',
       },
       {

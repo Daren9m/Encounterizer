@@ -1,12 +1,9 @@
 import { BACKGROUNDS } from '@/data/backgrounds';
+import { SRD_CLASSES } from '@/data/classes';
+import { SRD_EQUIPMENT } from '@/data/equipment';
 import { FEATS } from '@/data/feats';
 import { MAGIC_ITEMS } from '@/data/magic-items';
-import {
-  RULES_REFERENCE_CATEGORIES,
-  RULES_REFERENCE_ENTRIES,
-  type RulesReferenceCategoryId,
-  type RulesReferenceEntry,
-} from '@/data/rules-reference';
+import { SRD_REFERENCE_ARTICLES } from '@/data/reference-articles';
 import { levelLabel, SRD_SPELLS, type Spell, type SpellSchool } from '@/data/spells';
 import { SPECIES } from '@/data/species';
 import type {
@@ -17,11 +14,18 @@ import type {
   MagicItemCategory,
   MagicItemRarity,
   Species,
+  SrdClassEntry,
+  SrdEquipmentCategory,
+  SrdEquipmentItem,
+  SrdReferenceArticle,
+  SrdRuleGroup,
 } from '@/lib/srd-content-types';
 
 export type ReferenceCategory =
   | 'rules'
+  | 'classes'
   | 'spells'
+  | 'equipment'
   | 'magic-items'
   | 'feats'
   | 'backgrounds'
@@ -30,8 +34,10 @@ export type ReferenceCategory =
 export type ReferenceCategoryFilter = ReferenceCategory | 'all';
 
 export type ReferenceLibraryEntry =
-  | { key: string; id: string; name: string; category: 'rules'; resource: RulesReferenceEntry }
+  | { key: string; id: string; name: string; category: 'rules'; resource: SrdReferenceArticle }
+  | { key: string; id: string; name: string; category: 'classes'; resource: SrdClassEntry }
   | { key: string; id: string; name: string; category: 'spells'; resource: Spell }
+  | { key: string; id: string; name: string; category: 'equipment'; resource: SrdEquipmentItem }
   | { key: string; id: string; name: string; category: 'magic-items'; resource: MagicItem }
   | { key: string; id: string; name: string; category: 'feats'; resource: Feat }
   | { key: string; id: string; name: string; category: 'backgrounds'; resource: Background }
@@ -40,12 +46,15 @@ export type ReferenceLibraryEntry =
 export interface ReferenceLibraryFilters {
   query: string;
   category: ReferenceCategoryFilter;
-  ruleCategory?: RulesReferenceCategoryId;
+  ruleGroup?: SrdRuleGroup;
+  classKind?: SrdClassEntry['kind'];
+  className?: string;
   spellLevel?: number;
   spellSchool?: SpellSchool;
   spellClass?: string;
   concentration?: 'yes' | 'no';
   ritual?: 'yes' | 'no';
+  equipmentCategory?: SrdEquipmentCategory;
   magicItemRarity?: MagicItemRarity;
   magicItemCategory?: MagicItemCategory;
   attunement?: 'required' | 'not-required';
@@ -59,8 +68,10 @@ export const REFERENCE_CATEGORIES: ReadonlyArray<{
   singular: string;
   count: number;
 }> = [
-  { id: 'rules', label: 'Rules', singular: 'Rule', count: RULES_REFERENCE_ENTRIES.length },
+  { id: 'rules', label: 'Rules', singular: 'Rule', count: SRD_REFERENCE_ARTICLES.length },
+  { id: 'classes', label: 'Classes', singular: 'Class', count: SRD_CLASSES.length },
   { id: 'spells', label: 'Spells', singular: 'Spell', count: SRD_SPELLS.length },
+  { id: 'equipment', label: 'Equipment', singular: 'Equipment', count: SRD_EQUIPMENT.length },
   { id: 'magic-items', label: 'Magic Items', singular: 'Magic Item', count: MAGIC_ITEMS.length },
   { id: 'feats', label: 'Feats', singular: 'Feat', count: FEATS.length },
   { id: 'backgrounds', label: 'Backgrounds', singular: 'Background', count: BACKGROUNDS.length },
@@ -88,17 +99,46 @@ export const SPELL_CLASSES = [
   'Bard', 'Cleric', 'Druid', 'Paladin', 'Ranger', 'Sorcerer', 'Warlock', 'Wizard',
 ];
 
-export const RULE_CATEGORY_OPTIONS = RULES_REFERENCE_CATEGORIES;
+export const RULE_GROUP_OPTIONS: SrdRuleGroup[] = [
+  'Playing the Game',
+  'Character Creation',
+  'Equipment Rules',
+  'Spellcasting Rules',
+  'Rules Glossary',
+  'Gameplay Toolbox',
+  'Magic Item Rules',
+];
+
+export const CLASS_NAMES = SRD_CLASSES
+  .filter((entry) => entry.kind === 'Class')
+  .map((entry) => entry.name);
+
+export const EQUIPMENT_CATEGORIES: SrdEquipmentCategory[] = [
+  'Weapon',
+  'Armor',
+  'Adventuring Gear',
+  'Tool',
+  'Mount',
+  'Tack and Vehicle',
+  'Large Vehicle',
+];
 
 export function buildReferenceLibraryEntries(
   spells: Spell[] = SRD_SPELLS,
 ): ReferenceLibraryEntry[] {
   return [
-    ...RULES_REFERENCE_ENTRIES.map((resource) => ({
+    ...SRD_REFERENCE_ARTICLES.map((resource) => ({
       key: `rules:${resource.id}`,
       id: resource.id,
-      name: resource.title,
+      name: resource.name,
       category: 'rules' as const,
+      resource,
+    })),
+    ...SRD_CLASSES.map((resource) => ({
+      key: `classes:${resource.id}`,
+      id: resource.id,
+      name: resource.name,
+      category: 'classes' as const,
       resource,
     })),
     ...spells.map((resource) => ({
@@ -106,6 +146,13 @@ export function buildReferenceLibraryEntries(
       id: resource.id,
       name: resource.name,
       category: 'spells' as const,
+      resource,
+    })),
+    ...SRD_EQUIPMENT.map((resource) => ({
+      key: `equipment:${resource.id}`,
+      id: resource.id,
+      name: resource.name,
+      category: 'equipment' as const,
       resource,
     })),
     ...MAGIC_ITEMS.map((resource) => ({
@@ -145,7 +192,22 @@ function entrySearchText(entry: ReferenceLibraryEntry): string {
   switch (entry.category) {
     case 'rules': {
       const rule = entry.resource;
-      return [rule.title, rule.summary, ...rule.details, ...(rule.tags ?? [])].join(' ');
+      return [
+        rule.name,
+        rule.group,
+        rule.summary,
+        ...rule.sections.flatMap((section) => [section.heading, section.text]),
+      ].filter(Boolean).join(' ');
+    }
+    case 'classes': {
+      const characterClass = entry.resource;
+      return [
+        characterClass.name,
+        characterClass.kind,
+        characterClass.className,
+        characterClass.summary,
+        ...characterClass.sections.flatMap((section) => [section.heading, section.text]),
+      ].filter(Boolean).join(' ');
     }
     case 'spells': {
       const spell = entry.resource;
@@ -178,6 +240,18 @@ function entrySearchText(entry: ReferenceLibraryEntry): string {
         item.attunement,
         item.requiresAttunement ? 'attunement required' : 'no attunement',
         item.description,
+      ].filter(Boolean).join(' ');
+    }
+    case 'equipment': {
+      const equipment = entry.resource;
+      return [
+        equipment.name,
+        equipment.category,
+        equipment.cost,
+        equipment.weight,
+        equipment.summary,
+        ...equipment.facts.flatMap((item) => [item.label, item.value]),
+        equipment.description,
       ].filter(Boolean).join(' ');
     }
     case 'feats': {
@@ -225,8 +299,13 @@ export function filterReferenceLibrary(
     if (filters.bookmarkedOnly && !bookmarkedKeys.has(entry.key)) return false;
 
     if (entry.category === 'rules') {
-      if (filters.ruleCategory && entry.resource.category !== filters.ruleCategory) return false;
-    } else if (filters.ruleCategory) return false;
+      if (filters.ruleGroup && entry.resource.group !== filters.ruleGroup) return false;
+    } else if (filters.ruleGroup) return false;
+
+    if (entry.category === 'classes') {
+      if (filters.classKind && entry.resource.kind !== filters.classKind) return false;
+      if (filters.className && entry.resource.className !== filters.className) return false;
+    } else if (filters.classKind || filters.className) return false;
 
     if (entry.category === 'spells') {
       const spell = entry.resource;
@@ -242,6 +321,10 @@ export function filterReferenceLibrary(
       || filters.concentration
       || filters.ritual
     ) return false;
+
+    if (entry.category === 'equipment') {
+      if (filters.equipmentCategory && entry.resource.category !== filters.equipmentCategory) return false;
+    } else if (filters.equipmentCategory) return false;
 
     if (entry.category === 'magic-items') {
       const item = entry.resource;
@@ -287,6 +370,8 @@ export function getReferenceEntrySummary(entry: ReferenceLibraryEntry): string {
   switch (entry.category) {
     case 'rules':
       return entry.resource.summary;
+    case 'classes':
+      return `${entry.resource.kind} · ${entry.resource.className} · ${entry.resource.summary}`;
     case 'spells':
       return `${levelLabel(entry.resource.level)} ${entry.resource.school} · ${entry.resource.castingTime} · ${entry.resource.range}`;
     case 'magic-items':
@@ -295,6 +380,8 @@ export function getReferenceEntrySummary(entry: ReferenceLibraryEntry): string {
         entry.resource.categoryDetail ?? entry.resource.category,
         entry.resource.requiresAttunement ? 'Attunement' : undefined,
       ].filter(Boolean).join(' · ');
+    case 'equipment':
+      return entry.resource.summary;
     case 'feats':
       return [`${entry.resource.category} Feat`, entry.resource.prerequisite].filter(Boolean).join(' · ');
     case 'backgrounds':

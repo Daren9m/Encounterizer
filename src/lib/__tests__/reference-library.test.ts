@@ -7,12 +7,14 @@ import {
 
 describe('reference library', () => {
   it('indexes every built-in non-monster reference exactly once', () => {
-    expect(REFERENCE_LIBRARY_ENTRIES).toHaveLength(659);
-    expect(new Set(REFERENCE_LIBRARY_ENTRIES.map((entry) => entry.key)).size).toBe(659);
+    expect(REFERENCE_LIBRARY_ENTRIES).toHaveLength(1032);
+    expect(new Set(REFERENCE_LIBRARY_ENTRIES.map((entry) => entry.key)).size).toBe(1032);
     expect(Object.fromEntries(REFERENCE_CATEGORIES.map((category) => [category.id, category.count])))
       .toEqual({
-        rules: 33,
+        rules: 200,
+        classes: 24,
         spells: 339,
+        equipment: 182,
         'magic-items': 257,
         feats: 17,
         backgrounds: 4,
@@ -21,8 +23,14 @@ describe('reference library', () => {
   });
 
   it('searches naturally across different resource types', () => {
-    expect(filterReferenceLibrary({ query: 'death saving throws', category: 'all' })[0]?.name)
-      .toBe('Death Saving Throws');
+    expect(filterReferenceLibrary({ query: 'death saving throw', category: 'all' }).map((entry) => entry.name))
+      .toContain('Death Saving Throw');
+    expect(filterReferenceLibrary({ query: 'path berserker frenzy', category: 'classes' })[0]?.name)
+      .toBe('Path of the Berserker');
+    expect(filterReferenceLibrary({ query: '1d12 piercing musket', category: 'equipment' })[0]?.name)
+      .toBe('Musket');
+    expect(filterReferenceLibrary({ query: 'mental stress effects', category: 'rules' })[0]?.name)
+      .toBe('Fear and Mental Stress');
     expect(filterReferenceLibrary({ query: 'fireball', category: 'all' }).map((entry) => entry.name))
       .toContain('Fireball');
     expect(filterReferenceLibrary({ query: 'bag holding', category: 'all' })[0]?.name)
@@ -31,9 +39,15 @@ describe('reference library', () => {
       .toEqual(expect.arrayContaining(['Dwarf', 'Orc']));
   });
 
-  it('applies rule, spell, item, and feat filters', () => {
-    expect(filterReferenceLibrary({ query: '', category: 'rules', ruleCategory: 'conditions' }))
-      .toHaveLength(15);
+  it('applies rule, class, equipment, spell, item, and feat filters', () => {
+    expect(filterReferenceLibrary({ query: '', category: 'rules', ruleGroup: 'Gameplay Toolbox' }))
+      .toHaveLength(8);
+    expect(filterReferenceLibrary({ query: '', category: 'classes', classKind: 'Subclass' }))
+      .toHaveLength(12);
+    expect(filterReferenceLibrary({ query: '', category: 'classes', className: 'Bard' }))
+      .toHaveLength(2);
+    expect(filterReferenceLibrary({ query: '', category: 'equipment', equipmentCategory: 'Weapon' }))
+      .toHaveLength(38);
     const wizardRituals = filterReferenceLibrary({
       query: '',
       category: 'spells',
@@ -57,17 +71,17 @@ describe('reference library', () => {
   });
 
   it('can narrow any category to bookmarks', () => {
-    const keys = new Set(['rules:cover', 'spells:fireball', 'species:dwarf']);
+    const keys = new Set(['rules:rules-glossary-cover', 'spells:fireball', 'species:dwarf']);
     const saved = filterReferenceLibrary(
       { query: '', category: 'all', bookmarkedOnly: true },
       REFERENCE_LIBRARY_ENTRIES,
       keys,
     );
-    expect(saved.map((entry) => entry.key)).toEqual(['rules:cover', 'species:dwarf', 'spells:fireball']);
+    expect(saved.map((entry) => entry.key)).toEqual(['rules:rules-glossary-cover', 'species:dwarf', 'spells:fireball']);
     expect(filterReferenceLibrary(
       { query: '', category: 'rules', bookmarkedOnly: true },
       REFERENCE_LIBRARY_ENTRIES,
       keys,
-    ).map((entry) => entry.key)).toEqual(['rules:cover']);
+    ).map((entry) => entry.key)).toEqual(['rules:rules-glossary-cover']);
   });
 });
