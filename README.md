@@ -63,7 +63,7 @@ localStorage between visits.
 | Framework | Next.js 16 (App Router, static export) |
 | Language | TypeScript (strict) |
 | Styling | Tailwind CSS + CSS custom properties (Dusksteel tokens), Spectral + IBM Plex Sans via next/font, Lucide icons |
-| Data | Generated TypeScript bestiary + spell reference from SRD 5.2.1, client-side 5etools importers |
+| Data | Generated TypeScript bestiary, spells, magic items, feats, and origins from SRD 5.2.1; client-side 5etools importers |
 | Testing | Vitest (140+ tests: rules math, importer, Monte Carlo statistics) |
 | CI/CD | GitHub Actions → Azure Static Web Apps (free tier) |
 | Hosting cost | $0 |
@@ -114,9 +114,14 @@ src/
     spells-l*.ts             # AUTO-GENERATED SRD 5.2.1 spells (4 level bands)
     spells-meta.ts           # Generated count + source commit
     spell-summaries.ts       # Hand-curated effect summary overrides
+    magic-items-*.ts         # AUTO-GENERATED SRD magic items (rarity bands)
+    feats.ts                 # AUTO-GENERATED SRD feats
+    backgrounds.ts           # AUTO-GENERATED SRD backgrounds
+    species.ts               # AUTO-GENERATED SRD species
 scripts/
   import-bestiary.ts         # Regenerates monster data from 5etools (npm run import:bestiary)
   import-spells.ts           # Regenerates spell data from 5etools (npm run import:spells)
+  import-srd-content.ts       # Regenerates magic items, feats, and origins from pinned Markdown
 ```
 
 ## Getting Started
@@ -146,6 +151,8 @@ npm run lint             # ESLint (next/core-web-vitals)
 npm test                 # Vitest suite
 npm run import:bestiary  # Regenerate the SRD bestiary from the pinned source
 npm run import:spells    # Regenerate the SRD spell reference from the pinned source
+npm run import:srd       # Regenerate structured SRD content from pinned Markdown
+npm run srd:check        # Audit every committed SRD corpus (no network)
 ```
 
 ## Monster Database
@@ -170,6 +177,14 @@ edited by hand. An audit gate enforces exact corpus counts, licensing name
 checks, format whitelists, and field-coverage parity on every regeneration.
 The bold one-line effect summaries are layered: hand-curated overrides in
 `src/data/spell-summaries.ts` win over machine-synthesized mechanics lines.
+
+## Structured SRD Library
+
+The committed data layer also contains **257 magic items, 17 feats, 4
+backgrounds, and 9 species** from SRD 5.2.1. `scripts/import-srd-content.ts`
+parses per-entry Markdown from a pinned SRD-reForged commit, applies a small
+audited correction ledger for known PDF transcription boundaries, and emits
+typed, formatting-free records. See the [pipeline documentation](docs/srd-content-pipeline.md).
 
 Like the bestiary, the Spells page imports additional spells from **5etools
 spell JSON** or Encounterizer exports — converted and validated entirely in

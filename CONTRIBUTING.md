@@ -48,12 +48,28 @@ converter or the source pin — not the generated file.
 Monsters that aren't in the SRD belong in users' own JSON imports (Bestiary
 page → Custom Monsters), never in the repo.
 
+## Structured SRD Data Is Generated
+
+Do **not** hand-edit `src/data/magic-items-*.ts`, `feats.ts`, `backgrounds.ts`,
+or `species.ts`. Regenerate them from the pinned SRD-reForged Markdown source:
+
+```bash
+npm run import:srd
+npm run import:srd -- --local path/to/dnd.srd.5.2.1
+npm run srd:check
+```
+
+Known transcription repairs are intentionally narrow and documented in
+`docs/srd-content-pipeline.md`. Fix the shared parser, the relevant converter,
+or that correction ledger rather than patching generated output.
+
 ## Before Submitting
 
 ```bash
 npm run typecheck    # tsc --noEmit — must pass with 0 errors
 npm run lint         # ESLint — no warnings or errors
 npm test             # Vitest — all tests green
+npm run srd:check    # committed SRD corpora pass the offline audit
 npm run build        # Static export must complete
 ```
 

@@ -12,6 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "import:bestiary": "tsx scripts/import-bestiary.ts",
+    "import:srd": "tsx scripts/import-srd-content.ts",
+    "srd:check": "tsx scripts/srd-md/audit.ts --check",
     "generate:flavor": "tsx scripts/generate-flavor.ts",
     "flavor:check": "tsx scripts/flavor/audit.ts --check",
     "import:spells": "tsx scripts/import-spells.ts",
