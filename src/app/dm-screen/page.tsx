@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   BookOpen,
+  CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Download,
   Eye,
   EyeOff,
   FileText,
@@ -14,6 +14,7 @@ import {
   Link as LinkIcon,
   Plus,
   Printer,
+  RefreshCw,
   Sparkles,
   Swords,
   Trash2,
@@ -22,8 +23,12 @@ import {
 import { useMonsters } from '@/app/hooks/useMonsters';
 import { useSpells } from '@/app/hooks/useSpells';
 import { useBattleStore } from '@/app/hooks/useBattleStore';
+import { useCustomMonsters } from '@/app/hooks/useCustomMonsters';
+import { useCustomSpells } from '@/app/hooks/useCustomSpells';
+import { useDmScreenStore } from '@/app/hooks/useDmScreenStore';
 import { usePartyLibrary } from '@/app/hooks/usePartyLibrary';
 import BattleOrganizer from '@/components/BattleOrganizer';
+import DmScreenBackupPanel from '@/components/DmScreenBackupPanel';
 import DmPartyPanel from '@/components/DmPartyPanel';
 import MonsterStatBlock from '@/components/MonsterStatBlock';
 import RulesReference from '@/components/RulesReference';
@@ -34,16 +39,22 @@ import {
   EMPTY_DM_SCREEN,
   dmScreenToMarkdown,
   hasDmPartyItem,
-  isDmScreenState,
   removeSectionTree,
   syncDmPartySnapshot,
   syncPinnedItems,
   updateSectionTree,
   type DmScreenItem,
   type DmScreenItemKind,
+  type DmScreenIdFactory,
   type DmScreenSection,
   type DmScreenState,
 } from '@/lib/dm-screen';
+import {
+  createDmScreenExportEnvelope,
+  planDmScreenImport,
+  type DmScreenImportCandidate,
+  type DmScreenImportMode,
+} from '@/lib/dm-screen-import';
 import { getActiveParty } from '@/lib/party';
 import { partyToDmScreenSummary } from '@/lib/party-adapters';
 import { DM_SCREEN_DEFAULT_TOOL_PATH, DM_SCREEN_TOOL_ROUTES } from '@/lib/site';
@@ -70,9 +81,99 @@ function flattenSections(sections: DmScreenSection[], depth = 0): { id: string; 
   ]);
 }
 
+function defaultItemLayout(): DmScreenItem['layout'] {
+  return { width: 'full', stashed: false, excludedFromPrint: false };
+}
+
+function prepareImportedScreen(
+  screen: DmScreenState,
+  mode: DmScreenImportMode,
+  namespace: string,
+): DmScreenState {
+  let sectionIndex = 0;
+  let itemIndex = 0;
+  const prepare = (section: DmScreenSection): DmScreenSection => ({
+    ...section,
+    id: mode === 'merge' ? `${namespace}-section-${++sectionIndex}` : section.id,
+    items: section.items.map((item) => ({
+      ...item,
+      id: mode === 'merge' ? `${namespace}-item-${++itemIndex}` : item.id,
+      ...(item.origin === 'auto-pin' ? { origin: 'manual' as const } : {}),
+    })),
+    children: section.children.map(prepare),
+  });
+  return { ...screen, sections: screen.sections.map(prepare) };
+}
+
+function deterministicDocumentIds(namespace: string): { createId: DmScreenIdFactory } {
+  let next = 0;
+  return { createId: (kind) => `${namespace}-${kind}-collision-${++next}` };
+}
+
+function canonicalJson(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalJson);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value as Record<string, unknown>)
+    .filter(([, entry]) => entry !== undefined)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, entry]) => [key, canonicalJson(entry)]));
+}
+
+function sameResourceDefinition(
+  left: { source?: unknown },
+  right: { source?: unknown },
+): boolean {
+  const { source: _leftSource, ...leftDefinition } = left;
+  const { source: _rightSource, ...rightDefinition } = right;
+  return JSON.stringify(canonicalJson(leftDefinition))
+    === JSON.stringify(canonicalJson(rightDefinition));
+}
+
+function ScreenSaveStatus({
+  hydrated,
+  status,
+  dirty,
+  error,
+  onRetry,
+}: {
+  hydrated: boolean;
+  status: ReturnType<typeof useDmScreenStore>['status'];
+  dirty: boolean;
+  error: ReturnType<typeof useDmScreenStore>['error'];
+  onRetry: () => void;
+}) {
+  if (!hydrated || status === 'idle' || status === 'loading') {
+    return <p className="mt-2 text-xs text-[var(--text-3)]" role="status">Loading saved screen…</p>;
+  }
+  if (status === 'saving') {
+    return <p className="mt-2 inline-flex items-center gap-2 text-xs text-[var(--text-2)]" role="status"><RefreshCw size={14} className="animate-spin" aria-hidden="true" /> Saving screen…</p>;
+  }
+  if (status === 'error' || status === 'unavailable') {
+    return (
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--status-warning)] bg-[var(--status-warning-wash)] p-3 text-sm" role="alert">
+        <p><strong>{dirty ? 'Screen changes are only available in this tab.' : 'The saved screen was left untouched.'}</strong> {error?.message ?? 'Browser storage is unavailable.'}</p>
+        <button type="button" className="btn-secondary text-xs" onClick={onRetry}><RefreshCw size={15} aria-hidden="true" /> Retry</button>
+      </div>
+    );
+  }
+  return <p className="mt-2 inline-flex items-center gap-2 text-xs text-[var(--text-3)]" role="status"><CheckCircle2 size={14} className="text-[var(--status-success)]" aria-hidden="true" /> Saved in this browser</p>;
+}
+
 export default function DmScreenPage() {
-  const [screen, setScreen] = usePersistentState<DmScreenState>('dmScreen', EMPTY_DM_SCREEN, isDmScreenState);
-  const { battle } = useBattleStore();
+  const {
+    screen,
+    status: screenStatus,
+    hydrated: screenHydrated,
+    dirty: screenDirty,
+    error: screenError,
+    updateScreen,
+    replaceScreen,
+    retryScreenStorage,
+  } = useDmScreenStore();
+  const setScreen = useCallback((transform: (current: DmScreenState) => DmScreenState) => {
+    void updateScreen(transform);
+  }, [updateScreen]);
+  const { battle, replaceBattle } = useBattleStore();
   const {
     library: partyLibrary,
     hydrated: partyLibraryHydrated,
@@ -85,18 +186,20 @@ export default function DmScreenPage() {
   );
   const partyLibraryCanRefresh = partyLibraryHydrated && partyLibrary !== null;
   const partySummary = currentPartySummary
-    ?? (!partyLibraryCanRefresh ? screen.partySnapshot ?? null : null);
+    ?? (!partyLibraryCanRefresh ? screen?.partySnapshot ?? null : null);
   const containsPartyItem = useMemo(
-    () => hasDmPartyItem(screen.sections),
-    [screen.sections],
+    () => screen ? hasDmPartyItem(screen.sections) : false,
+    [screen],
   );
   const [pinnedMonsterIds] = usePersistentState<string[]>('bestiaryPinnedMonsters', [], (value): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
   const [pinnedSpellIds] = usePersistentState<string[]>('pinnedSpells', [], (value): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
   const { all: monsters } = useMonsters();
   const spells = useSpells();
+  const { addMonsters, removeMonster } = useCustomMonsters();
+  const { addSpells, removeSpell } = useCustomSpells();
   const monsterMap = useMemo(() => new Map(monsters.map((monster) => [monster.id, monster])), [monsters]);
   const spellMap = useMemo(() => new Map(spells.map((spell) => [spell.id, spell])), [spells]);
-  const sectionOptions = useMemo(() => flattenSections(screen.sections), [screen.sections]);
+  const sectionOptions = useMemo(() => flattenSections(screen?.sections ?? []), [screen]);
   const [targetSectionId, setTargetSectionId] = useState('');
   const [addKind, setAddKind] = useState<DmScreenItemKind>('note');
   const [title, setTitle] = useState('');
@@ -106,8 +209,10 @@ export default function DmScreenPage() {
   const selectedTargetSectionId = sectionOptions.some((section) => section.id === targetSectionId)
     ? targetSectionId
     : sectionOptions[0]?.id ?? '';
+  const screenAvailable = screen !== null;
 
   useEffect(() => {
+    if (!screenAvailable) return;
     setScreen((current) => {
       const next = syncPinnedItems(
         current,
@@ -118,14 +223,16 @@ export default function DmScreenPage() {
       );
       return JSON.stringify(next) === JSON.stringify(current) ? current : next;
     });
-  }, [monsterMap, pinnedMonsterIds, pinnedSpellIds, screen.autoAddPinnedMonsters, screen.autoAddPinnedSpells, setScreen, spellMap]);
+  }, [monsterMap, pinnedMonsterIds, pinnedSpellIds, screen?.autoAddPinnedMonsters, screen?.autoAddPinnedSpells, screenAvailable, setScreen, spellMap]);
 
   useEffect(() => {
+    if (!screenAvailable) return;
     if (containsPartyItem && !partyLibraryCanRefresh) return;
     setScreen((current) => syncDmPartySnapshot(current, currentPartySummary));
-  }, [containsPartyItem, currentPartySummary, partyLibraryCanRefresh, setScreen]);
+  }, [containsPartyItem, currentPartySummary, partyLibraryCanRefresh, screenAvailable, setScreen]);
 
-  function screenForExport(): DmScreenState {
+  function screenForExport(): DmScreenState | null {
+    if (!screen) return null;
     return containsPartyItem && !partyLibraryCanRefresh
       ? screen
       : syncDmPartySnapshot(screen, currentPartySummary);
@@ -169,29 +276,30 @@ export default function DmScreenPage() {
 
   function addConfiguredItem() {
     if (addKind === 'note' && (title.trim() || body.trim())) {
-      addItem({ id: id('note'), kind: 'note', title: title.trim() || 'Note', body: body.trim(), collapsed: false, hidden: false, origin: 'manual' });
+      addItem({ id: id('note'), kind: 'note', title: title.trim() || 'Note', body: body.trim(), collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
     }
     if (addKind === 'tool') {
       const route = DM_SCREEN_TOOL_ROUTES.find((candidate) => candidate.path === toolPath)!;
-      addItem({ id: id('tool'), kind: 'tool', title: title.trim() || route.title, body: body.trim() || route.description, href: route.path, collapsed: false, hidden: false, origin: 'manual' });
+      addItem({ id: id('tool'), kind: 'tool', title: title.trim() || route.title, body: body.trim() || route.description, href: route.path, collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
     }
     if (addKind === 'initiative') {
-      addItem({ id: id('initiative'), kind: 'initiative', title: title.trim() || 'Initiative Tracker', collapsed: false, hidden: false, origin: 'manual' });
+      addItem({ id: id('initiative'), kind: 'initiative', title: title.trim() || 'Initiative Tracker', collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
     }
     if (addKind === 'rules') {
-      addItem({ id: id('rules'), kind: 'rules', title: title.trim() || 'Table Rules Reference', collapsed: false, hidden: false, origin: 'manual' });
+      addItem({ id: id('rules'), kind: 'rules', title: title.trim() || 'Table Rules Reference', collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
     }
     if (addKind === 'party') {
-      addItem({ id: id('party'), kind: 'party', title: title.trim() || 'Active Party', collapsed: false, hidden: false, origin: 'manual' });
+      addItem({ id: id('party'), kind: 'party', title: title.trim() || 'Active Party', collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
     }
   }
 
   function addResource(resourceId: string, resourceTitle: string) {
-    addItem({ id: id(addKind), kind: addKind, title: resourceTitle, resourceId, collapsed: false, hidden: false, origin: 'manual' });
+    addItem({ id: id(addKind), kind: addKind, title: resourceTitle, resourceId, collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
   }
 
   function exportJson() {
     const exportScreen = screenForExport();
+    if (!exportScreen) return;
     const usedMonsterIds = new Set<string>();
     const usedSpellIds = new Set<string>();
     const walk = (sections: DmScreenSection[]) => sections.forEach((section) => {
@@ -202,40 +310,224 @@ export default function DmScreenPage() {
       walk(section.children);
     });
     walk(exportScreen.sections);
-    const exported = {
-      exportedAt: new Date().toISOString(),
+    const exported = createDmScreenExportEnvelope({
       dmScreen: exportScreen,
       battle,
       resources: {
-        monsters: [...usedMonsterIds].map((resourceId) => monsterMap.get(resourceId)).filter(Boolean),
-        spells: [...usedSpellIds].map((resourceId) => spellMap.get(resourceId)).filter(Boolean),
+        monsters: [...usedMonsterIds]
+          .map((resourceId) => monsterMap.get(resourceId))
+          .filter((monster): monster is Monster => monster !== undefined),
+        spells: [...usedSpellIds]
+          .map((resourceId) => spellMap.get(resourceId))
+          .filter((spell): spell is Spell => spell !== undefined),
+      },
+    });
+    download('encounterizer-dm-screen.json', JSON.stringify(exported, null, 2), 'application/json');
+  }
+
+  function restoreWarnings(candidate: DmScreenImportCandidate): string[] {
+    let identicalResources = 0;
+    let collidingResources = 0;
+    let autoPinnedPanels = 0;
+    let unresolvedResources = 0;
+    const bundledMonsters = new Set(candidate.resources.monsters.map((monster) => monster.id));
+    const bundledSpells = new Set(candidate.resources.spells.map((spell) => spell.id));
+    for (const monster of candidate.resources.monsters) {
+      const existing = monsterMap.get(monster.id);
+      if (!existing) continue;
+      if (sameResourceDefinition(existing, monster)) identicalResources += 1;
+      else collidingResources += 1;
+    }
+    for (const spell of candidate.resources.spells) {
+      const existing = spellMap.get(spell.id);
+      if (!existing) continue;
+      if (sameResourceDefinition(existing, spell)) identicalResources += 1;
+      else collidingResources += 1;
+    }
+    const visit = (sections: readonly DmScreenSection[]) => {
+      for (const section of sections) {
+        for (const item of section.items) {
+          if (item.origin === 'auto-pin') autoPinnedPanels += 1;
+          if (!item.resourceId) continue;
+          if (item.kind === 'monster'
+            && !monsterMap.has(item.resourceId)
+            && !bundledMonsters.has(item.resourceId)) unresolvedResources += 1;
+          if (item.kind === 'spell'
+            && !spellMap.has(item.resourceId)
+            && !bundledSpells.has(item.resourceId)) unresolvedResources += 1;
+        }
+        visit(section.children);
+      }
+    };
+    visit(candidate.dmScreen.sections);
+
+    const warnings: string[] = [];
+    if (identicalResources > 0) warnings.push(`${identicalResources} identical copied resource${identicalResources === 1 ? ' is' : 's are'} already available and will not be duplicated.`);
+    if (collidingResources > 0) warnings.push(`${collidingResources} copied resource${collidingResources === 1 ? ' has' : 's have'} the same ID as different local content and will receive a new ID.`);
+    if (unresolvedResources > 0) warnings.push(`${unresolvedResources} panel${unresolvedResources === 1 ? '' : 's'} reference resources that are neither bundled nor available in this browser.`);
+    if (autoPinnedPanels > 0) warnings.push(`${autoPinnedPanels} auto-pinned panel${autoPinnedPanels === 1 ? '' : 's'} will become regular panels so the restored screen does not depend on this browser’s pin list.`);
+    if (candidate.preview.sections > 0) warnings.push('Choosing “Add imported sections” assigns new local IDs to every imported section and panel, so current content cannot be overwritten.');
+    return warnings;
+  }
+
+  async function applyImport(
+    candidate: DmScreenImportCandidate,
+    mode: DmScreenImportMode,
+    includeBattle: boolean,
+  ) {
+    if (!screen && mode === 'merge') {
+      return { ok: false, error: 'A valid current screen is required before imported sections can be added.' };
+    }
+
+    const restoreNamespace = id('restore');
+    const candidateWithoutKnownCopies: DmScreenImportCandidate = {
+      ...candidate,
+      dmScreen: prepareImportedScreen(candidate.dmScreen, mode, restoreNamespace),
+      resources: {
+        monsters: candidate.resources.monsters.filter((monster) => {
+          const existing = monsterMap.get(monster.id);
+          return !existing || !sameResourceDefinition(existing, monster);
+        }),
+        spells: candidate.resources.spells.filter((spell) => {
+          const existing = spellMap.get(spell.id);
+          return !existing || !sameResourceDefinition(existing, spell);
+        }),
       },
     };
-    download('dm-screen.json', JSON.stringify(exported, null, 2), 'application/json');
+    const base = screen ?? EMPTY_DM_SCREEN;
+    const plan = planDmScreenImport(base, candidateWithoutKnownCopies, {
+      mode,
+      includeBattle,
+      existingMonsterIds: monsterMap.keys(),
+      existingSpellIds: spellMap.keys(),
+      documentOptions: deterministicDocumentIds(restoreNamespace),
+    });
+
+    const monsterRestore = addMonsters(plan.monsters);
+    if (monsterRestore.error) {
+      return { ok: false, error: `The screen was not changed. Copied monsters could not be restored: ${monsterRestore.error}` };
+    }
+    const spellRestore = addSpells(plan.spells);
+    if (spellRestore.error) {
+      plan.monsters.forEach((monster) => removeMonster(monster.id));
+      return { ok: false, error: `The screen was not changed. Copied spells could not be restored: ${spellRestore.error}` };
+    }
+
+    const screenResult = mode === 'merge'
+      ? await updateScreen((current) => planDmScreenImport(current, candidateWithoutKnownCopies, {
+          mode: 'merge',
+          existingMonsterIds: monsterMap.keys(),
+          existingSpellIds: spellMap.keys(),
+          documentOptions: deterministicDocumentIds(restoreNamespace),
+        }).dmScreen)
+      : await replaceScreen(plan.dmScreen);
+    let saveWarning = '';
+    if (!screenResult.ok) {
+      if (screenResult.queued) {
+        saveWarning = ' The imported screen is available in this tab but still needs to be saved; use Retry in the save status.';
+      } else {
+        plan.monsters.forEach((monster) => removeMonster(monster.id));
+        plan.spells.forEach((spell) => removeSpell(spell.id));
+        return { ok: false, error: screenResult.error?.message ?? 'The restored screen could not be saved.' };
+      }
+    }
+
+    let battleWarning = '';
+    if (plan.battle) {
+      const battleResult = replaceBattle(plan.battle);
+      if (!battleResult.ok) battleWarning = ' The included battle is available in this tab but could not be saved.';
+    }
+    const remaps = plan.sectionIdRemaps.length
+      + plan.itemIdRemaps.length
+      + plan.monsterIdRemaps.length
+      + plan.spellIdRemaps.length;
+    return {
+      ok: true,
+      message: mode === 'merge'
+        ? `Added ${candidate.preview.sections} imported section${candidate.preview.sections === 1 ? '' : 's'}${remaps ? ` and safely reassigned ${remaps} colliding ID${remaps === 1 ? '' : 's'}` : ''}.${saveWarning}${battleWarning}`
+        : `Replaced the DM Screen with “${candidate.preview.title}”.${saveWarning}${battleWarning}`,
+    };
+  }
+
+  const pageHeader = <ToolPageHeader
+      path="/dm-screen"
+      description="Build a durable command surface for your games. Keep references, notes, party details, and live tools together; stash panels until you need them."
+      actions={<div className="flex flex-wrap gap-2">
+        <button type="button" className="btn-secondary text-sm" disabled={!screen} onClick={() => {
+          const exportScreen = screenForExport();
+          if (!exportScreen) return;
+          download('dm-screen.md', dmScreenToMarkdown(exportScreen, monsterMap, spellMap, battle), 'text/markdown');
+        }}><FileText size={16} aria-hidden="true" /> MD</button>
+        <button type="button" className="btn-secondary text-sm" disabled={!screen} onClick={() => window.print()}><Printer size={16} aria-hidden="true" /> Print</button>
+      </div>}
+    />;
+
+  if (!screen) {
+    const loadingScreen = !screenHydrated || screenStatus === 'idle' || screenStatus === 'loading';
+    return <div className="animate-fade-in dm-screen-print">
+      {pageHeader}
+      <section className="card panel-accent" aria-labelledby="dm-screen-recovery-heading">
+        <p className="micro-label">Saved screen</p>
+        <h2 id="dm-screen-recovery-heading" className="mt-1 text-2xl">{loadingScreen ? 'Opening your DM Screen…' : 'Your saved DM Screen needs attention'}</h2>
+        <p className="mt-2 max-w-3xl text-sm text-[var(--text-2)]">
+          {loadingScreen
+            ? 'Loading the durable screen saved in this browser.'
+            : 'Encounterizer could not safely open this document, so its saved data has been left untouched. Retry browser storage or restore a validated backup to continue.'}
+        </p>
+        <ScreenSaveStatus
+          hydrated={screenHydrated}
+          status={screenStatus}
+          dirty={screenDirty}
+          error={screenError}
+          onRetry={() => void retryScreenStorage()}
+        />
+        {!loadingScreen && <DmScreenBackupPanel
+            saving={screenStatus === 'saving'}
+            canExport={false}
+            canMerge={false}
+            onExport={() => undefined}
+            onApply={applyImport}
+            getRestoreWarnings={restoreWarnings}
+          />}
+      </section>
+    </div>;
   }
 
   return <div className="animate-fade-in dm-screen-print">
-    <ToolPageHeader
-      path="/dm-screen"
-      description="Assemble a private command surface for the session. Add references, notes, app tools, and the live battle organizer; collapse or hide anything until you need it."
-      actions={<div className="flex flex-wrap gap-2">
-        <button type="button" className="btn-secondary text-sm" onClick={() => {
-          const exportScreen = screenForExport();
-          download('dm-screen.md', dmScreenToMarkdown(exportScreen, monsterMap, spellMap, battle), 'text/markdown');
-        }}><FileText size={16} aria-hidden="true" /> MD</button>
-        <button type="button" className="btn-secondary text-sm" onClick={exportJson}><Download size={16} aria-hidden="true" /> JSON</button>
-        <button type="button" className="btn-secondary text-sm" onClick={() => window.print()}><Printer size={16} aria-hidden="true" /> Print</button>
-      </div>}
-    />
+    {pageHeader}
 
     <div className="card panel-accent mb-5 print:hidden">
       <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
-        <label className="text-sm font-semibold">Screen title<input className="mt-1 w-full text-xl" value={screen.title} onChange={(event) => setScreen((current) => ({ ...current, title: event.target.value }))} /></label>
+        <label className="text-sm font-semibold">Screen title<input className="mt-1 w-full text-xl" value={screen.title} onChange={(event) => {
+          const nextTitle = event.target.value;
+          setScreen((current) => ({ ...current, title: nextTitle }));
+        }} /></label>
         <div className="flex flex-wrap gap-4 pb-2 text-sm">
-          <label className="flex items-center gap-2"><input type="checkbox" checked={screen.autoAddPinnedMonsters} onChange={(event) => setScreen((current) => ({ ...current, autoAddPinnedMonsters: event.target.checked }))} /> Auto-add pinned monsters</label>
-          <label className="flex items-center gap-2"><input type="checkbox" checked={screen.autoAddPinnedSpells} onChange={(event) => setScreen((current) => ({ ...current, autoAddPinnedSpells: event.target.checked }))} /> Auto-add pinned spells</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={screen.autoAddPinnedMonsters} onChange={(event) => {
+            const checked = event.target.checked;
+            setScreen((current) => ({ ...current, autoAddPinnedMonsters: checked }));
+          }} /> Auto-add pinned monsters</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={screen.autoAddPinnedSpells} onChange={(event) => {
+            const checked = event.target.checked;
+            setScreen((current) => ({ ...current, autoAddPinnedSpells: checked }));
+          }} /> Auto-add pinned spells</label>
         </div>
       </div>
+      <ScreenSaveStatus
+        hydrated={screenHydrated}
+        status={screenStatus}
+        dirty={screenDirty}
+        error={screenError}
+        onRetry={() => void retryScreenStorage()}
+      />
+      <DmScreenBackupPanel
+        saving={screenStatus === 'saving'}
+        canExport={screenHydrated}
+        canMerge={screenHydrated}
+        onExport={exportJson}
+        onApply={applyImport}
+        getRestoreWarnings={restoreWarnings}
+      />
     </div>
 
     <section className="card mb-5 print:hidden" aria-labelledby="add-to-screen-heading">
@@ -282,7 +574,10 @@ function ScreenSection({ section, depth, monsters, spells, partySummary, partyLo
   return <section className={`${depth === 0 ? 'card !p-0' : 'rounded-xl border border-[var(--steel-800)] bg-[var(--steel-950)]'} overflow-hidden`}>
     <header className="flex items-center gap-2 border-b border-[var(--steel-800)] px-4 py-3 print:px-0">
       <button type="button" className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg hover:bg-[var(--steel-800)] print:hidden" onClick={() => onUpdate(section.id, (current) => ({ ...current, collapsed: !current.collapsed }))} aria-expanded={!section.collapsed} aria-label={`${section.collapsed ? 'Expand' : 'Collapse'} ${section.title}`}>{section.collapsed ? <ChevronDown size={19} /> : <ChevronUp size={19} />}</button>
-      <input className={`min-w-0 flex-1 !border-0 !bg-transparent !p-0 font-display font-semibold ${depth === 0 ? 'text-xl' : 'text-base'} print:min-h-0`} value={section.title} onChange={(event) => onUpdate(section.id, (current) => ({ ...current, title: event.target.value }))} aria-label="Section title" />
+      <input className={`min-w-0 flex-1 !border-0 !bg-transparent !p-0 font-display font-semibold ${depth === 0 ? 'text-xl' : 'text-base'} print:min-h-0`} value={section.title} onChange={(event) => {
+        const nextTitle = event.target.value;
+        onUpdate(section.id, (current) => ({ ...current, title: nextTitle }));
+      }} aria-label="Section title" />
       <span className="text-xs text-[var(--text-3)] print:hidden">{section.items.length} items · {section.children.length} subsections</span>
       <button type="button" className="btn-ghost !min-h-10 !px-2 text-xs print:hidden" onClick={() => onAddChild(section.id)}><FolderPlus size={15} /> Subsection</button>
       <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--accent-danger)] hover:bg-[var(--steel-800)] print:hidden" onClick={() => onRemove(section.id)} aria-label={`Remove ${section.title}`}><Trash2 size={17} /></button>
@@ -306,18 +601,32 @@ function ScreenItem({ item, monster, spell, partySummary, partyLoading, partyUna
   onRemove: () => void;
 }) {
   const Icon = item.kind === 'party' ? Users : item.kind === 'monster' ? Swords : item.kind === 'spell' ? Sparkles : item.kind === 'tool' ? LinkIcon : item.kind === 'rules' ? BookOpen : item.kind === 'initiative' || item.kind === 'battle' ? Swords : FileText;
-  return <article className={`rounded-xl border ${item.hidden ? 'border-dashed border-[var(--steel-700)] opacity-70 print:opacity-100' : 'border-[var(--steel-800)]'} bg-[var(--steel-900)]`}>
+  return <article className={`rounded-xl border ${item.layout.stashed ? 'border-dashed border-[var(--steel-700)] opacity-70 print:opacity-100' : 'border-[var(--steel-800)]'} ${item.layout.excludedFromPrint ? 'print:hidden' : ''} bg-[var(--steel-900)]`}>
     <header className="flex items-center gap-2 px-3 py-2">
       <Icon size={17} className="shrink-0 text-[var(--bronze)]" aria-hidden="true" />
-      <input className="min-w-0 flex-1 !border-0 !bg-transparent !p-0 font-semibold print:min-h-0" value={item.title} onChange={(event) => onUpdate((current) => ({ ...current, title: event.target.value }))} aria-label="Item title" />
+      <input className="min-w-0 flex-1 !border-0 !bg-transparent !p-0 font-semibold print:min-h-0" value={item.title} onChange={(event) => {
+        const nextTitle = event.target.value;
+        onUpdate((current) => ({ ...current, title: nextTitle }));
+      }} aria-label="Item title" />
       {item.origin === 'auto-pin' && <span className="rounded-full bg-[var(--bronze-wash)] px-2 py-0.5 text-[10px] font-semibold text-[var(--bronze)] print:hidden">AUTO-PINNED</span>}
-      {item.hidden && <span className="text-xs text-[var(--text-3)] print:hidden">Hidden</span>}
-      <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-[var(--steel-800)] print:hidden" onClick={() => onUpdate((current) => ({ ...current, hidden: !current.hidden }))} aria-label={`${item.hidden ? 'Show' : 'Hide'} ${item.title}`}>{item.hidden ? <Eye size={17} /> : <EyeOff size={17} />}</button>
+      {item.layout.stashed && <span className="text-xs text-[var(--text-3)] print:hidden">Stashed</span>}
+      {item.layout.excludedFromPrint && <span className="text-xs text-[var(--text-3)] print:hidden">Not printed</span>}
+      <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-[var(--steel-800)] print:hidden" onClick={() => onUpdate((current) => ({ ...current, layout: { ...current.layout, stashed: !current.layout.stashed } }))} aria-label={`${item.layout.stashed ? 'Restore' : 'Stash'} ${item.title}`}>{item.layout.stashed ? <Eye size={17} /> : <EyeOff size={17} />}</button>
       <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-[var(--steel-800)] print:hidden" onClick={() => onUpdate((current) => ({ ...current, collapsed: !current.collapsed }))} aria-label={`${item.collapsed ? 'Open' : 'Collapse'} ${item.title}`}>{item.collapsed ? <ChevronDown size={17} /> : <ChevronUp size={17} />}</button>
       <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--accent-danger)] hover:bg-[var(--steel-800)] print:hidden" onClick={onRemove} aria-label={`Remove ${item.title}`}><Trash2 size={16} /></button>
     </header>
-    <div className={`${item.hidden || item.collapsed ? 'hidden print:block' : ''} border-t border-[var(--steel-800)] p-3 print:p-0 print:pt-2`}>
-      {item.kind === 'note' && <textarea className="w-full border-0 bg-transparent print:min-h-0" rows={Math.max(3, (item.body?.split('\n').length ?? 1) + 1)} value={item.body ?? ''} onChange={(event) => onUpdate((current) => ({ ...current, body: event.target.value }))} />}
+    <div className={`${item.layout.stashed || item.collapsed ? 'hidden print:block' : ''} border-t border-[var(--steel-800)] p-3 print:p-0 print:pt-2`}>
+      <label className="mb-3 flex items-center gap-2 text-xs text-[var(--text-3)] print:hidden">
+        <input type="checkbox" checked={item.layout.excludedFromPrint} onChange={(event) => {
+          const checked = event.target.checked;
+          onUpdate((current) => ({ ...current, layout: { ...current.layout, excludedFromPrint: checked } }));
+        }} />
+        Exclude this panel from print and Markdown
+      </label>
+      {item.kind === 'note' && <textarea className="w-full border-0 bg-transparent print:min-h-0" rows={Math.max(3, (item.body?.split('\n').length ?? 1) + 1)} value={item.body ?? ''} onChange={(event) => {
+        const nextBody = event.target.value;
+        onUpdate((current) => ({ ...current, body: nextBody }));
+      }} />}
       {item.kind === 'monster' && (monster ? <MonsterStatBlock monster={monster} physicalDescription={getMonsterPhysicalDescription(monster.id)} /> : <p className="text-sm text-[var(--accent-danger)]">This monster is no longer available.</p>)}
       {item.kind === 'spell' && (spell ? <SpellReference spell={spell} /> : <p className="text-sm text-[var(--accent-danger)]">This spell is no longer available.</p>)}
       {item.kind === 'tool' && <div><p className="text-sm text-[var(--text-2)]">{item.body}</p>{item.href && <Link className="btn-secondary mt-3 text-sm print:hidden" href={item.href}>Open tool <span aria-hidden="true">→</span></Link>}</div>}
