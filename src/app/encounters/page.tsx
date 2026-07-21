@@ -359,6 +359,8 @@ function EncounterBuilder() {
   const [manualSearch, setManualSearch] = useState('');
   const [showRecipes, setShowRecipes] = useState(false);
   const [recipeError, setRecipeError] = useState('');
+  const [recipeSuccess, setRecipeSuccess] = useState('');
+  const encounterResultsRef = useRef<HTMLDivElement>(null);
 
   const partySizeValidation = validateBoundedIntegerInput(
     partySizeInput, 'Party size', 1, 10,
@@ -578,6 +580,22 @@ function EncounterBuilder() {
     window.requestAnimationFrame(() => saveEncounterButtonRef.current?.focus());
   }, [setSavingName]);
 
+  useEffect(() => {
+    if (!recipeSuccess || !encounter?.recipePlan) return;
+    const frame = window.requestAnimationFrame(() => {
+      const target = encounterResultsRef.current;
+      if (!target) return;
+      target.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          ? 'instant' as ScrollBehavior
+          : 'smooth',
+        block: 'start',
+      });
+      target.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [encounter?.id, encounter?.recipePlan, recipeSuccess]);
+
   const runGenerate = useCallback((cfg: GenerateConfig) => {
     const generatorFilter = withoutEnvironmentFilter(cfg.filter);
     const budgetParty = contextToBudgetParty(cfg.partyContext);
@@ -601,6 +619,7 @@ function EncounterBuilder() {
       });
     }
     setRecipeError('');
+    setRecipeSuccess('');
     setEncounter(enc);
     setIsSeeded(true);
     setGeneratedPartySnapshotSignature(serializeAnonymousPartySnapshot(cfg.partyContext.snapshot));
@@ -615,7 +634,7 @@ function EncounterBuilder() {
     const recipe = getRecipeById(recipeId);
     if (!recipe) {
       setRecipeError('That recipe is not available.');
-      return;
+      return null;
     }
     const generatorFilter = withoutEnvironmentFilter(cfg.filter);
     const filteredPool = filterMonsters(allMonsters, generatorFilter);
@@ -631,7 +650,7 @@ function EncounterBuilder() {
     );
     if (filled.length === 0) {
       setRecipeError('No monsters match this recipe and the current filters. Broaden the filters and try again.');
-      return;
+      return null;
     }
     const byMonster = new Map<string, { monster: Monster; count: number; recipeRole: string }>();
     for (const slot of filled) {
@@ -679,6 +698,7 @@ function EncounterBuilder() {
     setEditingDetails(false);
     invalidateForecast();
     writeUrl({ ...cfg, filter: generatorFilter, recipeId });
+    return next;
   }, [allMonsters, invalidateForecast, setEditingDetails, setExpandedMonster]);
 
   // One-shot hydration from a shared link (?seed=...)
@@ -880,12 +900,15 @@ function EncounterBuilder() {
       focusInvalidPartyField();
       return;
     }
-    runRecipe(recipeId, {
+    const generated = runRecipe(recipeId, {
       partyContext: cloneEncounterPartyContext(effectivePartyContext),
       difficulty, environment,
       includeMap, mapLayout, mapScale, mapFeatureDensity, mapTerrainVariety,
       filter: monsterFilter, seed: randomSeed(), flavorVersion: 2, recipeId,
     });
+    if (!generated) return;
+    setShowRecipes(false);
+    setRecipeSuccess(`${generated.name} is ready`);
   }
 
   function handlePartySizeChange(value: number) {
@@ -951,6 +974,7 @@ function EncounterBuilder() {
     setManualSearch('');
     setShowRecipes(false);
     setRecipeError('');
+    setRecipeSuccess('');
     setShowPartySetup(false);
     setCustomPartyConfig({ version: 1, members: defaultPartyConfig(4, 3) });
     setSnapshotPartyContext(null);
@@ -1595,7 +1619,10 @@ function EncounterBuilder() {
             <button
               type="button"
               className={`option-card ${showRecipes ? 'is-active' : ''}`}
-              onClick={() => setShowRecipes((value) => !value)}
+              onClick={() => {
+                setRecipeSuccess('');
+                setShowRecipes((value) => !value);
+              }}
               aria-expanded={showRecipes}
               aria-controls="encounter-recipes-panel"
             >
@@ -1685,7 +1712,7 @@ function EncounterBuilder() {
                 <p className="micro-label">Encounter recipes</p>
                 <h3 className="mt-1 text-lg">Choose a starting pattern</h3>
               </div>
-              <p>Recipes generate immediately using the party, difficulty, environment, and filters above.</p>
+              <p>Select once to build the encounter and jump straight to the result—there is no second generate step.</p>
             </div>
             <div className="grid gap-5 p-4 lg:grid-cols-2">
               {(['combat', 'narrative'] as const).map((category) => (
@@ -1738,9 +1765,15 @@ function EncounterBuilder() {
           <div className="workflow-primary-action">
             <button type="submit" className="btn-primary text-base">
               <Sparkles size={18} aria-hidden="true" />
-              {encounter ? 'Generate a new encounter' : 'Generate encounter'}
+              {encounter?.recipePlan
+                ? 'Replace with standard encounter'
+                : encounter
+                  ? 'Generate a new encounter'
+                  : 'Generate encounter'}
             </button>
-            <p>Creates a complete roster from this brief.</p>
+            <p>{encounter?.recipePlan
+              ? 'Optional: replace this recipe with a standard generated roster.'
+              : 'Creates a complete roster from this brief.'}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -1878,7 +1911,16 @@ function EncounterBuilder() {
 
       {/* Results */}
       {encounter && encounter.monsters.length > 0 && (
-        <div className="animate-fade-in space-y-6">
+        <div ref={encounterResultsRef} tabIndex={-1} className="scroll-mt-24 animate-fade-in space-y-6 outline-none">
+          {recipeSuccess && (
+            <div className="flex items-start gap-3 rounded-xl border border-[var(--status-success)] bg-[var(--status-success-wash)] p-4 text-sm" role="status">
+              <Check className="mt-0.5 shrink-0 text-[var(--status-success)]" size={18} aria-hidden="true" />
+              <div>
+                <strong className="text-[var(--text-1)]">{recipeSuccess}</strong>
+                <p className="mt-1 text-[var(--text-2)]">The roster, DM playbook, battle cues, and any enabled map are already generated. Start reviewing below.</p>
+              </div>
+            </div>
+          )}
           {/* Step 2: review and manage the generated encounter. */}
           <section className="card encounter-summary-card" aria-labelledby="encounter-summary-heading">
             <header className="encounter-summary-header">
