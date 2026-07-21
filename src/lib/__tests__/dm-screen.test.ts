@@ -3,14 +3,57 @@ import { EMPTY_BATTLE } from '@/lib/battle-organizer';
 import { DM_SCREEN_TOOL_ROUTES } from '@/lib/site';
 import {
   EMPTY_DM_SCREEN,
+  cloneDmScreenDocument,
+  createEmptyDmScreen,
   dmScreenToMarkdown,
   isDmScreenState,
+  mergeDmScreenDocuments,
+  parseDmScreenDocument,
   removeSectionTree,
   syncDmPartySnapshot,
   syncPinnedItems,
   updateSectionTree,
+  type DmScreenIdFactory,
+  type DmScreenItem,
+  type DmScreenItemLayout,
   type DmScreenSection,
+  type DmScreenState,
 } from '@/lib/dm-screen';
+
+function ids(...values: string[]): DmScreenIdFactory {
+  let index = 0;
+  return (kind) => values[index++] ?? `${kind}-${index}`;
+}
+
+function layout(
+  overrides: Partial<DmScreenItemLayout> = {},
+): DmScreenItemLayout {
+  return {
+    width: 'standard',
+    stashed: false,
+    excludedFromPrint: false,
+    ...overrides,
+  };
+}
+
+function note(id: string, overrides: Partial<DmScreenItem> = {}): DmScreenItem {
+  return {
+    id,
+    kind: 'note',
+    title: id,
+    collapsed: false,
+    ...overrides,
+    layout: layout(overrides.layout),
+  };
+}
+
+function screen(sections: DmScreenSection[], id = 'screen-test'): DmScreenState {
+  return {
+    ...cloneDmScreenDocument(EMPTY_DM_SCREEN),
+    id,
+    sections,
+  };
+}
 
 const nested: DmScreenSection[] = [{
   id: 'parent', title: 'Parent', collapsed: false, items: [],
@@ -23,31 +66,156 @@ describe('DM screen', () => {
     expect(DM_SCREEN_TOOL_ROUTES.map((route) => route.path)).toContain('/battle');
   });
 
+  it('creates and deeply clones a valid v2 layout document', () => {
+    const created = createEmptyDmScreen({
+      createId: ids('screen-1', 'section-1', 'item-1'),
+    });
+    expect(created).toMatchObject({
+      version: 2,
+      id: 'screen-1',
+      revision: 0,
+      layout: { columns: 'auto', density: 'comfortable' },
+      sections: [{
+        id: 'section-1',
+        items: [{
+          id: 'item-1',
+          layout: { width: 'full', stashed: false, excludedFromPrint: false },
+        }],
+      }],
+    });
+    expect(isDmScreenState(created)).toBe(true);
+
+    const cloned = cloneDmScreenDocument(created);
+    expect(cloned).toEqual(created);
+    expect(cloned).not.toBe(created);
+    expect(cloned.layout).not.toBe(created.layout);
+    expect(cloned.sections[0]).not.toBe(created.sections[0]);
+    expect(cloned.sections[0].items[0].layout).not.toBe(created.sections[0].items[0].layout);
+  });
+
   it('updates and removes deeply nested sections', () => {
     const updated = updateSectionTree(nested, 'child', (section) => ({ ...section, title: 'Updated' }));
     expect(updated[0].children[0].title).toBe('Updated');
     expect(removeSectionTree(updated, 'child')[0].children).toEqual([]);
   });
 
-  it('syncs auto-pinned items without disturbing their view state', () => {
-    let screen = syncPinnedItems(EMPTY_DM_SCREEN, ['goblin'], ['shield'], () => 'Goblin', () => 'Shield');
-    screen.sections[0].items[0].hidden = true;
-    screen = syncPinnedItems(screen, ['goblin'], ['shield', 'light'], () => 'Goblin', (id) => id === 'shield' ? 'Shield' : 'Light');
-    expect(screen.sections[0].items.map((item) => item.title)).toEqual(['Goblin', 'Shield', 'Light']);
-    expect(screen.sections[0].items[0].hidden).toBe(true);
+  it('syncs auto-pins without duplicating global IDs and preserves their view state', () => {
+    const initial = screen([{
+      id: 'setup',
+      title: 'Setup',
+      collapsed: false,
+      items: [note('auto-pinned')],
+      children: [{
+        id: 'auto-monster-goblin',
+        title: 'Unrelated section',
+        collapsed: false,
+        items: [],
+        children: [],
+      }],
+    }], 'screen-pins');
+
+    let synced = syncPinnedItems(
+      initial,
+      ['goblin'],
+      ['shield'],
+      () => 'Goblin',
+      () => 'Shield',
+    );
+    expect(synced.sections[0].id).toBe('auto-pinned-2');
+    expect(synced.sections[0].items.map((item) => item.id)).toEqual([
+      'auto-monster-goblin-2',
+      'auto-spell-shield',
+    ]);
+    expect(isDmScreenState(synced)).toBe(true);
+
+    const pinnedSection = synced.sections[0];
+    const goblinId = pinnedSection.items[0].id;
+    synced = {
+      ...synced,
+      sections: [{
+        ...pinnedSection,
+        items: pinnedSection.items.map((item) => item.id === goblinId
+          ? {
+              ...item,
+              collapsed: false,
+              layout: layout({ width: 'wide', stashed: true, excludedFromPrint: true }),
+            }
+          : item),
+      }, ...synced.sections.slice(1)],
+    };
+    synced = syncPinnedItems(
+      synced,
+      ['goblin'],
+      ['shield', 'light'],
+      () => 'Goblin',
+      (id) => id === 'shield' ? 'Shield' : 'Light',
+    );
+
+    expect(synced.sections[0].id).toBe('auto-pinned-2');
+    expect(synced.sections[0].items.map((item) => item.title)).toEqual(['Goblin', 'Shield', 'Light']);
+    expect(synced.sections[0].items[0]).toMatchObject({
+      id: goblinId,
+      collapsed: false,
+      layout: { width: 'wide', stashed: true, excludedFromPrint: true },
+    });
+    expect(isDmScreenState(synced)).toBe(true);
   });
 
-  it('exports notes and a complete battle table to Markdown', () => {
-    const screen = {
-      ...EMPTY_DM_SCREEN,
-      sections: [{ id: 'run', title: 'Run', collapsed: true, children: [], items: [
-        { id: 'note', kind: 'note' as const, title: 'Reminder', body: 'Use cover.', collapsed: true, hidden: true },
-        { id: 'battle', kind: 'battle' as const, title: 'Fight', collapsed: true, hidden: false },
-      ] }],
-    };
-    const markdown = dmScreenToMarkdown(screen, new Map(), new Map(), EMPTY_BATTLE);
-    expect(markdown).toContain('Reminder _(hidden)_');
+  it('does not duplicate a restored manual resource panel from the auto-pinned section', () => {
+    const restored = screen([{
+      id: 'auto-pinned',
+      title: 'Pinned references',
+      collapsed: false,
+      items: [{
+        id: 'restored-goblin',
+        kind: 'monster',
+        title: 'Goblin',
+        resourceId: 'goblin',
+        collapsed: true,
+        layout: layout({ stashed: true }),
+        origin: 'manual',
+      }],
+      children: [],
+    }]);
+
+    const synced = syncPinnedItems(restored, ['goblin'], [], () => 'Goblin', () => undefined);
+
+    expect(synced.sections[0].items).toHaveLength(1);
+    expect(synced.sections[0].items[0]).toMatchObject({
+      id: 'restored-goblin',
+      origin: 'manual',
+      layout: { stashed: true },
+    });
+  });
+
+  it('includes stashed content but omits print-excluded content from Markdown', () => {
+    const document = screen([{
+      id: 'run', title: 'Run', collapsed: true, children: [], items: [
+        note('note', {
+          title: 'Reminder',
+          body: 'Use cover.',
+          collapsed: true,
+          layout: layout({ stashed: true }),
+        }),
+        note('private-note', {
+          title: 'Do not export this',
+          body: 'Secret outcome.',
+          layout: layout({ excludedFromPrint: true }),
+        }),
+        {
+          id: 'battle',
+          kind: 'battle',
+          title: 'Fight',
+          collapsed: true,
+          layout: layout({ width: 'full' }),
+        },
+      ],
+    }]);
+    const markdown = dmScreenToMarkdown(document, new Map(), new Map(), EMPTY_BATTLE);
+    expect(markdown).toContain('Reminder _(stashed)_');
     expect(markdown).toContain('Use cover.');
+    expect(markdown).not.toContain('Do not export this');
+    expect(markdown).not.toContain('Secret outcome.');
     expect(markdown).toContain('| Init | Combatant | Side | HP | AC | Conditions | Notes |');
   });
 
@@ -61,16 +229,13 @@ describe('DM screen', () => {
   });
 
   it('retains one isolated party snapshot for party panels and Markdown export', () => {
-    const screen = {
-      ...EMPTY_DM_SCREEN,
-      sections: [{
-        id: 'party-section', title: 'Party', collapsed: false, children: [],
-        items: [{
-          id: 'party-overview', kind: 'party' as const, title: 'Party overview',
-          collapsed: false, hidden: false,
-        }],
+    const document = screen([{
+      id: 'party-section', title: 'Party', collapsed: false, children: [],
+      items: [{
+        id: 'party-overview', kind: 'party', title: 'Party overview',
+        collapsed: false, layout: layout({ width: 'wide' }),
       }],
-    };
+    }]);
     const summary = {
       id: 'party-lanterns',
       name: 'The Lanterns',
@@ -84,7 +249,7 @@ describe('DM screen', () => {
       }],
     };
 
-    const snapshotted = syncDmPartySnapshot(screen, summary);
+    const snapshotted = syncDmPartySnapshot(document, summary);
     expect(isDmScreenState(snapshotted)).toBe(true);
     expect(snapshotted.partySnapshot).toEqual(summary);
     expect(snapshotted.partySnapshot).not.toBe(summary);
@@ -106,5 +271,198 @@ describe('DM screen', () => {
       sections: [{ ...snapshotted.sections[0], items: [] }],
     };
     expect(syncDmPartySnapshot(removedPartyItem, null).partySnapshot).toBeUndefined();
+  });
+
+  it('migrates nested v1 content exactly and repairs blank or duplicate IDs', () => {
+    const legacy = {
+      version: 1,
+      title: 'Night at the Silver Keep',
+      autoAddPinnedMonsters: false,
+      autoAddPinnedSpells: true,
+      sections: [{
+        id: 'shared-id',
+        title: 'Outer section',
+        collapsed: true,
+        items: [{
+          id: 'shared-id',
+          kind: 'monster',
+          title: 'Pinned Goblin',
+          body: 'Preserve this exact body.',
+          resourceId: 'goblin',
+          href: 'mailto:dm@example.test',
+          collapsed: true,
+          hidden: true,
+          origin: 'auto-pin',
+        }],
+        children: [{
+          id: 'shared-id',
+          title: 'Nested section',
+          collapsed: false,
+          items: [{
+            id: '',
+            kind: 'spell',
+            title: 'Shield',
+            resourceId: 'shield',
+            collapsed: false,
+            hidden: false,
+            origin: 'manual',
+          }],
+          children: [],
+        }],
+      }],
+    };
+
+    const parsed = parseDmScreenDocument(legacy, {
+      createId: ids('screen-migrated', 'item-remapped', 'section-remapped', 'blank-item-remapped'),
+    });
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+
+    expect(parsed.migrated).toBe(true);
+    expect(parsed.document).toMatchObject({
+      version: 2,
+      id: 'screen-migrated',
+      revision: 0,
+      title: legacy.title,
+      autoAddPinnedMonsters: false,
+      autoAddPinnedSpells: true,
+      layout: { columns: 'auto', density: 'comfortable' },
+      sections: [{
+        id: 'shared-id',
+        title: 'Outer section',
+        collapsed: true,
+        items: [{
+          id: 'item-remapped',
+          title: 'Pinned Goblin',
+          body: 'Preserve this exact body.',
+          resourceId: 'goblin',
+          href: 'mailto:dm@example.test',
+          collapsed: true,
+          origin: 'auto-pin',
+          layout: { width: 'full', stashed: true, excludedFromPrint: false },
+        }],
+        children: [{
+          id: 'section-remapped',
+          title: 'Nested section',
+          collapsed: false,
+          items: [{
+            id: 'blank-item-remapped',
+            resourceId: 'shield',
+            origin: 'manual',
+            layout: { width: 'full', stashed: false, excludedFromPrint: false },
+          }],
+        }],
+      }],
+    });
+    expect(parsed.warnings.join(' ')).toContain('Reassigned 3');
+    expect(isDmScreenState(parsed.document)).toBe(true);
+  });
+
+  it('rejects invalid and future documents with field paths', () => {
+    const invalid = cloneDmScreenDocument(EMPTY_DM_SCREEN);
+    invalid.sections[0].items[0].id = invalid.sections[0].id;
+    invalid.sections[0].items[0].href = 'javascript:alert(1)';
+    invalid.layout.columns = 1 as 2;
+    const parsedInvalid = parseDmScreenDocument(invalid);
+    expect(parsedInvalid).toMatchObject({ ok: false, reason: 'invalid' });
+    if (!parsedInvalid.ok) {
+      expect(parsedInvalid.issues.map((entry) => entry.path)).toEqual(expect.arrayContaining([
+        '$.layout.columns',
+        '$.sections[0].items[0].id',
+        '$.sections[0].items[0].href',
+      ]));
+    }
+
+    const parsedFuture = parseDmScreenDocument({ version: 99 });
+    expect(parsedFuture).toMatchObject({
+      ok: false,
+      reason: 'future-version',
+      issues: [{ path: '$.version' }],
+    });
+
+    const unsafeLegacy = parseDmScreenDocument({
+      version: 1,
+      title: 'Unsafe legacy link',
+      autoAddPinnedMonsters: false,
+      autoAddPinnedSpells: false,
+      sections: [{
+        id: 'section', title: 'Links', collapsed: false, children: [],
+        items: [{
+          id: 'tool', kind: 'tool', title: 'Bad link', href: 'javascript:alert(1)',
+          collapsed: false, hidden: false,
+        }],
+      }],
+    });
+    expect(unsafeLegacy).toMatchObject({ ok: false, reason: 'invalid' });
+    if (!unsafeLegacy.ok) {
+      expect(unsafeLegacy.issues).toContainEqual({
+        path: '$.sections[0].items[0].href',
+        message: 'must use an internal, http(s), mailto, or tel link',
+      });
+    }
+  });
+
+  it('strips unknown transient workspace properties from parsed v2 documents', () => {
+    const source = cloneDmScreenDocument(EMPTY_DM_SCREEN) as DmScreenState & {
+      focusedItemId?: string;
+      fullscreen?: boolean;
+    };
+    source.focusedItemId = source.sections[0].items[0].id;
+    source.fullscreen = true;
+    const item = source.sections[0].items[0] as DmScreenItem & { spotlighted?: boolean };
+    item.spotlighted = true;
+    const section = source.sections[0] as DmScreenSection & { trayOpen?: boolean };
+    section.trayOpen = true;
+
+    const parsed = parseDmScreenDocument(source);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.document).not.toHaveProperty('focusedItemId');
+    expect(parsed.document).not.toHaveProperty('fullscreen');
+    expect(parsed.document.sections[0]).not.toHaveProperty('trayOpen');
+    expect(parsed.document.sections[0].items[0]).not.toHaveProperty('spotlighted');
+  });
+
+  it('merges content collision-safely while preserving current screen identity and order', () => {
+    const current = screen([{
+      id: 'section-a', title: 'Current A', collapsed: false,
+      items: [note('item-a')], children: [],
+    }, {
+      id: 'section-b', title: 'Current B', collapsed: false,
+      items: [note('item-b')], children: [],
+    }], 'screen-current');
+    const incoming = screen([{
+      id: 'section-a', title: 'Imported A', collapsed: true,
+      items: [note('item-a', { body: 'Imported body A' })], children: [],
+    }, {
+      id: 'section-b', title: 'Imported B', collapsed: false,
+      items: [note('item-b', { resourceId: 'copied-resource' })], children: [],
+    }], 'screen-incoming');
+
+    const merged = mergeDmScreenDocuments(current, incoming, {
+      createId: ids('merge-1', 'merge-2', 'merge-3', 'merge-4'),
+    });
+    expect(merged.sectionIdRemaps).toEqual([
+      { from: 'section-a', to: 'merge-1' },
+      { from: 'section-b', to: 'merge-2' },
+    ]);
+    expect(merged.itemIdRemaps).toEqual([
+      { from: 'item-a', to: 'merge-3' },
+      { from: 'item-b', to: 'merge-4' },
+    ]);
+    expect(merged.document.id).toBe('screen-current');
+    expect(merged.document.sections.map((section) => section.title)).toEqual([
+      'Current A', 'Current B', 'Imported A', 'Imported B',
+    ]);
+    expect(merged.document.sections[2]).toMatchObject({
+      id: 'merge-1',
+      collapsed: true,
+      items: [{ id: 'merge-3', body: 'Imported body A' }],
+    });
+    expect(merged.document.sections[3].items[0]).toMatchObject({
+      id: 'merge-4',
+      resourceId: 'copied-resource',
+    });
+    expect(isDmScreenState(merged.document)).toBe(true);
   });
 });
