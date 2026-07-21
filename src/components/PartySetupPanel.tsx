@@ -9,15 +9,24 @@ import {
   PartyCombatStatPreview,
 } from '@/components/PartyCombatProfileFields';
 import { importCharacterJson } from '@/lib/character-import';
+import { MAX_ENCOUNTER_PARTY_MEMBERS } from '@/lib/encounter-party';
 
 export default function PartySetupPanel({
   members,
   onSave,
   onCancel,
+  eyebrow = 'Battle forecast',
+  title = 'Configure the adventuring party',
+  description = 'Pick a class template and level per player — or open Customize to tweak the numbers. The forecast only needs the combat math, not the whole character sheet.',
+  saveLabel = 'Save profiles',
 }: {
   members: PartyMemberConfig[];
   onSave: (members: PartyMemberConfig[]) => void;
   onCancel: () => void;
+  eyebrow?: string;
+  title?: string;
+  description?: string;
+  saveLabel?: string;
 }) {
   const [draft, setDraft] = useState<PartyMemberConfig[]>(members);
   const [customizing, setCustomizing] = useState<number | null>(null);
@@ -42,6 +51,13 @@ export default function PartySetupPanel({
       setImportMessage({ kind: 'error', text: result.error });
       return;
     }
+    if (draft.length >= MAX_ENCOUNTER_PARTY_MEMBERS) {
+      setImportMessage({
+        kind: 'error',
+        text: `An encounter party can include up to ${MAX_ENCOUNTER_PARTY_MEMBERS} characters.`,
+      });
+      return;
+    }
     setDraft((prev) => [...prev, result.member]);
     setCustomizing(draft.length);
     setImportMessage({
@@ -55,18 +71,17 @@ export default function PartySetupPanel({
   return (
     <section className="card mb-6 animate-fade-in space-y-5 print:hidden" aria-labelledby="forecast-party-heading">
       <header>
-        <p className="micro-label">Battle forecast</p>
-        <h2 id="forecast-party-heading" className="mt-1 text-xl">Configure the adventuring party</h2>
+        <p className="micro-label">{eyebrow}</p>
+        <h2 id="forecast-party-heading" className="mt-1 text-xl">{title}</h2>
         <p className="mt-1 max-w-3xl text-sm text-[var(--text-2)]">
-          Pick a class template and level per player — or open Customize to tweak the numbers.
-          The forecast only needs the combat math, not the whole character sheet.
+          {description}
         </p>
       </header>
 
       <div className="space-y-3">
         {draft.map((member, index) => (
           <div key={index} className="surface-inset space-y-3 p-4">
-            <div className="grid sm:grid-cols-[1fr_1.4fr_5rem_auto] gap-2 items-end">
+            <div className="grid gap-2 items-end lg:grid-cols-[1fr_1.4fr_5rem_auto]">
               <div>
                 <label htmlFor={`member-name-${index}`} className="field-label">
                   Name
@@ -144,6 +159,7 @@ export default function PartySetupPanel({
         <button
           type="button"
           className="btn-secondary text-sm inline-flex items-center gap-1.5"
+          disabled={draft.length >= MAX_ENCOUNTER_PARTY_MEMBERS}
           onClick={() =>
             setDraft((prev) => [
               ...prev,
@@ -181,7 +197,7 @@ export default function PartySetupPanel({
           disabled={draft.length === 0}
           onClick={() => onSave(draft)}
         >
-          Save &amp; run forecast
+          {saveLabel}
         </button>
       </footer>
       {importMessage && (

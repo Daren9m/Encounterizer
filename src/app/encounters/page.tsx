@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import {
   BookOpen,
   Box,
@@ -75,15 +76,12 @@ import { monsterToSimMonster } from '@/lib/monster-to-sim';
 import {
   buildSimPlayer,
   defaultPartyConfig,
+  getTemplateById,
   syncPartyConfigMembers,
 } from '@/data/class-templates';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import { storageLoad, storageSave } from '@/lib/storage';
-import {
-  PARTY_CONFIG_STORAGE_KEY,
-  type BattleReport,
-  type PartyConfig,
-} from '@/lib/battle-sim-types';
+import { type BattleReport, type PartyConfig } from '@/lib/battle-sim-types';
 import {
   encounterExportFilename,
   encounterPlayerHandoutMarkdown,
@@ -95,9 +93,25 @@ import {
   isBattleState,
   type BattleState,
 } from '@/lib/battle-organizer';
-import { mergeForecastMembersIntoPartyLibrary } from '@/lib/party-migration';
 import { getActiveParty } from '@/lib/party';
+import { setActiveParty as activateParty } from '@/lib/party-manager';
 import { partyToForecastConfig } from '@/lib/party-adapters';
+import {
+  cloneEncounterPartyContext,
+  contextFromActiveParty,
+  contextFromCustomParty,
+  contextToBudgetParty,
+  contextToForecastConfig,
+  isEncounterPartyContext,
+  MAX_ENCOUNTER_PARTY_MEMBERS,
+  partyLevelRange,
+  readEncounterPartyShareParams,
+  reconcilePartySelection,
+  representativePartyLevel,
+  serializeAnonymousPartySnapshot,
+  writeEncounterPartyShareParams,
+  type EncounterPartyContext,
+} from '@/lib/encounter-party';
 
 const DIFFICULTIES: Difficulty[] = ['Trivial', 'Low', 'Moderate', 'High', 'Extreme'];
 const MAP_DENSITIES: MapFeatureDensity[] = ['Sparse', 'Balanced', 'Dense'];
@@ -129,8 +143,7 @@ function buildParty(size: number, level: number): Party {
 // ─── Shareable URL state ──────────────────────────────────────────
 
 interface GenerateConfig {
-  partySize: number;
-  partyLevel: number;
+  partyContext: EncounterPartyContext;
   difficulty: Difficulty;
   environment: Environment;
   includeMap: boolean;
@@ -161,8 +174,9 @@ function mapOptionsFrom(cfg: GenerateConfig) {
 
 function writeUrl(cfg: GenerateConfig): void {
   const params = new URLSearchParams();
-  params.set('size', String(cfg.partySize));
-  params.set('level', String(cfg.partyLevel));
+  // Scalar fallbacks keep old clients useful. The versioned snapshot carries
+  // exact mixed levels and combat profiles without durable identity.
+  writeEncounterPartyShareParams(params, cfg.partyContext);
   params.set('diff', cfg.difficulty);
   params.set('env', cfg.environment);
   if (cfg.includeMap) {
@@ -223,14 +237,6 @@ function isMapTerrainVariety(v: unknown): v is MapTerrainVariety {
   return typeof v === 'string' && (MAP_VARIETIES as string[]).includes(v);
 }
 
-function isPartyConfig(v: unknown): v is PartyConfig {
-  return (
-    typeof v === 'object' && v !== null
-    && (v as PartyConfig).version === 1
-    && Array.isArray((v as PartyConfig).members)
-  );
-}
-
 interface EncounterSettings {
   partySize: number;
   partyLevel: number;
@@ -265,10 +271,17 @@ function isEncounterSettings(v: unknown): v is EncounterSettings {
 }
 
 interface SavedEncounter {
+  version?: 1;
   id: string;
   name: string;
   savedAt: number;
   encounter: Encounter;
+  /** Optional so encounters saved before durable parties still load. */
+  partyContext?: EncounterPartyContext;
+  forecast?: {
+    report: BattleReport;
+    signature: string;
+  };
 }
 
 interface WhatIfResult {
@@ -287,6 +300,18 @@ function encounterSignature(encounter: Encounter | null): string {
     .join('|');
 }
 
+function forecastSignature(
+  encounter: Encounter | null,
+  partyContext: EncounterPartyContext,
+): string {
+  const sourceIdentity = partyContext.source === 'library'
+    ? `${partyContext.partyId}:${partyContext.selectedMemberIds.join(',')}`
+    : partyContext.source;
+  return `${encounterSignature(encounter)}::${sourceIdentity}::${serializeAnonymousPartySnapshot(partyContext.snapshot)}`;
+}
+
+type EncounterPartyMode = 'pending' | 'active' | 'custom' | 'snapshot';
+
 // ─── Page ─────────────────────────────────────────────────────────
 
 export default function EncounterPage() {
@@ -301,6 +326,12 @@ function EncounterBuilder() {
     updateLibrary,
   } = usePartyLibrary();
   const durableParty = partyLibrary ? getActiveParty(partyLibrary) : null;
+  const availableParties = partyLibrary?.parties.filter((party) => party.archivedAt === undefined) ?? [];
+  const [partyMode, setPartyMode] = useState<EncounterPartyMode>('pending');
+  const [selectedPartyId, setSelectedPartyId] = useState<string | null>(null);
+  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+  const [snapshotPartyContext, setSnapshotPartyContext] =
+    useState<EncounterPartyContext | null>(null);
 
   const [partySize, setPartySize] = useState(4);
   const [partyLevel, setPartyLevel] = useState(3);
@@ -310,6 +341,7 @@ function EncounterBuilder() {
   const [environment, setEnvironment] = useState<Environment>('Forest');
   const [encounter, setEncounter] = useState<Encounter | null>(null);
   const [isSeeded, setIsSeeded] = useState(false);
+  const [generatedPartySnapshotSignature, setGeneratedPartySnapshotSignature] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [monsterFilter, setMonsterFilter] = useState<MonsterFilter>({});
@@ -330,20 +362,15 @@ function EncounterBuilder() {
   const partyLevelValidation = validateBoundedIntegerInput(
     partyLevelInput, 'Party level', 1, 20,
   );
-  const partyInputsValid = partySizeValidation.error === null
-    && partyLevelValidation.error === null;
-
   // Battle Forecast state
-  const [partyConfig, setPartyConfig, partyConfigHydrated] = usePersistentState<PartyConfig | null>(
-    PARTY_CONFIG_STORAGE_KEY,
-    null,
-    (v): v is PartyConfig | null => v === null || isPartyConfig(v),
-  );
+  const [customPartyConfig, setCustomPartyConfig] = useState<PartyConfig | null>(null);
   const [showPartySetup, setShowPartySetup] = useState(false);
   const [report, setReport] = useState<BattleReport | null>(null);
   const [reportSignature, setReportSignature] = useState('');
+  const [reportRosterSignature, setReportRosterSignature] = useState('');
   const [simRunning, setSimRunning] = useState(false);
   const [whatIfReports, setWhatIfReports] = useState<WhatIfResult[]>([]);
+  const forecastRunId = useRef(0);
   const partySetupRef = useRef<HTMLDivElement>(null);
   const configurePartyButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -390,29 +417,53 @@ function EncounterBuilder() {
     mapLayout, mapScale, mapFeatureDensity, mapTerrainVariety,
   ]);
 
-  // Bring a persisted forecast party up to the builder's current party size
-  // and level once both local-storage sources have hydrated.
-  const didSyncPartyConfig = useRef(false);
-  useEffect(() => {
-    if (didSyncPartyConfig.current || !partyConfigHydrated || !settingsHydrated.current) return;
-    didSyncPartyConfig.current = true;
-    setPartyConfig((current) => ({
-      version: 1,
-      members: syncPartyConfigMembers(current?.members ?? [], partySize, partyLevel),
-    }));
-  }, [partyConfigHydrated, partyLevel, partySize, setPartyConfig]);
+  const temporaryPartyConfig = useMemo<PartyConfig>(() => ({
+    version: 1,
+    members: (customPartyConfig?.members.length
+      ? customPartyConfig.members
+      : defaultPartyConfig(partySize, partyLevel))
+      .slice(0, MAX_ENCOUNTER_PARTY_MEMBERS),
+  }), [customPartyConfig, partyLevel, partySize]);
 
-  // Current party for XP budgets
-  const party = useMemo(() => buildParty(partySize, partyLevel), [partySize, partyLevel]);
+  // When another tab or the inline selector changes the active party, treat
+  // the new roster as fully attending until the encounter-scoped selection is
+  // synchronized. This avoids briefly announcing a false zero-person party.
+  const effectiveSelectedMemberIds = partyMode === 'active'
+    && durableParty
+    && selectedPartyId !== durableParty.id
+    ? reconcilePartySelection(durableParty)
+    : selectedMemberIds;
+
+  const effectivePartyContext: EncounterPartyContext = partyMode === 'active' && durableParty
+    ? contextFromActiveParty(durableParty, effectiveSelectedMemberIds)
+    : partyMode === 'snapshot' && snapshotPartyContext
+    ? snapshotPartyContext
+    : contextFromCustomParty(temporaryPartyConfig);
+
+  const effectiveForecastConfig: PartyConfig = partyMode === 'active' && durableParty
+    ? partyToForecastConfig(durableParty, effectiveSelectedMemberIds)
+    : partyMode === 'snapshot' && snapshotPartyContext
+    ? contextToForecastConfig(snapshotPartyContext)
+    : temporaryPartyConfig;
+
+  // Every encounter calculation now reads one immutable party snapshot.
+  const party = contextToBudgetParty(effectivePartyContext);
+  const effectivePartySize = party.members.length;
+  const effectiveLevelRange = partyLevelRange(effectivePartyContext.snapshot);
+  const customPartyInputsValid = partySizeValidation.error === null
+    && partyLevelValidation.error === null;
+  const partySetupValid = partyMode !== 'pending'
+    && effectivePartySize > 0
+    && (partyMode !== 'custom' || customPartyInputsValid);
 
   // Seeded token placement rides map.seed (third rng stream), so a
   // shared link reproduces map AND starting positions with zero extra
   // params, and "Regenerate Map" re-places automatically.
   const placement = useMemo(
     () => (encounter?.map
-      ? placeTokens(encounter.map, encounter.monsters, partySize, encounter.map.seed ?? encounter.seed)
+      ? placeTokens(encounter.map, encounter.monsters, effectivePartySize, encounter.map.seed ?? encounter.seed)
       : null),
-    [encounter, partySize],
+    [encounter, effectivePartySize],
   );
 
   // The single source of encounter totals for the meter, badge, and header stats
@@ -420,9 +471,25 @@ function EncounterBuilder() {
     () => summarizeEncounter(encounter?.monsters ?? [], party),
     [encounter, party],
   );
+  const forecastIsStale = report !== null
+    && (
+      !partySetupValid
+      || reportSignature !== forecastSignature(encounter, effectivePartyContext)
+      || reportRosterSignature !== effectiveForecastConfig.members
+        .map((member) => member.name)
+        .join('\u001f')
+    );
+  const currentPartySnapshotSignature = serializeAnonymousPartySnapshot(
+    effectivePartyContext.snapshot,
+  );
+  const partyChangedSinceGeneration = encounter !== null
+    && generatedPartySnapshotSignature !== ''
+    && generatedPartySnapshotSignature !== currentPartySnapshotSignature;
+  const shareLinkIsCurrent = isSeeded && partySetupValid && !partyChangedSinceGeneration;
 
   const configuredPartySummary = useMemo(() => {
-    const members = partyConfig?.members ?? defaultPartyConfig(partySize, partyLevel);
+    const members = effectiveForecastConfig.members;
+    if (members.length === 0) return 'No adventurers attending';
     const levels = members.map((member) => member.level);
     const lowestLevel = Math.min(...levels);
     const highestLevel = Math.max(...levels);
@@ -431,7 +498,12 @@ function EncounterBuilder() {
       : `levels ${lowestLevel}\u2013${highestLevel}`;
 
     return `${members.length} adventurer${members.length === 1 ? '' : 's'} \u00b7 ${levelLabel}`;
-  }, [partyConfig, partyLevel, partySize]);
+  }, [effectiveForecastConfig]);
+  const effectiveLevelLabel = effectiveLevelRange
+    ? effectiveLevelRange.min === effectiveLevelRange.max
+      ? `level ${effectiveLevelRange.min}`
+      : `levels ${effectiveLevelRange.min}\u2013${effectiveLevelRange.max}`
+    : 'no levels selected';
 
   // Monsters for manual add search
   const manualResults = useMemo(() => {
@@ -440,14 +512,22 @@ function EncounterBuilder() {
   }, [allMonsters, manualSearch]);
 
   const invalidateForecast = useCallback(() => {
+    forecastRunId.current += 1;
     setReport(null);
     setReportSignature('');
+    setReportRosterSignature('');
+    setSimRunning(false);
+    setWhatIfReports([]);
+  }, []);
+
+  const cancelPendingForecast = useCallback(() => {
+    forecastRunId.current += 1;
     setSimRunning(false);
     setWhatIfReports([]);
   }, []);
 
   const openPartySetup = useCallback(() => {
-    if (!partyLibraryHydrated) return;
+    if (partyMode !== 'custom') return;
     setShowPartySetup(true);
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
@@ -460,7 +540,24 @@ function EncounterBuilder() {
         partySetupRef.current?.focus({ preventScroll: true });
       });
     });
-  }, [partyLibraryHydrated]);
+  }, [partyMode]);
+
+  const reviewPartyControls = useCallback(() => {
+    const target = document.getElementById(
+      partyMode === 'active'
+        ? 'enc-party-attendance'
+        : partyMode === 'snapshot'
+        ? 'enc-party-snapshot'
+        : 'party-controls-heading',
+    );
+    target?.scrollIntoView({
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 'instant' as ScrollBehavior
+        : 'smooth',
+      block: 'center',
+    });
+    window.requestAnimationFrame(() => target?.focus({ preventScroll: true }));
+  }, [partyMode]);
 
   const closePartySetup = useCallback(() => {
     setShowPartySetup(false);
@@ -470,19 +567,20 @@ function EncounterBuilder() {
   const closeDetailsEditor = useCallback(() => {
     setEditingDetails(false);
     window.requestAnimationFrame(() => editDetailsButtonRef.current?.focus());
-  }, []);
+  }, [setEditingDetails]);
 
   const closeSaveEncounter = useCallback(() => {
     setSavingName(null);
     window.requestAnimationFrame(() => saveEncounterButtonRef.current?.focus());
-  }, []);
+  }, [setSavingName]);
 
   const runGenerate = useCallback((cfg: GenerateConfig) => {
     const generatorFilter = withoutEnvironmentFilter(cfg.filter);
+    const budgetParty = contextToBudgetParty(cfg.partyContext);
     const enc = generateEncounter(
       allMonsters,
       {
-        party: buildParty(cfg.partySize, cfg.partyLevel),
+        party: budgetParty,
         difficulty: cfg.difficulty,
         environment: cfg.environment,
         filter: generatorFilter,
@@ -501,12 +599,13 @@ function EncounterBuilder() {
     setRecipeError('');
     setEncounter(enc);
     setIsSeeded(true);
+    setGeneratedPartySnapshotSignature(serializeAnonymousPartySnapshot(cfg.partyContext.snapshot));
     setLinkCopied(false);
     setExpandedMonster(null);
     setEditingDetails(false);
     invalidateForecast();
     writeUrl({ ...cfg, filter: generatorFilter });
-  }, [allMonsters, invalidateForecast]);
+  }, [allMonsters, invalidateForecast, setEditingDetails, setExpandedMonster]);
 
   const runRecipe = useCallback((recipeId: string, cfg: GenerateConfig) => {
     const recipe = getRecipeById(recipeId);
@@ -516,13 +615,15 @@ function EncounterBuilder() {
     }
     const generatorFilter = withoutEnvironmentFilter(cfg.filter);
     const filteredPool = filterMonsters(allMonsters, generatorFilter);
+    const budgetParty = contextToBudgetParty(cfg.partyContext);
+    const representativeLevel = representativePartyLevel(cfg.partyContext.snapshot);
     const filled = fillRecipeSlots(
       recipe,
       filteredPool,
-      cfg.partyLevel,
+      representativeLevel,
       cfg.environment,
       seededRandom(cfg.seed),
-      getPartyXpBudget(buildParty(cfg.partySize, cfg.partyLevel), cfg.difficulty),
+      getPartyXpBudget(budgetParty, cfg.difficulty),
     );
     if (filled.length === 0) {
       setRecipeError('No monsters match this recipe and the current filters. Broaden the filters and try again.');
@@ -543,7 +644,7 @@ function EncounterBuilder() {
       name: recipe.name,
       description: `${recipe.description}\n\nHook: ${recipe.narrativeHook}`,
       environment: cfg.environment,
-      difficulty: assessEncounterDifficulty(totalXp, buildParty(cfg.partySize, cfg.partyLevel)),
+      difficulty: assessEncounterDifficulty(totalXp, budgetParty),
       monsters,
       totalXp,
       seed: cfg.seed,
@@ -559,15 +660,17 @@ function EncounterBuilder() {
     setEncounter(next);
     setRecipeError('');
     setIsSeeded(true);
+    setGeneratedPartySnapshotSignature(serializeAnonymousPartySnapshot(cfg.partyContext.snapshot));
     setLinkCopied(false);
     setExpandedMonster(null);
     setEditingDetails(false);
     invalidateForecast();
     writeUrl({ ...cfg, filter: generatorFilter, recipeId });
-  }, [allMonsters, invalidateForecast]);
+  }, [allMonsters, invalidateForecast, setEditingDetails, setExpandedMonster]);
 
   // One-shot hydration from a shared link (?seed=...)
   const didInit = useRef(false);
+  const loadedSharedParty = useRef(false);
   useEffect(() => {
     if (didInit.current) return;
     didInit.current = true;
@@ -579,6 +682,7 @@ function EncounterBuilder() {
 
     const size = clampInt(searchParams.get('size'), 1, 10);
     const level = clampInt(searchParams.get('level'), 1, 20);
+    const sharedParty = readEncounterPartyShareParams(searchParams);
     const diff = searchParams.get('diff');
     const env = searchParams.get('env');
     const seed = clampInt(searchParams.get('seed'), 0, 0x7fffffff);
@@ -612,14 +716,16 @@ function EncounterBuilder() {
       }
     }
 
-    if (size !== null) {
+    const displaySize = sharedParty?.size ?? size;
+    const displayLevel = sharedParty?.level ?? level;
+    if (displaySize !== null) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot share-link hydration preserves the seeded replay contract.
-      setPartySize(size);
-      setPartySizeInput(String(size));
+      setPartySize(displaySize);
+      setPartySizeInput(String(displaySize));
     }
-    if (level !== null) {
-      setPartyLevel(level);
-      setPartyLevelInput(String(level));
+    if (displayLevel !== null) {
+      setPartyLevel(displayLevel);
+      setPartyLevelInput(String(displayLevel));
     }
     if (isDifficulty(diff)) setDifficulty(diff);
     if (isEnvironment(env)) setEnvironment(env);
@@ -632,10 +738,18 @@ function EncounterBuilder() {
       setMapTerrainVariety(sharedMapVariety);
     }
 
-    if (seed !== null && size !== null && level !== null && isDifficulty(diff) && isEnvironment(env)) {
+    if (seed !== null && sharedParty && isDifficulty(diff) && isEnvironment(env)) {
+      loadedSharedParty.current = true;
+      if (sharedParty.mode === 'snapshot') {
+        setSnapshotPartyContext(sharedParty.context);
+        setPartyMode('snapshot');
+      } else {
+        // Legacy scalar links remain a temporary custom setup.
+        setCustomPartyConfig(contextToForecastConfig(sharedParty.context));
+        setPartyMode('custom');
+      }
       const sharedConfig: GenerateConfig = {
-        partySize: size,
-        partyLevel: level,
+        partyContext: sharedParty.context,
         difficulty: diff,
         environment: env,
         includeMap: withMap,
@@ -652,35 +766,110 @@ function EncounterBuilder() {
       if (recipeId && getRecipeById(recipeId)) runRecipe(recipeId, sharedConfig);
       else runGenerate(sharedConfig);
     }
-  }, [runGenerate, runRecipe]);
+  }, [runGenerate, runRecipe, setCustomPartyConfig]);
+
+  // A normal visit defaults to the active durable party. Shared links resolve
+  // above first and deliberately leave the Party Library untouched.
+  const didInitializePartyMode = useRef(false);
+  useEffect(() => {
+    if (didInitializePartyMode.current || !partyLibraryHydrated) return;
+    didInitializePartyMode.current = true;
+    if (loadedSharedParty.current || partyMode !== 'pending') return;
+    if (durableParty) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- initialize encounter-scoped attendance from the hydrated library snapshot.
+      setSelectedMemberIds(reconcilePartySelection(durableParty));
+      setSelectedPartyId(durableParty.id);
+      setPartyMode('active');
+    } else {
+      setPartyMode('custom');
+    }
+  }, [durableParty, partyLibraryHydrated, partyMode]);
+
+  const activePartyId = durableParty?.id ?? null;
+  useEffect(() => {
+    if (partyMode !== 'active') return;
+    if (!durableParty) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- a removed/archived active party falls back to isolated custom values.
+      setSelectedMemberIds([]);
+      setSelectedPartyId(null);
+      setPartyMode('custom');
+      cancelPendingForecast();
+      return;
+    }
+    if (selectedPartyId === activePartyId) return;
+    setSelectedMemberIds(reconcilePartySelection(durableParty));
+    setSelectedPartyId(durableParty.id);
+    cancelPendingForecast();
+  }, [activePartyId, cancelPendingForecast, durableParty, partyMode, selectedPartyId]);
+
+  function chooseActiveParty() {
+    if (!durableParty) return;
+    setSelectedMemberIds(reconcilePartySelection(durableParty));
+    setSelectedPartyId(durableParty.id);
+    setPartyMode('active');
+    setShowPartySetup(false);
+    cancelPendingForecast();
+  }
+
+  function chooseCustomParty() {
+    setPartyMode('custom');
+    setShowPartySetup(false);
+    cancelPendingForecast();
+  }
+
+  function chooseSnapshotParty() {
+    if (!snapshotPartyContext) return;
+    setPartyMode('snapshot');
+    setShowPartySetup(false);
+    cancelPendingForecast();
+  }
+
+  function toggleAttendance(memberId: string) {
+    if (!durableParty) return;
+    setSelectedMemberIds(reconcilePartySelection(
+      durableParty,
+      effectiveSelectedMemberIds.includes(memberId)
+        ? effectiveSelectedMemberIds.filter((id) => id !== memberId)
+        : [...effectiveSelectedMemberIds, memberId],
+    ));
+    setSelectedPartyId(durableParty.id);
+    cancelPendingForecast();
+  }
+
+  const focusInvalidPartyField = useCallback(() => {
+    const invalidId = partyMode === 'active' && effectivePartySize === 0
+      ? 'enc-party-attendance'
+      : partyMode === 'custom' && partySizeValidation.error
+      ? 'enc-party-size'
+      : partyMode === 'custom' && partyLevelValidation.error
+      ? 'enc-party-level'
+      : 'party-controls-heading';
+    document.getElementById(invalidId)?.focus();
+  }, [effectivePartySize, partyLevelValidation.error, partyMode, partySizeValidation.error]);
 
   function handleGenerate() {
-    if (!partyInputsValid) {
-      const invalidId = partySizeValidation.error
-        ? 'enc-party-size'
-        : 'enc-party-level';
-      document.getElementById(invalidId)?.focus();
+    if (!partySetupValid) {
+      focusInvalidPartyField();
       return;
     }
 
     runGenerate({
-      partySize, partyLevel, difficulty, environment,
+      partyContext: cloneEncounterPartyContext(effectivePartyContext),
+      difficulty, environment,
       includeMap, mapLayout, mapScale, mapFeatureDensity, mapTerrainVariety,
       filter: monsterFilter, seed: randomSeed(), flavorVersion: 2,
     });
   }
 
   function handleRecipe(recipeId: string) {
-    if (!partyInputsValid) {
+    if (!partySetupValid) {
       setRecipeError('Fix the party details before using a recipe.');
-      const invalidId = partySizeValidation.error
-        ? 'enc-party-size'
-        : 'enc-party-level';
-      document.getElementById(invalidId)?.focus();
+      focusInvalidPartyField();
       return;
     }
     runRecipe(recipeId, {
-      partySize, partyLevel, difficulty, environment,
+      partyContext: cloneEncounterPartyContext(effectivePartyContext),
+      difficulty, environment,
       includeMap, mapLayout, mapScale, mapFeatureDensity, mapTerrainVariety,
       filter: monsterFilter, seed: randomSeed(), flavorVersion: 2, recipeId,
     });
@@ -693,7 +882,7 @@ function EncounterBuilder() {
       ...current,
       difficulty: assessEncounterDifficulty(current.totalXp, buildParty(nextSize, partyLevel)),
     } : current);
-    setPartyConfig((current) => ({
+    setCustomPartyConfig((current) => ({
       version: 1,
       members: syncPartyConfigMembers(current?.members ?? [], nextSize, partyLevel),
     }));
@@ -713,7 +902,7 @@ function EncounterBuilder() {
       ...current,
       difficulty: assessEncounterDifficulty(current.totalXp, buildParty(partySize, nextLevel)),
     } : current);
-    setPartyConfig((current) => ({
+    setCustomPartyConfig((current) => ({
       version: 1,
       members: syncPartyConfigMembers(current?.members ?? [], partySize, nextLevel),
     }));
@@ -741,6 +930,7 @@ function EncounterBuilder() {
     setMonsterFilter({});
     setEncounter(null);
     setIsSeeded(false);
+    setGeneratedPartySnapshotSignature('');
     setLinkCopied(false);
     setShowFilters(false);
     setExpandedMonster(null);
@@ -749,7 +939,17 @@ function EncounterBuilder() {
     setShowRecipes(false);
     setRecipeError('');
     setShowPartySetup(false);
-    setPartyConfig({ version: 1, members: defaultPartyConfig(4, 3) });
+    setCustomPartyConfig({ version: 1, members: defaultPartyConfig(4, 3) });
+    setSnapshotPartyContext(null);
+    if (durableParty) {
+      setSelectedMemberIds(reconcilePartySelection(durableParty));
+      setSelectedPartyId(durableParty.id);
+      setPartyMode('active');
+    } else {
+      setSelectedMemberIds([]);
+      setSelectedPartyId(null);
+      setPartyMode('custom');
+    }
     setSavingName(null);
     setEditingDetails(false);
     invalidateForecast();
@@ -774,17 +974,24 @@ function EncounterBuilder() {
   }
 
   const handleCopyLink = useCallback(() => {
+    if (!shareLinkIsCurrent) return;
     navigator.clipboard.writeText(window.location.href).then(() => {
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
     });
-  }, []);
+  }, [shareLinkIsCurrent]);
 
-  const runForecast = useCallback((config: PartyConfig, enc: Encounter) => {
+  const runForecast = useCallback((
+    config: PartyConfig,
+    enc: Encounter,
+    partyContext: EncounterPartyContext,
+  ) => {
+    const runId = ++forecastRunId.current;
     setSimRunning(true);
     setWhatIfReports([]);
     // Let the skeleton paint before the (fast but synchronous) simulation.
     setTimeout(() => {
+      if (runId !== forecastRunId.current) return;
       const players = config.members.map((m, i) => buildSimPlayer(m, i));
       const monsters = enc.monsters.flatMap((em) =>
         Array.from({ length: em.count }, (_, i) => monsterToSimMonster(em.monster, i, em.count)),
@@ -797,22 +1004,34 @@ function EncounterBuilder() {
             placeTokens(enc.map, enc.monsters, config.members.length, enc.map.seed ?? enc.seed),
           )
         : undefined;
-      setReport(simulateBattle(players, monsters, {
+      const nextReport = simulateBattle(players, monsters, {
         seed: randomSeed(),
         ...(battlefield ? { battlefield } : {}),
-      }));
-      setReportSignature(encounterSignature(enc));
+      });
+      if (runId !== forecastRunId.current) return;
+      setReport(nextReport);
+      setReportSignature(forecastSignature(enc, partyContext));
+      setReportRosterSignature(config.members.map((member) => member.name).join('\u001f'));
       setSimRunning(false);
     }, 30);
   }, []);
 
   function handleForecastClick() {
     if (!encounter || encounter.monsters.length === 0) return;
-    if (!partyConfig || partyConfig.members.length === 0) {
-      openPartySetup();
+    if (!partySetupValid) {
+      focusInvalidPartyField();
       return;
     }
-    runForecast(partyConfig, encounter);
+    if (effectiveForecastConfig.members.length === 0) {
+      if (partyMode === 'custom') openPartySetup();
+      else document.getElementById('enc-party-attendance')?.focus();
+      return;
+    }
+    runForecast(
+      effectiveForecastConfig,
+      encounter,
+      cloneEncounterPartyContext(effectivePartyContext),
+    );
   }
 
   const handleAddMonster = useCallback((monster: Monster) => {
@@ -884,21 +1103,21 @@ function EncounterBuilder() {
   }, []);
 
   const runWhatIf = useCallback((monsterId: string, delta: 1 | -1) => {
-    if (!encounter || !partyConfig || !report) return;
+    if (!encounter || !report || forecastIsStale || effectiveForecastConfig.members.length === 0) return;
     const current = encounter.monsters.find((entry) => entry.monster.id === monsterId);
     if (!current || (delta < 0 && current.count <= 0)) return;
     const roster = encounter.monsters
       .map((entry) => entry.monster.id === monsterId ? { ...entry, count: entry.count + delta } : entry)
       .filter((entry) => entry.count > 0);
     if (roster.length === 0) return;
-    const players = partyConfig.members.map((member, index) => buildSimPlayer(member, index));
+    const players = effectiveForecastConfig.members.map((member, index) => buildSimPlayer(member, index));
     const monsters = roster.flatMap((entry) =>
       Array.from({ length: entry.count }, (_, index) => monsterToSimMonster(entry.monster, index, entry.count))
     );
     const battlefield = encounter.map
       ? battlefieldFromMap(
           encounter.map,
-          placeTokens(encounter.map, roster, partyConfig.members.length, encounter.map.seed ?? encounter.seed),
+          placeTokens(encounter.map, roster, effectiveForecastConfig.members.length, encounter.map.seed ?? encounter.seed),
         )
       : undefined;
     const nextReport = simulateBattle(players, monsters, {
@@ -910,20 +1129,23 @@ function EncounterBuilder() {
       ...previous.filter((entry) => !entry.label.endsWith(current.monster.name)),
       { label: `${delta > 0 ? '+1' : '-1'} ${current.monster.name}`, report: nextReport },
     ].slice(-3));
-  }, [encounter, partyConfig, report]);
+  }, [effectiveForecastConfig, encounter, forecastIsStale, report]);
 
   const handleExport = useCallback((format: 'json' | 'markdown' | 'foundry' | 'player') => {
     if (!encounter) return;
+    const currentEncounter = summary.assessment
+      ? { ...encounter, difficulty: summary.assessment }
+      : encounter;
     if (format === 'json') {
-      downloadEncounter(JSON.stringify(encounter, null, 2), 'application/json', encounterExportFilename(encounter, 'json'));
+      downloadEncounter(JSON.stringify(currentEncounter, null, 2), 'application/json', encounterExportFilename(currentEncounter, 'json'));
     } else if (format === 'markdown') {
-      downloadEncounter(encounterToMarkdown(encounter), 'text/markdown', encounterExportFilename(encounter, 'md'));
+      downloadEncounter(encounterToMarkdown(currentEncounter), 'text/markdown', encounterExportFilename(currentEncounter, 'md'));
     } else if (format === 'foundry') {
-      downloadEncounter(JSON.stringify(encounterToFoundry(encounter), null, 2), 'application/json', encounterExportFilename(encounter, 'foundry.json'));
+      downloadEncounter(JSON.stringify(encounterToFoundry(currentEncounter), null, 2), 'application/json', encounterExportFilename(currentEncounter, 'foundry.json'));
     } else {
-      downloadEncounter(encounterPlayerHandoutMarkdown(encounter), 'text/markdown', encounterExportFilename(encounter, 'player-handout.md'));
+      downloadEncounter(encounterPlayerHandoutMarkdown(currentEncounter), 'text/markdown', encounterExportFilename(currentEncounter, 'player-handout.md'));
     }
-  }, [downloadEncounter, encounter]);
+  }, [downloadEncounter, encounter, summary.assessment]);
 
   const handlePrintPlayerHandout = useCallback(() => {
     document.body.classList.add('player-handout-print');
@@ -933,8 +1155,12 @@ function EncounterBuilder() {
     window.setTimeout(cleanup, 1000);
   }, []);
 
-  const handleRunBattle = useCallback(() => {
+  function handleRunBattle() {
     if (!encounter || encounter.monsters.length === 0) return;
+    if (!partySetupValid) {
+      focusInvalidPartyField();
+      return;
+    }
     const existing = storageLoad<BattleState | null>(
       'battleOrganizer',
       null,
@@ -945,35 +1171,88 @@ function EncounterBuilder() {
       && !window.confirm(`Replace the current battle “${existing.name}” with “${encounter.name}”?`)
     ) return;
 
-    const members = partyConfig?.members.length
-      ? partyConfig.members
-      : defaultPartyConfig(partySize, partyLevel);
-    const nextBattle = battleFromEncounter(encounter, members);
+    const currentEncounter = summary.assessment
+      ? { ...encounter, difficulty: summary.assessment }
+      : encounter;
+    const nextBattle = battleFromEncounter(
+      currentEncounter,
+      effectiveForecastConfig.members,
+      cloneEncounterPartyContext(effectivePartyContext),
+    );
     if (!storageSave('battleOrganizer', nextBattle)) {
       window.alert('The battle could not be saved in this browser.');
       return;
     }
     window.location.assign('/battle/');
-  }, [encounter, partyConfig, partyLevel, partySize]);
+  }
 
-  const handleSaveEncounter = useCallback(() => {
-    if (!encounter || savingName === null) return;
+  function handleSaveEncounter() {
+    if (!encounter || savingName === null || !partySetupValid) return;
     const name = savingName.trim() || encounter.name;
+    const frozenParty = cloneEncounterPartyContext(effectivePartyContext);
+    const savedEncounter = summary.assessment
+      ? { ...encounter, difficulty: summary.assessment }
+      : encounter;
+    const savedRecord: SavedEncounter = {
+      version: 1,
+      id: `saved-${Date.now()}`,
+      name,
+      savedAt: Date.now(),
+      encounter: savedEncounter,
+      partyContext: frozenParty,
+      ...(!forecastIsStale && report
+        ? {
+            forecast: {
+              report,
+              signature: forecastSignature(savedEncounter, frozenParty),
+            },
+          }
+        : {}),
+    };
     setSavedEncounters((prev) => [
-      { id: `saved-${Date.now()}`, name, savedAt: Date.now(), encounter },
+      savedRecord,
       ...prev,
     ].slice(0, MAX_SAVED_ENCOUNTERS));
     closeSaveEncounter();
-  }, [closeSaveEncounter, encounter, savingName, setSavedEncounters]);
+  }
 
-  const handleLoadSaved = useCallback((saved: SavedEncounter) => {
+  function handleLoadSaved(saved: SavedEncounter) {
+    forecastRunId.current += 1;
+    setSimRunning(false);
     setEncounter(saved.encounter);
     setIsSeeded(false); // the pool may have changed since it was saved
+    setGeneratedPartySnapshotSignature('');
     clearUrlSeed();
     setExpandedMonster(null);
-    setReport(null);
+    setWhatIfReports([]);
+    if (saved.partyContext && isEncounterPartyContext(saved.partyContext)) {
+      const frozenParty = cloneEncounterPartyContext(saved.partyContext);
+      setSnapshotPartyContext(frozenParty);
+      setPartyMode('snapshot');
+      setReport(saved.forecast?.report ?? null);
+      setReportSignature(saved.forecast
+        ? forecastSignature(saved.encounter, frozenParty)
+        : '');
+      setReportRosterSignature(saved.forecast
+        ? contextToForecastConfig(frozenParty).members
+          .map((member) => member.name)
+          .join('\u001f')
+        : '');
+    } else {
+      setSnapshotPartyContext(null);
+      if (durableParty) {
+        setSelectedMemberIds(reconcilePartySelection(durableParty));
+        setSelectedPartyId(durableParty.id);
+        setPartyMode('active');
+      } else {
+        setPartyMode('custom');
+      }
+      setReport(null);
+      setReportSignature('');
+      setReportRosterSignature('');
+    }
     setEditingDetails(false);
-  }, []);
+  }
 
   return (
     <div className="animate-fade-in">
@@ -1002,70 +1281,273 @@ function EncounterBuilder() {
               <p className="micro-label">Build the encounter</p>
               <h2 id="encounter-setup-heading" className="mt-1 text-2xl">Set the scene</h2>
               <p className="mt-1 max-w-2xl text-sm text-[var(--text-2)]">
-                Define the party and the kind of fight you want. Optional tools stay out of the way until you need them.
+                Choose who is at the table, then set the tone for the fight. Optional tools stay tucked away until you need them.
               </p>
             </div>
           </div>
           <div className="workflow-context" role="status">
             <span className="micro-label">Current brief</span>
             <strong>
-              {partyInputsValid
-                ? `${partySize} heroes · level ${partyLevel} · ${difficulty}`
+              {partyMode === 'pending'
+                ? 'Loading party…'
+                : partySetupValid
+                ? `${effectivePartySize} ${effectivePartySize === 1 ? 'hero' : 'heroes'} · ${effectiveLevelLabel} · ${difficulty} target`
                 : 'Party details need attention'}
             </strong>
           </div>
         </header>
 
         <div className="setup-grid">
-          <section className="setup-group" aria-labelledby="party-controls-heading">
+          <section className="setup-group self-start" aria-labelledby="party-controls-heading">
             <div className="setup-group-heading">
               <span className="setup-group-icon" aria-hidden="true"><Users size={18} /></span>
               <div>
-                <h3 id="party-controls-heading" className="text-base">Party</h3>
-                <p>Who is walking into the room?</p>
+                <h3 id="party-controls-heading" tabIndex={-1} className="text-base">Party</h3>
+                <p>Choose the party and who’s here today.</p>
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <label htmlFor="enc-party-size" className="field-label">Heroes</label>
-                <input
-                  id="enc-party-size"
-                  type="number" min={1} max={10} step={1} inputMode="numeric"
-                  value={partySizeInput}
-                  onChange={e => handlePartySizeInputChange(e.target.value)}
-                  aria-invalid={partySizeValidation.error ? true : undefined}
-                  aria-describedby={partySizeValidation.error ? 'enc-party-size-error' : 'enc-party-size-hint'}
-                  className="w-full"
-                />
-                <p id="enc-party-size-hint" className="field-hint">1–10 characters</p>
-                {partySizeValidation.error && (
-                  <p id="enc-party-size-error" className="field-error" role="alert">
-                    {partySizeValidation.error}
-                  </p>
+            {partyMode === 'pending' ? (
+              <div className="surface-inset animate-pulse p-4" role="status">
+                <p className="text-sm text-[var(--text-3)]">Loading your Party Library…</p>
+              </div>
+            ) : partyMode === 'snapshot' && snapshotPartyContext ? (
+              <div id="enc-party-snapshot" tabIndex={-1} className="surface-inset space-y-3 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between md:flex-col xl:flex-row">
+                  <div>
+                    <p className="micro-label">
+                      {snapshotPartyContext.source === 'shared' ? 'Shared party setup' : 'Saved party setup'}
+                    </p>
+                    <p className="mt-1 font-semibold text-[var(--text-1)]">
+                      {effectivePartySize} {effectivePartySize === 1 ? 'adventurer' : 'adventurers'} · {effectiveLevelLabel}
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-[var(--text-3)]">
+                      A frozen copy of the party math keeps this scene reproducible. Character names and notes are not included.
+                    </p>
+                    <p className="mt-2 text-xs text-[var(--text-3)]">
+                      {difficulty} budget {getPartyXpBudget(party, difficulty).toLocaleString()} XP
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap md:w-full md:flex-col xl:w-auto xl:flex-row">
+                    {durableParty && (
+                      <button type="button" className="btn-secondary w-full text-xs sm:w-auto md:w-full xl:w-auto" onClick={chooseActiveParty}>
+                        Use active party
+                      </button>
+                    )}
+                    <button type="button" className="btn-ghost w-full text-xs sm:w-auto md:w-full xl:w-auto" onClick={chooseCustomParty}>
+                      Use custom values
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <fieldset>
+                  <legend className="sr-only">Party source</legend>
+                  <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-1 xl:grid-cols-2">
+                    <label
+                      aria-disabled={!durableParty || undefined}
+                      className={`option-card option-card-toggle ${partyMode === 'active' ? 'is-active' : ''} ${!durableParty ? 'cursor-not-allowed opacity-60' : ''}`}
+                    >
+                      <Users size={18} aria-hidden="true" />
+                      <span className="option-card-copy">
+                        <strong>Use active party</strong>
+                        <small>{durableParty ? durableParty.name : 'No saved party yet'}</small>
+                      </span>
+                      <input
+                        type="radio"
+                        name="encounter-party-source"
+                        value="active"
+                        checked={partyMode === 'active'}
+                        disabled={!durableParty}
+                        onChange={chooseActiveParty}
+                      />
+                    </label>
+                    <label className={`option-card option-card-toggle ${partyMode === 'custom' ? 'is-active' : ''}`}>
+                      <SlidersHorizontal size={18} aria-hidden="true" />
+                      <span className="option-card-copy">
+                        <strong>Use custom values</strong>
+                        <small>Temporary for this encounter</small>
+                      </span>
+                      <input
+                        type="radio"
+                        name="encounter-party-source"
+                        value="custom"
+                        checked={partyMode === 'custom'}
+                        onChange={chooseCustomParty}
+                      />
+                    </label>
+                  </div>
+                </fieldset>
+
+                {snapshotPartyContext && (
+                  <button
+                    type="button"
+                    className="btn-ghost w-full justify-center text-xs sm:w-auto"
+                    onClick={chooseSnapshotParty}
+                  >
+                    Return to {snapshotPartyContext.source === 'shared' ? 'shared' : 'saved'} party setup
+                  </button>
+                )}
+
+                {partyMode === 'active' && durableParty ? (
+                  <div className="surface-inset space-y-3 p-3">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        {availableParties.length > 1 ? (
+                          <>
+                            <label htmlFor="enc-active-party" className="field-label">Active party</label>
+                            <select
+                              id="enc-active-party"
+                              value={durableParty.id}
+                              className="w-full text-sm"
+                              onChange={(event) => {
+                                const nextPartyId = event.target.value;
+                                const nextParty = availableParties.find((savedParty) => savedParty.id === nextPartyId);
+                                if (!nextParty) return;
+                                setSelectedPartyId(nextParty.id);
+                                setSelectedMemberIds(reconcilePartySelection(nextParty));
+                                cancelPendingForecast();
+                                void updateLibrary((library) => activateParty(library, nextPartyId)).then((result) => {
+                                  if (result.ok) return;
+                                  setSelectedPartyId(durableParty.id);
+                                  setSelectedMemberIds(reconcilePartySelection(durableParty));
+                                });
+                              }}
+                            >
+                              {availableParties.map((savedParty) => (
+                                <option key={savedParty.id} value={savedParty.id}>{savedParty.name}</option>
+                              ))}
+                            </select>
+                          </>
+                        ) : (
+                          <p className="font-semibold text-[var(--text-1)]">{durableParty.name}</p>
+                        )}
+                        <p className="mt-0.5 text-xs text-[var(--text-3)]">
+                          {effectivePartySize} of {durableParty.members.length} attending · {effectiveLevelLabel}
+                        </p>
+                        {availableParties.length > 1 && (
+                          <p className="mt-1 text-xs text-[var(--text-3)]">
+                            Changing this selection updates the active party across DM tools.
+                          </p>
+                        )}
+                      </div>
+                      <Link href="/party/" className="btn-ghost text-xs">Manage parties</Link>
+                    </div>
+                    <fieldset
+                      id="enc-party-attendance"
+                      tabIndex={-1}
+                      aria-invalid={effectivePartySize === 0 ? true : undefined}
+                      aria-describedby={effectivePartySize === 0 ? 'enc-party-attendance-error' : 'enc-party-attendance-hint'}
+                    >
+                      <legend className="field-label">Attendance</legend>
+                      <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-1 xl:grid-cols-2">
+                        {durableParty.members.map((member) => {
+                          const attending = effectiveSelectedMemberIds.includes(member.id);
+                          const attendanceCapped = !attending
+                            && effectiveSelectedMemberIds.length >= MAX_ENCOUNTER_PARTY_MEMBERS;
+                          return (
+                            <label
+                              key={member.id}
+                              className={`flex min-h-11 items-center gap-3 rounded-lg border px-3 py-2 transition-colors ${attendanceCapped ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${attending
+                                ? 'border-[var(--border-interactive)] bg-[var(--bronze-wash)]'
+                                : 'border-[var(--border-subtle)] bg-[var(--surface-subtle)] text-[var(--text-3)]'}`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={attending}
+                                disabled={attendanceCapped}
+                                onChange={() => toggleAttendance(member.id)}
+                              />
+                              <span className="min-w-0 flex-1">
+                                <strong className="block truncate text-sm text-[var(--text-1)]">{member.name || 'Unnamed adventurer'}</strong>
+                                <small className="block text-[11px] text-[var(--text-3)]">
+                                  Level {member.level} · {member.classLabel || getTemplateById(member.templateId)?.name || 'Adventurer'}
+                                </small>
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </fieldset>
+                    {durableParty.members.length > MAX_ENCOUNTER_PARTY_MEMBERS && (
+                      <p className="field-hint">
+                        Up to {MAX_ENCOUNTER_PARTY_MEMBERS} characters can attend one encounter.
+                      </p>
+                    )}
+                    {effectivePartySize === 0 ? (
+                      <p id="enc-party-attendance-error" className="field-error" role="alert">
+                        {durableParty.members.length === 0
+                          ? <>This party has no characters. <Link href="/party/" className="underline">Add a character</Link> to continue.</>
+                          : 'Select at least one attending character.'}
+                      </p>
+                    ) : (
+                      <p id="enc-party-attendance-hint" className="text-xs text-[var(--text-3)]">
+                        {effectivePartySize} attending · {effectiveLevelLabel} · {difficulty} budget {getPartyXpBudget(party, difficulty).toLocaleString()} XP
+                      </p>
+                    )}
+                    <p className="text-xs leading-relaxed text-[var(--text-3)]">
+                      Attendance will be included when you save or start combat. It does not remove anyone from the Party Library.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="surface-inset p-3">
+                    <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="font-semibold text-[var(--text-1)]">Temporary party</p>
+                        <p className="mt-0.5 text-xs text-[var(--text-3)]">These values affect this encounter only and never edit a saved party.</p>
+                      </div>
+                      {!durableParty && <Link href="/party/" className="btn-ghost text-xs">Create a saved party</Link>}
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-1 xl:grid-cols-2">
+                      <div>
+                        <label htmlFor="enc-party-size" className="field-label">Heroes</label>
+                        <input
+                          id="enc-party-size"
+                          type="number" min={1} max={10} step={1} inputMode="numeric"
+                          value={partySizeInput}
+                          onChange={e => handlePartySizeInputChange(e.target.value)}
+                          aria-invalid={partySizeValidation.error ? true : undefined}
+                          aria-describedby={partySizeValidation.error ? 'enc-party-size-error' : 'enc-party-size-hint'}
+                          className="w-full"
+                        />
+                        <p id="enc-party-size-hint" className="field-hint">1–10 characters</p>
+                        {partySizeValidation.error && (
+                          <p id="enc-party-size-error" className="field-error" role="alert">
+                            {partySizeValidation.error}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label htmlFor="enc-party-level" className="field-label">Starting level</label>
+                        <input
+                          id="enc-party-level"
+                          type="number" min={1} max={20} step={1} inputMode="numeric"
+                          value={partyLevelInput}
+                          onChange={e => handlePartyLevelInputChange(e.target.value)}
+                          aria-invalid={partyLevelValidation.error ? true : undefined}
+                          aria-describedby={partyLevelValidation.error ? 'enc-party-level-error' : 'enc-party-level-hint'}
+                          className="w-full"
+                        />
+                        <p id="enc-party-level-hint" className="field-hint">Applied to every temporary character</p>
+                        {partyLevelValidation.error && (
+                          <p id="enc-party-level-error" className="field-error" role="alert">
+                            {partyLevelValidation.error}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    {customPartyInputsValid && (
+                      <p className="mt-3 text-xs text-[var(--text-3)]">
+                        {effectivePartySize} heroes · {effectiveLevelLabel} · {difficulty} budget {getPartyXpBudget(party, difficulty).toLocaleString()} XP
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
-              <div>
-                <label htmlFor="enc-party-level" className="field-label">Average level</label>
-                <input
-                  id="enc-party-level"
-                  type="number" min={1} max={20} step={1} inputMode="numeric"
-                  value={partyLevelInput}
-                  onChange={e => handlePartyLevelInputChange(e.target.value)}
-                  aria-invalid={partyLevelValidation.error ? true : undefined}
-                  aria-describedby={partyLevelValidation.error ? 'enc-party-level-error' : 'enc-party-level-hint'}
-                  className="w-full"
-                />
-                <p id="enc-party-level-hint" className="field-hint">Level 1–20</p>
-                {partyLevelValidation.error && (
-                  <p id="enc-party-level-error" className="field-error" role="alert">
-                    {partyLevelValidation.error}
-                  </p>
-                )}
-              </div>
-            </div>
+            )}
           </section>
 
-          <section className="setup-group" aria-labelledby="encounter-controls-heading">
+          <section className="setup-group self-start" aria-labelledby="encounter-controls-heading">
             <div className="setup-group-heading">
               <span className="setup-group-icon" aria-hidden="true"><SlidersHorizontal size={18} /></span>
               <div>
@@ -1073,7 +1555,7 @@ function EncounterBuilder() {
                 <p>What should the fight feel like?</p>
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-1 xl:grid-cols-2">
               <div>
                 <label htmlFor="enc-difficulty" className="field-label">Target difficulty</label>
                 <select id="enc-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value as Difficulty)} className="w-full">
@@ -1285,6 +1767,10 @@ function EncounterBuilder() {
                     {saved.encounter.difficulty} ·{' '}
                     {saved.encounter.monsters.reduce((sum, em) => sum + em.monster.hitPoints * em.count, 0).toLocaleString()} HP ·{' '}
                     {saved.encounter.monsters.reduce((s, em) => s + em.count, 0)} monsters ·{' '}
+                    {saved.partyContext && isEncounterPartyContext(saved.partyContext)
+                      ? `${saved.partyContext.snapshot.members.length} heroes · `
+                      : ''}
+                    {saved.forecast ? 'forecast saved · ' : ''}
                     {new Date(saved.savedAt).toLocaleDateString()}
                   </span>
                 </div>
@@ -1442,7 +1928,7 @@ function EncounterBuilder() {
                 <span className="meta-label">Calculated challenge</span>
                 {summary.assessment && <DifficultyBadge difficulty={summary.assessment} />}
                 <p>
-                  Assessed for {partySize} level-{partyLevel} heroes. The current setup target is <strong>{difficulty}</strong>.
+                  Assessed for {effectivePartySize} {effectivePartySize === 1 ? 'hero' : 'heroes'} at {effectiveLevelLabel}. The current setup target is <strong>{difficulty}</strong>.
                 </p>
               </div>
               <dl className="metric-grid">
@@ -1479,13 +1965,14 @@ function EncounterBuilder() {
                     ref={saveEncounterButtonRef}
                     type="button"
                     onClick={() => setSavingName(encounter.name)}
+                    disabled={!partySetupValid}
                     className="btn-secondary text-sm"
                   >
                     <Save size={16} aria-hidden="true" />
                     Save
                   </button>
                 )}
-                {isSeeded && (
+                {shareLinkIsCurrent && (
                   <button
                     type="button"
                     onClick={handleCopyLink}
@@ -1496,9 +1983,16 @@ function EncounterBuilder() {
                     {linkCopied ? 'Link copied' : 'Copy share link'}
                   </button>
                 )}
-                <span id="share-link-description" className="sr-only">
-                  The link recreates this encounter using the built-in bestiary.
-                </span>
+                {shareLinkIsCurrent && (
+                  <p id="share-link-description" className="basis-full text-xs leading-relaxed text-[var(--text-3)]">
+                    Share links include anonymous levels and combat values—never character names, player names, or notes.
+                  </p>
+                )}
+                {partyChangedSinceGeneration && (
+                  <p className="basis-full text-xs font-medium text-[var(--bronze-light)]" role="status">
+                    The party changed. Generate again before sharing so the link matches this setup.
+                  </p>
+                )}
               </div>
 
               <details className="action-menu">
@@ -1556,8 +2050,9 @@ function EncounterBuilder() {
                       if (e.key === 'Escape') closeSaveEncounter();
                     }}
                   />
+                  <p className="field-hint">Includes this party setup and the current forecast, when available.</p>
                 </div>
-                <button type="submit" className="btn-primary text-sm">
+                <button type="submit" disabled={!partySetupValid} className="btn-primary text-sm">
                   <Check size={16} aria-hidden="true" />
                   Save encounter
                 </button>
@@ -1652,24 +2147,32 @@ function EncounterBuilder() {
                 <p className="mt-1 text-xs leading-relaxed text-[var(--text-3)]">
                   Used for both the combat forecast and the initiative tracker.
                 </p>
-                <PartyPersistenceStatus hideErrors />
               </div>
-              <button
-                ref={configurePartyButtonRef}
-                type="button"
-                onClick={openPartySetup}
-                disabled={!partyLibraryHydrated}
-                aria-expanded={showPartySetup}
-                aria-controls="encounter-party-setup"
-                className="btn-secondary w-full text-sm sm:w-auto"
-              >
-                <SlidersHorizontal size={16} aria-hidden="true" />
-                {!partyLibraryHydrated
-                  ? 'Loading party…'
-                  : showPartySetup ? 'Editing party' : 'Configure party'}
-              </button>
+              {partyMode === 'custom' ? (
+                <button
+                  ref={configurePartyButtonRef}
+                  type="button"
+                  onClick={openPartySetup}
+                  aria-expanded={showPartySetup}
+                  aria-controls="encounter-party-setup"
+                  className="btn-secondary w-full text-sm sm:w-auto"
+                >
+                  <SlidersHorizontal size={16} aria-hidden="true" />
+                  {showPartySetup ? 'Editing profiles' : 'Tune temporary profiles'}
+                </button>
+              ) : partyMode === 'active' ? (
+                <button type="button" onClick={reviewPartyControls} className="btn-secondary w-full text-sm sm:w-auto">
+                  <Users size={16} aria-hidden="true" />
+                  Review attendance
+                </button>
+              ) : (
+                <button type="button" onClick={reviewPartyControls} className="btn-secondary w-full text-sm sm:w-auto">
+                  <Users size={16} aria-hidden="true" />
+                  Review party setup
+                </button>
+              )}
             </div>
-            {showPartySetup && partyLibraryHydrated && (
+            {showPartySetup && partyMode === 'custom' && (
               <div
                 id="encounter-party-setup"
                 ref={partySetupRef}
@@ -1678,13 +2181,21 @@ function EncounterBuilder() {
                 aria-label="Encounter party setup"
               >
                 <PartySetupPanel
-                  members={durableParty
-                    ? partyToForecastConfig(durableParty).members
-                    : partyConfig?.members ?? defaultPartyConfig(partySize, partyLevel)}
+                  members={temporaryPartyConfig.members}
+                  eyebrow="Temporary encounter party"
+                  title="Tune forecast profiles"
+                  description="These combat profiles stay with the temporary encounter setup and never edit your Party Library."
+                  saveLabel="Use these profiles"
                   onSave={(members) => {
-                    setPartyConfig({ version: 1, members });
-                    void updateLibrary((library) =>
-                      mergeForecastMembersIntoPartyLibrary(library, members));
+                    setCustomPartyConfig({ version: 1, members });
+                    const nextSize = members.length;
+                    const nextLevel = nextSize > 0
+                      ? Math.round(members.reduce((total, member) => total + member.level, 0) / nextSize)
+                      : partyLevel;
+                    setPartySize(nextSize);
+                    setPartySizeInput(String(nextSize));
+                    setPartyLevel(nextLevel);
+                    setPartyLevelInput(String(nextLevel));
                     invalidateForecast();
                     closePartySetup();
                   }}
@@ -1702,7 +2213,7 @@ function EncounterBuilder() {
                     <button
                       type="button"
                       onClick={handleForecastClick}
-                      disabled={simRunning}
+                      disabled={simRunning || !partySetupValid}
                       className="btn-primary w-full text-sm sm:w-auto"
                     >
                       <Sparkles size={16} aria-hidden="true" />
@@ -1716,7 +2227,12 @@ function EncounterBuilder() {
                 <div className="min-w-0 flex-1">
                   <h3 className="text-lg">Start live combat</h3>
                   <p>Send this roster and party to the initiative tracker for play at the table.</p>
-                  <button type="button" onClick={handleRunBattle} className="btn-primary mt-4 w-full text-sm sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={handleRunBattle}
+                    disabled={!partySetupValid}
+                    className="btn-primary mt-4 w-full text-sm sm:w-auto"
+                  >
                     <Swords size={16} aria-hidden="true" />
                     Open battle organizer
                   </button>
@@ -1737,12 +2253,31 @@ function EncounterBuilder() {
             <BattleReportCard
               report={report}
               xpLabel={summary.assessment}
-              stale={reportSignature !== encounterSignature(encounter)}
-              onRerun={() => encounter && partyConfig && runForecast(partyConfig, encounter)}
-              onEditParty={openPartySetup}
+              stale={forecastIsStale}
+              onRerun={() => {
+                if (!partySetupValid) {
+                  focusInvalidPartyField();
+                  return;
+                }
+                if (encounter) {
+                  runForecast(
+                    effectiveForecastConfig,
+                    encounter,
+                    cloneEncounterPartyContext(effectivePartyContext),
+                  );
+                }
+              }}
+              onEditParty={partyMode === 'custom' ? openPartySetup : reviewPartyControls}
+              partyActionLabel={partyMode === 'custom'
+                ? 'Edit temporary profiles'
+                : partyMode === 'active'
+                ? 'Review attendance'
+                : snapshotPartyContext?.source === 'shared'
+                ? 'Review shared party'
+                : 'Review saved party'}
             />
           )}
-          {!simRunning && report && (
+          {!simRunning && report && !forecastIsStale && (
             <section className="card player-handout-hidden space-y-4 print:hidden" aria-labelledby="what-if-heading">
               <div>
                 <p className="micro-label">Smart insights</p>
@@ -1840,7 +2375,7 @@ function EncounterBuilder() {
               </div>
               <MapSvg map={encounter.map} tokens={placement?.tokens} />
               <p className="mt-2 text-xs text-[var(--text-3)]">
-                Suggested starting positions — bronze ring: party (P1–P{partySize}), red ring: monsters.
+                Suggested starting positions — bronze ring: party (P1–P{effectivePartySize}), red ring: monsters.
               </p>
               {placement && placement.notes.length > 0 && (
                 <p className="mt-1 text-xs text-[var(--text-3)] print:hidden">

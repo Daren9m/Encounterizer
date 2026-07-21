@@ -16,8 +16,11 @@ import {
   sortCombatants,
   startBattle,
   type BattleCombatant,
+  type BattleState,
 } from '@/lib/battle-organizer';
 import type { Encounter, Monster } from '@/lib/types';
+import { contextFromActiveParty } from '@/lib/encounter-party';
+import type { PartyProfile } from '@/lib/party';
 import { makeMonster } from './test-helpers';
 
 function combatant(id: string, initiative: number, dexterity = 10): BattleCombatant {
@@ -144,5 +147,54 @@ describe('battle organizer', () => {
       dexterity: 10,
     });
     expect(battle.combatants[1]).toMatchObject({ kind: 'enemy', maxHp: 10, armorClass: 15, dexterity: 14 });
+  });
+
+  it('carries an isolated party reference and anonymous snapshot into battle handoff', () => {
+    const goblin: Monster = makeMonster({ id: 'goblin', name: 'Goblin' });
+    const encounter: Encounter = {
+      id: 'ambush', name: 'Road Ambush', description: '', environment: 'Forest',
+      difficulty: 'Moderate', monsters: [{ monster: goblin, count: 1 }], totalXp: 50, seed: 1,
+    };
+    const party: PartyProfile = {
+      id: 'party-lanterns',
+      name: 'The Lanterns',
+      createdAt: 1,
+      updatedAt: 2,
+      members: [{
+        id: 'member-aria',
+        name: 'Aria',
+        playerName: 'Dana',
+        notes: 'Private note.',
+        level: 5,
+        templateId: 'fighter-champion',
+        overrides: { ac: 19 },
+      }],
+    };
+    const context = contextFromActiveParty(party, ['member-aria']);
+    const battle = battleFromEncounter(encounter, [{
+      id: 'member-aria', name: 'Aria', level: 5, templateId: 'fighter-champion',
+    }], context);
+
+    expect(battle.partyContext).toMatchObject({
+      source: 'library',
+      partyId: 'party-lanterns',
+      selectedMemberIds: ['member-aria'],
+      snapshot: {
+        version: 1,
+        members: [{ level: 5, templateId: 'fighter-champion', overrides: { ac: 19 } }],
+      },
+    });
+    expect(JSON.stringify(battle.partyContext)).not.toContain('Aria');
+    expect(JSON.stringify(battle.partyContext)).not.toContain('Dana');
+    expect(JSON.stringify(battle.partyContext)).not.toContain('Private note');
+    expect(battle.partyContext).not.toBe(context);
+    party.members[0].level = 20;
+    expect(battle.partyContext?.snapshot.members[0].level).toBe(5);
+    expect(isBattleState(battle)).toBe(true);
+
+    const persisted: unknown = JSON.parse(JSON.stringify(battle));
+    expect(isBattleState(persisted)).toBe(true);
+    expect((persisted as BattleState).partyContext?.snapshot.members[0])
+      .toMatchObject({ level: 5, templateId: 'fighter-champion' });
   });
 });
