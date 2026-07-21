@@ -22,12 +22,10 @@ export type RouteIconName =
   | 'skull'
   | 'map'
   | 'puzzle'
-  | 'sparkles'
   | 'users'
   | 'screen'
   | 'battle'
-  | 'book'
-  | 'library';
+  | 'book';
 
 export interface RouteInfo {
   path: string;
@@ -117,23 +115,15 @@ export const TOOL_SECTIONS: ToolSection[] = [
   {
     id: 'reference',
     label: 'Find',
-    description: 'Rules and the complete SRD library.',
+    description: 'One reference library, plus the bestiary.',
     routes: [
       {
         path: '/reference',
-        navLabel: 'Rules',
-        title: 'DM Reference',
-        description: 'Find conditions and common rulings without slowing the game.',
-        navDescription: 'Check conditions and common rulings.',
+        navLabel: 'Reference',
+        title: 'Reference Library',
+        description: 'Search rules, spells, magic items, feats, backgrounds, and species in one place.',
+        navDescription: 'Search rules, spells, items, and character options.',
         icon: 'book',
-      },
-      {
-        path: '/compendium',
-        navLabel: 'Compendium',
-        title: 'SRD Compendium',
-        description: 'Search every SRD magic item, feat, background, and species.',
-        navDescription: 'Search items and character options.',
-        icon: 'library',
       },
       {
         path: '/monsters',
@@ -142,14 +132,6 @@ export const TOOL_SECTIONS: ToolSection[] = [
         description: 'Search SRD monsters by CR, type, movement, defenses, and more.',
         navDescription: 'Search SRD stat blocks.',
         icon: 'skull',
-      },
-      {
-        path: '/spells',
-        navLabel: 'Spells',
-        title: 'Spell Reference',
-        description: 'Search and compare SRD spells by level, school, class, and more.',
-        navDescription: 'Search and compare SRD spells.',
-        icon: 'sparkles',
       },
     ],
   },

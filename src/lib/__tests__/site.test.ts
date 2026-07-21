@@ -13,7 +13,7 @@ import {
 const EXPECTED_TOPOLOGY: Record<ToolSectionId, string[]> = {
   prep: ['/party', '/encounters', '/maps', '/noncombat'],
   run: ['/dm-screen', '/battle'],
-  reference: ['/reference', '/compendium', '/monsters', '/spells'],
+  reference: ['/reference', '/monsters'],
 };
 
 describe('site information architecture', () => {
@@ -59,13 +59,15 @@ describe('site information architecture', () => {
     }
   });
 
-  it('indexes the DM Reference and exposes it inside the DM Screen', () => {
+  it('indexes the unified Reference Library and exposes it inside the DM Screen', () => {
     expect(ALL_ROUTE_PATHS).toContain('/reference');
-    expect(ALL_ROUTE_PATHS).toContain('/compendium');
+    expect(ALL_ROUTE_PATHS).not.toContain('/compendium');
+    expect(ALL_ROUTE_PATHS).not.toContain('/spells');
     expect(ALL_ROUTE_PATHS.filter((path) => path === '/reference')).toHaveLength(1);
     expect(DM_SCREEN_TOOL_ROUTES.map((route) => route.path)).toContain(DM_SCREEN_DEFAULT_TOOL_PATH);
     expect(DM_SCREEN_TOOL_ROUTES.map((route) => route.path)).toContain('/reference');
-    expect(DM_SCREEN_TOOL_ROUTES.map((route) => route.path)).toContain('/compendium');
+    expect(DM_SCREEN_TOOL_ROUTES.map((route) => route.path)).not.toContain('/compendium');
+    expect(DM_SCREEN_TOOL_ROUTES.map((route) => route.path)).not.toContain('/spells');
     expect(DM_SCREEN_TOOL_ROUTES.map((route) => route.path)).not.toContain('/dm-screen');
   });
 
