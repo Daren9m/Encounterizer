@@ -1,12 +1,10 @@
 import type { Metadata } from 'next';
-import { TOOL_ROUTES } from '@/lib/site';
-
-const route = TOOL_ROUTES.find((item) => item.path === '/compendium');
 
 export const metadata: Metadata = {
-  title: route?.title ?? 'SRD Compendium',
-  description: route?.description
-    ?? 'Search every SRD 5.2.1 magic item, feat, background, and species in Encounterizer.',
+  title: 'Reference Library',
+  description: 'Search Encounterizer’s unified rules and game reference.',
+  alternates: { canonical: '/reference' },
+  robots: { index: false, follow: true },
 };
 
 export default function CompendiumLayout({ children }: { children: React.ReactNode }) {
