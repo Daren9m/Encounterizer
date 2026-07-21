@@ -1,5 +1,4 @@
-import type { Condition } from './types';
-import type { Encounter } from './types';
+import type { Condition, Encounter, EncounterRecipeBeat, EncounterRecipePlan } from './types';
 import type { PartyMemberConfig } from './battle-sim-types';
 import { buildSimPlayer } from '../data/class-templates';
 import {
@@ -49,6 +48,13 @@ export interface BattleState {
   log: BattleLogEntry[];
   /** Frozen encounter input; optional for battles created before Party Library. */
   partyContext?: EncounterPartyContext;
+  /** Frozen recipe instructions and table progress; optional for legacy and
+   *  manually-created battles. */
+  recipePlan?: EncounterRecipePlan;
+  recipeProgress?: {
+    resolvedBeatIds: string[];
+    outcome: 'active' | 'success' | 'failure';
+  };
 }
 
 export const EMPTY_BATTLE: BattleState = {
@@ -91,7 +97,7 @@ export function battleFromEncounter(
     };
   });
 
-  const enemies: BattleCombatant[] = encounter.monsters.flatMap(({ monster, count }) =>
+  const enemies: BattleCombatant[] = encounter.monsters.flatMap(({ monster, count, recipeRole }) =>
     Array.from({ length: count }, (_, index) => ({
       id: `encounter-${monster.id}-${index + 1}`,
       name: count > 1 ? `${monster.name} ${index + 1}` : monster.name,
@@ -107,9 +113,29 @@ export function battleFromEncounter(
       reactionUsed: false,
       legendaryActionsMax: monster.legendary?.actionsPerRound ?? 0,
       legendaryActionsUsed: 0,
-      notes: `CR ${monster.challengeRating} · ${encounter.environment}`,
+      notes: `CR ${monster.challengeRating} · ${encounter.environment}${recipeRole ? ` · ${recipeRole}` : ''}`,
     })),
   );
+
+  const recipeAlly: BattleCombatant[] = encounter.recipePlan?.specialParticipant
+    ? [{
+        id: `recipe-${encounter.recipePlan.recipeId}-objective`,
+        name: encounter.recipePlan.specialParticipant.name,
+        kind: encounter.recipePlan.specialParticipant.kind,
+        initiative: 0,
+        dexterity: 10,
+        armorClass: encounter.recipePlan.specialParticipant.armorClass,
+        maxHp: encounter.recipePlan.specialParticipant.maxHp,
+        currentHp: encounter.recipePlan.specialParticipant.maxHp,
+        tempHp: 0,
+        conditions: [],
+        concentration: false,
+        reactionUsed: false,
+        legendaryActionsMax: 0,
+        legendaryActionsUsed: 0,
+        notes: encounter.recipePlan.specialParticipant.notes,
+      }]
+    : [];
 
   return {
     version: 1,
@@ -117,12 +143,65 @@ export function battleFromEncounter(
     name: encounter.name,
     round: 1,
     started: false,
-    combatants: [...players, ...enemies],
+    combatants: [...players, ...recipeAlly, ...enemies],
     log: [],
+    ...(encounter.recipePlan
+      ? {
+          recipePlan: JSON.parse(JSON.stringify(encounter.recipePlan)) as EncounterRecipePlan,
+          recipeProgress: { resolvedBeatIds: [], outcome: 'active' as const },
+        }
+      : {}),
     ...(partyContext
       ? { partyContext: cloneEncounterPartyContext(partyContext) }
       : {}),
   };
+}
+
+export type RecipeBeatState = 'due' | 'watch' | 'upcoming' | 'resolved';
+
+export function getRecipeBeatState(state: BattleState, beat: EncounterRecipeBeat): RecipeBeatState {
+  if (state.recipeProgress?.resolvedBeatIds.includes(beat.id)) return 'resolved';
+  const trigger = beat.trigger;
+  if (trigger.kind === 'manual') return 'watch';
+  if (trigger.kind === 'round') return state.round >= trigger.round ? 'due' : 'upcoming';
+  if (trigger.kind === 'ally-at-zero') {
+    const participantName = state.recipePlan?.specialParticipant?.name;
+    return state.combatants.some((combatant) =>
+      combatant.kind === 'ally'
+      && combatant.currentHp === 0
+      && (!participantName || combatant.name === participantName)
+    ) ? 'due' : 'upcoming';
+  }
+  if (trigger.kind === 'enemies-remaining') {
+    const remaining = state.combatants.filter((combatant) => combatant.kind === 'enemy' && combatant.currentHp > 0).length;
+    return remaining <= trigger.count ? 'due' : 'upcoming';
+  }
+  const enemies = state.combatants
+    .filter((combatant) => combatant.kind === 'enemy' && combatant.maxHp > 0)
+    .sort((a, b) => b.maxHp - a.maxHp);
+  const leader = enemies.find((combatant) => combatant.notes.includes('· Boss')) ?? enemies[0];
+  return leader && leader.currentHp / leader.maxHp <= trigger.percent / 100 ? 'due' : 'upcoming';
+}
+
+export function resolveRecipeBeat(state: BattleState, beatId: string): BattleState {
+  const beat = state.recipePlan?.beats.find((entry) => entry.id === beatId);
+  if (!beat || state.recipeProgress?.resolvedBeatIds.includes(beatId)) return state;
+  const progress = state.recipeProgress ?? { resolvedBeatIds: [], outcome: 'active' as const };
+  return log({
+    ...state,
+    recipeProgress: { ...progress, resolvedBeatIds: [...progress.resolvedBeatIds, beatId] },
+  }, `Recipe cue resolved: ${beat.title}.`);
+}
+
+export function setRecipeOutcome(
+  state: BattleState,
+  outcome: 'active' | 'success' | 'failure',
+): BattleState {
+  if (!state.recipePlan || state.recipeProgress?.outcome === outcome) return state;
+  const progress = state.recipeProgress ?? { resolvedBeatIds: [], outcome: 'active' as const };
+  const next = { ...state, recipeProgress: { ...progress, outcome } };
+  if (outcome === 'active') return log(next, 'Recipe objective reopened.');
+  return log(next, `Recipe objective marked ${outcome}.`);
 }
 
 /** Resolve legacy version-1 records into the explicit workflow phase. */
@@ -312,6 +391,19 @@ export function battleToMarkdown(state: BattleState): string {
       `- Next up: ${callouts.next?.name ?? '—'}`,
       `- On deck: ${callouts.onDeck?.name ?? '—'}`,
     ] : []),
+    ...(state.recipePlan ? [
+      '',
+      '## Recipe objective',
+      '',
+      `**${state.recipePlan.objective.title}.** ${state.recipePlan.objective.summary}`,
+      `- Outcome: ${state.recipeProgress?.outcome ?? 'active'}`,
+      `- Success: ${state.recipePlan.objective.success}`,
+      `- Failure: ${state.recipePlan.objective.failure}`,
+      '',
+      '### Battle beats',
+      '',
+      ...state.recipePlan.beats.map((beat) => `- [${state.recipeProgress?.resolvedBeatIds.includes(beat.id) ? 'x' : ' '}] **${beat.title}:** ${beat.guidance} ${beat.effect}`),
+    ] : []),
     '',
     '## Initiative',
     '',
@@ -342,5 +434,34 @@ export function isBattleState(value: unknown): value is BattleState {
     && typeof state.started === 'boolean'
     && Array.isArray(state.combatants)
     && Array.isArray(state.log)
-    && (state.partyContext === undefined || isEncounterPartyContext(state.partyContext));
+    && (state.partyContext === undefined || isEncounterPartyContext(state.partyContext))
+    && (state.recipePlan === undefined || isRecipePlan(state.recipePlan))
+    && (state.recipeProgress === undefined || (
+      Array.isArray(state.recipeProgress.resolvedBeatIds)
+      && state.recipeProgress.resolvedBeatIds.every((id) => typeof id === 'string')
+      && ['active', 'success', 'failure'].includes(state.recipeProgress.outcome)
+    ));
+}
+
+function isRecipePlan(value: unknown): value is EncounterRecipePlan {
+  if (!value || typeof value !== 'object') return false;
+  const plan = value as Partial<EncounterRecipePlan>;
+  return plan.version === 1
+    && typeof plan.recipeId === 'string'
+    && typeof plan.recipeName === 'string'
+    && !!plan.objective
+    && typeof plan.objective.title === 'string'
+    && typeof plan.objective.summary === 'string'
+    && typeof plan.objective.success === 'string'
+    && typeof plan.objective.failure === 'string'
+    && Array.isArray(plan.setup)
+    && plan.setup.every((note) => typeof note === 'string')
+    && Array.isArray(plan.beats)
+    && plan.beats.every((beat) => !!beat && typeof beat.id === 'string' && typeof beat.title === 'string')
+    && !!plan.forecast
+    && typeof plan.forecast.headline === 'string'
+    && Array.isArray(plan.forecast.guidance)
+    && typeof plan.forecast.caveat === 'string'
+    && typeof plan.terrain === 'string'
+    && typeof plan.closing === 'string';
 }

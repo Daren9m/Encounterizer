@@ -50,8 +50,10 @@ import { parseFlavorVersionParam, type FlavorVersion } from '@/lib/flavor-pools'
 import { randomSeed, seededRandom } from '@/lib/random';
 import {
   ENCOUNTER_RECIPES,
+  buildRecipePlan,
   fillRecipeSlots,
   getRecipeById,
+  getRecipePlaybookPreview,
 } from '@/lib/encounter-recipes';
 import { validateBoundedIntegerInput } from '@/lib/number-input';
 import type {
@@ -67,6 +69,7 @@ import FilterPanel from '@/components/FilterPanel';
 import PartySetupPanel from '@/components/PartySetupPanel';
 import PartyPersistenceStatus from '@/components/PartyPersistenceStatus';
 import BattleReportCard from '@/components/BattleReportCard';
+import EncounterRecipePlaybook from '@/components/EncounterRecipePlaybook';
 import PrintButton from '@/components/PrintButton';
 import ResetGeneratorButton from '@/components/ResetGeneratorButton';
 import ToolPageHeader from '@/components/ToolPageHeader';
@@ -629,12 +632,15 @@ function EncounterBuilder() {
       setRecipeError('No monsters match this recipe and the current filters. Broaden the filters and try again.');
       return;
     }
-    const byMonster = new Map<string, { monster: Monster; count: number }>();
+    const byMonster = new Map<string, { monster: Monster; count: number; recipeRole: string }>();
     for (const slot of filled) {
       const existing = byMonster.get(slot.monster.id);
       byMonster.set(slot.monster.id, {
         monster: slot.monster,
         count: (existing?.count ?? 0) + slot.count,
+        recipeRole: existing && !existing.recipeRole.split(' / ').includes(slot.role)
+          ? `${existing.recipeRole} / ${slot.role}`
+          : existing?.recipeRole ?? slot.role,
       });
     }
     const monsters = [...byMonster.values()];
@@ -649,6 +655,12 @@ function EncounterBuilder() {
       totalXp,
       seed: cfg.seed,
       tactics: `${recipe.tactics}\n\nScaling: ${recipe.scaling}\n\nTerrain: ${recipe.terrainSuggestions.join('; ')}`,
+      recipePlan: buildRecipePlan(recipe, filled, {
+        environment: cfg.environment,
+        partyLevel: representativeLevel,
+        partySize: cfg.partyContext.snapshot.members.length,
+        seed: cfg.seed,
+      }),
     };
     if (cfg.includeMap) {
       next.map = generateMap({
@@ -1689,6 +1701,11 @@ function EncounterBuilder() {
                         <span className="mt-2 block text-[10px] uppercase tracking-wide text-[var(--bronze)]">
                           {recipe.slots.map((slot) => `${slot.count}× ${slot.role}`).join(' · ')}
                         </span>
+                        {getRecipePlaybookPreview(recipe.id) && (
+                          <span className="mt-2 block text-[10px] font-semibold text-[var(--text-3)]">
+                            {getRecipePlaybookPreview(recipe.id)?.objective} · {getRecipePlaybookPreview(recipe.id)?.beats} live cues
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -2063,6 +2080,8 @@ function EncounterBuilder() {
             )}
           </section>
 
+          {encounter.recipePlan && <EncounterRecipePlaybook plan={encounter.recipePlan} />}
+
           {/* Review the roster before choosing a forecast or live-combat action. */}
           <section className="card player-handout-hidden" aria-labelledby="monster-composition-heading">
             <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -2094,6 +2113,9 @@ function EncounterBuilder() {
                         <span className="block text-sm text-[var(--text-2)] sm:ml-2 sm:inline">
                           CR {crDisplay(em.monster.challengeRating)} | AC {em.monster.armor.ac} | {em.monster.hitPoints} HP each
                         </span>
+                        {em.recipeRole && (
+                          <span className="mt-1 block text-[10px] font-bold uppercase tracking-wide text-[var(--bronze)]">{em.recipeRole}</span>
+                        )}
                       </div>
                     </button>
                     <div className="flex items-center justify-between gap-2 sm:justify-end">
@@ -2276,6 +2298,9 @@ function EncounterBuilder() {
                 ? 'Review shared party'
                 : 'Review saved party'}
             />
+          )}
+          {!simRunning && report && encounter.recipePlan && (
+            <EncounterRecipePlaybook plan={encounter.recipePlan} variant="forecast" />
           )}
           {!simRunning && report && !forecastIsStale && (
             <section className="card player-handout-hidden space-y-4 print:hidden" aria-labelledby="what-if-heading">

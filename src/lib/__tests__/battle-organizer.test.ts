@@ -8,17 +8,20 @@ import {
   battleToMarkdown,
   finishBattle,
   getBattlePhase,
+  getRecipeBeatState,
   getTurnCallouts,
   isBattleState,
   removeBattleCombatant,
+  resolveRecipeBeat,
   resumeBattle,
   setCurrentTurn,
+  setRecipeOutcome,
   sortCombatants,
   startBattle,
   type BattleCombatant,
   type BattleState,
 } from '@/lib/battle-organizer';
-import type { Encounter, Monster } from '@/lib/types';
+import type { Encounter, EncounterRecipePlan, Monster } from '@/lib/types';
 import { contextFromActiveParty } from '@/lib/encounter-party';
 import type { PartyProfile } from '@/lib/party';
 import { makeMonster } from './test-helpers';
@@ -30,6 +33,23 @@ function combatant(id: string, initiative: number, dexterity = 10): BattleCombat
     reactionUsed: false, legendaryActionsMax: 0, legendaryActionsUsed: 0, notes: '',
   };
 }
+
+const RECIPE_PLAN: EncounterRecipePlan = {
+  version: 1,
+  recipeId: 'test-recipe',
+  recipeName: 'Test Recipe',
+  objective: { title: 'Protect the ward', summary: 'Keep the ward standing.', success: 'Ward survives.', failure: 'Ward falls.' },
+  setup: ['Place the ward.'],
+  beats: [
+    { id: 'round-two', title: 'Pressure rises', trigger: { kind: 'round', round: 2 }, guidance: 'Advance.', effect: 'Move the threat.' },
+    { id: 'half-hp', title: 'Leader changes', trigger: { kind: 'leader-hp', percent: 50 }, guidance: 'Transform.', effect: 'Change form.' },
+    { id: 'ward-down', title: 'Ward falls', trigger: { kind: 'ally-at-zero' }, guidance: 'Check the ward.', effect: 'Mark failure.' },
+  ],
+  forecast: { headline: 'Read the objective.', guidance: ['Check the curve.'], caveat: 'Objective not modeled.' },
+  terrain: 'A test chamber',
+  closing: 'Record the result.',
+  specialParticipant: { name: 'Protected NPC', kind: 'ally', armorClass: 12, maxHp: 20, notes: 'Objective ally' },
+};
 
 describe('battle organizer', () => {
   it('sorts initiative with Dexterity and name tie breakers', () => {
@@ -82,6 +102,15 @@ describe('battle organizer', () => {
     expect(isBattleState(legacyActive)).toBe(true);
     expect(getBattlePhase(legacyActive)).toBe('active');
     expect(getTurnCallouts(legacyActive).current?.id).toBe('legacy');
+  });
+
+  it('rejects malformed persisted recipe guidance without breaking legacy battles', () => {
+    expect(isBattleState({ ...EMPTY_BATTLE, recipePlan: { version: 1 } })).toBe(false);
+    expect(isBattleState({
+      ...EMPTY_BATTLE,
+      recipePlan: RECIPE_PLAN,
+      recipeProgress: { resolvedBeatIds: ['round-two'], outcome: 'success' },
+    })).toBe(true);
   });
 
   it('advances turn resources correctly when the acting combatant is removed', () => {
@@ -196,5 +225,34 @@ describe('battle organizer', () => {
     expect(isBattleState(persisted)).toBe(true);
     expect((persisted as BattleState).partyContext?.snapshot.members[0])
       .toMatchObject({ level: 5, templateId: 'fighter-champion' });
+  });
+
+  it('carries recipe guidance into live battle and tracks triggered beats and outcome', () => {
+    const leader = makeMonster({ id: 'leader', name: 'Leader', hitPoints: 100 });
+    const encounter: Encounter = {
+      id: 'recipe-test', name: 'Recipe Test', description: '', environment: 'Urban',
+      difficulty: 'Moderate', monsters: [{ monster: leader, count: 1, recipeRole: 'Boss' }],
+      totalXp: leader.xp, seed: 7, recipePlan: RECIPE_PLAN,
+    };
+    let battle = battleFromEncounter(encounter, []);
+
+    expect(battle.recipePlan).toEqual(RECIPE_PLAN);
+    expect(battle.combatants.map((entry) => entry.name)).toEqual(['Protected NPC', 'Leader']);
+    expect(battle.combatants[1].notes).toContain('Boss');
+    expect(getRecipeBeatState(battle, RECIPE_PLAN.beats[0])).toBe('upcoming');
+
+    battle = { ...battle, round: 2 };
+    expect(getRecipeBeatState(battle, RECIPE_PLAN.beats[0])).toBe('due');
+    battle = applyDamage(battle, 'encounter-leader-1', 50);
+    expect(getRecipeBeatState(battle, RECIPE_PLAN.beats[1])).toBe('due');
+    battle = applyDamage(battle, 'recipe-test-recipe-objective', 20);
+    expect(getRecipeBeatState(battle, RECIPE_PLAN.beats[2])).toBe('due');
+
+    battle = resolveRecipeBeat(battle, 'round-two');
+    expect(getRecipeBeatState(battle, RECIPE_PLAN.beats[0])).toBe('resolved');
+    battle = setRecipeOutcome(battle, 'failure');
+    expect(battle.recipeProgress?.outcome).toBe('failure');
+    expect(battleToMarkdown(battle)).toContain('## Recipe objective');
+    expect(battleToMarkdown(battle)).toContain('[x] **Pressure rises:**');
   });
 });

@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   BookOpen,
+  Check,
   ChevronDown,
   ChevronUp,
   Clock,
@@ -20,6 +21,7 @@ import {
   Trash2,
   Trophy,
   Users,
+  X,
 } from 'lucide-react';
 import { useMonsters } from '@/app/hooks/useMonsters';
 import {
@@ -30,11 +32,14 @@ import {
   battleToMarkdown,
   finishBattle,
   getBattlePhase,
+  getRecipeBeatState,
   getTurnCallouts,
   isBattleState,
   removeBattleCombatant,
+  resolveRecipeBeat,
   resumeBattle,
   setCurrentTurn,
+  setRecipeOutcome,
   sortCombatants,
   startBattle,
   type BattleCombatant,
@@ -42,6 +47,7 @@ import {
   type BattleState,
   type CombatantKind,
 } from '@/lib/battle-organizer';
+import { describeRecipeTrigger } from '@/lib/encounter-recipes';
 import type { Condition, Monster } from '@/lib/types';
 import { usePersistentState } from '@/lib/use-persistent-state';
 import PrintButton from '@/components/PrintButton';
@@ -197,6 +203,8 @@ export default function BattleOrganizer({ mode = 'full' }: { mode?: 'full' | 'in
         onDamage={(combatantId, amount) => setBattle((state) => applyDamage(state, combatantId, amount))}
         onHeal={(combatantId, amount) => setBattle((state) => applyHealing(state, combatantId, amount))}
         onTakeTurn={(combatantId) => setBattle((state) => setCurrentTurn(state, combatantId))}
+        onResolveRecipeBeat={(beatId) => setBattle((state) => resolveRecipeBeat(state, beatId))}
+        onRecipeOutcome={(outcome) => setBattle((state) => setRecipeOutcome(state, outcome))}
       />
     );
   }
@@ -250,6 +258,17 @@ export default function BattleOrganizer({ mode = 'full' }: { mode?: 'full' | 'in
               </dl>
             </section>
           </div>
+
+          {battle.recipePlan && (
+            <div className="px-5 pb-5">
+              <LiveRecipeGuide
+                battle={battle}
+                phase="setup"
+                onResolve={(beatId) => setBattle((state) => resolveRecipeBeat(state, beatId))}
+                onOutcome={(outcome) => setBattle((state) => setRecipeOutcome(state, outcome))}
+              />
+            </div>
+          )}
 
           <div className="px-5 pb-5">
             <section className="content-panel" aria-labelledby="initiative-roster-heading">
@@ -347,6 +366,15 @@ export default function BattleOrganizer({ mode = 'full' }: { mode?: 'full' | 'in
             <p className="sr-only" aria-live="polite">Round {battle.round}. {callouts.current?.name ?? 'No combatant'} is acting.</p>
           </section>
 
+          {battle.recipePlan && (
+            <LiveRecipeGuide
+              battle={battle}
+              phase="active"
+              onResolve={(beatId) => setBattle((state) => resolveRecipeBeat(state, beatId))}
+              onOutcome={(outcome) => setBattle((state) => setRecipeOutcome(state, outcome))}
+            />
+          )}
+
           <section className="content-panel" aria-labelledby="turn-order-heading">
             <div className="content-panel-heading">
               <div><h2 id="turn-order-heading" className="text-xl">Turn order</h2><p>The active combatant is labeled. Open details for conditions, notes, or an out-of-order turn.</p></div>
@@ -429,6 +457,15 @@ export default function BattleOrganizer({ mode = 'full' }: { mode?: 'full' | 'in
               </div>
             </div>
           </section>
+
+          {battle.recipePlan && (
+            <LiveRecipeGuide
+              battle={battle}
+              phase="complete"
+              onResolve={(beatId) => setBattle((state) => resolveRecipeBeat(state, beatId))}
+              onOutcome={(outcome) => setBattle((state) => setRecipeOutcome(state, outcome))}
+            />
+          )}
 
           <section className="content-panel" aria-labelledby="final-roster-heading">
             <div className="content-panel-heading">
@@ -713,6 +750,101 @@ function CompletedCombatantRow({ combatant }: { combatant: BattleCombatant }) {
   );
 }
 
+function LiveRecipeGuide({ battle, phase, compact = false, onResolve, onOutcome }: {
+  battle: BattleState;
+  phase: BattlePhase;
+  compact?: boolean;
+  onResolve: (beatId: string) => void;
+  onOutcome: (outcome: 'active' | 'success' | 'failure') => void;
+}) {
+  const plan = battle.recipePlan;
+  if (!plan) return null;
+  const outcome = battle.recipeProgress?.outcome ?? 'active';
+  const beatStates = plan.beats.map((beat) => ({ beat, state: getRecipeBeatState(battle, beat) }));
+  const dueCount = beatStates.filter((entry) => entry.state === 'due').length;
+
+  return (
+    <section className={`${compact ? 'content-panel mb-3' : 'content-panel panel-accent mb-4'}`} aria-labelledby={`${compact ? 'compact-' : ''}recipe-guide-heading`}>
+      <div className="content-panel-heading">
+        <div>
+          <p className="micro-label">Live recipe · {plan.recipeName}</p>
+          <h2 id={`${compact ? 'compact-' : ''}recipe-guide-heading`} className={compact ? 'text-base' : 'text-xl'}>{plan.objective.title}</h2>
+          <p>{plan.objective.summary}</p>
+        </div>
+        {phase === 'active' && (
+          <span className={`status-readout text-xs ${dueCount > 0 ? 'status-readout-warning' : 'status-readout-success'}`}>
+            <span className="status-readout-dot" aria-hidden="true" />{dueCount > 0 ? `${dueCount} cue${dueCount === 1 ? '' : 's'} due` : 'On script'}
+          </span>
+        )}
+      </div>
+
+      {phase === 'setup' && (
+        <div className="grid gap-3 p-4 md:grid-cols-2">
+          <div>
+            <h3 className="text-sm">Before initiative</h3>
+            <ul className="mt-2 space-y-2 text-sm text-[var(--text-2)]">
+              {plan.setup.map((note) => <li key={note} className="surface-inset p-3">{note}</li>)}
+            </ul>
+          </div>
+          <div className="grid content-start gap-2 text-sm">
+            <div className="rounded-lg border border-[var(--status-success)] bg-[var(--status-success-wash)] p-3"><strong>Success</strong><p className="mt-1 text-[var(--text-2)]">{plan.objective.success}</p></div>
+            <div className="rounded-lg border border-[var(--accent-danger)] bg-[var(--status-danger-wash)] p-3"><strong>Failure</strong><p className="mt-1 text-[var(--text-2)]">{plan.objective.failure}</p></div>
+          </div>
+        </div>
+      )}
+
+      {phase !== 'setup' && (
+        <div className="p-4">
+          <ol className="space-y-2">
+            {beatStates.map(({ beat, state }) => (
+              <li
+                key={beat.id}
+                className={`rounded-lg border p-3 ${state === 'due' ? 'border-[var(--status-warning)] bg-[var(--status-warning-wash)]' : state === 'resolved' ? 'border-[var(--status-success)] bg-[var(--status-success-wash)]' : 'border-[var(--border-subtle)] bg-[var(--surface-inset)]'}`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--bronze)]">{describeRecipeTrigger(beat.trigger)} · {state}</p>
+                    <h3 className="mt-1 text-sm">{beat.title}</h3>
+                    {(!compact || state === 'due' || state === 'watch') && (
+                      <>
+                        <p className="mt-1 text-sm text-[var(--text-2)]">{beat.guidance}</p>
+                        <p className="mt-2 text-xs text-[var(--text-3)]"><strong>Apply:</strong> {beat.effect}</p>
+                      </>
+                    )}
+                  </div>
+                  {state !== 'resolved' && phase === 'active' && (
+                    <button type="button" className="btn-secondary shrink-0 text-xs" onClick={() => onResolve(beat.id)}>
+                      <Check size={14} aria-hidden="true" /> Mark resolved
+                    </button>
+                  )}
+                  {state === 'resolved' && <Check size={18} className="shrink-0 text-[var(--status-success)]" aria-label="Resolved" />}
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          <div className="mt-3 flex flex-col gap-2 border-t border-[var(--line-subtle)] pt-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-[var(--text-3)]">
+              {outcome === 'active' ? 'Objective unresolved.' : outcome === 'success' ? plan.objective.success : plan.objective.failure}
+            </p>
+            <div className="flex flex-wrap gap-2 print:hidden">
+              {outcome === 'active' ? (
+                <>
+                  <button type="button" className="btn-secondary text-xs" onClick={() => onOutcome('success')}><Check size={14} aria-hidden="true" /> Mark success</button>
+                  <button type="button" className="btn-ghost text-xs text-[var(--accent-danger)]" onClick={() => onOutcome('failure')}><X size={14} aria-hidden="true" /> Mark failure</button>
+                </>
+              ) : (
+                <button type="button" className="btn-ghost text-xs" onClick={() => onOutcome('active')}>Reopen objective</button>
+              )}
+            </div>
+          </div>
+          {phase === 'complete' && <p className="mt-3 text-sm text-[var(--text-2)]"><strong>Aftermath:</strong> {plan.closing}</p>}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function BattleLog({ battle, panelId, defaultOpen = false }: { battle: BattleState; panelId: string; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -758,7 +890,7 @@ function BattleActionsMenu({ battle, onDelete }: { battle: BattleState; onDelete
   );
 }
 
-function CompactBattleOrganizer({ battle, phase, ordered, callouts, onStart, onAdvance, onFinish, onResume, onUpdate, onDamage, onHeal, onTakeTurn }: {
+function CompactBattleOrganizer({ battle, phase, ordered, callouts, onStart, onAdvance, onFinish, onResume, onUpdate, onDamage, onHeal, onTakeTurn, onResolveRecipeBeat, onRecipeOutcome }: {
   battle: BattleState;
   phase: BattlePhase;
   ordered: BattleCombatant[];
@@ -771,6 +903,8 @@ function CompactBattleOrganizer({ battle, phase, ordered, callouts, onStart, onA
   onDamage: (combatantId: string, amount: number) => void;
   onHeal: (combatantId: string, amount: number) => void;
   onTakeTurn: (combatantId: string) => void;
+  onResolveRecipeBeat: (beatId: string) => void;
+  onRecipeOutcome: (outcome: 'active' | 'success' | 'failure') => void;
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const previousPhase = useRef<BattlePhase | undefined>(undefined);
@@ -820,6 +954,15 @@ function CompactBattleOrganizer({ battle, phase, ordered, callouts, onStart, onA
             </div>
             <p className="sr-only" aria-live="polite">Round {battle.round}. {callouts.current?.name ?? 'No combatant'} is acting.</p>
           </div>
+          {battle.recipePlan && (
+            <LiveRecipeGuide
+              battle={battle}
+              phase="active"
+              compact
+              onResolve={onResolveRecipeBeat}
+              onOutcome={onRecipeOutcome}
+            />
+          )}
           <div className="space-y-2">
             {ordered.map((combatant) => (
               <LiveCombatantRow
