@@ -50,6 +50,20 @@ describe('Wave 1 converters with real SRD-reForged entries', () => {
     expect(item.description).not.toContain('*');
   });
 
+  it('keeps commas inside an item category detail out of the rarity label', () => {
+    const item = convertMagicItem('Adamantine_Armor.md', `# Adamantine Armor
+
+*Armor (Any Medium or Heavy, Except Hide Armor), Uncommon*
+
+Critical Hits become normal hits.`);
+    expect(item).toMatchObject({
+      category: 'Armor',
+      categoryDetail: 'Any Medium or Heavy, Except Hide Armor',
+      rarityText: 'Uncommon',
+      rarities: ['Uncommon'],
+    });
+  });
+
   it('converts a feat', () => {
     expect(convertFeat('Alert.md', fixture('Alert.md'))).toMatchObject({
       id: 'alert',

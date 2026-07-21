@@ -45,6 +45,9 @@ in one place. No accounts, no server, no cost. Everything runs in your browser.
   concentration, reactions, legendary actions, rounds, and turn flow.
 - **📖 DM Reference** — Search, expand, print, or export 33 concise SRD 5.2.1
   references covering checks, conditions, combat, recovery, movement, and sight.
+- **📚 SRD Compendium** — Search and read all **257 magic items, 17 feats,
+  4 backgrounds, and 9 species**, with rarity, category, attunement, trait,
+  prerequisite, proficiency, and equipment filters and details.
 - **✨ Spell Reference** — **All 339 spells from the SRD 5.2.1** (levels
   0–9, verbatim 2024 rules text) with instant search, mechanics-first
   summaries, filters for level/school/class/concentration/ritual, and
@@ -81,6 +84,7 @@ src/
     dm-screen/               # Configurable DM command screen
     battle/                  # Live initiative and combat organizer
     reference/               # Searchable rules and conditions
+    compendium/              # Magic items, feats, backgrounds, and species
     spells/                  # Spell Reference
     credits/                 # SRD attribution + licensing
     icon.svg, opengraph-image.png, robots.ts, sitemap.ts
@@ -184,7 +188,9 @@ The committed data layer also contains **257 magic items, 17 feats, 4
 backgrounds, and 9 species** from SRD 5.2.1. `scripts/import-srd-content.ts`
 parses per-entry Markdown from a pinned SRD-reForged commit, applies a small
 audited correction ledger for known PDF transcription boundaries, and emits
-typed, formatting-free records. See the [pipeline documentation](docs/srd-content-pipeline.md).
+typed, formatting-free records. The `/compendium` route exposes the complete
+corpus with full-text search, resource filters, and focused printable detail
+views. See the [pipeline documentation](docs/srd-content-pipeline.md).
 
 Like the bestiary, the Spells page imports additional spells from **5etools
 spell JSON** or Encounterizer exports — converted and validated entirely in

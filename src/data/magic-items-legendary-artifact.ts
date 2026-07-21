@@ -165,7 +165,7 @@ export const MAGIC_ITEMS_LEGENDARY_ARTIFACT: MagicItem[] = [
     "rarities": [
       "Legendary"
     ],
-    "rarityText": "Greatsword, Longsword, Rapier, Scimitar, Sickle, or Shortsword), Legendary",
+    "rarityText": "Legendary",
     "requiresAttunement": true,
     "description": "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon. While the weapon is on your person, you also gain a +1 bonus to saving throws.\n\nLuck. If the weapon is on your person, you can call on its luck (no action required) to reroll one failed D20 Test if you don't have the Incapacitated condition. You must use the second roll. Once used, this property can't be used again until the next dawn.\n\nWish. The weapon has 1d3 charges. While holding it, you can expend 1 charge and cast Wish from it.\n\nOnce used, this property can't be used again until the next dawn. The weapon loses this property if it has no charges.",
     "source": "SRD 5.2.1"
@@ -398,7 +398,7 @@ export const MAGIC_ITEMS_LEGENDARY_ARTIFACT: MagicItem[] = [
     "rarities": [
       "Legendary"
     ],
-    "rarityText": "Greatsword, Longsword, or Scimitar), Legendary",
+    "rarityText": "Legendary",
     "requiresAttunement": true,
     "description": "You gain a +3 bonus to attack rolls and damage",
     "source": "SRD 5.2.1"
