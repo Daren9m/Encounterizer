@@ -1,12 +1,14 @@
 import {
   DmScreenStorageError,
   type DmScreenDocumentStore,
+  type DmScreenStoredRecords,
 } from './dm-screen-repository';
 
 export const DM_SCREEN_DATABASE_NAME = 'encounterizer';
 export const DM_SCREEN_DATABASE_VERSION = 1;
 export const DM_SCREEN_DOCUMENT_STORE = 'documents';
 export const DM_SCREEN_DOCUMENT_KEY = 'dm-screen';
+export const DM_SCREEN_REPLACEMENT_UNDO_KEY = 'dm-screen-replacement-undo';
 
 function unavailable(): DmScreenStorageError {
   return new DmScreenStorageError(
@@ -143,6 +145,80 @@ export class IndexedDbDmScreenDocumentStore implements DmScreenDocumentStore {
           'The DM Screen transaction could not start.',
         ));
       };
+      transaction.oncomplete = () => {
+        if (settled) return;
+        settled = true;
+        resolve(result);
+      };
+      transaction.onabort = () => {
+        if (settled) return;
+        settled = true;
+        reject(
+          transformError
+          ?? transaction.error
+          ?? new DOMException('DM Screen transaction aborted.', 'AbortError'),
+        );
+      };
+    });
+  }
+
+  async transactRecords(
+    transform: (current: DmScreenStoredRecords) => DmScreenStoredRecords,
+  ): Promise<DmScreenStoredRecords> {
+    const database = await this.open();
+    return new Promise((resolve, reject) => {
+      let result: DmScreenStoredRecords;
+      let transformError: unknown;
+      let settled = false;
+      let completedReads = 0;
+      let document: unknown | undefined;
+      let replacementUndo: unknown | undefined;
+      const transaction = database.transaction(DM_SCREEN_DOCUMENT_STORE, 'readwrite');
+      const store = transaction.objectStore(DM_SCREEN_DOCUMENT_STORE);
+      const documentRequest = store.get(DM_SCREEN_DOCUMENT_KEY);
+      const undoRequest = store.get(DM_SCREEN_REPLACEMENT_UNDO_KEY);
+
+      const failRead = (error: DOMException | null) => {
+        if (settled) return;
+        settled = true;
+        reject(error ?? new DmScreenStorageError(
+          'unknown',
+          'The DM Screen transaction could not start.',
+        ));
+      };
+      const applyTransform = () => {
+        completedReads += 1;
+        if (completedReads !== 2) return;
+        const current: DmScreenStoredRecords = { document, replacementUndo };
+        try {
+          result = transform(current);
+          if (result.document !== current.document) {
+            if (result.document === undefined) store.delete(DM_SCREEN_DOCUMENT_KEY);
+            else store.put(result.document, DM_SCREEN_DOCUMENT_KEY);
+          }
+          if (result.replacementUndo !== current.replacementUndo) {
+            if (result.replacementUndo === undefined) {
+              store.delete(DM_SCREEN_REPLACEMENT_UNDO_KEY);
+            } else {
+              store.put(result.replacementUndo, DM_SCREEN_REPLACEMENT_UNDO_KEY);
+            }
+          }
+        } catch (error) {
+          transformError = error;
+          transaction.abort();
+        }
+      };
+
+      documentRequest.onsuccess = () => {
+        document = documentRequest.result as unknown | undefined;
+        applyTransform();
+      };
+      undoRequest.onsuccess = () => {
+        replacementUndo = undoRequest.result as unknown | undefined;
+        applyTransform();
+      };
+      documentRequest.onerror = () => failRead(documentRequest.error);
+      undoRequest.onerror = () => failRead(undoRequest.error);
       transaction.oncomplete = () => {
         if (settled) return;
         settled = true;
