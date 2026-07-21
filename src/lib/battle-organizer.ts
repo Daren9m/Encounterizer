@@ -2,6 +2,11 @@ import type { Condition } from './types';
 import type { Encounter } from './types';
 import type { PartyMemberConfig } from './battle-sim-types';
 import { buildSimPlayer } from '../data/class-templates';
+import {
+  cloneEncounterPartyContext,
+  isEncounterPartyContext,
+  type EncounterPartyContext,
+} from './encounter-party';
 
 export type CombatantKind = 'player' | 'ally' | 'enemy';
 export type BattlePhase = 'setup' | 'active' | 'complete';
@@ -42,6 +47,8 @@ export interface BattleState {
   started: boolean;
   combatants: BattleCombatant[];
   log: BattleLogEntry[];
+  /** Frozen encounter input; optional for battles created before Party Library. */
+  partyContext?: EncounterPartyContext;
 }
 
 export const EMPTY_BATTLE: BattleState = {
@@ -58,6 +65,7 @@ export const EMPTY_BATTLE: BattleState = {
 export function battleFromEncounter(
   encounter: Encounter,
   partyMembers: readonly PartyMemberConfig[],
+  partyContext?: EncounterPartyContext,
 ): BattleState {
   const players: BattleCombatant[] = partyMembers.map((member, index) => {
     const simulated = buildSimPlayer(member, index);
@@ -111,6 +119,9 @@ export function battleFromEncounter(
     started: false,
     combatants: [...players, ...enemies],
     log: [],
+    ...(partyContext
+      ? { partyContext: cloneEncounterPartyContext(partyContext) }
+      : {}),
   };
 }
 
@@ -330,5 +341,6 @@ export function isBattleState(value: unknown): value is BattleState {
     && typeof state.round === 'number'
     && typeof state.started === 'boolean'
     && Array.isArray(state.combatants)
-    && Array.isArray(state.log);
+    && Array.isArray(state.log)
+    && (state.partyContext === undefined || isEncounterPartyContext(state.partyContext));
 }

@@ -94,12 +94,14 @@ export default function BattleReportCard({
   stale,
   onRerun,
   onEditParty,
+  partyActionLabel = 'Review party',
 }: {
   report: BattleReport;
   xpLabel: string;
   stale: boolean;
   onRerun: () => void;
   onEditParty: () => void;
+  partyActionLabel?: string;
 }) {
   return (
     <div className="card space-y-4">
@@ -122,7 +124,7 @@ export default function BattleReportCard({
 
       {stale && (
         <div className="text-sm rounded-md border border-[rgba(227,197,103,0.4)] bg-[rgba(227,197,103,0.08)] px-3 py-2" role="status">
-          The encounter changed since this forecast ran — re-run it for current numbers.
+          The party or encounter changed since this forecast ran — re-run it for current numbers.
         </div>
       )}
 
@@ -232,7 +234,7 @@ export default function BattleReportCard({
           Run Again
         </button>
         <button type="button" className="btn-secondary text-sm" onClick={onEditParty}>
-          Edit Party
+          {partyActionLabel}
         </button>
       </div>
     </div>
