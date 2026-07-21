@@ -149,6 +149,31 @@ export function updateSectionTree(
     : { ...section, children: updateSectionTree(section.children, sectionId, update) });
 }
 
+/** Add a panel and reveal every collapsed ancestor on the path to it. */
+export function appendItemToSectionTree(
+  sections: DmScreenSection[],
+  sectionId: string,
+  item: DmScreenItem,
+): DmScreenSection[] {
+  let changed = false;
+  const next = sections.map((section) => {
+    if (section.id === sectionId) {
+      changed = true;
+      return {
+        ...section,
+        collapsed: false,
+        items: [...section.items, item],
+      };
+    }
+
+    const children = appendItemToSectionTree(section.children, sectionId, item);
+    if (children === section.children) return section;
+    changed = true;
+    return { ...section, collapsed: false, children };
+  });
+  return changed ? next : sections;
+}
+
 export function removeSectionTree(sections: DmScreenSection[], sectionId: string): DmScreenSection[] {
   return sections
     .filter((section) => section.id !== sectionId)
@@ -164,6 +189,85 @@ function collectScreenNodeIds(
     for (const item of section.items) ids.add(item.id);
     collectScreenNodeIds(section.children, ids);
   }
+}
+
+/**
+ * Duplicate a manual panel beside its source without leaking workspace state
+ * into the portable document. Auto-pinned panels are projections of the pin
+ * lists, so duplicating one would be undone by the next pin synchronization.
+ */
+export function duplicateDmScreenItem(
+  state: DmScreenState,
+  itemId: string,
+  options: { createId?: DmScreenIdFactory } = {},
+): DmScreenState {
+  let source: DmScreenItem | undefined;
+  let itemCount = 0;
+
+  function inspect(sections: readonly DmScreenSection[]): void {
+    for (const section of sections) {
+      itemCount += section.items.length;
+      source ??= section.items.find((item) => item.id === itemId);
+      inspect(section.children);
+    }
+  }
+
+  inspect(state.sections);
+  if (!source || source.origin === 'auto-pin' || itemCount >= DM_SCREEN_MAX_ITEMS) {
+    return state;
+  }
+
+  const usedIds = new Set<string>([state.id]);
+  collectScreenNodeIds(state.sections, usedIds);
+  const duplicate: DmScreenItem = {
+    ...source,
+    id: allocateId(undefined, 'item', usedIds, options.createId ?? defaultId),
+    layout: { ...source.layout },
+    origin: 'manual',
+  };
+
+  function insertAfterSource(
+    sections: DmScreenSection[],
+  ): { sections: DmScreenSection[]; inserted: boolean } {
+    for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex += 1) {
+      const section = sections[sectionIndex];
+      const itemIndex = section.items.findIndex((item) => item.id === itemId);
+      if (itemIndex >= 0) {
+        const nextSection = {
+          ...section,
+          items: [
+            ...section.items.slice(0, itemIndex + 1),
+            duplicate,
+            ...section.items.slice(itemIndex + 1),
+          ],
+        };
+        return {
+          sections: [
+            ...sections.slice(0, sectionIndex),
+            nextSection,
+            ...sections.slice(sectionIndex + 1),
+          ],
+          inserted: true,
+        };
+      }
+
+      const nested = insertAfterSource(section.children);
+      if (nested.inserted) {
+        return {
+          sections: [
+            ...sections.slice(0, sectionIndex),
+            { ...section, children: nested.sections },
+            ...sections.slice(sectionIndex + 1),
+          ],
+          inserted: true,
+        };
+      }
+    }
+    return { sections, inserted: false };
+  }
+
+  const inserted = insertAfterSource(state.sections);
+  return inserted.inserted ? { ...state, sections: inserted.sections } : state;
 }
 
 function allocatePinnedId(preferred: string, used: Set<string>): string {
@@ -284,7 +388,11 @@ function cloneSection(section: DmScreenSection): DmScreenSection {
       kind: item.kind,
       title: item.title,
       collapsed: item.collapsed,
-      layout: { ...item.layout },
+      layout: {
+        width: item.layout.width,
+        stashed: item.layout.stashed,
+        excludedFromPrint: item.layout.excludedFromPrint,
+      },
       ...(item.body !== undefined ? { body: item.body } : {}),
       ...(item.resourceId !== undefined ? { resourceId: item.resourceId } : {}),
       ...(item.href !== undefined ? { href: item.href } : {}),
@@ -302,7 +410,10 @@ export function cloneDmScreenDocument(document: DmScreenState): DmScreenState {
     title: document.title,
     autoAddPinnedMonsters: document.autoAddPinnedMonsters,
     autoAddPinnedSpells: document.autoAddPinnedSpells,
-    layout: { ...document.layout },
+    layout: {
+      columns: document.layout.columns,
+      density: document.layout.density,
+    },
     ...(document.partySnapshot
       ? { partySnapshot: clonePartySummary(document.partySnapshot) }
       : {}),

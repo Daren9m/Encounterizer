@@ -18,7 +18,7 @@ export default function ToolPageHeader({
   if (!route) return null;
 
   return (
-    <header className="page-header print:hidden">
+    <header data-app-shell="page-header" className="page-header print:hidden">
       <div className="page-header-copy">
         <div className="eyebrow mb-2">
           <RouteIcon name={route.icon} size={14} />

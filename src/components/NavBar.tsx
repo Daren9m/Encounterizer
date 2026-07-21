@@ -310,6 +310,7 @@ function NavigationBar({ pathname }: { pathname: string }) {
 
   return (
     <header
+      data-app-shell="navigation"
       className="sticky top-0 z-50 border-b border-[var(--steel-800)] bg-[var(--steel-900)] shadow-[0_8px_24px_rgba(0,0,0,0.14)] backdrop-blur-xl print:hidden"
       style={{ backgroundColor: 'color-mix(in srgb, var(--steel-900) 92%, transparent)' }}
     >

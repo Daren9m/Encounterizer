@@ -7,15 +7,20 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Copy,
   Eye,
   EyeOff,
+  Expand,
   FileText,
   FolderPlus,
   Link as LinkIcon,
   LayoutTemplate,
+  Minimize2,
+  MoreHorizontal,
   Plus,
   Printer,
   RefreshCw,
+  Settings2,
   Sparkles,
   Swords,
   Trash2,
@@ -28,9 +33,13 @@ import { useBattleStore } from '@/app/hooks/useBattleStore';
 import { useCustomMonsters } from '@/app/hooks/useCustomMonsters';
 import { useCustomSpells } from '@/app/hooks/useCustomSpells';
 import { useDmScreenStore } from '@/app/hooks/useDmScreenStore';
+import { useDmScreenFocusMode } from '@/app/hooks/useDmScreenFocusMode';
 import { usePartyLibrary } from '@/app/hooks/usePartyLibrary';
 import BattleOrganizer from '@/components/BattleOrganizer';
 import DmScreenBackupPanel from '@/components/DmScreenBackupPanel';
+import DmScreenQuickAddDrawer, {
+  type DmScreenQuickAddActionResult,
+} from '@/components/DmScreenQuickAddDrawer';
 import DmScreenTemplateChooser, {
   type DmScreenTemplateAction,
 } from '@/components/DmScreenTemplateChooser';
@@ -42,7 +51,9 @@ import { levelLabel, type Spell } from '@/data/spells';
 import { getMonsterPhysicalDescription } from '@/data/monster-description-index';
 import {
   EMPTY_DM_SCREEN,
+  appendItemToSectionTree,
   dmScreenToMarkdown,
+  duplicateDmScreenItem,
   hasDmPartyItem,
   mergeDmScreenDocuments,
   removeSectionTree,
@@ -55,6 +66,10 @@ import {
   type DmScreenSection,
   type DmScreenState,
 } from '@/lib/dm-screen';
+import {
+  isDmScreenWorkspaceMode,
+  type DmScreenWorkspaceMode,
+} from '@/lib/dm-screen-workspace';
 import {
   createDmScreenExportEnvelope,
   planDmScreenImport,
@@ -217,6 +232,8 @@ export default function DmScreenPage() {
   );
   const [pinnedMonsterIds, , pinnedMonsterIdsHydrated] = usePersistentState<string[]>('bestiaryPinnedMonsters', [], (value): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
   const [pinnedSpellIds, , pinnedSpellIdsHydrated] = usePersistentState<string[]>('pinnedSpells', [], (value): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
+  const [workspaceMode, setWorkspaceMode] = usePersistentState<DmScreenWorkspaceMode>('dmScreenWorkspaceMode', 'run', isDmScreenWorkspaceMode);
+  const arranging = workspaceMode === 'arrange';
   const { all: monsters } = useMonsters();
   const spells = useSpells();
   const { addMonsters, removeMonster } = useCustomMonsters();
@@ -237,14 +254,32 @@ export default function DmScreenPage() {
   const templateSourcesReady = partyLibraryHydrated
     && pinnedMonsterIdsHydrated
     && pinnedSpellIdsHydrated;
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [workspaceNotice, setWorkspaceNotice] = useState('');
+  const [workspaceError, setWorkspaceError] = useState('');
   const [templateNotice, setTemplateNotice] = useState<{
     kind: 'replace' | 'notice' | 'error';
     message: string;
   } | null>(null);
   const templateButtonRef = useRef<HTMLButtonElement>(null);
+  const quickAddButtonRef = useRef<HTMLButtonElement>(null);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+  const moreHeadingRef = useRef<HTMLHeadingElement>(null);
+  const pendingPanelFocusRef = useRef<string | null>(null);
   const templateNoticeRef = useRef<HTMLDivElement>(null);
   const sawReplacementUndo = useRef(false);
+  const {
+    focusButtonRef,
+    focused: screenFocused,
+    nativeFullscreen,
+    nativeFullscreenAvailable,
+    statusMessage: focusStatusMessage,
+    toggleFocus,
+    enterBrowserFullscreen,
+    exitFocus,
+  } = useDmScreenFocusMode(quickAddOpen || moreOpen || templatesOpen);
   const screenCounts = useMemo(
     () => countScreenTree(screen?.sections ?? []),
     [screen?.sections],
@@ -264,6 +299,44 @@ export default function DmScreenPage() {
     if (!templateNotice) return;
     window.requestAnimationFrame(() => templateNoticeRef.current?.focus());
   }, [templateNotice]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const frame = window.requestAnimationFrame(() => moreHeadingRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [moreOpen]);
+
+  useEffect(() => {
+    if (!moreOpen && !templatesOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      event.preventDefault();
+      if (templatesOpen) {
+        acknowledgeFirstUse();
+        setTemplatesOpen(false);
+        window.requestAnimationFrame(() => templateButtonRef.current?.focus());
+        return;
+      }
+      setMoreOpen(false);
+      window.requestAnimationFrame(() => moreButtonRef.current?.focus());
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [acknowledgeFirstUse, moreOpen, templatesOpen]);
+
+  useEffect(() => {
+    if (quickAddOpen) return;
+    const panelId = pendingPanelFocusRef.current;
+    if (!panelId) return;
+    const frame = window.requestAnimationFrame(() => {
+      const panel = document.getElementById(`dm-screen-panel-${panelId}`);
+      if (!panel) return;
+      pendingPanelFocusRef.current = null;
+      panel.focus({ preventScroll: true });
+      panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [quickAddOpen, screen]);
 
   useEffect(() => {
     if (!screenAvailable) return;
@@ -306,49 +379,123 @@ export default function DmScreenPage() {
     return [];
   }, [addKind, monsters, resourceQuery, spells]);
 
-  function addSection(parentId?: string) {
-    const section: DmScreenSection = { id: id('section'), title: 'New section', collapsed: false, items: [], children: [] };
-    setScreen((current) => ({
-      ...current,
-      sections: parentId
-        ? updateSectionTree(current.sections, parentId, (parent) => ({ ...parent, children: [...parent.children, section] }))
-        : [...current.sections, section],
-    }));
+  async function addSection(
+    parentId?: string,
+    requestedTitle?: string,
+  ): Promise<DmScreenQuickAddActionResult> {
+    const section: DmScreenSection = {
+      id: id('section'),
+      title: requestedTitle?.trim() || 'New section',
+      collapsed: false,
+      items: [],
+      children: [],
+    };
+    const result = await updateScreen((current) => ({
+        ...current,
+        sections: parentId
+          ? updateSectionTree(current.sections, parentId, (parent) => ({ ...parent, collapsed: false, children: [...parent.children, section] }))
+          : [...current.sections, section],
+      }));
+    if (!result.ok && !result.queued) {
+      const message = result.error?.message ?? 'That section could not be created. Nothing was changed.';
+      setWorkspaceNotice(message);
+      setWorkspaceError(message);
+      return { ok: false, error: message };
+    }
+    setWorkspaceError('');
     setTargetSectionId(section.id);
+    setWorkspaceNotice(result.queued
+      ? `${section.title} was created in this tab but still needs to be saved.`
+      : `${section.title} was created.`);
+    return { ok: true };
   }
 
-  function addItem(item: DmScreenItem) {
-    if (!selectedTargetSectionId) return;
-    setScreen((current) => ({
+  async function addItem(item: DmScreenItem): Promise<DmScreenQuickAddActionResult> {
+    if (!selectedTargetSectionId) {
+      return { ok: false, error: 'Create a section before adding a panel.' };
+    }
+    const result = await updateScreen((current) => ({
       ...current,
-      sections: updateSectionTree(current.sections, selectedTargetSectionId, (section) => ({ ...section, items: [...section.items, item] })),
+      sections: appendItemToSectionTree(current.sections, selectedTargetSectionId, item),
     }));
+    if (!result.ok && !result.queued) {
+      const message = result.error?.message ?? 'That panel could not be added. Your draft is still here.';
+      setWorkspaceNotice(message);
+      setWorkspaceError(message);
+      return { ok: false, error: message };
+    }
+    setWorkspaceError('');
+    pendingPanelFocusRef.current = item.id;
+    setQuickAddOpen(false);
+    setWorkspaceNotice(result.queued
+      ? `${item.title} was added in this tab but still needs to be saved.`
+      : `${item.title} was added to the screen.`);
     setTitle('');
     setBody('');
     setResourceQuery('');
+    return { ok: true };
   }
 
-  function addConfiguredItem() {
+  async function addConfiguredItem(): Promise<DmScreenQuickAddActionResult> {
     if (addKind === 'note' && (title.trim() || body.trim())) {
-      addItem({ id: id('note'), kind: 'note', title: title.trim() || 'Note', body: body.trim(), collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
+      return addItem({ id: id('note'), kind: 'note', title: title.trim() || 'Note', body: body.trim(), collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
     }
     if (addKind === 'tool') {
       const route = DM_SCREEN_TOOL_ROUTES.find((candidate) => candidate.path === toolPath)!;
-      addItem({ id: id('tool'), kind: 'tool', title: title.trim() || route.title, body: body.trim() || route.description, href: route.path, collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
+      return addItem({ id: id('tool'), kind: 'tool', title: title.trim() || route.title, body: body.trim() || route.description, href: route.path, collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
     }
     if (addKind === 'initiative') {
-      addItem({ id: id('initiative'), kind: 'initiative', title: title.trim() || 'Initiative Tracker', collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
+      return addItem({ id: id('initiative'), kind: 'initiative', title: title.trim() || 'Initiative Tracker', collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
     }
     if (addKind === 'rules') {
-      addItem({ id: id('rules'), kind: 'rules', title: title.trim() || 'Table Rules Reference', collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
+      return addItem({ id: id('rules'), kind: 'rules', title: title.trim() || 'Table Rules Reference', collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
     }
     if (addKind === 'party') {
-      addItem({ id: id('party'), kind: 'party', title: title.trim() || 'Active Party', collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
+      return addItem({ id: id('party'), kind: 'party', title: title.trim() || 'Active Party', collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
+    }
+    return { ok: false, error: 'Choose a supported panel and finish its required fields.' };
+  }
+
+  function addResource(
+    resourceId: string,
+    resourceTitle: string,
+  ): Promise<DmScreenQuickAddActionResult> {
+    return addItem({ id: id(addKind), kind: addKind, title: resourceTitle, resourceId, collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
+  }
+
+  function openQuickAdd(): void {
+    setMoreOpen(false);
+    setTemplatesOpen(false);
+    setQuickAddOpen(true);
+  }
+
+  function closeQuickAdd(): void {
+    setQuickAddOpen(false);
+    window.requestAnimationFrame(() => quickAddButtonRef.current?.focus());
+  }
+
+  function openTemplateChooser(): void {
+    setQuickAddOpen(false);
+    setMoreOpen(false);
+    setTemplatesOpen(true);
+  }
+
+  function toggleWorkspaceMode(): void {
+    const nextMode: DmScreenWorkspaceMode = arranging ? 'run' : 'arrange';
+    setWorkspaceMode(nextMode);
+    setWorkspaceNotice(nextMode === 'run'
+      ? 'Run mode is on. Editing controls are hidden.'
+      : 'Arrange mode is on. Screen editing controls are available.');
+    setWorkspaceError('');
+    if (nextMode === 'run') {
+      setQuickAddOpen(false);
+      setMoreOpen(false);
     }
   }
 
-  function addResource(resourceId: string, resourceTitle: string) {
-    addItem({ id: id(addKind), kind: addKind, title: resourceTitle, resourceId, collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
+  function closeMorePanel(): void {
+    setMoreOpen(false);
+    window.requestAnimationFrame(() => moreButtonRef.current?.focus());
   }
 
   function closeTemplateChooser(): void {
@@ -582,26 +729,9 @@ export default function DmScreenPage() {
   }
 
   const pageHeader = <ToolPageHeader
-      path="/dm-screen"
-      description="Build a durable command surface for your games. Keep references, notes, party details, and live tools together; stash panels until you need them."
-      actions={<div className="flex flex-wrap gap-2">
-        <button
-          ref={templateButtonRef}
-          type="button"
-          className="btn-secondary text-sm"
-          disabled={!screen}
-          aria-controls="dm-screen-template-chooser"
-          aria-expanded={screenFirstUse || templatesOpen}
-          onClick={() => setTemplatesOpen(true)}
-        ><LayoutTemplate size={16} aria-hidden="true" /> Templates</button>
-        <button type="button" className="btn-secondary text-sm" disabled={!screen || screenFirstUse} onClick={() => {
-          const exportScreen = screenForExport();
-          if (!exportScreen) return;
-          download('dm-screen.md', dmScreenToMarkdown(exportScreen, monsterMap, spellMap, battle), 'text/markdown');
-        }}><FileText size={16} aria-hidden="true" /> MD</button>
-        <button type="button" className="btn-secondary text-sm" disabled={!screen || screenFirstUse} onClick={() => window.print()}><Printer size={16} aria-hidden="true" /> Print</button>
-      </div>}
-    />;
+    path="/dm-screen"
+    description="Build a durable command surface for your games. Keep references, notes, party details, and live tools together; stash panels until you need them."
+  />;
 
   if (!screen) {
     const loadingScreen = !screenHydrated || screenStatus === 'idle' || screenStatus === 'loading';
@@ -650,8 +780,170 @@ export default function DmScreenPage() {
     </div>;
   }
 
-  return <div className="animate-fade-in dm-screen-print">
-    {pageHeader}
+  return <div className="animate-fade-in dm-screen-print min-w-0">
+    {quickAddOpen && <DmScreenQuickAddDrawer
+      open={quickAddOpen}
+      sectionOptions={sectionOptions}
+      selectedTargetSectionId={selectedTargetSectionId}
+      addKind={addKind}
+      title={title}
+      body={body}
+      resourceQuery={resourceQuery}
+      toolPath={toolPath}
+      resourceResults={resourceResults}
+      onClose={closeQuickAdd}
+      onSelectedTargetSectionIdChange={setTargetSectionId}
+      onAddKindChange={setAddKind}
+      onTitleChange={setTitle}
+      onBodyChange={setBody}
+      onResourceQueryChange={setResourceQuery}
+      onToolPathChange={setToolPath}
+      onCreateSection={(name) => addSection(undefined, name)}
+      onAddConfiguredItem={addConfiguredItem}
+      onAddResource={addResource}
+    />}
+
+    <section className="dm-screen-command-bar card panel-accent mb-4 !p-3 print:hidden" aria-label="DM Screen controls">
+      <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0 flex-1">
+          <p className="micro-label">{arranging ? 'Arrange screen' : 'At the table'}</p>
+          {arranging ? <>
+            <h1 className="sr-only">{screen.title}</h1>
+            <label className="sr-only" htmlFor="dm-screen-title">Screen title</label>
+            <input
+              id="dm-screen-title"
+              className="mt-1 w-full min-w-0 !min-h-10 !border-dashed !px-2 !py-1 font-display text-xl font-semibold"
+              value={screen.title}
+              onChange={(event) => {
+                const nextTitle = event.target.value;
+                setScreen((current) => ({ ...current, title: nextTitle }));
+              }}
+            />
+          </> : <h1 className="mt-0.5 truncate text-2xl">{screen.title}</h1>}
+          <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+            <Link
+              href="/party"
+              className="inline-flex min-h-9 min-w-0 items-center gap-1.5 rounded-full border border-[var(--steel-800)] bg-[var(--steel-950)] px-3 text-xs font-semibold text-[var(--text-2)] hover:border-[var(--bronze)] hover:text-[var(--text-1)]"
+            >
+              <Users size={14} className="shrink-0 text-[var(--bronze)]" aria-hidden="true" />
+              <span className="truncate">{partySummary ? `${partySummary.name} · ${partySummary.memberCount} heroes` : 'Choose active party'}</span>
+            </Link>
+            <div className="[&>*]:!mt-0">
+              <ScreenSaveStatus
+                hydrated={screenHydrated}
+                status={screenStatus}
+                dirty={screenDirty}
+                error={screenError}
+                onRetry={() => void retryScreenStorage()}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+          <button
+            ref={quickAddButtonRef}
+            type="button"
+            className="btn-primary w-full justify-center text-sm sm:w-auto"
+            aria-haspopup="dialog"
+            aria-expanded={quickAddOpen}
+            onClick={openQuickAdd}
+          ><Plus size={16} aria-hidden="true" /> Quick add</button>
+          <button
+            ref={templateButtonRef}
+            type="button"
+            className="btn-secondary w-full justify-center text-sm sm:w-auto"
+            aria-controls="dm-screen-template-chooser"
+            aria-expanded={templatesOpen}
+            onClick={openTemplateChooser}
+          ><LayoutTemplate size={16} aria-hidden="true" /> Templates</button>
+          <button
+            type="button"
+            className={`${arranging ? 'btn-primary' : 'btn-secondary'} w-full justify-center text-sm sm:w-auto`}
+            aria-pressed={arranging}
+            onClick={toggleWorkspaceMode}
+          >{arranging ? <CheckCircle2 size={16} aria-hidden="true" /> : <Settings2 size={16} aria-hidden="true" />} {arranging ? 'Done' : 'Arrange'}</button>
+          <button
+            ref={focusButtonRef}
+            type="button"
+            className="btn-secondary w-full justify-center text-sm sm:w-auto"
+            aria-pressed={screenFocused}
+            onClick={toggleFocus}
+          >{screenFocused ? <Minimize2 size={16} aria-hidden="true" /> : <Expand size={16} aria-hidden="true" />} {screenFocused ? 'Exit focus' : 'Focus screen'}</button>
+          <button
+            ref={moreButtonRef}
+            type="button"
+            className="btn-ghost col-span-2 w-full justify-center text-sm sm:w-auto"
+            aria-controls="dm-screen-more-panel"
+            aria-expanded={moreOpen}
+            onClick={() => {
+              setQuickAddOpen(false);
+              setTemplatesOpen(false);
+              setMoreOpen((current) => !current);
+            }}
+          ><MoreHorizontal size={17} aria-hidden="true" /> More</button>
+        </div>
+      </div>
+      <span className="sr-only" role="status" aria-live="polite">{workspaceError ? '' : workspaceNotice} {focusStatusMessage}</span>
+    </section>
+
+    {workspaceError && <p className="mb-4 rounded-lg border border-[var(--status-danger)] bg-[var(--status-danger-wash)] px-3 py-2 text-sm print:hidden" role="alert">{workspaceError}</p>}
+
+    {focusStatusMessage && /(could not|unavailable|already)/i.test(focusStatusMessage) && <p className="mb-4 rounded-lg border border-[var(--status-warning)] bg-[var(--status-warning-wash)] px-3 py-2 text-sm print:hidden">{focusStatusMessage}</p>}
+
+    {moreOpen && <section id="dm-screen-more-panel" className="card mb-4 print:hidden" aria-labelledby="dm-screen-more-heading">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="micro-label">Screen options</p>
+          <h2 id="dm-screen-more-heading" ref={moreHeadingRef} tabIndex={-1} className="mt-1 w-fit rounded text-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bronze)]">Share, print, and protect your screen</h2>
+          <p className="mt-1 text-sm text-[var(--text-2)]">Less common controls stay here so the live screen remains calm.</p>
+        </div>
+        <button type="button" className="btn-ghost shrink-0 text-sm" onClick={closeMorePanel}>Close</button>
+      </div>
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <button type="button" className="btn-secondary justify-center text-sm" onClick={() => {
+          const exportScreen = screenForExport();
+          if (!exportScreen) return;
+          download('dm-screen.md', dmScreenToMarkdown(exportScreen, monsterMap, spellMap, battle), 'text/markdown');
+        }}><FileText size={16} aria-hidden="true" /> Export Markdown</button>
+        <button type="button" className="btn-secondary justify-center text-sm" onClick={() => window.print()}><Printer size={16} aria-hidden="true" /> Print</button>
+        <button
+          type="button"
+          className="btn-secondary justify-center text-sm"
+          disabled={!nativeFullscreenAvailable && !nativeFullscreen}
+          onClick={() => {
+            setMoreOpen(false);
+            if (nativeFullscreen) exitFocus();
+            else void enterBrowserFullscreen();
+          }}
+        >{nativeFullscreen ? <Minimize2 size={16} aria-hidden="true" /> : <Expand size={16} aria-hidden="true" />} {nativeFullscreen ? 'Exit browser fullscreen' : 'Browser fullscreen'}</button>
+      </div>
+      {!nativeFullscreenAvailable && <p className="mt-2 text-xs text-[var(--text-3)]">Browser fullscreen is not available here. Focus screen still uses the full page width.</p>}
+      {focusStatusMessage && <p className="mt-2 text-xs text-[var(--text-3)]">{focusStatusMessage}</p>}
+
+      {arranging && <div className="surface-inset mt-4 p-4">
+        <p className="micro-label">Pinned references</p>
+        <div className="mt-2 flex flex-col gap-3 text-sm sm:flex-row sm:flex-wrap sm:gap-5">
+          <label className="flex items-center gap-2"><input type="checkbox" checked={screen.autoAddPinnedMonsters} onChange={(event) => {
+            const checked = event.target.checked;
+            setScreen((current) => ({ ...current, autoAddPinnedMonsters: checked }));
+          }} /> Auto-add pinned monsters</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={screen.autoAddPinnedSpells} onChange={(event) => {
+            const checked = event.target.checked;
+            setScreen((current) => ({ ...current, autoAddPinnedSpells: checked }));
+          }} /> Auto-add pinned spells</label>
+        </div>
+      </div>}
+
+      <DmScreenBackupPanel
+        saving={screenStatus === 'saving'}
+        canExport={screenHydrated}
+        canMerge={screenHydrated}
+        onExport={exportJson}
+        onApply={applyImport}
+        getRestoreWarnings={restoreWarnings}
+      />
+    </section>}
 
     {templatesOpen && <DmScreenTemplateChooser
       mode="existing"
@@ -689,137 +981,180 @@ export default function DmScreenPage() {
       </div>
     </div>}
 
-    <div className="card panel-accent mb-5 print:hidden">
-      <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
-        <label className="text-sm font-semibold">Screen title<input className="mt-1 w-full text-xl" value={screen.title} onChange={(event) => {
-          const nextTitle = event.target.value;
-          setScreen((current) => ({ ...current, title: nextTitle }));
-        }} /></label>
-        <div className="flex flex-wrap gap-4 pb-2 text-sm">
-          <label className="flex items-center gap-2"><input type="checkbox" checked={screen.autoAddPinnedMonsters} onChange={(event) => {
-            const checked = event.target.checked;
-            setScreen((current) => ({ ...current, autoAddPinnedMonsters: checked }));
-          }} /> Auto-add pinned monsters</label>
-          <label className="flex items-center gap-2"><input type="checkbox" checked={screen.autoAddPinnedSpells} onChange={(event) => {
-            const checked = event.target.checked;
-            setScreen((current) => ({ ...current, autoAddPinnedSpells: checked }));
-          }} /> Auto-add pinned spells</label>
-        </div>
-      </div>
-      <ScreenSaveStatus
-        hydrated={screenHydrated}
-        status={screenStatus}
-        dirty={screenDirty}
-        error={screenError}
-        onRetry={() => void retryScreenStorage()}
-      />
-      <DmScreenBackupPanel
-        saving={screenStatus === 'saving'}
-        canExport={screenHydrated}
-        canMerge={screenHydrated}
-        onExport={exportJson}
-        onApply={applyImport}
-        getRestoreWarnings={restoreWarnings}
-      />
-    </div>
-
-    <section className="card mb-5 print:hidden" aria-labelledby="add-to-screen-heading">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div><p className="micro-label">Screen builder</p><h2 id="add-to-screen-heading" className="text-xl">Add to the screen</h2></div>
-        <button type="button" className="btn-secondary text-sm" onClick={() => addSection()}><FolderPlus size={17} aria-hidden="true" /> New section</button>
-      </div>
-      {sectionOptions.length > 0 ? <>
-        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-[1fr_0.8fr_1.2fr]">
-          <label className="text-xs font-semibold">Destination<select className="mt-1 w-full" value={selectedTargetSectionId} onChange={(event) => setTargetSectionId(event.target.value)}>{sectionOptions.map((section) => <option key={section.id} value={section.id}>{section.label}</option>)}</select></label>
-          <label className="text-xs font-semibold">Content type<select className="mt-1 w-full" value={addKind} onChange={(event) => setAddKind(event.target.value as DmScreenItemKind)}><option value="note">Note</option><option value="party">Active party</option><option value="rules">Rules reference</option><option value="monster">Monster</option><option value="spell">Spell</option><option value="tool">App tool</option><option value="initiative">Initiative tracker</option></select></label>
-          {(addKind === 'monster' || addKind === 'spell') ? <label className="text-xs font-semibold">Find {addKind}<input className="mt-1 w-full" value={resourceQuery} onChange={(event) => setResourceQuery(event.target.value)} placeholder={`Search ${addKind}s…`} /></label> : <label className="text-xs font-semibold">Title (optional)<input className="mt-1 w-full" value={title} onChange={(event) => setTitle(event.target.value)} /></label>}
-        </div>
-        {(addKind === 'monster' || addKind === 'spell') && resourceResults.length > 0 && <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{resourceResults.map((result) => <button key={result.id} type="button" className="rounded-lg border border-[var(--steel-800)] p-3 text-left hover:border-[var(--bronze)]" onClick={() => addResource(result.id, result.name)}><span className="block font-semibold">{result.name}</span><span className="text-xs text-[var(--text-3)]">{result.detail}</span></button>)}</div>}
-        {addKind === 'note' && <textarea className="mt-3 w-full" rows={3} value={body} onChange={(event) => setBody(event.target.value)} placeholder="Rules reminder, boxed text, NPC notes, session beats…" />}
-        {addKind === 'tool' && <div className="mt-3 grid gap-2 md:grid-cols-[1fr_2fr]"><select value={toolPath} onChange={(event) => setToolPath(event.target.value)}>{DM_SCREEN_TOOL_ROUTES.map((route) => <option key={route.path} value={route.path}>{route.title}</option>)}</select><input value={body} onChange={(event) => setBody(event.target.value)} placeholder="Optional reminder about how you’ll use this tool" /></div>}
-        {(addKind === 'note' || addKind === 'tool' || addKind === 'rules' || addKind === 'party' || addKind === 'initiative') && <button type="button" className="btn-primary mt-3" onClick={addConfiguredItem}><Plus size={17} aria-hidden="true" /> Add {addKind === 'initiative' ? 'tracker' : addKind === 'rules' ? 'reference' : addKind}</button>}
-      </> : <div className="rounded-lg border border-dashed border-[var(--steel-700)] p-5 text-center text-sm text-[var(--text-2)]">Create a section first, then fill it with anything you need at the table.</div>}
-    </section>
-
     <div className="mb-5 hidden print:block"><h1 className="text-3xl">{screen.title}</h1><p className="text-sm text-[var(--text-3)]">Encounterizer DM Screen</p></div>
 
-    {screen.sections.length > 0 ? <div className="space-y-4">
-      {screen.sections.map((section) => <ScreenSection key={section.id} section={section} depth={0} monsters={monsterMap} spells={spellMap} partySummary={partySummary} partyLoading={!partyLibraryHydrated && !partySummary} partyUnavailable={partyLibraryStatus === 'unavailable' || partyLibraryStatus === 'error'} onAddChild={addSection} onUpdate={(sectionId, update) => setScreen((current) => ({ ...current, sections: updateSectionTree(current.sections, sectionId, update) }))} onRemove={(sectionId) => { if (window.confirm('Remove this section, its subsections, and all of its items?')) setScreen((current) => ({ ...current, sections: removeSectionTree(current.sections, sectionId) })); }} />)}
-    </div> : <div className="empty-state"><BookOpen className="mx-auto mb-3 text-[var(--bronze)]" size={38} aria-hidden="true" /><p className="font-semibold">Your screen is ready to be arranged</p><p className="mt-1 text-sm">Create sections for the scene, rules, NPCs, spells, or anything else you want close at hand.</p><button type="button" className="btn-primary mt-4 print:hidden" onClick={() => addSection()}><FolderPlus size={17} aria-hidden="true" /> Create first section</button></div>}
+    {screen.sections.length > 0 ? <div className="min-w-0 space-y-4">
+      {screen.sections.map((section) => <ScreenSection
+        key={section.id}
+        section={section}
+        depth={0}
+        arranging={arranging}
+        monsters={monsterMap}
+        spells={spellMap}
+        partySummary={partySummary}
+        partyLoading={!partyLibraryHydrated && !partySummary}
+        partyUnavailable={partyLibraryStatus === 'unavailable' || partyLibraryStatus === 'error'}
+        onAddChild={addSection}
+        onDuplicateItem={(itemId) => setScreen((current) => duplicateDmScreenItem(current, itemId))}
+        onUpdate={(sectionId, update) => setScreen((current) => ({
+          ...current,
+          sections: updateSectionTree(current.sections, sectionId, update),
+        }))}
+        onRemove={(sectionId) => {
+          if (window.confirm('Remove this section, its subsections, and all of its items?')) {
+            setScreen((current) => ({
+              ...current,
+              sections: removeSectionTree(current.sections, sectionId),
+            }));
+          }
+        }}
+      />)}
+    </div> : <div className="empty-state">
+      <BookOpen className="mx-auto mb-3 text-[var(--bronze)]" size={38} aria-hidden="true" />
+      <p className="font-semibold">Your screen is ready</p>
+      <p className="mt-1 text-sm">Add a section, then keep the references and notes you use at the table close by.</p>
+      <button type="button" className="btn-primary mt-4 print:hidden" onClick={openQuickAdd}><Plus size={17} aria-hidden="true" /> Add your first section</button>
+    </div>}
   </div>;
 }
 
-function ScreenSection({ section, depth, monsters, spells, partySummary, partyLoading, partyUnavailable, onAddChild, onUpdate, onRemove }: {
+function ScreenSection({ section, depth, arranging, monsters, spells, partySummary, partyLoading, partyUnavailable, onAddChild, onDuplicateItem, onUpdate, onRemove }: {
   section: DmScreenSection;
   depth: number;
+  arranging: boolean;
   monsters: ReadonlyMap<string, Monster>;
   spells: ReadonlyMap<string, Spell>;
   partySummary: ReturnType<typeof partyToDmScreenSummary> | null;
   partyLoading: boolean;
   partyUnavailable: boolean;
   onAddChild: (parentId: string) => void;
+  onDuplicateItem: (itemId: string) => void;
   onUpdate: (sectionId: string, update: (section: DmScreenSection) => DmScreenSection) => void;
   onRemove: (sectionId: string) => void;
 }) {
   function updateItem(itemId: string, update: (item: DmScreenItem) => DmScreenItem) {
     onUpdate(section.id, (current) => ({ ...current, items: current.items.map((item) => item.id === itemId ? update(item) : item) }));
   }
-  return <section className={`${depth === 0 ? 'card !p-0' : 'rounded-xl border border-[var(--steel-800)] bg-[var(--steel-950)]'} overflow-hidden`}>
-    <header className="flex items-center gap-2 border-b border-[var(--steel-800)] px-4 py-3 print:px-0">
+  const titleClass = `min-w-0 font-display font-semibold ${depth === 0 ? 'text-xl' : 'text-base'}`;
+  const stashedPanelCount = section.items.filter((item) => item.layout.stashed).length;
+  const visiblePanelCount = arranging
+    ? section.items.length
+    : section.items.length - stashedPanelCount;
+  return <section className={`${depth === 0 ? 'card !p-0' : 'rounded-xl border border-[var(--steel-800)] bg-[var(--steel-950)]'} min-w-0 overflow-hidden`}>
+    <header className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-[var(--steel-800)] px-3 py-3 print:block print:px-0 sm:px-4">
+      <div className="min-w-0">
+        {arranging ? <>
+          <input className={`${titleClass} w-full !min-h-10 !border-dashed !px-2 !py-1 print:hidden`} value={section.title} onChange={(event) => {
+            const nextTitle = event.target.value;
+            onUpdate(section.id, (current) => ({ ...current, title: nextTitle }));
+          }} aria-label="Section title" />
+          <h2 className={`${titleClass} hidden print:block`}>{section.title}</h2>
+        </> : <h2 className={`${titleClass} break-words`}>{section.title}</h2>}
+        <p className="mt-0.5 text-xs text-[var(--text-3)] print:hidden">{visiblePanelCount} panel{visiblePanelCount === 1 ? '' : 's'}{arranging && stashedPanelCount > 0 ? ` · ${stashedPanelCount} stashed` : ''}{section.children.length > 0 ? ` · ${section.children.length} subsection${section.children.length === 1 ? '' : 's'}` : ''}</p>
+      </div>
       <button type="button" className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg hover:bg-[var(--steel-800)] print:hidden" onClick={() => onUpdate(section.id, (current) => ({ ...current, collapsed: !current.collapsed }))} aria-expanded={!section.collapsed} aria-label={`${section.collapsed ? 'Expand' : 'Collapse'} ${section.title}`}>{section.collapsed ? <ChevronDown size={19} /> : <ChevronUp size={19} />}</button>
-      <input className={`min-w-0 flex-1 !border-0 !bg-transparent !p-0 font-display font-semibold ${depth === 0 ? 'text-xl' : 'text-base'} print:min-h-0`} value={section.title} onChange={(event) => {
-        const nextTitle = event.target.value;
-        onUpdate(section.id, (current) => ({ ...current, title: nextTitle }));
-      }} aria-label="Section title" />
-      <span className="text-xs text-[var(--text-3)] print:hidden">{section.items.length} items · {section.children.length} subsections</span>
-      <button type="button" className="btn-ghost !min-h-10 !px-2 text-xs print:hidden" onClick={() => onAddChild(section.id)}><FolderPlus size={15} /> Subsection</button>
-      <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--accent-danger)] hover:bg-[var(--steel-800)] print:hidden" onClick={() => onRemove(section.id)} aria-label={`Remove ${section.title}`}><Trash2 size={17} /></button>
+      {arranging && <div className="col-span-2 flex min-w-0 flex-wrap items-center justify-end gap-1 border-t border-[var(--steel-800)] pt-2 print:hidden">
+        <button type="button" className="btn-ghost !min-h-10 !px-2 text-xs" onClick={() => onAddChild(section.id)}><FolderPlus size={15} aria-hidden="true" /> Subsection</button>
+        <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--accent-danger)] hover:bg-[var(--steel-800)]" onClick={() => onRemove(section.id)} aria-label={`Remove ${section.title}`} title={`Remove ${section.title}`}><Trash2 size={17} aria-hidden="true" /></button>
+      </div>}
     </header>
-    <div className={`${section.collapsed ? 'hidden print:block' : ''} space-y-3 p-4 print:p-0 print:pt-3`}>
-      {section.items.map((item) => <ScreenItem key={item.id} item={item} monster={item.resourceId ? monsters.get(item.resourceId) : undefined} spell={item.resourceId ? spells.get(item.resourceId) : undefined} partySummary={partySummary} partyLoading={partyLoading} partyUnavailable={partyUnavailable} onUpdate={(update) => updateItem(item.id, update)} onRemove={() => onUpdate(section.id, (current) => ({ ...current, items: current.items.filter((candidate) => candidate.id !== item.id) }))} />)}
-      {section.children.map((child) => <ScreenSection key={child.id} section={child} depth={depth + 1} monsters={monsters} spells={spells} partySummary={partySummary} partyLoading={partyLoading} partyUnavailable={partyUnavailable} onAddChild={onAddChild} onUpdate={onUpdate} onRemove={onRemove} />)}
-      {section.items.length === 0 && section.children.length === 0 && <p className="rounded-lg border border-dashed border-[var(--steel-800)] p-4 text-center text-sm text-[var(--text-3)] print:hidden">Choose this section in the builder above to add content.</p>}
+    <div className={`${section.collapsed ? 'hidden print:block' : ''} min-w-0 space-y-3 ${depth === 0 ? 'p-3 sm:p-4' : 'p-1.5 sm:p-3'} print:p-0 print:pt-3`}>
+      {section.items.map((item) => <ScreenItem
+        key={item.id}
+        item={item}
+        arranging={arranging}
+        monster={item.resourceId ? monsters.get(item.resourceId) : undefined}
+        spell={item.resourceId ? spells.get(item.resourceId) : undefined}
+        partySummary={partySummary}
+        partyLoading={partyLoading}
+        partyUnavailable={partyUnavailable}
+        onDuplicate={() => onDuplicateItem(item.id)}
+        onUpdate={(update) => updateItem(item.id, update)}
+        onRemove={() => onUpdate(section.id, (current) => ({
+          ...current,
+          items: current.items.filter((candidate) => candidate.id !== item.id),
+        }))}
+      />)}
+      {section.children.map((child) => <ScreenSection
+        key={child.id}
+        section={child}
+        depth={depth + 1}
+        arranging={arranging}
+        monsters={monsters}
+        spells={spells}
+        partySummary={partySummary}
+        partyLoading={partyLoading}
+        partyUnavailable={partyUnavailable}
+        onAddChild={onAddChild}
+        onDuplicateItem={onDuplicateItem}
+        onUpdate={onUpdate}
+        onRemove={onRemove}
+      />)}
+      {visiblePanelCount === 0 && section.children.length === 0 && <p className="rounded-lg border border-dashed border-[var(--steel-800)] p-4 text-center text-sm text-[var(--text-3)] print:hidden">{arranging ? 'Use Quick add to place a panel in this section.' : 'This section has no active panels.'}</p>}
     </div>
   </section>;
 }
 
-function ScreenItem({ item, monster, spell, partySummary, partyLoading, partyUnavailable, onUpdate, onRemove }: {
+function ScreenItem({ item, arranging, monster, spell, partySummary, partyLoading, partyUnavailable, onDuplicate, onUpdate, onRemove }: {
   item: DmScreenItem;
+  arranging: boolean;
   monster?: Monster;
   spell?: Spell;
   partySummary: ReturnType<typeof partyToDmScreenSummary> | null;
   partyLoading: boolean;
   partyUnavailable: boolean;
+  onDuplicate: () => void;
   onUpdate: (update: (item: DmScreenItem) => DmScreenItem) => void;
   onRemove: () => void;
 }) {
   const Icon = item.kind === 'party' ? Users : item.kind === 'monster' ? Swords : item.kind === 'spell' ? Sparkles : item.kind === 'tool' ? LinkIcon : item.kind === 'rules' ? BookOpen : item.kind === 'initiative' || item.kind === 'battle' ? Swords : FileText;
-  return <article className={`rounded-xl border ${item.layout.stashed ? 'border-dashed border-[var(--steel-700)] opacity-70 print:opacity-100' : 'border-[var(--steel-800)]'} ${item.layout.excludedFromPrint ? 'print:hidden' : ''} bg-[var(--steel-900)]`}>
-    <header className="flex items-center gap-2 px-3 py-2">
+  const hiddenInRun = item.layout.stashed && !arranging;
+  const runVisibility = hiddenInRun
+    ? item.layout.excludedFromPrint ? 'hidden' : 'hidden print:block'
+    : '';
+  return <article
+    id={`dm-screen-panel-${item.id}`}
+    tabIndex={-1}
+    className={`min-w-0 rounded-xl border bg-[var(--steel-900)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bronze)] ${item.layout.stashed ? 'border-dashed border-[var(--steel-700)] opacity-70 print:opacity-100' : 'border-[var(--steel-800)]'} ${runVisibility} ${item.layout.excludedFromPrint ? 'print:hidden' : ''}`}
+  >
+    <header className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 py-2 print:block">
       <Icon size={17} className="shrink-0 text-[var(--bronze)]" aria-hidden="true" />
-      <input className="min-w-0 flex-1 !border-0 !bg-transparent !p-0 font-semibold print:min-h-0" value={item.title} onChange={(event) => {
-        const nextTitle = event.target.value;
-        onUpdate((current) => ({ ...current, title: nextTitle }));
-      }} aria-label="Item title" />
-      {item.origin === 'auto-pin' && <span className="rounded-full bg-[var(--bronze-wash)] px-2 py-0.5 text-[10px] font-semibold text-[var(--bronze)] print:hidden">AUTO-PINNED</span>}
-      {item.layout.stashed && <span className="text-xs text-[var(--text-3)] print:hidden">Stashed</span>}
-      {item.layout.excludedFromPrint && <span className="text-xs text-[var(--text-3)] print:hidden">Not printed</span>}
-      <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-[var(--steel-800)] print:hidden" onClick={() => onUpdate((current) => ({ ...current, layout: { ...current.layout, stashed: !current.layout.stashed } }))} aria-label={`${item.layout.stashed ? 'Restore' : 'Stash'} ${item.title}`}>{item.layout.stashed ? <Eye size={17} /> : <EyeOff size={17} />}</button>
+      <div className="min-w-0">
+        {arranging && item.origin !== 'auto-pin' ? <>
+          <input className="w-full min-w-0 !min-h-9 !border-dashed !px-2 !py-1 text-sm font-semibold print:hidden" value={item.title} onChange={(event) => {
+            const nextTitle = event.target.value;
+            onUpdate((current) => ({ ...current, title: nextTitle }));
+          }} aria-label="Panel title" />
+          <h3 className="hidden break-words font-semibold print:block">{item.title}</h3>
+        </> : <h3 className="break-words font-semibold">{item.title}</h3>}
+      </div>
       <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-[var(--steel-800)] print:hidden" onClick={() => onUpdate((current) => ({ ...current, collapsed: !current.collapsed }))} aria-label={`${item.collapsed ? 'Open' : 'Collapse'} ${item.title}`}>{item.collapsed ? <ChevronDown size={17} /> : <ChevronUp size={17} />}</button>
-      <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--accent-danger)] hover:bg-[var(--steel-800)] print:hidden" onClick={onRemove} aria-label={`Remove ${item.title}`}><Trash2 size={16} /></button>
+      {arranging && <div className="col-span-3 flex min-w-0 flex-wrap items-center justify-end gap-1 border-t border-[var(--steel-800)] pt-2 print:hidden">
+        <div className="mr-auto flex min-w-0 flex-wrap items-center gap-1.5">
+          {item.origin === 'auto-pin' && <span className="rounded-full bg-[var(--bronze-wash)] px-2 py-0.5 text-[10px] font-semibold text-[var(--bronze)]">AUTO-PINNED</span>}
+          {item.layout.stashed && <span className="text-xs text-[var(--text-3)]">Stashed</span>}
+          {item.layout.excludedFromPrint && <span className="text-xs text-[var(--text-3)]">Not printed</span>}
+        </div>
+        <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-[var(--steel-800)]" onClick={() => onUpdate((current) => ({ ...current, layout: { ...current.layout, stashed: !current.layout.stashed } }))} aria-label={`${item.layout.stashed ? 'Restore' : 'Stash'} ${item.title}`} title={`${item.layout.stashed ? 'Restore' : 'Stash'} ${item.title}`}>{item.layout.stashed ? <Eye size={17} aria-hidden="true" /> : <EyeOff size={17} aria-hidden="true" />}</button>
+        {item.origin !== 'auto-pin' && <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-[var(--steel-800)]" onClick={onDuplicate} aria-label={`Duplicate ${item.title}`} title={`Duplicate ${item.title}`}><Copy size={16} aria-hidden="true" /></button>}
+        {item.origin !== 'auto-pin' && <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--accent-danger)] hover:bg-[var(--steel-800)]" onClick={onRemove} aria-label={`Remove ${item.title}`} title={`Remove ${item.title}`}><Trash2 size={16} aria-hidden="true" /></button>}
+      </div>}
     </header>
     <div className={`${item.layout.stashed || item.collapsed ? 'hidden print:block' : ''} border-t border-[var(--steel-800)] p-3 print:p-0 print:pt-2`}>
-      <label className="mb-3 flex items-center gap-2 text-xs text-[var(--text-3)] print:hidden">
+      {arranging && <label className="mb-3 flex items-center gap-2 text-xs text-[var(--text-3)] print:hidden">
         <input type="checkbox" checked={item.layout.excludedFromPrint} onChange={(event) => {
           const checked = event.target.checked;
           onUpdate((current) => ({ ...current, layout: { ...current.layout, excludedFromPrint: checked } }));
         }} />
         Exclude this panel from print and Markdown
-      </label>
-      {item.kind === 'note' && <textarea className="w-full border-0 bg-transparent print:min-h-0" rows={Math.max(3, (item.body?.split('\n').length ?? 1) + 1)} value={item.body ?? ''} onChange={(event) => {
-        const nextBody = event.target.value;
-        onUpdate((current) => ({ ...current, body: nextBody }));
-      }} />}
+      </label>}
+      {item.kind === 'note' && <>
+        <textarea className="w-full border-0 bg-transparent print:hidden" aria-label={`Notes for ${item.title}`} rows={Math.max(3, (item.body?.split('\n').length ?? 1) + 1)} value={item.body ?? ''} onChange={(event) => {
+          const nextBody = event.target.value;
+          onUpdate((current) => ({ ...current, body: nextBody }));
+        }} />
+        <div className="hidden whitespace-pre-wrap text-sm leading-relaxed print:block">{item.body}</div>
+      </>}
       {item.kind === 'monster' && (monster ? <MonsterStatBlock monster={monster} physicalDescription={getMonsterPhysicalDescription(monster.id)} /> : <p className="text-sm text-[var(--accent-danger)]">This monster is no longer available.</p>)}
       {item.kind === 'spell' && (spell ? <SpellReference spell={spell} /> : <p className="text-sm text-[var(--accent-danger)]">This spell is no longer available.</p>)}
       {item.kind === 'tool' && <div><p className="text-sm text-[var(--text-2)]">{item.body}</p>{item.href && <Link className="btn-secondary mt-3 text-sm print:hidden" href={item.href}>Open tool <span aria-hidden="true">→</span></Link>}</div>}
