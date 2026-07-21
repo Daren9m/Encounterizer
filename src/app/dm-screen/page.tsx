@@ -1,20 +1,23 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import Link from 'next/link';
 import {
+  Archive,
+  ArchiveRestore,
   BookOpen,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
   Copy,
-  Eye,
-  EyeOff,
   Expand,
   FileText,
   FolderPlus,
   Link as LinkIcon,
   LayoutTemplate,
+  Columns3,
+  Maximize2,
   Minimize2,
   MoreHorizontal,
   Plus,
@@ -37,6 +40,7 @@ import { useDmScreenFocusMode } from '@/app/hooks/useDmScreenFocusMode';
 import { usePartyLibrary } from '@/app/hooks/usePartyLibrary';
 import BattleOrganizer from '@/components/BattleOrganizer';
 import DmScreenBackupPanel from '@/components/DmScreenBackupPanel';
+import DmScreenModal from '@/components/DmScreenModal';
 import DmScreenQuickAddDrawer, {
   type DmScreenQuickAddActionResult,
 } from '@/components/DmScreenQuickAddDrawer';
@@ -56,6 +60,8 @@ import {
   duplicateDmScreenItem,
   hasDmPartyItem,
   mergeDmScreenDocuments,
+  reduceDmScreenGrid,
+  reduceDmScreenPanelDisplay,
   removeSectionTree,
   syncDmPartySnapshot,
   syncPinnedItems,
@@ -63,6 +69,8 @@ import {
   type DmScreenItem,
   type DmScreenItemKind,
   type DmScreenIdFactory,
+  type DmScreenPanelDisplayAction,
+  type DmScreenPanelWidth,
   type DmScreenSection,
   type DmScreenState,
 } from '@/lib/dm-screen';
@@ -116,8 +124,40 @@ function countScreenTree(sections: readonly DmScreenSection[]): { sections: numb
   }, { sections: 0, panels: 0 });
 }
 
+interface DmScreenItemLocation {
+  item: DmScreenItem;
+  sectionId: string;
+  sectionTitle: string;
+}
+
+function collectScreenItems(
+  sections: readonly DmScreenSection[],
+): DmScreenItemLocation[] {
+  return sections.flatMap((section) => [
+    ...section.items.map((item) => ({
+      item,
+      sectionId: section.id,
+      sectionTitle: section.title,
+    })),
+    ...collectScreenItems(section.children),
+  ]);
+}
+
+function panelKindLabel(kind: DmScreenItemKind): string {
+  if (kind === 'initiative') return 'Initiative';
+  if (kind === 'rules') return 'Rules';
+  return `${kind.charAt(0).toUpperCase()}${kind.slice(1)}`;
+}
+
+function panelWidthLabel(width: DmScreenPanelWidth): string {
+  return width === 'compact' ? 'Compact'
+    : width === 'standard' ? 'Standard'
+      : width === 'wide' ? 'Wide'
+        : 'Full';
+}
+
 function defaultItemLayout(): DmScreenItem['layout'] {
-  return { width: 'full', stashed: false, excludedFromPrint: false };
+  return { width: 'standard', stashed: false, excludedFromPrint: false };
 }
 
 function prepareImportedScreen(
@@ -257,6 +297,9 @@ export default function DmScreenPage() {
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [stashTrayOpen, setStashTrayOpen] = useState(false);
+  const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
+  const [printing, setPrinting] = useState(false);
   const [workspaceNotice, setWorkspaceNotice] = useState('');
   const [workspaceError, setWorkspaceError] = useState('');
   const [templateNotice, setTemplateNotice] = useState<{
@@ -266,8 +309,12 @@ export default function DmScreenPage() {
   const templateButtonRef = useRef<HTMLButtonElement>(null);
   const quickAddButtonRef = useRef<HTMLButtonElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
+  const stashTrayButtonRef = useRef<HTMLButtonElement>(null);
+  const panelFocusReturnRef = useRef<HTMLElement>(null);
+  const suppressTrayReturnFocusRef = useRef(false);
   const moreHeadingRef = useRef<HTMLHeadingElement>(null);
   const pendingPanelFocusRef = useRef<string | null>(null);
+  const pendingStashButtonFocusRef = useRef(false);
   const templateNoticeRef = useRef<HTMLDivElement>(null);
   const sawReplacementUndo = useRef(false);
   const {
@@ -279,11 +326,24 @@ export default function DmScreenPage() {
     toggleFocus,
     enterBrowserFullscreen,
     exitFocus,
-  } = useDmScreenFocusMode(quickAddOpen || moreOpen || templatesOpen);
+  } = useDmScreenFocusMode(
+    quickAddOpen || moreOpen || templatesOpen || stashTrayOpen || focusedItemId !== null,
+  );
   const screenCounts = useMemo(
     () => countScreenTree(screen?.sections ?? []),
     [screen?.sections],
   );
+  const screenItems = useMemo(
+    () => collectScreenItems(screen?.sections ?? []),
+    [screen?.sections],
+  );
+  const stashedPanels = useMemo(
+    () => screenItems.filter(({ item }) => item.layout.stashed),
+    [screenItems],
+  );
+  const focusedPanel = focusedItemId
+    ? screenItems.find(({ item }) => item.id === focusedItemId) ?? null
+    : null;
 
   useEffect(() => {
     if (replacementUndo) {
@@ -325,7 +385,31 @@ export default function DmScreenPage() {
   }, [acknowledgeFirstUse, moreOpen, templatesOpen]);
 
   useEffect(() => {
-    if (quickAddOpen) return;
+    const preparePrint = () => flushSync(() => setPrinting(true));
+    const finishPrint = () => setPrinting(false);
+    window.addEventListener('beforeprint', preparePrint);
+    window.addEventListener('afterprint', finishPrint);
+    return () => {
+      window.removeEventListener('beforeprint', preparePrint);
+      window.removeEventListener('afterprint', finishPrint);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!focusedItemId || focusedPanel) return;
+    const frame = window.requestAnimationFrame(() => setFocusedItemId(null));
+    return () => window.cancelAnimationFrame(frame);
+  }, [focusedItemId, focusedPanel]);
+
+  useEffect(() => {
+    if (!pendingStashButtonFocusRef.current || stashedPanels.length === 0) return;
+    pendingStashButtonFocusRef.current = false;
+    const frame = window.requestAnimationFrame(() => stashTrayButtonRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [stashedPanels.length]);
+
+  useEffect(() => {
+    if (quickAddOpen || stashTrayOpen || focusedItemId) return;
     const panelId = pendingPanelFocusRef.current;
     if (!panelId) return;
     const frame = window.requestAnimationFrame(() => {
@@ -336,7 +420,7 @@ export default function DmScreenPage() {
       panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [quickAddOpen, screen]);
+  }, [focusedItemId, quickAddOpen, screen, stashTrayOpen]);
 
   useEffect(() => {
     if (!screenAvailable) return;
@@ -466,7 +550,14 @@ export default function DmScreenPage() {
   function openQuickAdd(): void {
     setMoreOpen(false);
     setTemplatesOpen(false);
+    setStashTrayOpen(false);
+    setFocusedItemId(null);
     setQuickAddOpen(true);
+  }
+
+  function openQuickAddForSection(sectionId: string): void {
+    setTargetSectionId(sectionId);
+    openQuickAdd();
   }
 
   function closeQuickAdd(): void {
@@ -477,7 +568,61 @@ export default function DmScreenPage() {
   function openTemplateChooser(): void {
     setQuickAddOpen(false);
     setMoreOpen(false);
+    setStashTrayOpen(false);
+    setFocusedItemId(null);
     setTemplatesOpen(true);
+  }
+
+  function updatePanel(
+    sectionId: string,
+    itemId: string,
+    update: (item: DmScreenItem) => DmScreenItem,
+  ): void {
+    setScreen((current) => ({
+      ...current,
+      sections: updateSectionTree(current.sections, sectionId, (section) => ({
+        ...section,
+        items: section.items.map((item) => item.id === itemId ? update(item) : item),
+      })),
+    }));
+  }
+
+  function changePanelDisplay(
+    itemId: string,
+    action: DmScreenPanelDisplayAction,
+  ): void {
+    setScreen((current) => reduceDmScreenPanelDisplay(current, itemId, action));
+  }
+
+  function stashPanel(itemId: string): void {
+    pendingStashButtonFocusRef.current = true;
+    changePanelDisplay(itemId, { type: 'set-stashed', stashed: true });
+    setWorkspaceNotice('Panel moved to the stash.');
+  }
+
+  function restorePanel(itemId: string): void {
+    pendingPanelFocusRef.current = itemId;
+    suppressTrayReturnFocusRef.current = true;
+    setStashTrayOpen(false);
+    changePanelDisplay(itemId, { type: 'set-stashed', stashed: false });
+    setWorkspaceNotice('Panel restored to the board.');
+  }
+
+  function openPanelFocus(itemId: string, returnTarget: HTMLElement | null): void {
+    panelFocusReturnRef.current = returnTarget;
+    setQuickAddOpen(false);
+    setMoreOpen(false);
+    setTemplatesOpen(false);
+    setStashTrayOpen(false);
+    setFocusedItemId(itemId);
+  }
+
+  function openStashTray(): void {
+    setQuickAddOpen(false);
+    setMoreOpen(false);
+    setTemplatesOpen(false);
+    setFocusedItemId(null);
+    setStashTrayOpen(true);
   }
 
   function toggleWorkspaceMode(): void {
@@ -803,6 +948,64 @@ export default function DmScreenPage() {
       onAddResource={addResource}
     />}
 
+    {stashTrayOpen && <DmScreenModal
+      open
+      variant="tray"
+      eyebrow="Stashed panels"
+      title="Off the board, ready when needed"
+      description="Restore a panel to its original place. Its size, order, collapsed header, and print setting are preserved."
+      returnFocusRef={stashTrayButtonRef}
+      suppressReturnFocusRef={suppressTrayReturnFocusRef}
+      onClose={() => setStashTrayOpen(false)}
+    >
+      <div className="space-y-2">
+        {stashedPanels.map(({ item, sectionTitle }) => <article
+          key={item.id}
+          className="flex min-w-0 flex-col gap-3 rounded-xl border border-[var(--steel-800)] bg-[var(--steel-900)] p-3 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="break-words text-base">{item.title}</h3>
+              {item.layout.excludedFromPrint && <span className="rounded-full bg-[var(--steel-800)] px-2 py-0.5 text-[10px] font-semibold text-[var(--text-3)]">NOT PRINTED</span>}
+            </div>
+            <p className="mt-1 text-xs text-[var(--text-3)]">{sectionTitle} · {panelKindLabel(item.kind)} · {panelWidthLabel(item.layout.width)}</p>
+          </div>
+          <button type="button" className="btn-primary shrink-0 justify-center text-sm" onClick={() => restorePanel(item.id)}>
+            <ArchiveRestore size={16} aria-hidden="true" /> Restore to board
+          </button>
+        </article>)}
+        {stashedPanels.length === 0 && <div className="empty-state">
+          <Archive className="mx-auto mb-3 text-[var(--bronze)]" size={34} aria-hidden="true" />
+          <p className="font-semibold">The stash is empty</p>
+          <p className="mt-1 text-sm">Stashed panels will stay recoverable here.</p>
+        </div>}
+      </div>
+    </DmScreenModal>}
+
+    {focusedPanel && <DmScreenModal
+      open
+      variant="spotlight"
+      eyebrow={`${focusedPanel.sectionTitle} · ${panelKindLabel(focusedPanel.item.kind)}`}
+      title={focusedPanel.item.title}
+      description="Panel focus is temporary. Close it to return to the board without changing the layout."
+      returnFocusRef={panelFocusReturnRef}
+      onClose={() => setFocusedItemId(null)}
+    >
+      <div className="mx-auto w-full max-w-7xl rounded-xl border border-[var(--steel-800)] bg-[var(--steel-900)] p-3 sm:p-5">
+        <ScreenItemBody
+          item={focusedPanel.item}
+          arranging={false}
+          monster={focusedPanel.item.resourceId ? monsterMap.get(focusedPanel.item.resourceId) : undefined}
+          spell={focusedPanel.item.resourceId ? spellMap.get(focusedPanel.item.resourceId) : undefined}
+          partySummary={partySummary}
+          partyLoading={!partyLibraryHydrated && !partySummary}
+          partyUnavailable={partyLibraryStatus === 'unavailable' || partyLibraryStatus === 'error'}
+          onUpdate={(update) => updatePanel(focusedPanel.sectionId, focusedPanel.item.id, update)}
+          onDisplayAction={(action) => changePanelDisplay(focusedPanel.item.id, action)}
+        />
+      </div>
+    </DmScreenModal>}
+
     <section className="dm-screen-command-bar card panel-accent mb-4 !p-3 print:hidden" aria-label="DM Screen controls">
       <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 flex-1">
@@ -863,6 +1066,14 @@ export default function DmScreenPage() {
             aria-pressed={arranging}
             onClick={toggleWorkspaceMode}
           >{arranging ? <CheckCircle2 size={16} aria-hidden="true" /> : <Settings2 size={16} aria-hidden="true" />} {arranging ? 'Done' : 'Arrange'}</button>
+          {stashedPanels.length > 0 && <button
+            ref={stashTrayButtonRef}
+            type="button"
+            className="btn-secondary w-full justify-center text-sm sm:w-auto"
+            aria-haspopup="dialog"
+            aria-expanded={stashTrayOpen}
+            onClick={openStashTray}
+          ><Archive size={16} aria-hidden="true" /> Stash <span className="rounded-full bg-[var(--steel-800)] px-1.5 py-0.5 text-[10px]">{stashedPanels.length}</span></button>}
           <button
             ref={focusButtonRef}
             type="button"
@@ -886,6 +1097,36 @@ export default function DmScreenPage() {
       </div>
       <span className="sr-only" role="status" aria-live="polite">{workspaceError ? '' : workspaceNotice} {focusStatusMessage}</span>
     </section>
+
+    {arranging && <section className="mb-4 flex min-w-0 flex-col gap-3 rounded-xl border border-[var(--steel-800)] bg-[var(--surface-subtle)] p-3 print:hidden lg:flex-row lg:items-center" aria-labelledby="dm-screen-board-layout-heading">
+      <div className="flex min-w-0 items-center gap-2 lg:mr-auto">
+        <Columns3 size={18} className="shrink-0 text-[var(--bronze)]" aria-hidden="true" />
+        <div className="min-w-0">
+          <h2 id="dm-screen-board-layout-heading" className="text-sm font-semibold">Board layout</h2>
+          <p className="text-xs text-[var(--text-3)]">Panels snap to the grid and simplify automatically on smaller screens.</p>
+        </div>
+      </div>
+      <fieldset className="flex min-w-0 flex-wrap items-center gap-1.5">
+        <legend className="mr-1 text-xs font-semibold text-[var(--text-3)]">Columns</legend>
+        {(['auto', 2, 3, 4] as const).map((columns) => <button
+          key={columns}
+          type="button"
+          className={`${screen.layout.columns === columns ? 'border-[var(--bronze)] bg-[var(--bronze-wash)] text-[var(--text-1)]' : 'border-[var(--steel-700)] bg-[var(--steel-900)] text-[var(--text-2)]'} min-h-9 rounded-lg border px-3 text-xs font-semibold`}
+          aria-pressed={screen.layout.columns === columns}
+          onClick={() => setScreen((current) => reduceDmScreenGrid(current, { type: 'set-columns', columns }))}
+        >{columns === 'auto' ? 'Auto fit' : columns}</button>)}
+      </fieldset>
+      <fieldset className="flex min-w-0 flex-wrap items-center gap-1.5">
+        <legend className="mr-1 text-xs font-semibold text-[var(--text-3)]">Spacing</legend>
+        {(['comfortable', 'compact'] as const).map((density) => <button
+          key={density}
+          type="button"
+          className={`${screen.layout.density === density ? 'border-[var(--bronze)] bg-[var(--bronze-wash)] text-[var(--text-1)]' : 'border-[var(--steel-700)] bg-[var(--steel-900)] text-[var(--text-2)]'} min-h-9 rounded-lg border px-3 text-xs font-semibold`}
+          aria-pressed={screen.layout.density === density}
+          onClick={() => setScreen((current) => reduceDmScreenGrid(current, { type: 'set-density', density }))}
+        >{density === 'comfortable' ? 'Roomy' : 'Tight'}</button>)}
+      </fieldset>
+    </section>}
 
     {workspaceError && <p className="mb-4 rounded-lg border border-[var(--status-danger)] bg-[var(--status-danger-wash)] px-3 py-2 text-sm print:hidden" role="alert">{workspaceError}</p>}
 
@@ -989,13 +1230,19 @@ export default function DmScreenPage() {
         section={section}
         depth={0}
         arranging={arranging}
+        printing={printing}
+        screenLayout={screen.layout}
         monsters={monsterMap}
         spells={spellMap}
         partySummary={partySummary}
         partyLoading={!partyLibraryHydrated && !partySummary}
         partyUnavailable={partyLibraryStatus === 'unavailable' || partyLibraryStatus === 'error'}
         onAddChild={addSection}
+        onAddPanel={openQuickAddForSection}
         onDuplicateItem={(itemId) => setScreen((current) => duplicateDmScreenItem(current, itemId))}
+        onFocusItem={openPanelFocus}
+        onPanelDisplay={changePanelDisplay}
+        onStashItem={stashPanel}
         onUpdate={(sectionId, update) => setScreen((current) => ({
           ...current,
           sections: updateSectionTree(current.sections, sectionId, update),
@@ -1018,17 +1265,23 @@ export default function DmScreenPage() {
   </div>;
 }
 
-function ScreenSection({ section, depth, arranging, monsters, spells, partySummary, partyLoading, partyUnavailable, onAddChild, onDuplicateItem, onUpdate, onRemove }: {
+function ScreenSection({ section, depth, arranging, printing, screenLayout, monsters, spells, partySummary, partyLoading, partyUnavailable, onAddChild, onAddPanel, onDuplicateItem, onFocusItem, onPanelDisplay, onStashItem, onUpdate, onRemove }: {
   section: DmScreenSection;
   depth: number;
   arranging: boolean;
+  printing: boolean;
+  screenLayout: DmScreenState['layout'];
   monsters: ReadonlyMap<string, Monster>;
   spells: ReadonlyMap<string, Spell>;
   partySummary: ReturnType<typeof partyToDmScreenSummary> | null;
   partyLoading: boolean;
   partyUnavailable: boolean;
   onAddChild: (parentId: string) => void;
+  onAddPanel: (sectionId: string) => void;
   onDuplicateItem: (itemId: string) => void;
+  onFocusItem: (itemId: string, returnTarget: HTMLElement | null) => void;
+  onPanelDisplay: (itemId: string, action: DmScreenPanelDisplayAction) => void;
+  onStashItem: (itemId: string) => void;
   onUpdate: (sectionId: string, update: (section: DmScreenSection) => DmScreenSection) => void;
   onRemove: (sectionId: string) => void;
 }) {
@@ -1037,9 +1290,8 @@ function ScreenSection({ section, depth, arranging, monsters, spells, partySumma
   }
   const titleClass = `min-w-0 font-display font-semibold ${depth === 0 ? 'text-xl' : 'text-base'}`;
   const stashedPanelCount = section.items.filter((item) => item.layout.stashed).length;
-  const visiblePanelCount = arranging
-    ? section.items.length
-    : section.items.length - stashedPanelCount;
+  const visiblePanelCount = section.items.length - stashedPanelCount;
+  const showContents = !section.collapsed || printing;
   return <section className={`${depth === 0 ? 'card !p-0' : 'rounded-xl border border-[var(--steel-800)] bg-[var(--steel-950)]'} min-w-0 overflow-hidden`}>
     <header className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-[var(--steel-800)] px-3 py-3 print:block print:px-0 sm:px-4">
       <div className="min-w-0">
@@ -1050,7 +1302,7 @@ function ScreenSection({ section, depth, arranging, monsters, spells, partySumma
           }} aria-label="Section title" />
           <h2 className={`${titleClass} hidden print:block`}>{section.title}</h2>
         </> : <h2 className={`${titleClass} break-words`}>{section.title}</h2>}
-        <p className="mt-0.5 text-xs text-[var(--text-3)] print:hidden">{visiblePanelCount} panel{visiblePanelCount === 1 ? '' : 's'}{arranging && stashedPanelCount > 0 ? ` · ${stashedPanelCount} stashed` : ''}{section.children.length > 0 ? ` · ${section.children.length} subsection${section.children.length === 1 ? '' : 's'}` : ''}</p>
+        <p className="mt-0.5 text-xs text-[var(--text-3)] print:hidden">{visiblePanelCount} on board{stashedPanelCount > 0 ? ` · ${stashedPanelCount} stashed` : ''}{section.children.length > 0 ? ` · ${section.children.length} subsection${section.children.length === 1 ? '' : 's'}` : ''}</p>
       </div>
       <button type="button" className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg hover:bg-[var(--steel-800)] print:hidden" onClick={() => onUpdate(section.id, (current) => ({ ...current, collapsed: !current.collapsed }))} aria-expanded={!section.collapsed} aria-label={`${section.collapsed ? 'Expand' : 'Collapse'} ${section.title}`}>{section.collapsed ? <ChevronDown size={19} /> : <ChevronUp size={19} />}</button>
       {arranging && <div className="col-span-2 flex min-w-0 flex-wrap items-center justify-end gap-1 border-t border-[var(--steel-800)] pt-2 print:hidden">
@@ -1058,66 +1310,104 @@ function ScreenSection({ section, depth, arranging, monsters, spells, partySumma
         <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--accent-danger)] hover:bg-[var(--steel-800)]" onClick={() => onRemove(section.id)} aria-label={`Remove ${section.title}`} title={`Remove ${section.title}`}><Trash2 size={17} aria-hidden="true" /></button>
       </div>}
     </header>
-    <div className={`${section.collapsed ? 'hidden print:block' : ''} min-w-0 space-y-3 ${depth === 0 ? 'p-3 sm:p-4' : 'p-1.5 sm:p-3'} print:p-0 print:pt-3`}>
-      {section.items.map((item) => <ScreenItem
-        key={item.id}
-        item={item}
-        arranging={arranging}
-        monster={item.resourceId ? monsters.get(item.resourceId) : undefined}
-        spell={item.resourceId ? spells.get(item.resourceId) : undefined}
-        partySummary={partySummary}
-        partyLoading={partyLoading}
-        partyUnavailable={partyUnavailable}
-        onDuplicate={() => onDuplicateItem(item.id)}
-        onUpdate={(update) => updateItem(item.id, update)}
-        onRemove={() => onUpdate(section.id, (current) => ({
-          ...current,
-          items: current.items.filter((candidate) => candidate.id !== item.id),
-        }))}
-      />)}
-      {section.children.map((child) => <ScreenSection
-        key={child.id}
-        section={child}
-        depth={depth + 1}
-        arranging={arranging}
-        monsters={monsters}
-        spells={spells}
-        partySummary={partySummary}
-        partyLoading={partyLoading}
-        partyUnavailable={partyUnavailable}
-        onAddChild={onAddChild}
-        onDuplicateItem={onDuplicateItem}
-        onUpdate={onUpdate}
-        onRemove={onRemove}
-      />)}
-      {visiblePanelCount === 0 && section.children.length === 0 && <p className="rounded-lg border border-dashed border-[var(--steel-800)] p-4 text-center text-sm text-[var(--text-3)] print:hidden">{arranging ? 'Use Quick add to place a panel in this section.' : 'This section has no active panels.'}</p>}
-    </div>
+    {showContents && <div className={`min-w-0 ${depth === 0 ? 'p-3 sm:p-4' : 'p-1.5 sm:p-3'} print:p-0 print:pt-3`}>
+      <div className="dm-screen-panel-grid" data-columns={screenLayout.columns} data-density={screenLayout.density}>
+        {section.items.map((item) => <ScreenItem
+          key={item.id}
+          item={item}
+          arranging={arranging}
+          printing={printing}
+          monster={item.resourceId ? monsters.get(item.resourceId) : undefined}
+          spell={item.resourceId ? spells.get(item.resourceId) : undefined}
+          partySummary={partySummary}
+          partyLoading={partyLoading}
+          partyUnavailable={partyUnavailable}
+          onDuplicate={() => onDuplicateItem(item.id)}
+          onFocus={(returnTarget) => onFocusItem(item.id, returnTarget)}
+          onDisplayAction={(action) => onPanelDisplay(item.id, action)}
+          onStash={() => onStashItem(item.id)}
+          onUpdate={(update) => updateItem(item.id, update)}
+          onRemove={() => onUpdate(section.id, (current) => ({
+            ...current,
+            items: current.items.filter((candidate) => candidate.id !== item.id),
+          }))}
+        />)}
+        {arranging && <button type="button" className="dm-screen-add-target print:hidden" onClick={() => onAddPanel(section.id)}>
+          <Plus size={18} aria-hidden="true" />
+          <span><strong>Add panel</strong><small>Place it in {section.title}</small></span>
+        </button>}
+        {!arranging && visiblePanelCount === 0 && <p className="dm-screen-grid-full rounded-lg border border-dashed border-[var(--steel-800)] p-4 text-center text-sm text-[var(--text-3)] print:hidden">{stashedPanelCount > 0 ? 'Every panel in this section is stashed.' : 'This section has no active panels.'}</p>}
+      </div>
+      {section.children.length > 0 && <div className="mt-3 space-y-3 print:mt-4">
+        {section.children.map((child) => <ScreenSection
+          key={child.id}
+          section={child}
+          depth={depth + 1}
+          arranging={arranging}
+          printing={printing}
+          screenLayout={screenLayout}
+          monsters={monsters}
+          spells={spells}
+          partySummary={partySummary}
+          partyLoading={partyLoading}
+          partyUnavailable={partyUnavailable}
+          onAddChild={onAddChild}
+          onAddPanel={onAddPanel}
+          onDuplicateItem={onDuplicateItem}
+          onFocusItem={onFocusItem}
+          onPanelDisplay={onPanelDisplay}
+          onStashItem={onStashItem}
+          onUpdate={onUpdate}
+          onRemove={onRemove}
+        />)}
+      </div>}
+    </div>}
   </section>;
 }
 
-function ScreenItem({ item, arranging, monster, spell, partySummary, partyLoading, partyUnavailable, onDuplicate, onUpdate, onRemove }: {
+function panelSummary(
+  item: DmScreenItem,
+  monster: Monster | undefined,
+  spell: Spell | undefined,
+  partySummary: ReturnType<typeof partyToDmScreenSummary> | null,
+): string {
+  if (item.kind === 'monster' && monster) return `CR ${monster.challengeRating} · AC ${monster.armor.ac} · ${monster.hitPoints} HP`;
+  if (item.kind === 'spell' && spell) return `${levelLabel(spell.level)} ${spell.school} · ${spell.castingTime}`;
+  if (item.kind === 'party' && partySummary) return `${partySummary.name} · ${partySummary.memberCount} heroes`;
+  if (item.kind === 'rules') return 'Core rules, conditions, and table references';
+  if (item.kind === 'initiative' || item.kind === 'battle') return 'Live rounds, turns, and combatant status';
+  const firstLine = item.body?.trim().split(/\r?\n/)[0];
+  if (firstLine) return firstLine;
+  return `${panelKindLabel(item.kind)} panel`;
+}
+
+function ScreenItem({ item, arranging, printing, monster, spell, partySummary, partyLoading, partyUnavailable, onDuplicate, onFocus, onDisplayAction, onStash, onUpdate, onRemove }: {
   item: DmScreenItem;
   arranging: boolean;
+  printing: boolean;
   monster?: Monster;
   spell?: Spell;
   partySummary: ReturnType<typeof partyToDmScreenSummary> | null;
   partyLoading: boolean;
   partyUnavailable: boolean;
   onDuplicate: () => void;
+  onFocus: (returnTarget: HTMLElement) => void;
+  onDisplayAction: (action: DmScreenPanelDisplayAction) => void;
+  onStash: () => void;
   onUpdate: (update: (item: DmScreenItem) => DmScreenItem) => void;
   onRemove: () => void;
 }) {
   const Icon = item.kind === 'party' ? Users : item.kind === 'monster' ? Swords : item.kind === 'spell' ? Sparkles : item.kind === 'tool' ? LinkIcon : item.kind === 'rules' ? BookOpen : item.kind === 'initiative' || item.kind === 'battle' ? Swords : FileText;
-  const hiddenInRun = item.layout.stashed && !arranging;
-  const runVisibility = hiddenInRun
-    ? item.layout.excludedFromPrint ? 'hidden' : 'hidden print:block'
-    : '';
+  const bodyVisible = printing || (!item.layout.stashed && !item.collapsed);
+  const summary = panelSummary(item, monster, spell, partySummary);
   return <article
     id={`dm-screen-panel-${item.id}`}
     tabIndex={-1}
-    className={`min-w-0 rounded-xl border bg-[var(--steel-900)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bronze)] ${item.layout.stashed ? 'border-dashed border-[var(--steel-700)] opacity-70 print:opacity-100' : 'border-[var(--steel-800)]'} ${runVisibility} ${item.layout.excludedFromPrint ? 'print:hidden' : ''}`}
+    data-panel-width={item.layout.width}
+    data-print-excluded={item.layout.excludedFromPrint ? 'true' : undefined}
+    className={`dm-screen-panel min-w-0 rounded-xl border border-[var(--steel-800)] bg-[var(--steel-900)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bronze)] ${item.layout.stashed ? 'hidden print:block' : ''}`}
   >
-    <header className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 py-2 print:block">
+    <header className="dm-screen-panel-header grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 py-2 print:block">
       <Icon size={17} className="shrink-0 text-[var(--bronze)]" aria-hidden="true" />
       <div className="min-w-0">
         {arranging && item.origin !== 'auto-pin' ? <>
@@ -1127,24 +1417,60 @@ function ScreenItem({ item, arranging, monster, spell, partySummary, partyLoadin
           }} aria-label="Panel title" />
           <h3 className="hidden break-words font-semibold print:block">{item.title}</h3>
         </> : <h3 className="break-words font-semibold">{item.title}</h3>}
+        {item.collapsed && <p className="mt-0.5 truncate text-xs text-[var(--text-3)] print:hidden">{summary}</p>}
       </div>
-      <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-[var(--steel-800)] print:hidden" onClick={() => onUpdate((current) => ({ ...current, collapsed: !current.collapsed }))} aria-label={`${item.collapsed ? 'Open' : 'Collapse'} ${item.title}`}>{item.collapsed ? <ChevronDown size={17} /> : <ChevronUp size={17} />}</button>
+      <div className="flex shrink-0 items-center gap-0.5 print:hidden">
+        <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-[var(--steel-800)]" onClick={(event) => onFocus(event.currentTarget)} aria-label={`Focus ${item.title}`} title={`Focus ${item.title}`}><Maximize2 size={16} aria-hidden="true" /></button>
+        <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-[var(--steel-800)]" onClick={() => onDisplayAction({ type: 'set-collapsed', collapsed: !item.collapsed })} aria-expanded={!item.collapsed} aria-label={`${item.collapsed ? 'Expand' : 'Collapse'} ${item.title}`} title={`${item.collapsed ? 'Expand' : 'Collapse'} ${item.title}`}>{item.collapsed ? <ChevronDown size={17} aria-hidden="true" /> : <ChevronUp size={17} aria-hidden="true" />}</button>
+      </div>
       {arranging && <div className="col-span-3 flex min-w-0 flex-wrap items-center justify-end gap-1 border-t border-[var(--steel-800)] pt-2 print:hidden">
         <div className="mr-auto flex min-w-0 flex-wrap items-center gap-1.5">
           {item.origin === 'auto-pin' && <span className="rounded-full bg-[var(--bronze-wash)] px-2 py-0.5 text-[10px] font-semibold text-[var(--bronze)]">AUTO-PINNED</span>}
-          {item.layout.stashed && <span className="text-xs text-[var(--text-3)]">Stashed</span>}
           {item.layout.excludedFromPrint && <span className="text-xs text-[var(--text-3)]">Not printed</span>}
         </div>
-        <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-[var(--steel-800)]" onClick={() => onUpdate((current) => ({ ...current, layout: { ...current.layout, stashed: !current.layout.stashed } }))} aria-label={`${item.layout.stashed ? 'Restore' : 'Stash'} ${item.title}`} title={`${item.layout.stashed ? 'Restore' : 'Stash'} ${item.title}`}>{item.layout.stashed ? <Eye size={17} aria-hidden="true" /> : <EyeOff size={17} aria-hidden="true" />}</button>
+        <label className="flex min-h-10 items-center gap-1.5 rounded-lg px-1.5 text-xs text-[var(--text-3)]">
+          <span>Size</span>
+          <select className="!min-h-9 !py-1 text-xs" value={item.layout.width} onChange={(event) => onDisplayAction({ type: 'set-width', width: event.target.value as DmScreenPanelWidth })} aria-label={`Size for ${item.title}`}>
+            {(['compact', 'standard', 'wide', 'full'] as const).map((width) => <option key={width} value={width}>{panelWidthLabel(width)}</option>)}
+          </select>
+        </label>
+        <button type="button" className="inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-lg px-2 text-xs hover:bg-[var(--steel-800)]" onClick={onStash} aria-label={`Stash ${item.title}`} title={`Stash ${item.title}`}><Archive size={16} aria-hidden="true" /><span className="hidden xl:inline">Stash</span></button>
         {item.origin !== 'auto-pin' && <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-[var(--steel-800)]" onClick={onDuplicate} aria-label={`Duplicate ${item.title}`} title={`Duplicate ${item.title}`}><Copy size={16} aria-hidden="true" /></button>}
         {item.origin !== 'auto-pin' && <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--accent-danger)] hover:bg-[var(--steel-800)]" onClick={onRemove} aria-label={`Remove ${item.title}`} title={`Remove ${item.title}`}><Trash2 size={16} aria-hidden="true" /></button>}
       </div>}
     </header>
-    <div className={`${item.layout.stashed || item.collapsed ? 'hidden print:block' : ''} border-t border-[var(--steel-800)] p-3 print:p-0 print:pt-2`}>
+    {bodyVisible && <div className="dm-screen-panel-body border-t border-[var(--steel-800)] p-3 print:p-0 print:pt-2">
+      <ScreenItemBody
+        item={item}
+        arranging={arranging}
+        monster={monster}
+        spell={spell}
+        partySummary={partySummary}
+        partyLoading={partyLoading}
+        partyUnavailable={partyUnavailable}
+        onUpdate={onUpdate}
+        onDisplayAction={onDisplayAction}
+      />
+    </div>}
+  </article>;
+}
+
+function ScreenItemBody({ item, arranging, monster, spell, partySummary, partyLoading, partyUnavailable, onUpdate, onDisplayAction }: {
+  item: DmScreenItem;
+  arranging: boolean;
+  monster?: Monster;
+  spell?: Spell;
+  partySummary: ReturnType<typeof partyToDmScreenSummary> | null;
+  partyLoading: boolean;
+  partyUnavailable: boolean;
+  onUpdate: (update: (item: DmScreenItem) => DmScreenItem) => void;
+  onDisplayAction: (action: DmScreenPanelDisplayAction) => void;
+}) {
+  return <>
       {arranging && <label className="mb-3 flex items-center gap-2 text-xs text-[var(--text-3)] print:hidden">
         <input type="checkbox" checked={item.layout.excludedFromPrint} onChange={(event) => {
           const checked = event.target.checked;
-          onUpdate((current) => ({ ...current, layout: { ...current.layout, excludedFromPrint: checked } }));
+          onDisplayAction({ type: 'set-print-excluded', excludedFromPrint: checked });
         }} />
         Exclude this panel from print and Markdown
       </label>}
@@ -1161,8 +1487,7 @@ function ScreenItem({ item, arranging, monster, spell, partySummary, partyLoadin
       {item.kind === 'rules' && <RulesReference />}
       {item.kind === 'party' && <DmPartyPanel summary={partySummary} loading={partyLoading} unavailable={partyUnavailable} />}
       {(item.kind === 'initiative' || item.kind === 'battle') && <BattleOrganizer mode="initiative" />}
-    </div>
-  </article>;
+  </>;
 }
 
 function SpellReference({ spell }: { spell: Spell }) {

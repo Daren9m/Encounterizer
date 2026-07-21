@@ -1508,6 +1508,139 @@ select optgroup {
   z-index: 40;
 }
 
+.dm-screen-panel-grid {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.dm-screen-panel,
+.dm-screen-add-target,
+.dm-screen-grid-full {
+  grid-column: 1 / -1;
+}
+
+.dm-screen-panel-grid[data-density='compact'] {
+  gap: 0.5rem;
+}
+
+.dm-screen-panel-grid[data-density='compact'] .dm-screen-panel-header {
+  padding: 0.4rem 0.6rem;
+}
+
+.dm-screen-panel-grid[data-density='compact'] .dm-screen-panel-body {
+  padding: 0.6rem;
+}
+
+.dm-screen-add-target {
+  display: flex;
+  min-height: 5rem;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  border: 1px dashed var(--control-border);
+  border-radius: var(--radius-panel);
+  background: color-mix(in srgb, var(--surface-subtle) 74%, transparent);
+  color: var(--text-2);
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.dm-screen-add-target:hover {
+  border-color: var(--bronze);
+  background: var(--bronze-wash);
+  color: var(--text-1);
+}
+
+.dm-screen-add-target span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.dm-screen-add-target small {
+  overflow: hidden;
+  color: var(--text-3);
+  font-size: 0.68rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .dm-screen-panel-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dm-screen-panel[data-panel-width='compact'],
+  .dm-screen-add-target {
+    grid-column: span 1;
+  }
+
+  .dm-screen-panel[data-panel-width='standard'],
+  .dm-screen-panel[data-panel-width='wide'],
+  .dm-screen-panel[data-panel-width='full'] {
+    grid-column: span 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dm-screen-panel-grid[data-columns='2'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dm-screen-panel-grid[data-columns='auto'],
+  .dm-screen-panel-grid[data-columns='3'],
+  .dm-screen-panel-grid[data-columns='4'] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dm-screen-panel-grid[data-columns='2'] .dm-screen-panel[data-panel-width='compact'] {
+    grid-column: span 1;
+  }
+
+  .dm-screen-panel-grid[data-columns='2'] .dm-screen-panel:not([data-panel-width='compact']) {
+    grid-column: span 2;
+  }
+
+  .dm-screen-panel-grid:is([data-columns='auto'], [data-columns='3'], [data-columns='4']) .dm-screen-panel[data-panel-width='compact'] {
+    grid-column: span 1;
+  }
+
+  .dm-screen-panel-grid:is([data-columns='auto'], [data-columns='3'], [data-columns='4']) .dm-screen-panel[data-panel-width='standard'] {
+    grid-column: span 2;
+  }
+
+  .dm-screen-panel-grid:is([data-columns='auto'], [data-columns='3'], [data-columns='4']) .dm-screen-panel:is([data-panel-width='wide'], [data-panel-width='full']) {
+    grid-column: span 3;
+  }
+}
+
+@media (min-width: 1280px) {
+  .dm-screen-panel-grid[data-columns='auto'],
+  .dm-screen-panel-grid[data-columns='4'] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .dm-screen-panel-grid:is([data-columns='auto'], [data-columns='4']) .dm-screen-panel[data-panel-width='compact'] {
+    grid-column: span 1;
+  }
+
+  .dm-screen-panel-grid:is([data-columns='auto'], [data-columns='4']) .dm-screen-panel[data-panel-width='standard'] {
+    grid-column: span 2;
+  }
+
+  .dm-screen-panel-grid:is([data-columns='auto'], [data-columns='4']) .dm-screen-panel[data-panel-width='wide'] {
+    grid-column: span 3;
+  }
+
+  .dm-screen-panel-grid:is([data-columns='auto'], [data-columns='4']) .dm-screen-panel[data-panel-width='full'] {
+    grid-column: span 4;
+  }
+}
+
 @media screen {
   html[data-app-focus-shell='dm-screen'] [data-app-shell='navigation'],
   html[data-app-focus-shell='dm-screen'] [data-app-shell='footer'],
@@ -1635,6 +1768,21 @@ select optgroup {
     background: #ffffff !important;
     color: #1c1a16;
     overflow: visible !important;
+  }
+
+  .dm-screen-panel-grid {
+    display: block !important;
+  }
+
+  .dm-screen-panel {
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 0.18in;
+    break-inside: auto;
+  }
+
+  .dm-screen-panel[data-print-excluded='true'] {
+    display: none !important;
   }
 
   .card {
