@@ -262,6 +262,25 @@ default branch. One-time setup:
 4. Push to the default branch (or re-run the Deploy workflow). Verify the
    live site, deep-link refreshes, and the themed 404 page.
 
+## Releases
+
+Releases follow [Semantic Versioning](https://semver.org/) and are automated
+by `.github/workflows/release.yml`. Conventional commits on `main` are
+collected into a release pull request:
+
+- `fix:` produces a patch release.
+- `feat:` produces a minor release.
+- A breaking-change footer (`BREAKING CHANGE:`) or `!` after the commit type
+  produces a major release.
+
+Merging the release pull request updates `package.json`, `package-lock.json`,
+the changelog, and the release manifest, then creates the matching `vX.Y.Z`
+Git tag and GitHub Release. The deployed site reads its footer version directly
+from `package.json`, so the displayed version and release tag stay aligned.
+
+Repository administrators must allow GitHub Actions to create pull requests
+under **Settings → Actions → General → Workflow permissions**.
+
 ## Design Principles
 
 1. **No LLM dependency** — All generation is algorithmic. No API calls, no ongoing AI costs.

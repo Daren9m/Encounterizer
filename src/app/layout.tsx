@@ -6,6 +6,7 @@ import './globals.css';
 import NavBar from '@/components/NavBar';
 import RouteIcon from '@/components/RouteIcon';
 import { SITE_DESCRIPTION, SITE_URL, TOOL_SECTIONS } from '@/lib/site';
+import { APP_RELEASE_URL, APP_VERSION_TAG } from '@/lib/version';
 
 // Self-hosted at build time by next/font — zero runtime requests.
 const spectral = Spectral({
@@ -142,12 +143,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {/* Full SRD 5.2.1 / CC-BY-4.0 attribution lives on /credits; a
                   footer link satisfies the license (CC-BY-4.0 §3(a)(2)). */}
               <p className="max-w-4xl">Unofficial Fan Content</p>
-              <Link
-                href="/credits"
-                className="inline-flex min-h-11 shrink-0 items-center rounded-lg px-2 font-medium text-[var(--text-2)] underline decoration-[var(--steel-700)] underline-offset-4 transition-colors hover:text-[var(--bronze)]"
-              >
-                Credits and licensing
-              </Link>
+              <div className="flex flex-wrap items-center gap-x-3">
+                <a
+                  href={APP_RELEASE_URL}
+                  className="inline-flex min-h-11 items-center rounded-lg px-2 font-medium text-[var(--text-2)] underline decoration-[var(--steel-700)] underline-offset-4 transition-colors hover:text-[var(--bronze)]"
+                  aria-label={`Encounterizer release ${APP_VERSION_TAG}`}
+                >
+                  {APP_VERSION_TAG}
+                </a>
+                <Link
+                  href="/credits"
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-lg px-2 font-medium text-[var(--text-2)] underline decoration-[var(--steel-700)] underline-offset-4 transition-colors hover:text-[var(--bronze)]"
+                >
+                  Credits and licensing
+                </Link>
+              </div>
             </div>
           </div>
         </footer>
