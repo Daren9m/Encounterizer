@@ -1,4 +1,4 @@
-import { buildSimPlayer } from '@/data/class-templates';
+import { buildSimPlayer, getTemplateById } from '@/data/class-templates';
 import type { BattleCombatant } from './battle-organizer';
 import type { PartyConfig, PartyMemberConfig, SimPlayer } from './battle-sim-types';
 import {
@@ -25,6 +25,12 @@ function selectedMembers(
   return getSelectedPartyMembers(party, memberIds);
 }
 
+function displayClassLabel(member: PartyMemberProfile): string {
+  return member.classLabel?.trim()
+    || getTemplateById(member.templateId)?.name
+    || member.templateId;
+}
+
 /** Exact levels are retained for 2024 encounter-budget calculations. */
 export function partyToBudgetParty(
   party: PartyProfile,
@@ -36,7 +42,7 @@ export function partyToBudgetParty(
     members: selectedMembers(party, memberIds).map((member, index) => ({
       name: member.name || `Player ${index + 1}`,
       level: member.level,
-      className: member.classLabel || member.templateId,
+      className: displayClassLabel(member),
     })),
   };
 }
@@ -79,7 +85,7 @@ export function partyToBattleCombatants(
     const simulated = buildSimPlayer(config, index);
     const detail = [
       `Level ${member.level}`,
-      member.classLabel || member.templateId,
+      displayClassLabel(member),
       member.notes?.trim(),
     ].filter(Boolean).join(' · ');
     return {
@@ -155,7 +161,7 @@ export function partyToDmScreenSummary(
       id: source.id,
       name: simulated.name,
       ...(source.playerName !== undefined ? { playerName: source.playerName } : {}),
-      classLabel: source.classLabel || source.templateId,
+      classLabel: displayClassLabel(source),
       level: source.level,
       armorClass: simulated.ac,
       ...(source.initiativeBonus !== undefined

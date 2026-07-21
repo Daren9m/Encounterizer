@@ -4,7 +4,9 @@ import { DM_SCREEN_TOOL_ROUTES } from '@/lib/site';
 import {
   EMPTY_DM_SCREEN,
   dmScreenToMarkdown,
+  isDmScreenState,
   removeSectionTree,
+  syncDmPartySnapshot,
   syncPinnedItems,
   updateSectionTree,
   type DmScreenSection,
@@ -56,5 +58,53 @@ describe('DM screen', () => {
     expect(markdown).toContain('Saving Throws');
     expect(markdown).toContain('Death Saving Throws');
     expect(markdown).toContain('Unconscious');
+  });
+
+  it('retains one isolated party snapshot for party panels and Markdown export', () => {
+    const screen = {
+      ...EMPTY_DM_SCREEN,
+      sections: [{
+        id: 'party-section', title: 'Party', collapsed: false, children: [],
+        items: [{
+          id: 'party-overview', kind: 'party' as const, title: 'Party overview',
+          collapsed: false, hidden: false,
+        }],
+      }],
+    };
+    const summary = {
+      id: 'party-lanterns',
+      name: 'The Lanterns',
+      memberCount: 1,
+      levelRange: { min: 5, max: 5 },
+      members: [{
+        id: 'member-aria', name: 'Aria', playerName: 'Dana',
+        classLabel: 'Champion | Fighter', level: 5, armorClass: 19,
+        initiativeBonus: 7, passivePerception: 16,
+        notes: 'Carries the moon key.\nKeep private.',
+      }],
+    };
+
+    const snapshotted = syncDmPartySnapshot(screen, summary);
+    expect(isDmScreenState(snapshotted)).toBe(true);
+    expect(snapshotted.partySnapshot).toEqual(summary);
+    expect(snapshotted.partySnapshot).not.toBe(summary);
+    expect(snapshotted.partySnapshot?.members).not.toBe(summary.members);
+
+    summary.members[0].name = 'Changed later';
+    expect(snapshotted.partySnapshot?.members[0].name).toBe('Aria');
+
+    const markdown = dmScreenToMarkdown(snapshotted, new Map(), new Map(), EMPTY_BATTLE);
+    expect(markdown).toContain('### Party overview');
+    expect(markdown).toContain('**The Lanterns** — 1 hero');
+    expect(markdown).toContain('Champion \\| Fighter');
+    expect(markdown).toContain('Carries the moon key.<br>Keep private.');
+
+    expect(syncDmPartySnapshot(snapshotted, null).partySnapshot).toBeUndefined();
+
+    const removedPartyItem = {
+      ...snapshotted,
+      sections: [{ ...snapshotted.sections[0], items: [] }],
+    };
+    expect(syncDmPartySnapshot(removedPartyItem, null).partySnapshot).toBeUndefined();
   });
 });

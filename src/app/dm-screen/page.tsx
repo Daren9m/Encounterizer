@@ -17,21 +17,26 @@ import {
   Sparkles,
   Swords,
   Trash2,
+  Users,
 } from 'lucide-react';
 import { useMonsters } from '@/app/hooks/useMonsters';
 import { useSpells } from '@/app/hooks/useSpells';
+import { useBattleStore } from '@/app/hooks/useBattleStore';
+import { usePartyLibrary } from '@/app/hooks/usePartyLibrary';
 import BattleOrganizer from '@/components/BattleOrganizer';
+import DmPartyPanel from '@/components/DmPartyPanel';
 import MonsterStatBlock from '@/components/MonsterStatBlock';
 import RulesReference from '@/components/RulesReference';
 import ToolPageHeader from '@/components/ToolPageHeader';
 import { levelLabel, type Spell } from '@/data/spells';
 import { getMonsterPhysicalDescription } from '@/data/monster-description-index';
-import { EMPTY_BATTLE, isBattleState, type BattleState } from '@/lib/battle-organizer';
 import {
   EMPTY_DM_SCREEN,
   dmScreenToMarkdown,
+  hasDmPartyItem,
   isDmScreenState,
   removeSectionTree,
+  syncDmPartySnapshot,
   syncPinnedItems,
   updateSectionTree,
   type DmScreenItem,
@@ -39,6 +44,8 @@ import {
   type DmScreenSection,
   type DmScreenState,
 } from '@/lib/dm-screen';
+import { getActiveParty } from '@/lib/party';
+import { partyToDmScreenSummary } from '@/lib/party-adapters';
 import { DM_SCREEN_DEFAULT_TOOL_PATH, DM_SCREEN_TOOL_ROUTES } from '@/lib/site';
 import type { Monster } from '@/lib/types';
 import { usePersistentState } from '@/lib/use-persistent-state';
@@ -65,7 +72,24 @@ function flattenSections(sections: DmScreenSection[], depth = 0): { id: string; 
 
 export default function DmScreenPage() {
   const [screen, setScreen] = usePersistentState<DmScreenState>('dmScreen', EMPTY_DM_SCREEN, isDmScreenState);
-  const [battle] = usePersistentState<BattleState>('battleOrganizer', EMPTY_BATTLE, isBattleState);
+  const { battle } = useBattleStore();
+  const {
+    library: partyLibrary,
+    hydrated: partyLibraryHydrated,
+    status: partyLibraryStatus,
+  } = usePartyLibrary();
+  const activeParty = partyLibrary ? getActiveParty(partyLibrary) : null;
+  const currentPartySummary = useMemo(
+    () => activeParty ? partyToDmScreenSummary(activeParty) : null,
+    [activeParty],
+  );
+  const partyLibraryCanRefresh = partyLibraryHydrated && partyLibrary !== null;
+  const partySummary = currentPartySummary
+    ?? (!partyLibraryCanRefresh ? screen.partySnapshot ?? null : null);
+  const containsPartyItem = useMemo(
+    () => hasDmPartyItem(screen.sections),
+    [screen.sections],
+  );
   const [pinnedMonsterIds] = usePersistentState<string[]>('bestiaryPinnedMonsters', [], (value): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
   const [pinnedSpellIds] = usePersistentState<string[]>('pinnedSpells', [], (value): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
   const { all: monsters } = useMonsters();
@@ -95,6 +119,17 @@ export default function DmScreenPage() {
       return JSON.stringify(next) === JSON.stringify(current) ? current : next;
     });
   }, [monsterMap, pinnedMonsterIds, pinnedSpellIds, screen.autoAddPinnedMonsters, screen.autoAddPinnedSpells, setScreen, spellMap]);
+
+  useEffect(() => {
+    if (containsPartyItem && !partyLibraryCanRefresh) return;
+    setScreen((current) => syncDmPartySnapshot(current, currentPartySummary));
+  }, [containsPartyItem, currentPartySummary, partyLibraryCanRefresh, setScreen]);
+
+  function screenForExport(): DmScreenState {
+    return containsPartyItem && !partyLibraryCanRefresh
+      ? screen
+      : syncDmPartySnapshot(screen, currentPartySummary);
+  }
 
   const resourceResults = useMemo(() => {
     const query = resourceQuery.trim().toLowerCase();
@@ -146,6 +181,9 @@ export default function DmScreenPage() {
     if (addKind === 'rules') {
       addItem({ id: id('rules'), kind: 'rules', title: title.trim() || 'Table Rules Reference', collapsed: false, hidden: false, origin: 'manual' });
     }
+    if (addKind === 'party') {
+      addItem({ id: id('party'), kind: 'party', title: title.trim() || 'Active Party', collapsed: false, hidden: false, origin: 'manual' });
+    }
   }
 
   function addResource(resourceId: string, resourceTitle: string) {
@@ -153,6 +191,7 @@ export default function DmScreenPage() {
   }
 
   function exportJson() {
+    const exportScreen = screenForExport();
     const usedMonsterIds = new Set<string>();
     const usedSpellIds = new Set<string>();
     const walk = (sections: DmScreenSection[]) => sections.forEach((section) => {
@@ -162,10 +201,10 @@ export default function DmScreenPage() {
       });
       walk(section.children);
     });
-    walk(screen.sections);
+    walk(exportScreen.sections);
     const exported = {
       exportedAt: new Date().toISOString(),
-      dmScreen: screen,
+      dmScreen: exportScreen,
       battle,
       resources: {
         monsters: [...usedMonsterIds].map((resourceId) => monsterMap.get(resourceId)).filter(Boolean),
@@ -180,7 +219,10 @@ export default function DmScreenPage() {
       path="/dm-screen"
       description="Assemble a private command surface for the session. Add references, notes, app tools, and the live battle organizer; collapse or hide anything until you need it."
       actions={<div className="flex flex-wrap gap-2">
-        <button type="button" className="btn-secondary text-sm" onClick={() => download('dm-screen.md', dmScreenToMarkdown(screen, monsterMap, spellMap, battle), 'text/markdown')}><FileText size={16} aria-hidden="true" /> MD</button>
+        <button type="button" className="btn-secondary text-sm" onClick={() => {
+          const exportScreen = screenForExport();
+          download('dm-screen.md', dmScreenToMarkdown(exportScreen, monsterMap, spellMap, battle), 'text/markdown');
+        }}><FileText size={16} aria-hidden="true" /> MD</button>
         <button type="button" className="btn-secondary text-sm" onClick={exportJson}><Download size={16} aria-hidden="true" /> JSON</button>
         <button type="button" className="btn-secondary text-sm" onClick={() => window.print()}><Printer size={16} aria-hidden="true" /> Print</button>
       </div>}
@@ -204,29 +246,32 @@ export default function DmScreenPage() {
       {sectionOptions.length > 0 ? <>
         <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-[1fr_0.8fr_1.2fr]">
           <label className="text-xs font-semibold">Destination<select className="mt-1 w-full" value={selectedTargetSectionId} onChange={(event) => setTargetSectionId(event.target.value)}>{sectionOptions.map((section) => <option key={section.id} value={section.id}>{section.label}</option>)}</select></label>
-          <label className="text-xs font-semibold">Content type<select className="mt-1 w-full" value={addKind} onChange={(event) => setAddKind(event.target.value as DmScreenItemKind)}><option value="note">Note</option><option value="rules">Rules reference</option><option value="monster">Monster</option><option value="spell">Spell</option><option value="tool">App tool</option><option value="initiative">Initiative tracker</option></select></label>
+          <label className="text-xs font-semibold">Content type<select className="mt-1 w-full" value={addKind} onChange={(event) => setAddKind(event.target.value as DmScreenItemKind)}><option value="note">Note</option><option value="party">Active party</option><option value="rules">Rules reference</option><option value="monster">Monster</option><option value="spell">Spell</option><option value="tool">App tool</option><option value="initiative">Initiative tracker</option></select></label>
           {(addKind === 'monster' || addKind === 'spell') ? <label className="text-xs font-semibold">Find {addKind}<input className="mt-1 w-full" value={resourceQuery} onChange={(event) => setResourceQuery(event.target.value)} placeholder={`Search ${addKind}s…`} /></label> : <label className="text-xs font-semibold">Title (optional)<input className="mt-1 w-full" value={title} onChange={(event) => setTitle(event.target.value)} /></label>}
         </div>
         {(addKind === 'monster' || addKind === 'spell') && resourceResults.length > 0 && <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{resourceResults.map((result) => <button key={result.id} type="button" className="rounded-lg border border-[var(--steel-800)] p-3 text-left hover:border-[var(--bronze)]" onClick={() => addResource(result.id, result.name)}><span className="block font-semibold">{result.name}</span><span className="text-xs text-[var(--text-3)]">{result.detail}</span></button>)}</div>}
         {addKind === 'note' && <textarea className="mt-3 w-full" rows={3} value={body} onChange={(event) => setBody(event.target.value)} placeholder="Rules reminder, boxed text, NPC notes, session beats…" />}
         {addKind === 'tool' && <div className="mt-3 grid gap-2 md:grid-cols-[1fr_2fr]"><select value={toolPath} onChange={(event) => setToolPath(event.target.value)}>{DM_SCREEN_TOOL_ROUTES.map((route) => <option key={route.path} value={route.path}>{route.title}</option>)}</select><input value={body} onChange={(event) => setBody(event.target.value)} placeholder="Optional reminder about how you’ll use this tool" /></div>}
-        {(addKind === 'note' || addKind === 'tool' || addKind === 'rules' || addKind === 'initiative') && <button type="button" className="btn-primary mt-3" onClick={addConfiguredItem}><Plus size={17} aria-hidden="true" /> Add {addKind === 'initiative' ? 'tracker' : addKind === 'rules' ? 'reference' : addKind}</button>}
+        {(addKind === 'note' || addKind === 'tool' || addKind === 'rules' || addKind === 'party' || addKind === 'initiative') && <button type="button" className="btn-primary mt-3" onClick={addConfiguredItem}><Plus size={17} aria-hidden="true" /> Add {addKind === 'initiative' ? 'tracker' : addKind === 'rules' ? 'reference' : addKind}</button>}
       </> : <div className="rounded-lg border border-dashed border-[var(--steel-700)] p-5 text-center text-sm text-[var(--text-2)]">Create a section first, then fill it with anything you need at the table.</div>}
     </section>
 
     <div className="mb-5 hidden print:block"><h1 className="text-3xl">{screen.title}</h1><p className="text-sm text-[var(--text-3)]">Encounterizer DM Screen</p></div>
 
     {screen.sections.length > 0 ? <div className="space-y-4">
-      {screen.sections.map((section) => <ScreenSection key={section.id} section={section} depth={0} monsters={monsterMap} spells={spellMap} onAddChild={addSection} onUpdate={(sectionId, update) => setScreen((current) => ({ ...current, sections: updateSectionTree(current.sections, sectionId, update) }))} onRemove={(sectionId) => { if (window.confirm('Remove this section, its subsections, and all of its items?')) setScreen((current) => ({ ...current, sections: removeSectionTree(current.sections, sectionId) })); }} />)}
+      {screen.sections.map((section) => <ScreenSection key={section.id} section={section} depth={0} monsters={monsterMap} spells={spellMap} partySummary={partySummary} partyLoading={!partyLibraryHydrated && !partySummary} partyUnavailable={partyLibraryStatus === 'unavailable' || partyLibraryStatus === 'error'} onAddChild={addSection} onUpdate={(sectionId, update) => setScreen((current) => ({ ...current, sections: updateSectionTree(current.sections, sectionId, update) }))} onRemove={(sectionId) => { if (window.confirm('Remove this section, its subsections, and all of its items?')) setScreen((current) => ({ ...current, sections: removeSectionTree(current.sections, sectionId) })); }} />)}
     </div> : <div className="empty-state"><BookOpen className="mx-auto mb-3 text-[var(--bronze)]" size={38} aria-hidden="true" /><p className="font-semibold">Your screen is ready to be arranged</p><p className="mt-1 text-sm">Create sections for the scene, rules, NPCs, spells, or anything else you want close at hand.</p><button type="button" className="btn-primary mt-4 print:hidden" onClick={() => addSection()}><FolderPlus size={17} aria-hidden="true" /> Create first section</button></div>}
   </div>;
 }
 
-function ScreenSection({ section, depth, monsters, spells, onAddChild, onUpdate, onRemove }: {
+function ScreenSection({ section, depth, monsters, spells, partySummary, partyLoading, partyUnavailable, onAddChild, onUpdate, onRemove }: {
   section: DmScreenSection;
   depth: number;
   monsters: ReadonlyMap<string, Monster>;
   spells: ReadonlyMap<string, Spell>;
+  partySummary: ReturnType<typeof partyToDmScreenSummary> | null;
+  partyLoading: boolean;
+  partyUnavailable: boolean;
   onAddChild: (parentId: string) => void;
   onUpdate: (sectionId: string, update: (section: DmScreenSection) => DmScreenSection) => void;
   onRemove: (sectionId: string) => void;
@@ -243,21 +288,24 @@ function ScreenSection({ section, depth, monsters, spells, onAddChild, onUpdate,
       <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--accent-danger)] hover:bg-[var(--steel-800)] print:hidden" onClick={() => onRemove(section.id)} aria-label={`Remove ${section.title}`}><Trash2 size={17} /></button>
     </header>
     <div className={`${section.collapsed ? 'hidden print:block' : ''} space-y-3 p-4 print:p-0 print:pt-3`}>
-      {section.items.map((item) => <ScreenItem key={item.id} item={item} monster={item.resourceId ? monsters.get(item.resourceId) : undefined} spell={item.resourceId ? spells.get(item.resourceId) : undefined} onUpdate={(update) => updateItem(item.id, update)} onRemove={() => onUpdate(section.id, (current) => ({ ...current, items: current.items.filter((candidate) => candidate.id !== item.id) }))} />)}
-      {section.children.map((child) => <ScreenSection key={child.id} section={child} depth={depth + 1} monsters={monsters} spells={spells} onAddChild={onAddChild} onUpdate={onUpdate} onRemove={onRemove} />)}
+      {section.items.map((item) => <ScreenItem key={item.id} item={item} monster={item.resourceId ? monsters.get(item.resourceId) : undefined} spell={item.resourceId ? spells.get(item.resourceId) : undefined} partySummary={partySummary} partyLoading={partyLoading} partyUnavailable={partyUnavailable} onUpdate={(update) => updateItem(item.id, update)} onRemove={() => onUpdate(section.id, (current) => ({ ...current, items: current.items.filter((candidate) => candidate.id !== item.id) }))} />)}
+      {section.children.map((child) => <ScreenSection key={child.id} section={child} depth={depth + 1} monsters={monsters} spells={spells} partySummary={partySummary} partyLoading={partyLoading} partyUnavailable={partyUnavailable} onAddChild={onAddChild} onUpdate={onUpdate} onRemove={onRemove} />)}
       {section.items.length === 0 && section.children.length === 0 && <p className="rounded-lg border border-dashed border-[var(--steel-800)] p-4 text-center text-sm text-[var(--text-3)] print:hidden">Choose this section in the builder above to add content.</p>}
     </div>
   </section>;
 }
 
-function ScreenItem({ item, monster, spell, onUpdate, onRemove }: {
+function ScreenItem({ item, monster, spell, partySummary, partyLoading, partyUnavailable, onUpdate, onRemove }: {
   item: DmScreenItem;
   monster?: Monster;
   spell?: Spell;
+  partySummary: ReturnType<typeof partyToDmScreenSummary> | null;
+  partyLoading: boolean;
+  partyUnavailable: boolean;
   onUpdate: (update: (item: DmScreenItem) => DmScreenItem) => void;
   onRemove: () => void;
 }) {
-  const Icon = item.kind === 'monster' ? Swords : item.kind === 'spell' ? Sparkles : item.kind === 'tool' ? LinkIcon : item.kind === 'rules' ? BookOpen : item.kind === 'initiative' || item.kind === 'battle' ? Swords : FileText;
+  const Icon = item.kind === 'party' ? Users : item.kind === 'monster' ? Swords : item.kind === 'spell' ? Sparkles : item.kind === 'tool' ? LinkIcon : item.kind === 'rules' ? BookOpen : item.kind === 'initiative' || item.kind === 'battle' ? Swords : FileText;
   return <article className={`rounded-xl border ${item.hidden ? 'border-dashed border-[var(--steel-700)] opacity-70 print:opacity-100' : 'border-[var(--steel-800)]'} bg-[var(--steel-900)]`}>
     <header className="flex items-center gap-2 px-3 py-2">
       <Icon size={17} className="shrink-0 text-[var(--bronze)]" aria-hidden="true" />
@@ -274,6 +322,7 @@ function ScreenItem({ item, monster, spell, onUpdate, onRemove }: {
       {item.kind === 'spell' && (spell ? <SpellReference spell={spell} /> : <p className="text-sm text-[var(--accent-danger)]">This spell is no longer available.</p>)}
       {item.kind === 'tool' && <div><p className="text-sm text-[var(--text-2)]">{item.body}</p>{item.href && <Link className="btn-secondary mt-3 text-sm print:hidden" href={item.href}>Open tool <span aria-hidden="true">→</span></Link>}</div>}
       {item.kind === 'rules' && <RulesReference />}
+      {item.kind === 'party' && <DmPartyPanel summary={partySummary} loading={partyLoading} unavailable={partyUnavailable} />}
       {(item.kind === 'initiative' || item.kind === 'battle') && <BattleOrganizer mode="initiative" />}
     </div>
   </article>;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import {
   BookOpen,
   Check,
@@ -23,7 +24,18 @@ import { toPlayerView, playerViewToMarkdown, playerViewToJson } from '@/lib/nonc
 import { randomSeed } from '@/lib/random';
 import { validateBoundedIntegerInput } from '@/lib/number-input';
 import { usePersistentState } from '@/lib/use-persistent-state';
+import { usePartyLibrary } from '@/app/hooks/usePartyLibrary';
+import { useToolPartySetup } from '@/app/hooks/useToolPartySetup';
+import { getActiveParty } from '@/lib/party';
+import {
+  MAX_CUSTOM_PARTY_MEMBERS,
+  MAX_SCENE_PARTY_MEMBERS,
+  createActiveToolPartySetup,
+  createCustomToolPartySetup,
+  resolveToolPartySetup,
+} from '@/lib/tool-party';
 import PuzzleHandout from '@/components/PuzzleHandout';
+import PartyAttendanceList from '@/components/PartyAttendanceList';
 import PrintButton from '@/components/PrintButton';
 import ResetGeneratorButton from '@/components/ResetGeneratorButton';
 import ToolPageHeader from '@/components/ToolPageHeader';
@@ -71,10 +83,33 @@ export default function NoncombatPage() {
 }
 
 function NoncombatBuilder() {
+  const {
+    library: partyLibrary,
+    hydrated: partyLibraryHydrated,
+    status: partyLibraryStatus,
+  } = usePartyLibrary();
+  const durableParty = partyLibrary ? getActiveParty(partyLibrary) : null;
+  const partyLibraryUnavailable = partyLibraryStatus === 'unavailable'
+    || partyLibraryStatus === 'error';
+  const {
+    setup: partySetup,
+    setSetup: setPartySetup,
+    hydrated: partySetupHydrated,
+  } = useToolPartySetup({
+    key: 'noncombatPartySetup1',
+    activeParty: durableParty,
+    partyHydrated: partyLibraryHydrated,
+    defaultCustomSize: 4,
+    defaultCustomLevel: 5,
+    minCustomSize: 1,
+    legacySizeKey: 'noncombatPartySize',
+    legacyLevelKey: 'noncombatPartyLevel',
+  });
+  const resolvedParty = resolveToolPartySetup(partySetup, durableParty);
+  const partySize = resolvedParty.partySize;
+  const partyLevel = resolvedParty.partyLevel ?? 1;
   const [kind, setKind] = usePersistentState<NoncombatKind | ''>('noncombatKind', '');
   const [difficulty, setDifficulty] = usePersistentState<Difficulty | ''>('noncombatDifficulty', '');
-  const [partyLevel, setPartyLevel, partyLevelHydrated] = usePersistentState<number>('noncombatPartyLevel', 5);
-  const [partySize, setPartySize, partySizeHydrated] = usePersistentState<number>('noncombatPartySize', 4);
   const [partyLevelInput, setPartyLevelInput] = useState('5');
   const [partySizeInput, setPartySizeInput] = useState('4');
   const [theme, setTheme] = usePersistentState<ThemeChoice>('noncombatTheme', 'any');
@@ -94,21 +129,24 @@ function NoncombatBuilder() {
     partyLevelInput, 'Party level', 1, 20,
   );
   const partySizeValidation = validateBoundedIntegerInput(
-    partySizeInput, 'Party size', 1, 8,
+    partySizeInput, 'Party size', 1, MAX_CUSTOM_PARTY_MEMBERS,
   );
-  const partyInputsValid = partyLevelValidation.error === null
-    && partySizeValidation.error === null;
+  const partyInputsValid = partySetupHydrated && (partySetup.mode === 'active'
+    ? durableParty !== null && partySize > 0
+    : partyLevelValidation.error === null && partySizeValidation.error === null);
   const partyInputsHydratedRef = useRef(false);
 
   useEffect(() => {
-    if (!partyLevelHydrated || !partySizeHydrated || partyInputsHydratedRef.current) return;
+    if (!partySetupHydrated || partyInputsHydratedRef.current) return;
     partyInputsHydratedRef.current = true;
     const frame = window.requestAnimationFrame(() => {
-      setPartyLevelInput(String(partyLevel));
-      setPartySizeInput(String(partySize));
+      if (partySetup.mode === 'custom') {
+        setPartyLevelInput(String(partySetup.level));
+        setPartySizeInput(String(partySetup.size));
+      }
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [partyLevel, partyLevelHydrated, partySize, partySizeHydrated]);
+  }, [partySetup, partySetupHydrated]);
 
   function pushHistory(r: NoncombatResult) {
     setHistory(prev => [r, ...prev.filter(h => h.id !== r.id).slice(0, 9)]);
@@ -149,18 +187,17 @@ function NoncombatBuilder() {
     const diffP = searchParams.get('diff');
     const diffV = DIFFICULTIES.includes(diffP as Difficulty) ? (diffP as Difficulty) : undefined;
     const lvl = clampInt(searchParams.get('lvl'), 1, 20) ?? 5;
-    const size = clampInt(searchParams.get('size'), 1, 8) ?? 4;
+    const size = clampInt(searchParams.get('size'), 1, MAX_SCENE_PARTY_MEMBERS) ?? 4;
     const themeP = searchParams.get('theme');
     const themeV = THEME_OPTIONS.some(o => o.value === themeP) ? (themeP as ThemeChoice) : 'any';
     const toneP = searchParams.get('tone');
     const toneV = TONE_OPTIONS.some(o => o.value === toneP) ? (toneP as Tone) : 'standard';
     const timeP = searchParams.get('time');
     const timeV = TIME_OPTIONS.some(o => o.value === timeP) ? (timeP as TimeBudget) : 'standard';
-    setKind(kindV ?? ''); setDifficulty(diffV ?? ''); setPartyLevel(lvl); setPartySize(size);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot share-link hydration preserves deterministic draw order.
-    setPartyLevelInput(String(lvl)); setPartySizeInput(String(size));
+    setKind(kindV ?? ''); setDifficulty(diffV ?? '');
     setTheme(themeV); setTone(toneV); setTimeBudget(timeV);
     const r = generateNoncombat({ kind: kindV, difficulty: diffV, partyLevel: lvl, partySize: size, theme: themeV, tone: toneV, timeBudget: timeV, seed: seedParam });
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot share-link hydration must render the exact seeded scene.
     setResult(r);
     setStatusMessage(`${r.name} loaded from the shared link.`);
     pushHistory(r);
@@ -169,10 +206,14 @@ function NoncombatBuilder() {
 
   function handleGenerate(seedOverride?: number, kindOverride?: NoncombatKind) {
     if (!partyInputsValid) {
-      const invalidId = partyLevelValidation.error
-        ? 'noncombat-party-level'
-        : 'noncombat-party-size';
-      setStatusMessage('Fix the party level and size before generating a scene.');
+      const invalidId = partySetup.mode === 'active'
+        ? 'noncombat-party-attendance'
+        : partyLevelValidation.error
+          ? 'noncombat-party-level'
+          : 'noncombat-party-size';
+      setStatusMessage(partySetup.mode === 'active'
+        ? 'Select at least one attending character before generating a scene.'
+        : 'Fix the temporary party level and size before generating a scene.');
       document.getElementById(invalidId)?.focus();
       return;
     }
@@ -223,10 +264,13 @@ function NoncombatBuilder() {
   function handleReset() {
     setKind('');
     setDifficulty('');
-    setPartyLevel(5);
-    setPartySize(4);
-    setPartyLevelInput('5');
-    setPartySizeInput('4');
+    if (durableParty) {
+      setPartySetup(createActiveToolPartySetup(durableParty));
+    } else {
+      setPartySetup(createCustomToolPartySetup(4, 5));
+      setPartyLevelInput('5');
+      setPartySizeInput('4');
+    }
     setTheme('any');
     setTone('standard');
     setTimeBudget('standard');
@@ -239,13 +283,41 @@ function NoncombatBuilder() {
   function handlePartyLevelInputChange(raw: string) {
     setPartyLevelInput(raw);
     const validation = validateBoundedIntegerInput(raw, 'Party level', 1, 20);
-    if (validation.value !== null) setPartyLevel(validation.value);
+    if (validation.value !== null && partySetup.mode === 'custom') {
+      setPartySetup({ ...partySetup, level: validation.value });
+    }
   }
 
   function handlePartySizeInputChange(raw: string) {
     setPartySizeInput(raw);
-    const validation = validateBoundedIntegerInput(raw, 'Party size', 1, 8);
-    if (validation.value !== null) setPartySize(validation.value);
+    const validation = validateBoundedIntegerInput(
+      raw,
+      'Party size',
+      1,
+      MAX_CUSTOM_PARTY_MEMBERS,
+    );
+    if (validation.value !== null && partySetup.mode === 'custom') {
+      setPartySetup({ ...partySetup, size: validation.value });
+    }
+  }
+
+  function chooseActiveParty() {
+    if (!durableParty) return;
+    setPartySetup(createActiveToolPartySetup(durableParty));
+    setStatusMessage(`${durableParty.name} will be used for the next scene.`);
+  }
+
+  function chooseCustomParty() {
+    const next = createCustomToolPartySetup(
+      durableParty
+        ? Math.max(1, Math.min(MAX_CUSTOM_PARTY_MEMBERS, partySize || 4))
+        : partySizeValidation.value ?? 4,
+      durableParty ? partyLevel : partyLevelValidation.value ?? 5,
+    );
+    setPartySetup(next);
+    setPartySizeInput(String(next.size));
+    setPartyLevelInput(String(next.level));
+    setStatusMessage('Temporary scene values selected. The saved party will not change.');
   }
 
   function handleCopyLink() {
@@ -416,6 +488,11 @@ function NoncombatBuilder() {
   }
 
   const selectedKindLabel = kinds.find(option => option.value === kind)?.label ?? 'Any puzzle or challenge';
+  const activeLevelSummary = resolvedParty.exactLevels.length === 0
+    ? 'No attending heroes'
+    : Math.min(...resolvedParty.exactLevels) === Math.max(...resolvedParty.exactLevels)
+      ? `Level ${partyLevel}`
+      : `Levels ${Math.min(...resolvedParty.exactLevels)}–${Math.max(...resolvedParty.exactLevels)} · rounded average ${partyLevel}`;
 
   return (
     <div className="animate-fade-in">
@@ -451,7 +528,7 @@ function NoncombatBuilder() {
             <span className="micro-label">Current brief</span>
             <strong>
               {partyInputsValid
-                ? `${selectedKindLabel} · ${difficulty || 'Any difficulty'} · ${partySize} level-${partyLevel} heroes`
+                ? `${selectedKindLabel} · ${difficulty || 'Any difficulty'} · ${partySize} ${partySize === 1 ? 'hero' : 'heroes'} · ${partySetup.mode === 'active' ? activeLevelSummary : `level ${partyLevel}`}`
                 : 'Party details need attention'}
             </strong>
           </div>
@@ -466,52 +543,135 @@ function NoncombatBuilder() {
                 <p>Who will face this scene?</p>
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <label htmlFor="noncombat-party-size" className="field-label">Heroes</label>
-                <input
-                  id="noncombat-party-size"
-                  type="number"
-                  min={1}
-                  max={8}
-                  step={1}
-                  inputMode="numeric"
-                  value={partySizeInput}
-                  onChange={e => handlePartySizeInputChange(e.target.value)}
-                  aria-invalid={partySizeValidation.error ? true : undefined}
-                  aria-describedby={partySizeValidation.error ? 'noncombat-party-size-error' : 'noncombat-party-size-hint'}
-                  className="w-full"
+            <fieldset>
+              <legend className="sr-only">Party source</legend>
+              <div className="option-card-grid mb-3">
+                <label className={`option-card option-card-toggle ${partySetup.mode === 'active' ? 'is-active' : ''}`}>
+                  <Users size={18} aria-hidden="true" />
+                  <span className="option-card-copy">
+                    <strong>Use active party</strong>
+                    <small>{durableParty?.name ?? 'No saved party yet'}</small>
+                  </span>
+                  <input
+                    type="radio"
+                    name="noncombat-party-source"
+                    checked={partySetup.mode === 'active'}
+                    disabled={!durableParty || !partySetupHydrated}
+                    onChange={chooseActiveParty}
+                  />
+                </label>
+                <label className={`option-card option-card-toggle ${partySetup.mode === 'custom' ? 'is-active' : ''}`}>
+                  <SlidersHorizontal size={18} aria-hidden="true" />
+                  <span className="option-card-copy">
+                    <strong>Temporary values</strong>
+                    <small>Only for this scene</small>
+                  </span>
+                  <input
+                    type="radio"
+                    name="noncombat-party-source"
+                    checked={partySetup.mode === 'custom'}
+                    disabled={!partySetupHydrated}
+                    onChange={chooseCustomParty}
+                  />
+                </label>
+              </div>
+            </fieldset>
+
+            {!partySetupHydrated ? (
+              <div className="surface-inset p-4 text-sm text-[var(--text-2)]" role="status">
+                Loading party setup…
+              </div>
+            ) : partySetup.mode === 'active' && durableParty ? (
+              <div className="surface-inset space-y-3 p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="font-semibold text-[var(--text-1)]">{durableParty.name}</p>
+                    <p className="mt-0.5 text-xs text-[var(--text-3)]">
+                      {partySize} of {durableParty.members.length} attending · {activeLevelSummary}
+                    </p>
+                  </div>
+                  <Link href="/party/" className="btn-ghost text-xs">Manage parties</Link>
+                </div>
+                <PartyAttendanceList
+                  id="noncombat-party-attendance"
+                  party={durableParty}
+                  selectedMemberIds={resolvedParty.selectedMemberIds}
+                  onChange={(selectedMemberIds) => {
+                    if (partySetup.mode !== 'active') return;
+                    setPartySetup({ ...partySetup, selectedMemberIds });
+                  }}
+                  legend="Attendance"
+                  error={partySize === 0 ? 'Select at least one attending character.' : null}
                 />
-                <p id="noncombat-party-size-hint" className="field-hint">1–8 characters</p>
-                {partySizeValidation.error && (
-                  <p id="noncombat-party-size-error" className="field-error" role="alert">
-                    {partySizeValidation.error}
-                  </p>
+                <p className="text-xs leading-relaxed text-[var(--text-3)]">
+                  Mixed levels use a rounded average because puzzle and challenge engines take one scene level.
+                </p>
+              </div>
+            ) : partySetup.mode === 'active' ? (
+              <div className="surface-inset p-4 text-sm text-[var(--text-2)]">
+                <p className="font-semibold text-[var(--text-1)]">
+                  {partyLibraryUnavailable ? 'Party Library unavailable' : 'No active party'}
+                </p>
+                <p className="mt-1 text-xs text-[var(--text-3)]">
+                  Create or activate a saved party, or continue with temporary values.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link href="/party/" className="btn-secondary text-xs">Manage parties</Link>
+                  <button type="button" className="btn-ghost text-xs" onClick={chooseCustomParty}>Use temporary values</button>
+                </div>
+              </div>
+            ) : (
+              <div className="surface-inset p-3">
+                <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="font-semibold text-[var(--text-1)]">Temporary scene party</p>
+                    <p className="mt-0.5 text-xs text-[var(--text-3)]">Regeneration keeps these values; the Party Library never changes.</p>
+                  </div>
+                  {!durableParty && <Link href="/party/" className="btn-ghost text-xs">Create a saved party</Link>}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="noncombat-party-size" className="field-label">Heroes</label>
+                    <input
+                      id="noncombat-party-size"
+                      type="number"
+                      min={1}
+                      max={MAX_CUSTOM_PARTY_MEMBERS}
+                      step={1}
+                      inputMode="numeric"
+                      value={partySizeInput}
+                      onChange={e => handlePartySizeInputChange(e.target.value)}
+                      aria-invalid={partySizeValidation.error ? true : undefined}
+                      aria-describedby={partySizeValidation.error ? 'noncombat-party-size-error' : 'noncombat-party-size-hint'}
+                      className="w-full"
+                    />
+                    <p id="noncombat-party-size-hint" className="field-hint">1–{MAX_CUSTOM_PARTY_MEMBERS} characters</p>
+                    {partySizeValidation.error && <p id="noncombat-party-size-error" className="field-error" role="alert">{partySizeValidation.error}</p>}
+                  </div>
+                  <div>
+                    <label htmlFor="noncombat-party-level" className="field-label">Average level</label>
+                    <input
+                      id="noncombat-party-level"
+                      type="number"
+                      min={1}
+                      max={20}
+                      step={1}
+                      inputMode="numeric"
+                      value={partyLevelInput}
+                      onChange={e => handlePartyLevelInputChange(e.target.value)}
+                      aria-invalid={partyLevelValidation.error ? true : undefined}
+                      aria-describedby={partyLevelValidation.error ? 'noncombat-party-level-error' : 'noncombat-party-level-hint'}
+                      className="w-full"
+                    />
+                    <p id="noncombat-party-level-hint" className="field-hint">Level 1–20</p>
+                    {partyLevelValidation.error && <p id="noncombat-party-level-error" className="field-error" role="alert">{partyLevelValidation.error}</p>}
+                  </div>
+                </div>
+                {partyLibraryUnavailable && (
+                  <p className="mt-3 text-xs text-[var(--text-3)]">Saved parties are unavailable, but temporary scene values still work.</p>
                 )}
               </div>
-              <div>
-                <label htmlFor="noncombat-party-level" className="field-label">Average level</label>
-                <input
-                  id="noncombat-party-level"
-                  type="number"
-                  min={1}
-                  max={20}
-                  step={1}
-                  inputMode="numeric"
-                  value={partyLevelInput}
-                  onChange={e => handlePartyLevelInputChange(e.target.value)}
-                  aria-invalid={partyLevelValidation.error ? true : undefined}
-                  aria-describedby={partyLevelValidation.error ? 'noncombat-party-level-error' : 'noncombat-party-level-hint'}
-                  className="w-full"
-                />
-                <p id="noncombat-party-level-hint" className="field-hint">Level 1–20</p>
-                {partyLevelValidation.error && (
-                  <p id="noncombat-party-level-error" className="field-error" role="alert">
-                    {partyLevelValidation.error}
-                  </p>
-                )}
-              </div>
-            </div>
+            )}
           </section>
 
           <section className="setup-group" aria-labelledby="noncombat-brief-heading">

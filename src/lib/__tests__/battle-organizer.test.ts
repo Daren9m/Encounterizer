@@ -14,6 +14,8 @@ import {
   removeBattleCombatant,
   resolveRecipeBeat,
   resumeBattle,
+  seedBattleFromParty,
+  seededPartyMemberIds,
   setCurrentTurn,
   setRecipeOutcome,
   sortCombatants,
@@ -254,5 +256,89 @@ describe('battle organizer', () => {
     expect(battle.recipeProgress?.outcome).toBe('failure');
     expect(battleToMarkdown(battle)).toContain('## Recipe objective');
     expect(battleToMarkdown(battle)).toContain('[x] **Pressure rises:**');
+  });
+
+  it('seeds selected active-party members without duplicating or replacing manual rows', () => {
+    const party: PartyProfile = {
+      id: 'party-lanterns',
+      name: 'The Lanterns',
+      createdAt: 1,
+      updatedAt: 2,
+      members: [
+        {
+          id: 'member-aria', name: 'Aria', level: 5,
+          templateId: 'fighter-champion', notes: 'Carries the moon key.',
+          overrides: { ac: 19, maxHp: 51 },
+        },
+        {
+          id: 'member-borin', name: 'Borin', level: 7,
+          templateId: 'cleric-life', overrides: { ac: 18 },
+        },
+      ],
+    };
+    const manualPlayer = { ...combatant('guest', 12), kind: 'player' as const };
+    const enemy = combatant('ogre', 8);
+    const stalePartyRow = {
+      ...combatant('party-old', 0),
+      kind: 'player' as const,
+      sourcePartyMemberId: 'member-old',
+    };
+    const draft: BattleState = {
+      ...EMPTY_BATTLE,
+      combatants: [manualPlayer, enemy, stalePartyRow],
+    };
+
+    const seeded = seedBattleFromParty(draft, party, ['member-borin']);
+
+    expect(seeded.combatants.map((entry) => entry.id))
+      .toEqual(['party-member-borin', 'guest', 'ogre']);
+    expect(seeded.combatants[0]).toMatchObject({
+      sourcePartyMemberId: 'member-borin',
+      name: 'Borin',
+      kind: 'player',
+    });
+    expect(seeded.partyContext).toMatchObject({
+      source: 'library',
+      partyId: 'party-lanterns',
+      selectedMemberIds: ['member-borin'],
+    });
+    expect(seededPartyMemberIds(seeded, party)).toEqual(['member-borin']);
+
+    const reseeded = seedBattleFromParty(seeded, party, ['member-aria']);
+    expect(reseeded.combatants.map((entry) => entry.id))
+      .toEqual(['party-member-aria', 'guest', 'ogre']);
+    expect(new Set(reseeded.combatants.map((entry) => entry.id)).size)
+      .toBe(reseeded.combatants.length);
+
+    const removedFromDraft = removeBattleCombatant(reseeded, 'party-member-aria');
+    expect(seededPartyMemberIds(removedFromDraft, party)).toEqual([]);
+    expect(removedFromDraft.partyContext).toMatchObject({
+      selectedMemberIds: [],
+      snapshot: { members: [] },
+    });
+
+    party.members[0].name = 'Changed later';
+    party.members[0].notes = 'Changed later too.';
+    party.members[0].overrides!.maxHp = 999;
+    expect(reseeded.combatants[0]).toMatchObject({
+      name: 'Aria',
+      maxHp: 51,
+    });
+    expect(reseeded.combatants[0].notes).toContain('Carries the moon key.');
+  });
+
+  it('never reseeds a battle after combat has started or with zero attendance', () => {
+    const party: PartyProfile = {
+      id: 'party-one', name: 'One', createdAt: 1, updatedAt: 1,
+      members: [{
+        id: 'member-one', name: 'One', level: 1, templateId: 'fighter-champion',
+      }],
+    };
+    const draft = { ...EMPTY_BATTLE, combatants: [combatant('enemy', 10)] };
+    expect(seedBattleFromParty(draft, party, [])).toBe(draft);
+
+    const active = startBattle(draft);
+    expect(seedBattleFromParty(active, party)).toBe(active);
+    expect(seededPartyMemberIds(active, party)).toBeUndefined();
   });
 });

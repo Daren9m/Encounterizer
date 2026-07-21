@@ -176,7 +176,7 @@ describe('Party Library adapters', () => {
     expect(summary.members[1]).toMatchObject({
       id: 'member-blank',
       name: 'Player 2',
-      classLabel: 'wizard-evoker',
+      classLabel: 'Wizard (Evoker)',
     });
     expect(summary.members[1]).not.toHaveProperty('initiativeBonus');
     expect(summary.members[2]).not.toHaveProperty('initiativeBonus');

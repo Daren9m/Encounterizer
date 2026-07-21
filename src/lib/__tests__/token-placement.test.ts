@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { generateMap } from '@/lib/map-generator';
-import { placeTokens, TOKEN_BLOCKING } from '@/lib/token-placement';
+import {
+  anonymizePartyTokens,
+  labelPartyTokens,
+  placeTokens,
+  preparePartyTokensForExport,
+  TOKEN_BLOCKING,
+} from '@/lib/token-placement';
 import { makeMonster } from './test-helpers';
 import type { EncounterMap, EncounterMonster, MapToken } from '@/lib/types';
 
@@ -49,6 +55,65 @@ describe('placeTokens', () => {
     for (let i = 0; i < 3; i++) expect(ids).toContain(`wolf#${i}`);
     for (let i = 0; i < 2; i++) expect(ids).toContain(`archer#${i}`);
     expect(ids).toContain('ogre#0');
+  });
+
+  it('adds local party labels while anonymous copies remove every durable identity field', () => {
+    const generic = placeTokens(DUNGEON, [], 2, 42).tokens;
+    const local = labelPartyTokens(generic, [
+      { id: 'member-aria', name: 'Aria Brightwood', label: 'AB' },
+      { id: 'member-borin', name: 'Borin', label: 'BO' },
+    ]);
+
+    expect(local.map((token) => ({ id: token.id, name: token.name, label: token.label })))
+      .toEqual([
+        { id: 'party-member-aria', name: 'Aria Brightwood', label: 'AB' },
+        { id: 'party-member-borin', name: 'Borin', label: 'BO' },
+      ]);
+    const anonymous = anonymizePartyTokens(local);
+    expect(anonymous.map((token) => ({ id: token.id, name: token.name, label: token.label })))
+      .toEqual([
+        { id: 'party-0', name: 'Party Member 1', label: '1' },
+        { id: 'party-1', name: 'Party Member 2', label: '2' },
+      ]);
+    expect(JSON.stringify(anonymous)).not.toContain('Aria');
+    expect(JSON.stringify(anonymous)).not.toContain('Borin');
+    expect(JSON.stringify(anonymous)).not.toContain('member-aria');
+    expect(anonymous.map((token) => [token.x, token.y]))
+      .toEqual(local.map((token) => [token.x, token.y]));
+  });
+
+  it('keeps anonymous party labels within two characters through the scene cap', () => {
+    const generic = placeTokens(
+      generateMap({ environment: 'Grassland', seed: 9, width: 60, height: 45 }),
+      [],
+      50,
+      9,
+    ).tokens;
+    const anonymous = anonymizePartyTokens(generic);
+    expect(anonymous.filter((token) => token.kind === 'party')).toHaveLength(50);
+    expect(anonymous.every((token) => token.label.length <= 2)).toBe(true);
+  });
+
+  it('keeps export IDs positional and only includes names after explicit opt-in', () => {
+    const generic = placeTokens(DUNGEON, [], 2, 42).tokens;
+    const local = labelPartyTokens(generic, [
+      { id: 'member-aria', name: 'Aria Brightwood', label: 'AB' },
+      { id: 'member-borin', name: 'Borin', label: 'BO' },
+    ]);
+
+    const privateExport = preparePartyTokensForExport(local);
+    expect(privateExport.map(({ id, name, label }) => ({ id, name, label }))).toEqual([
+      { id: 'party-0', name: 'Party Member 1', label: '1' },
+      { id: 'party-1', name: 'Party Member 2', label: '2' },
+    ]);
+
+    const namedExport = preparePartyTokensForExport(local, true);
+    expect(namedExport.map(({ id, name, label }) => ({ id, name, label }))).toEqual([
+      { id: 'party-0', name: 'Aria Brightwood', label: 'AB' },
+      { id: 'party-1', name: 'Borin', label: 'BO' },
+    ]);
+    expect(namedExport.map(({ x, y }) => ({ x, y })))
+      .toEqual(local.map(({ x, y }) => ({ x, y })));
   });
 
   it('keeps every footprint on legal, in-bounds terrain with no overlaps', () => {

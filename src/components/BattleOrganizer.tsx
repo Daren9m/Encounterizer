@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   BookOpen,
@@ -34,10 +34,11 @@ import {
   getBattlePhase,
   getRecipeBeatState,
   getTurnCallouts,
-  isBattleState,
   removeBattleCombatant,
   resolveRecipeBeat,
   resumeBattle,
+  seedBattleFromParty,
+  seededPartyMemberIds,
   setCurrentTurn,
   setRecipeOutcome,
   sortCombatants,
@@ -49,8 +50,12 @@ import {
 } from '@/lib/battle-organizer';
 import { describeRecipeTrigger } from '@/lib/encounter-recipes';
 import type { Condition, Monster } from '@/lib/types';
-import { usePersistentState } from '@/lib/use-persistent-state';
+import { useBattleStore } from '@/app/hooks/useBattleStore';
+import { usePartyLibrary } from '@/app/hooks/usePartyLibrary';
+import { getActiveParty } from '@/lib/party';
+import { MAX_SCENE_PARTY_MEMBERS } from '@/lib/tool-party';
 import PrintButton from '@/components/PrintButton';
+import PartyAttendanceList from '@/components/PartyAttendanceList';
 
 const CONDITIONS: Condition[] = [
   'Blinded', 'Charmed', 'Deafened', 'Exhaustion', 'Frightened', 'Grappled',
@@ -98,7 +103,29 @@ function fromMonster(monster: Monster): BattleCombatant {
 }
 
 export default function BattleOrganizer({ mode = 'full' }: { mode?: 'full' | 'initiative' }) {
-  const [battle, setBattle, hydrated] = usePersistentState<BattleState>('battleOrganizer', EMPTY_BATTLE, isBattleState);
+  const {
+    battle,
+    hydrated,
+    persistenceError,
+    updateBattle,
+    replaceBattle,
+    retryPersistence,
+  } = useBattleStore();
+  const setBattle = useCallback((next: BattleState | ((state: BattleState) => BattleState)) => (
+    typeof next === 'function' ? updateBattle(next) : replaceBattle(next)
+  ), [replaceBattle, updateBattle]);
+  const {
+    library: partyLibrary,
+    hydrated: partyLibraryHydrated,
+    status: partyLibraryStatus,
+  } = usePartyLibrary();
+  const activeParty = partyLibrary ? getActiveParty(partyLibrary) : null;
+  const partyLibraryUnavailable = partyLibraryStatus === 'unavailable'
+    || partyLibraryStatus === 'error';
+  const [partyAttendanceOverride, setPartyAttendanceOverride] = useState<{
+    partyId: string;
+    memberIds: string[];
+  } | null>(null);
   const initiativeOnly = mode === 'initiative';
   const phase = getBattlePhase(battle);
   const ordered = sortCombatants(battle.combatants);
@@ -114,6 +141,21 @@ export default function BattleOrganizer({ mode = 'full' }: { mode?: 'full' | 'in
   const players = battle.combatants.filter((combatant) => combatant.kind === 'player').length;
   const allies = battle.combatants.filter((combatant) => combatant.kind === 'ally').length;
   const enemies = battle.combatants.filter((combatant) => combatant.kind === 'enemy').length;
+  const sourcedPlayers = battle.combatants.filter(
+    (combatant) => combatant.kind === 'player' && combatant.sourcePartyMemberId,
+  ).length;
+  const selectedPartyMemberIds = useMemo(() => {
+    if (!activeParty) return [];
+    const requested = partyAttendanceOverride?.partyId === activeParty.id
+      ? partyAttendanceOverride.memberIds
+      : seededPartyMemberIds(battle, activeParty)
+        ?? activeParty.members.slice(0, MAX_SCENE_PARTY_MEMBERS).map((member) => member.id);
+    const requestedIds = new Set(requested);
+    return activeParty.members
+      .filter((member) => requestedIds.has(member.id))
+      .slice(0, MAX_SCENE_PARTY_MEMBERS)
+      .map((member) => member.id);
+  }, [activeParty, battle, partyAttendanceOverride]);
 
   useEffect(() => {
     if (!hydrated || battle.phase !== undefined) return;
@@ -180,6 +222,18 @@ export default function BattleOrganizer({ mode = 'full' }: { mode?: 'full' | 'in
     setNotice('');
   }
 
+  function addActiveParty() {
+    if (!activeParty || selectedPartyMemberIds.length === 0) return;
+    const result = updateBattle((state) => seedBattleFromParty(
+      state,
+      activeParty,
+      selectedPartyMemberIds,
+    ));
+    setNotice(result.ok
+      ? `${selectedPartyMemberIds.length} ${activeParty.name} character${selectedPartyMemberIds.length === 1 ? '' : 's'} snapped into this battle.`
+      : 'The party snapshot could not be saved in this browser.');
+  }
+
   if (!hydrated) {
     return (
       <section aria-label={initiativeOnly ? 'Initiative tracker' : 'Battle organizer'}>
@@ -190,28 +244,42 @@ export default function BattleOrganizer({ mode = 'full' }: { mode?: 'full' | 'in
 
   if (initiativeOnly) {
     return (
-      <CompactBattleOrganizer
-        battle={battle}
-        phase={phase}
-        ordered={ordered}
-        callouts={callouts}
-        onStart={startCombat}
-        onAdvance={() => setBattle((state) => advanceTurn(state))}
-        onFinish={completeCombat}
-        onResume={() => setBattle((state) => resumeBattle(state))}
-        onUpdate={updateCombatant}
-        onDamage={(combatantId, amount) => setBattle((state) => applyDamage(state, combatantId, amount))}
-        onHeal={(combatantId, amount) => setBattle((state) => applyHealing(state, combatantId, amount))}
-        onTakeTurn={(combatantId) => setBattle((state) => setCurrentTurn(state, combatantId))}
-        onResolveRecipeBeat={(beatId) => setBattle((state) => resolveRecipeBeat(state, beatId))}
-        onRecipeOutcome={(outcome) => setBattle((state) => setRecipeOutcome(state, outcome))}
-      />
+      <>
+        {persistenceError && (
+          <div className="surface-inset mb-3 flex flex-wrap items-center justify-between gap-3 border border-[var(--status-warning)] p-3 text-sm" role="alert">
+            <p><strong>Battle changes are only available in this tab.</strong> {persistenceError.message}</p>
+            <button type="button" className="btn-secondary text-sm" onClick={retryPersistence}>Retry saving</button>
+          </div>
+        )}
+        <CompactBattleOrganizer
+          battle={battle}
+          phase={phase}
+          ordered={ordered}
+          callouts={callouts}
+          onStart={startCombat}
+          onAdvance={() => setBattle((state) => advanceTurn(state))}
+          onFinish={completeCombat}
+          onResume={() => setBattle((state) => resumeBattle(state))}
+          onUpdate={updateCombatant}
+          onDamage={(combatantId, amount) => setBattle((state) => applyDamage(state, combatantId, amount))}
+          onHeal={(combatantId, amount) => setBattle((state) => applyHealing(state, combatantId, amount))}
+          onTakeTurn={(combatantId) => setBattle((state) => setCurrentTurn(state, combatantId))}
+          onResolveRecipeBeat={(beatId) => setBattle((state) => resolveRecipeBeat(state, beatId))}
+          onRecipeOutcome={(outcome) => setBattle((state) => setRecipeOutcome(state, outcome))}
+        />
+      </>
     );
   }
 
   return (
     <section className="animate-fade-in" aria-label="Battle organizer">
       {notice && <p className="mb-3 text-sm text-[var(--status-success)]" role="status">{notice}</p>}
+      {persistenceError && (
+        <div className="surface-inset mb-3 flex flex-wrap items-center justify-between gap-3 border border-[var(--status-warning)] p-3 text-sm" role="alert">
+          <p><strong>Battle changes are only available in this tab.</strong> {persistenceError.message}</p>
+          <button type="button" className="btn-secondary text-sm" onClick={retryPersistence}>Retry saving</button>
+        </div>
+      )}
 
       {phase === 'setup' && (
         <div className="workflow-shell mb-5 print:hidden">
@@ -271,6 +339,65 @@ export default function BattleOrganizer({ mode = 'full' }: { mode?: 'full' | 'in
           )}
 
           <div className="px-5 pb-5">
+            <section className="content-panel mb-3" aria-labelledby="saved-party-heading">
+              <div className="content-panel-heading">
+                <div>
+                  <h3 id="saved-party-heading">Saved party</h3>
+                  <p>Choose who is here, then take a fresh snapshot for this battle.</p>
+                </div>
+                {activeParty && <Link href="/party/" className="btn-ghost text-xs">Manage parties</Link>}
+              </div>
+              {!partyLibraryHydrated ? (
+                <div className="surface-inset p-4 text-sm text-[var(--text-2)]" role="status">Loading Party Library…</div>
+              ) : activeParty ? (
+                <div className="surface-inset space-y-4 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p className="font-semibold text-[var(--text-1)]">{activeParty.name}</p>
+                      <p className="mt-1 text-xs text-[var(--text-3)]">
+                        {sourcedPlayers > 0
+                          ? `${sourcedPlayers} saved character snapshot${sourcedPlayers === 1 ? '' : 's'} already in this draft.`
+                          : 'No saved characters have been added to this draft yet.'}
+                      </p>
+                    </div>
+                    <span className="status-readout text-sm">{selectedPartyMemberIds.length} attending</span>
+                  </div>
+                  <PartyAttendanceList
+                    id="battle-party-attendance"
+                    party={activeParty}
+                    selectedMemberIds={selectedPartyMemberIds}
+                    onChange={(memberIds) => setPartyAttendanceOverride({
+                      partyId: activeParty.id,
+                      memberIds,
+                    })}
+                    legend="Battle attendance"
+                    error={selectedPartyMemberIds.length === 0 ? 'Select at least one character to add.' : null}
+                  />
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-3">
+                    <p className="max-w-2xl text-xs leading-relaxed text-[var(--text-3)]">
+                      Names and combat stats are copied now. Later edits to the saved party will not change this battle, and live HP and conditions stay here.
+                    </p>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      disabled={selectedPartyMemberIds.length === 0}
+                      onClick={addActiveParty}
+                    >
+                      <Users size={17} aria-hidden="true" /> {sourcedPlayers > 0 ? 'Update party snapshot' : 'Add party to roster'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="surface-inset p-4 text-sm text-[var(--text-2)]">
+                  <p className="font-semibold text-[var(--text-1)]">
+                    {partyLibraryUnavailable ? 'Party Library unavailable' : 'No active party'}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--text-3)]">You can still add players manually, or create an active party for one-click setup.</p>
+                  <Link href="/party/" className="btn-secondary mt-3 text-xs">Open Party Manager</Link>
+                </div>
+              )}
+            </section>
+
             <section className="content-panel" aria-labelledby="initiative-roster-heading">
               <div className="content-panel-heading">
                 <div><h3 id="initiative-roster-heading">Initiative roster</h3><p>Highest initiative acts first; Dexterity breaks ties.</p></div>

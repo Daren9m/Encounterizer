@@ -6,6 +6,7 @@
 // shared /noncombat links replay them.
 
 import { pickRandom as pick, randomSeed, seededRandom } from '../random';
+import { MAX_SCENE_PARTY_MEMBERS } from '../tool-party';
 import { estimatedMinutes } from './levers';
 import { handoutToText } from './handout-text';
 import { resolveTheme } from './theming';
@@ -120,7 +121,7 @@ export function generateNoncombat(options: GenerateNoncombatOptions = {}): Nonco
 
   const levers: ResolvedLevers = {
     partyLevel: clamp(partyLevel, 1, 20),
-    partySize: clamp(partySize, 1, 8),
+    partySize: clamp(partySize, 1, MAX_SCENE_PARTY_MEMBERS),
     difficulty: diff, theme: pack, tone, timeBudget, seed,
   };
   const requested = { kind, difficulty, theme };

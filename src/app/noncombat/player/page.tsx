@@ -9,6 +9,7 @@ import { THEME_OPTIONS, TONE_OPTIONS, TIME_OPTIONS } from '@/lib/noncombat/themi
 import type { ThemeChoice, Tone, TimeBudget, Difficulty } from '@/lib/noncombat/types';
 import PuzzleHandout from '@/components/PuzzleHandout';
 import PrintButton from '@/components/PrintButton';
+import { MAX_SCENE_PARTY_MEMBERS } from '@/lib/tool-party';
 
 const DIFFICULTIES: Difficulty[] = ['Easy', 'Medium', 'Hard'];
 
@@ -56,7 +57,7 @@ function PlayerScreen() {
     const r = generateNoncombat({
       kind, difficulty, theme, tone, timeBudget,
       partyLevel: clampInt(params.get('lvl'), 1, 20) ?? 5,
-      partySize: clampInt(params.get('size'), 1, 8) ?? 4,
+      partySize: clampInt(params.get('size'), 1, MAX_SCENE_PARTY_MEMBERS) ?? 4,
       seed,
     });
     return { view: toPlayerView(r), missing: false };
