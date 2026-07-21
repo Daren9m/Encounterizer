@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { EMPTY_BATTLE } from '@/lib/battle-organizer';
 import { DM_SCREEN_TOOL_ROUTES } from '@/lib/site';
 import {
+  DM_SCREEN_MAX_ITEMS,
   EMPTY_DM_SCREEN,
+  appendItemToSectionTree,
   cloneDmScreenDocument,
   createEmptyDmScreen,
   dmScreenToMarkdown,
+  duplicateDmScreenItem,
   isDmScreenState,
   mergeDmScreenDocuments,
   parseDmScreenDocument,
@@ -97,6 +100,102 @@ describe('DM screen', () => {
     const updated = updateSectionTree(nested, 'child', (section) => ({ ...section, title: 'Updated' }));
     expect(updated[0].children[0].title).toBe('Updated');
     expect(removeSectionTree(updated, 'child')[0].children).toEqual([]);
+  });
+
+  it('adds a panel to a nested section and reveals its collapsed ancestor path', () => {
+    const sections: DmScreenSection[] = [{
+      id: 'outer', title: 'Outer', collapsed: true, items: [],
+      children: [{ id: 'inner', title: 'Inner', collapsed: true, items: [], children: [] }],
+    }];
+    const added = note('new-panel');
+    const updated = appendItemToSectionTree(sections, 'inner', added);
+
+    expect(updated[0].collapsed).toBe(false);
+    expect(updated[0].children[0].collapsed).toBe(false);
+    expect(updated[0].children[0].items).toEqual([added]);
+    expect(appendItemToSectionTree(sections, 'missing', added)).toBe(sections);
+    expect(sections[0].collapsed).toBe(true);
+  });
+
+  it('duplicates a nested manual panel beside its source with a fresh global ID', () => {
+    const source = note('source-item', {
+      kind: 'tool',
+      title: 'Encounter notes',
+      body: 'Keep every field.',
+      resourceId: 'resource-1',
+      href: '/battle',
+      collapsed: true,
+      layout: layout({ width: 'wide', stashed: true, excludedFromPrint: true }),
+    });
+    const document = screen([{
+      id: 'parent', title: 'Parent', collapsed: false, items: [note('parent-item')],
+      children: [{
+        id: 'nested', title: 'Nested', collapsed: false,
+        items: [note('before'), source, note('after')], children: [],
+      }],
+    }]);
+    const original = cloneDmScreenDocument(document);
+
+    const duplicated = duplicateDmScreenItem(document, source.id, {
+      createId: ids(document.id, 'parent', 'copied-item'),
+    });
+    const nestedItems = duplicated.sections[0].children[0].items;
+
+    expect(nestedItems.map((item) => item.id)).toEqual([
+      'before', 'source-item', 'copied-item', 'after',
+    ]);
+    expect(nestedItems[2]).toEqual({
+      ...source,
+      id: 'copied-item',
+      layout: { ...source.layout },
+      origin: 'manual',
+    });
+    expect(nestedItems[2]).not.toBe(source);
+    expect(nestedItems[2].layout).not.toBe(source.layout);
+    expect(duplicated).not.toBe(document);
+    expect(duplicated.sections[0]).not.toBe(document.sections[0]);
+    expect(duplicated.sections[0].children[0]).not.toBe(document.sections[0].children[0]);
+    expect(document).toEqual(original);
+    expect(isDmScreenState(duplicated)).toBe(true);
+  });
+
+  it('does not duplicate missing or auto-pinned panels', () => {
+    const autoPinned = note('auto-item', { origin: 'auto-pin' });
+    const document = screen([{
+      id: 'section', title: 'Section', collapsed: false,
+      items: [autoPinned], children: [],
+    }]);
+    let idCalls = 0;
+    const createId: DmScreenIdFactory = () => {
+      idCalls += 1;
+      return `unexpected-${idCalls}`;
+    };
+
+    expect(duplicateDmScreenItem(document, 'missing', { createId })).toBe(document);
+    expect(duplicateDmScreenItem(document, autoPinned.id, { createId })).toBe(document);
+    expect(idCalls).toBe(0);
+  });
+
+  it('does not duplicate a panel when the document is at the item limit', () => {
+    const items = Array.from(
+      { length: DM_SCREEN_MAX_ITEMS },
+      (_, index) => note(`item-${index}`),
+    );
+    const document = screen([{
+      id: 'full-section', title: 'Full section', collapsed: false,
+      items, children: [],
+    }]);
+    let idCalls = 0;
+
+    const duplicated = duplicateDmScreenItem(document, items[0].id, {
+      createId: () => {
+        idCalls += 1;
+        return 'should-not-be-used';
+      },
+    });
+
+    expect(duplicated).toBe(document);
+    expect(idCalls).toBe(0);
   });
 
   it('syncs auto-pins without duplicating global IDs and preserves their view state', () => {
@@ -411,6 +510,10 @@ describe('DM screen', () => {
     source.fullscreen = true;
     const item = source.sections[0].items[0] as DmScreenItem & { spotlighted?: boolean };
     item.spotlighted = true;
+    const screenLayout = source.layout as DmScreenState['layout'] & { fullscreen?: boolean };
+    screenLayout.fullscreen = true;
+    const itemLayout = item.layout as DmScreenItem['layout'] & { spotlighted?: boolean };
+    itemLayout.spotlighted = true;
     const section = source.sections[0] as DmScreenSection & { trayOpen?: boolean };
     section.trayOpen = true;
 
@@ -419,8 +522,10 @@ describe('DM screen', () => {
     if (!parsed.ok) return;
     expect(parsed.document).not.toHaveProperty('focusedItemId');
     expect(parsed.document).not.toHaveProperty('fullscreen');
+    expect(parsed.document.layout).not.toHaveProperty('fullscreen');
     expect(parsed.document.sections[0]).not.toHaveProperty('trayOpen');
     expect(parsed.document.sections[0].items[0]).not.toHaveProperty('spotlighted');
+    expect(parsed.document.sections[0].items[0].layout).not.toHaveProperty('spotlighted');
   });
 
   it('merges content collision-safely while preserving current screen identity and order', () => {

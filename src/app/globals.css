@@ -1502,6 +1502,33 @@ select optgroup {
   animation: fadeIn 0.3s ease-out;
 }
 
+.dm-screen-command-bar {
+  position: sticky;
+  top: 4.75rem;
+  z-index: 40;
+}
+
+@media screen {
+  html[data-app-focus-shell='dm-screen'] [data-app-shell='navigation'],
+  html[data-app-focus-shell='dm-screen'] [data-app-shell='footer'],
+  html[data-app-focus-shell='dm-screen'] [data-app-shell='skip-link'],
+  html[data-app-focus-shell='dm-screen'] [data-app-shell='page-header'] {
+    display: none !important;
+  }
+
+  html[data-app-focus-shell='dm-screen'] [data-app-shell='main'] {
+    max-width: none;
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+  }
+
+  html[data-app-focus-shell='dm-screen'] .dm-screen-command-bar {
+    top: max(0.5rem, env(safe-area-inset-top));
+  }
+}
+
 /* Runic glyphs for cipher/rune-lock handouts. unicode-range scopes the
    font to the runic block, so it can sit first in any font stack. */
 @font-face {
@@ -1607,6 +1634,7 @@ select optgroup {
   body {
     background: #ffffff !important;
     color: #1c1a16;
+    overflow: visible !important;
   }
 
   .card {

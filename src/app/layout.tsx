@@ -66,6 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-screen flex-col">
         <a
           href="#main-content"
+          data-app-shell="skip-link"
           className="skip-link print:hidden"
         >
           Skip to main content
@@ -76,6 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Main Content */}
         <main
           id="main-content"
+          data-app-shell="main"
           tabIndex={-1}
           className="relative mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-8"
         >
@@ -83,7 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
 
         {/* Footer */}
-        <footer className="relative mt-10 overflow-hidden border-t border-[var(--steel-800)] bg-[var(--steel-900)] print:hidden">
+        <footer data-app-shell="footer" className="relative mt-10 overflow-hidden border-t border-[var(--steel-800)] bg-[var(--steel-900)] print:hidden">
           <div
             className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[36rem] -translate-x-1/2 rounded-full bg-[var(--bronze)] opacity-[0.06] blur-3xl"
             aria-hidden="true"
