@@ -1,4 +1,5 @@
 import type { Encounter, Monster } from './types';
+import { describeRecipeTrigger } from './encounter-recipes';
 
 function safeFilePart(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'encounter';
@@ -22,6 +23,24 @@ export function encounterToMarkdown(encounter: Encounter): string {
   const map = encounter.map
     ? `## Battle Map\n\n${encounter.map.width} × ${encounter.map.height} squares, seed ${encounter.map.seed ?? encounter.seed}.${encounter.map.rooms?.length ? ` ${encounter.map.rooms.length} keyed rooms.` : ''}`
     : '';
+  const recipe = encounter.recipePlan
+    ? [
+        '## DM Recipe Playbook',
+        '',
+        `### ${encounter.recipePlan.objective.title}`,
+        encounter.recipePlan.objective.summary,
+        `- **Success:** ${encounter.recipePlan.objective.success}`,
+        `- **Failure:** ${encounter.recipePlan.objective.failure}`,
+        '',
+        '### Before initiative',
+        ...encounter.recipePlan.setup.map((note) => `- ${note}`),
+        '',
+        '### Battle beats',
+        ...encounter.recipePlan.beats.map((beat) => `- **${describeRecipeTrigger(beat.trigger)} — ${beat.title}:** ${beat.guidance} *At the table:* ${beat.effect}`),
+        '',
+        `**Aftermath:** ${encounter.recipePlan.closing}`,
+      ].join('\n')
+    : '';
   return [
     `# ${encounter.name}`,
     encounter.description,
@@ -29,6 +48,7 @@ export function encounterToMarkdown(encounter: Encounter): string {
     `## Monsters\n\n${roster}`,
     encounter.tactics ? `## Tactics\n\n${encounter.tactics}` : '',
     encounter.treasure ? `## Treasure\n\n${encounter.treasure}` : '',
+    recipe,
     map,
   ].filter(Boolean).join('\n\n');
 }
