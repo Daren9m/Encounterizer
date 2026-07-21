@@ -50,6 +50,65 @@ describe('IndexedDbDmScreenDocumentStore', () => {
     store.close();
   });
 
+  it('atomically persists, reads, and clears replacement undo metadata under its separate key', async () => {
+    const factory = new IDBFactory();
+    const first = new IndexedDbDmScreenDocumentStore(factory);
+    const document = { version: 2, revision: 2, title: 'Applied template' };
+    const replacementUndo = {
+      version: 1,
+      kind: 'replacement',
+      before: { version: 2, revision: 1, title: 'Original screen' },
+      after: document,
+    };
+
+    expect(await first.transactRecords(() => ({
+      document,
+      replacementUndo,
+    }))).toEqual({ document, replacementUndo });
+    expect(await first.read()).toEqual(document);
+    first.close();
+
+    const reopened = new IndexedDbDmScreenDocumentStore(factory);
+    expect(await reopened.transactRecords((current) => current)).toEqual({
+      document,
+      replacementUndo,
+    });
+
+    const changedDocument = { ...document, revision: 3, title: 'Must roll back' };
+    await expect(reopened.transactRecords(() => ({
+      document: changedDocument,
+      replacementUndo: () => undefined,
+    }))).rejects.toMatchObject({ name: 'DataCloneError' });
+    expect(await reopened.transactRecords((current) => current)).toEqual({
+      document,
+      replacementUndo,
+    });
+
+    const failure = new Error('abort both records');
+    await expect(reopened.transactRecords(() => {
+      throw failure;
+    })).rejects.toBe(failure);
+    expect(await reopened.transactRecords((current) => current)).toEqual({
+      document,
+      replacementUndo,
+    });
+
+    expect(await reopened.transactRecords((current) => ({
+      ...current,
+      replacementUndo: undefined,
+    }))).toEqual({ document, replacementUndo: undefined });
+    expect(await reopened.read()).toEqual(document);
+    reopened.close();
+
+    const verified = new IndexedDbDmScreenDocumentStore(factory);
+    expect(await verified.transactRecords((current) => current)).toEqual({
+      document,
+      replacementUndo: undefined,
+    });
+    expect(await verified.read()).toEqual(document);
+    verified.close();
+  });
+
   it('serializes concurrent transforms across connections', async () => {
     const factory = new IDBFactory();
     const first = new IndexedDbDmScreenDocumentStore(factory);

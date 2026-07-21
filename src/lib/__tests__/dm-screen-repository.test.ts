@@ -4,6 +4,7 @@ import {
   createDmScreenRepository,
   type DmScreenCommitNotifier,
   type DmScreenDocumentStore,
+  type DmScreenStoredRecords,
 } from '@/lib/dm-screen-repository';
 import {
   createEmptyDmScreen,
@@ -16,11 +17,16 @@ function clone<T>(value: T): T {
 
 class MemoryDocumentStore implements DmScreenDocumentStore {
   value: unknown | undefined;
+  replacementUndoValue: unknown | undefined;
   failNextWith: unknown | null = null;
+  transactCalls = 0;
   private queue: Promise<void> = Promise.resolve();
 
-  constructor(initial?: unknown) {
+  constructor(initial?: unknown, replacementUndo?: unknown) {
     this.value = initial === undefined ? undefined : clone(initial);
+    this.replacementUndoValue = replacementUndo === undefined
+      ? undefined
+      : clone(replacementUndo);
   }
 
   async read(): Promise<unknown | undefined> {
@@ -29,6 +35,7 @@ class MemoryDocumentStore implements DmScreenDocumentStore {
   }
 
   transact(transform: (current: unknown | undefined) => unknown): Promise<unknown> {
+    this.transactCalls += 1;
     const operation = this.queue.then(() => {
       if (this.failNextWith !== null) {
         const failure = this.failNextWith;
@@ -39,6 +46,38 @@ class MemoryDocumentStore implements DmScreenDocumentStore {
       const result = transform(current);
       if (result !== current) this.value = clone(result);
       return clone(result);
+    });
+    this.queue = operation.then(() => undefined, () => undefined);
+    return operation;
+  }
+
+  transactRecords(
+    transform: (current: DmScreenStoredRecords) => DmScreenStoredRecords,
+  ): Promise<DmScreenStoredRecords> {
+    this.transactCalls += 1;
+    const operation = this.queue.then(() => {
+      if (this.failNextWith !== null) {
+        const failure = this.failNextWith;
+        this.failNextWith = null;
+        throw failure;
+      }
+      const current: DmScreenStoredRecords = {
+        document: this.value === undefined ? undefined : clone(this.value),
+        replacementUndo: this.replacementUndoValue === undefined
+          ? undefined
+          : clone(this.replacementUndoValue),
+      };
+      const result = transform(current);
+      this.value = result.document === undefined ? undefined : clone(result.document);
+      this.replacementUndoValue = result.replacementUndo === undefined
+        ? undefined
+        : clone(result.replacementUndo);
+      return {
+        document: this.value === undefined ? undefined : clone(this.value),
+        replacementUndo: this.replacementUndoValue === undefined
+          ? undefined
+          : clone(this.replacementUndoValue),
+      };
     });
     this.queue = operation.then(() => undefined, () => undefined);
     return operation;
@@ -161,11 +200,21 @@ describe('DmScreenRepository', () => {
       status: 'saved',
       hydrated: true,
       dirty: false,
+      firstUse: true,
+      replacementUndo: null,
       lastSavedAt: 100,
       error: null,
     });
     expect(notifier.published).toEqual([1]);
     expect(store.value).toMatchObject({ version: 2, revision: 1 });
+
+    const storedBeforeAcknowledgement = clone(store.value);
+    const transactionsBeforeAcknowledgement = store.transactCalls;
+    repository.acknowledgeFirstUse();
+    expect(repository.getSnapshot().firstUse).toBe(false);
+    expect(store.value).toEqual(storedBeforeAcknowledgement);
+    expect(store.transactCalls).toBe(transactionsBeforeAcknowledgement);
+    expect(notifier.published).toEqual([1]);
     repository.close();
   });
 
@@ -200,10 +249,54 @@ describe('DmScreenRepository', () => {
     });
     expect(clearLegacy).toHaveBeenCalledOnce();
     expect(notifier.published).toEqual([1]);
+    expect(repository.getSnapshot().firstUse).toBe(false);
 
     await repository.initialize();
     expect(clearLegacy).toHaveBeenCalledOnce();
     repository.close();
+  });
+
+  it('does not mark an existing durable document as first use', async () => {
+    const existing = {
+      ...createEmptyDmScreen(),
+      revision: 4,
+      title: 'Existing screen',
+    };
+    const repository = createDmScreenRepository({
+      store: new MemoryDocumentStore(existing),
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+
+    await repository.initialize();
+
+    expect(repository.getSnapshot()).toMatchObject({
+      screen: { title: 'Existing screen', revision: 4 },
+      firstUse: false,
+    });
+    repository.close();
+  });
+
+  it('marks only the repository that wins concurrent first-screen creation as first use', async () => {
+    const store = new MemoryDocumentStore();
+    const first = createDmScreenRepository({
+      store,
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+    const second = createDmScreenRepository({
+      store,
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+
+    await Promise.all([first.initialize(), second.initialize()]);
+
+    expect(first.getSnapshot().firstUse).toBe(true);
+    expect(second.getSnapshot().firstUse).toBe(false);
+    expect(store.value).toMatchObject({ version: 2, revision: 1 });
+    first.close();
+    second.close();
   });
 
   it.each([
@@ -255,6 +348,13 @@ describe('DmScreenRepository', () => {
       ...createEmptyDmScreen(),
       title: 'Restored from backup',
     };
+    const unsafeUndoable = await repository.replace(replacement, { undoable: true });
+    expect(unsafeUndoable).toMatchObject({
+      ok: false,
+      error: { code: 'future-version' },
+    });
+    expect(store.value).toEqual(future);
+
     const result = await repository.replace(replacement);
 
     expect(result).toEqual({ ok: true });
@@ -262,6 +362,7 @@ describe('DmScreenRepository', () => {
       screen: { title: 'Restored from backup', version: 2, revision: 9 },
       status: 'saved',
       dirty: false,
+      replacementUndo: null,
       error: null,
     });
     expect(store.value).toMatchObject({
@@ -270,6 +371,368 @@ describe('DmScreenRepository', () => {
       revision: 9,
     });
     expect(notifier.published).toEqual([9]);
+    repository.close();
+  });
+
+  it('undoes an opted-in replacement as a new monotonic commit', async () => {
+    const store = new MemoryDocumentStore();
+    const notifier = new RecordingNotifier();
+    const repository = createDmScreenRepository({ store, notifier, readLegacy: noLegacy });
+    await repository.initialize();
+    const before = clone(repository.getSnapshot().screen!);
+    const replacement = {
+      ...createEmptyDmScreen(),
+      title: 'Session template',
+      sections: [],
+    };
+
+    const replaced = await repository.replace(replacement, { undoable: true });
+
+    expect(replaced).toEqual({ ok: true });
+    expect(repository.getSnapshot()).toMatchObject({
+      screen: { title: 'Session template', revision: 2 },
+      replacementUndo: { kind: 'replacement', replacementRevision: 2 },
+    });
+
+    const undone = await repository.undoReplacement();
+
+    expect(undone).toEqual({ ok: true });
+    expect(repository.getSnapshot()).toMatchObject({
+      screen: { title: before.title, revision: 3 },
+      replacementUndo: null,
+      status: 'saved',
+    });
+    expect(store.value).toEqual({ ...before, revision: 3 });
+    expect(notifier.published).toEqual([1, 2, 3]);
+    repository.close();
+  });
+
+  it('reloads a matching durable replacement undo record and can apply it', async () => {
+    const store = new MemoryDocumentStore();
+    const firstNotifier = new RecordingNotifier();
+    const first = createDmScreenRepository({
+      store,
+      notifier: firstNotifier,
+      readLegacy: noLegacy,
+    });
+    await first.initialize();
+    const before = clone(first.getSnapshot().screen!);
+    await first.replace({
+      ...createEmptyDmScreen(),
+      title: 'Durable template',
+      sections: [],
+    }, { undoable: true });
+    expect(store.replacementUndoValue).toMatchObject({
+      version: 1,
+      kind: 'replacement',
+      before: { title: before.title, revision: 1 },
+      after: { title: 'Durable template', revision: 2 },
+    });
+    first.close();
+
+    const reopenedNotifier = new RecordingNotifier();
+    const reopened = createDmScreenRepository({
+      store,
+      notifier: reopenedNotifier,
+      readLegacy: noLegacy,
+    });
+    await reopened.initialize();
+
+    expect(reopened.getSnapshot()).toMatchObject({
+      screen: { title: 'Durable template', revision: 2 },
+      replacementUndo: { kind: 'replacement', replacementRevision: 2 },
+    });
+    expect(await reopened.update((current) => current)).toEqual({ ok: true });
+    expect(reopened.getSnapshot().replacementUndo).toMatchObject({
+      replacementRevision: 2,
+    });
+    expect(store.replacementUndoValue).toBeDefined();
+    expect(await reopened.undoReplacement()).toEqual({ ok: true });
+    expect(reopened.getSnapshot()).toMatchObject({
+      screen: { title: before.title, revision: 3 },
+      replacementUndo: null,
+    });
+    expect(store.replacementUndoValue).toBeUndefined();
+    expect(reopenedNotifier.published).toEqual([3]);
+    reopened.close();
+  });
+
+  it('atomically expires a reloaded undo record on the next committed edit', async () => {
+    const store = new MemoryDocumentStore();
+    const first = createDmScreenRepository({
+      store,
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+    await first.initialize();
+    await first.replace({
+      ...createEmptyDmScreen(),
+      title: 'Applied template',
+    }, { undoable: true });
+    first.close();
+
+    const reopened = createDmScreenRepository({
+      store,
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+    await reopened.initialize();
+    expect(reopened.getSnapshot().replacementUndo).not.toBeNull();
+
+    await reopened.update((current) => ({ ...current, title: 'Edited after reload' }));
+
+    expect(reopened.getSnapshot()).toMatchObject({
+      screen: { title: 'Edited after reload', revision: 3 },
+      replacementUndo: null,
+    });
+    expect(store.value).toMatchObject({ title: 'Edited after reload', revision: 3 });
+    expect(store.replacementUndoValue).toBeUndefined();
+    reopened.close();
+
+    const verified = createDmScreenRepository({
+      store,
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+    await verified.initialize();
+    expect(verified.getSnapshot().replacementUndo).toBeNull();
+    verified.close();
+  });
+
+  it('rejects and clears a durable undo record that does not match the saved screen', async () => {
+    const store = new MemoryDocumentStore();
+    const first = createDmScreenRepository({
+      store,
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+    await first.initialize();
+    await first.replace({
+      ...createEmptyDmScreen(),
+      title: 'Applied template',
+    }, { undoable: true });
+    expect(store.replacementUndoValue).toBeDefined();
+    store.value = {
+      ...clone(store.value as DmScreenState),
+      title: 'Independent committed screen',
+    };
+    first.close();
+
+    const reopened = createDmScreenRepository({
+      store,
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+    await reopened.initialize();
+
+    expect(reopened.getSnapshot()).toMatchObject({
+      screen: { title: 'Independent committed screen', revision: 2 },
+      replacementUndo: null,
+      status: 'saved',
+    });
+    expect(store.replacementUndoValue).toBeUndefined();
+    expect(await reopened.undoReplacement()).toMatchObject({
+      ok: false,
+      error: { code: 'conflict' },
+    });
+    expect(store.value).toMatchObject({
+      title: 'Independent committed screen',
+      revision: 2,
+    });
+    reopened.close();
+  });
+
+  it('captures the latest transactional document rather than a stale rendered snapshot', async () => {
+    const store = new MemoryDocumentStore();
+    const first = createDmScreenRepository({
+      store,
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+    await first.initialize();
+    const second = createDmScreenRepository({
+      store,
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+    await second.initialize();
+    await second.update((current) => ({ ...current, title: 'Latest other-tab title' }));
+    expect(first.getSnapshot().screen?.title).not.toBe('Latest other-tab title');
+
+    await first.replace({
+      ...createEmptyDmScreen(),
+      title: 'Applied template',
+    }, { undoable: true });
+    const undone = await first.undoReplacement();
+
+    expect(undone).toEqual({ ok: true });
+    expect(first.getSnapshot().screen).toMatchObject({
+      title: 'Latest other-tab title',
+      revision: 4,
+    });
+    expect(store.value).toMatchObject({
+      title: 'Latest other-tab title',
+      revision: 4,
+    });
+    first.close();
+    second.close();
+  });
+
+  it('keeps undo through a no-op but expires it after the next committed edit', async () => {
+    const store = new MemoryDocumentStore();
+    const repository = createDmScreenRepository({
+      store,
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+    await repository.initialize();
+    await repository.replace({
+      ...createEmptyDmScreen(),
+      title: 'Applied template',
+    }, { undoable: true });
+
+    await repository.update((current) => current);
+    expect(repository.getSnapshot()).toMatchObject({
+      screen: { revision: 2 },
+      replacementUndo: { replacementRevision: 2 },
+    });
+
+    await repository.update((current) => ({ ...current, title: 'Edited template' }));
+    expect(repository.getSnapshot()).toMatchObject({
+      screen: { title: 'Edited template', revision: 3 },
+      replacementUndo: null,
+    });
+    const expired = await repository.undoReplacement();
+    expect(expired).toMatchObject({ ok: false, error: { code: 'conflict' } });
+    expect(store.value).toMatchObject({ title: 'Edited template', revision: 3 });
+    repository.close();
+  });
+
+  it('does not let undo overwrite a newer cross-tab commit', async () => {
+    const store = new MemoryDocumentStore();
+    const first = createDmScreenRepository({
+      store,
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+    await first.initialize();
+    const second = createDmScreenRepository({
+      store,
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+    await second.initialize();
+    await first.replace({
+      ...createEmptyDmScreen(),
+      title: 'Applied template',
+    }, { undoable: true });
+    await second.update((current) => ({ ...current, title: 'Other-tab edit' }));
+
+    const conflicted = await first.undoReplacement();
+
+    expect(conflicted).toMatchObject({ ok: false, error: { code: 'conflict' } });
+    expect(first.getSnapshot()).toMatchObject({
+      screen: { title: 'Other-tab edit', revision: 3 },
+      replacementUndo: null,
+      status: 'saved',
+    });
+    expect(store.value).toMatchObject({ title: 'Other-tab edit', revision: 3 });
+    first.close();
+    second.close();
+  });
+
+  it('keeps the undo point when the undo write fails and succeeds on another attempt', async () => {
+    const store = new MemoryDocumentStore();
+    const repository = createDmScreenRepository({
+      store,
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+    await repository.initialize();
+    const originalTitle = repository.getSnapshot().screen!.title;
+    await repository.replace({
+      ...createEmptyDmScreen(),
+      title: 'Applied template',
+    }, { undoable: true });
+    store.failNextWith = new DOMException('full once', 'QuotaExceededError');
+
+    const failed = await repository.undoReplacement();
+
+    expect(failed).toMatchObject({ ok: false, error: { code: 'quota' } });
+    expect(repository.getSnapshot()).toMatchObject({
+      screen: { title: 'Applied template', revision: 2 },
+      replacementUndo: { replacementRevision: 2 },
+      status: 'error',
+    });
+    expect(store.value).toMatchObject({ title: 'Applied template', revision: 2 });
+
+    const retried = await repository.undoReplacement();
+    expect(retried).toEqual({ ok: true });
+    expect(store.value).toMatchObject({ title: originalTitle, revision: 3 });
+    repository.close();
+  });
+
+  it('keeps the prior undo point when a later replacement does not commit', async () => {
+    const store = new MemoryDocumentStore();
+    const repository = createDmScreenRepository({
+      store,
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+    await repository.initialize();
+    const originalTitle = repository.getSnapshot().screen!.title;
+    await repository.replace({
+      ...createEmptyDmScreen(),
+      title: 'First template',
+    }, { undoable: true });
+    store.failNextWith = new DOMException('full once', 'QuotaExceededError');
+
+    const failed = await repository.replace({
+      ...createEmptyDmScreen(),
+      title: 'Second template',
+    }, { undoable: true });
+
+    expect(failed).toMatchObject({ ok: false, error: { code: 'quota' } });
+    expect(repository.getSnapshot()).toMatchObject({
+      screen: { title: 'First template', revision: 2 },
+      replacementUndo: { replacementRevision: 2 },
+    });
+    await repository.undoReplacement();
+    expect(store.value).toMatchObject({ title: originalTitle, revision: 3 });
+    repository.close();
+  });
+
+  it('preserves pending optimistic changes instead of discarding them through undo', async () => {
+    const store = new MemoryDocumentStore();
+    const repository = createDmScreenRepository({
+      store,
+      notifier: new RecordingNotifier(),
+      readLegacy: noLegacy,
+    });
+    await repository.initialize();
+    await repository.replace({
+      ...createEmptyDmScreen(),
+      title: 'Applied template',
+    }, { undoable: true });
+    store.failNextWith = new DOMException('full once', 'QuotaExceededError');
+    await repository.update((current) => ({ ...current, title: 'Unsaved edit' }));
+
+    const blocked = await repository.undoReplacement();
+
+    expect(blocked).toMatchObject({ ok: false, error: { code: 'conflict' } });
+    expect(repository.getSnapshot()).toMatchObject({
+      screen: { title: 'Unsaved edit' },
+      dirty: true,
+      replacementUndo: { replacementRevision: 2 },
+    });
+    expect(store.value).toMatchObject({ title: 'Applied template', revision: 2 });
+
+    await repository.retry();
+    expect(repository.getSnapshot()).toMatchObject({
+      screen: { title: 'Unsaved edit', revision: 3 },
+      dirty: false,
+      replacementUndo: null,
+    });
     repository.close();
   });
 

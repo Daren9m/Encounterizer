@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   BookOpen,
@@ -12,12 +12,14 @@ import {
   FileText,
   FolderPlus,
   Link as LinkIcon,
+  LayoutTemplate,
   Plus,
   Printer,
   RefreshCw,
   Sparkles,
   Swords,
   Trash2,
+  Undo2,
   Users,
 } from 'lucide-react';
 import { useMonsters } from '@/app/hooks/useMonsters';
@@ -29,6 +31,9 @@ import { useDmScreenStore } from '@/app/hooks/useDmScreenStore';
 import { usePartyLibrary } from '@/app/hooks/usePartyLibrary';
 import BattleOrganizer from '@/components/BattleOrganizer';
 import DmScreenBackupPanel from '@/components/DmScreenBackupPanel';
+import DmScreenTemplateChooser, {
+  type DmScreenTemplateAction,
+} from '@/components/DmScreenTemplateChooser';
 import DmPartyPanel from '@/components/DmPartyPanel';
 import MonsterStatBlock from '@/components/MonsterStatBlock';
 import RulesReference from '@/components/RulesReference';
@@ -39,6 +44,7 @@ import {
   EMPTY_DM_SCREEN,
   dmScreenToMarkdown,
   hasDmPartyItem,
+  mergeDmScreenDocuments,
   removeSectionTree,
   syncDmPartySnapshot,
   syncPinnedItems,
@@ -55,6 +61,10 @@ import {
   type DmScreenImportCandidate,
   type DmScreenImportMode,
 } from '@/lib/dm-screen-import';
+import {
+  createDmScreenFromTemplate,
+  type DmScreenTemplateDefinition,
+} from '@/lib/dm-screen-templates';
 import { getActiveParty } from '@/lib/party';
 import { partyToDmScreenSummary } from '@/lib/party-adapters';
 import { DM_SCREEN_DEFAULT_TOOL_PATH, DM_SCREEN_TOOL_ROUTES } from '@/lib/site';
@@ -79,6 +89,16 @@ function flattenSections(sections: DmScreenSection[], depth = 0): { id: string; 
     { id: section.id, label: `${'— '.repeat(depth)}${section.title}` },
     ...flattenSections(section.children, depth + 1),
   ]);
+}
+
+function countScreenTree(sections: readonly DmScreenSection[]): { sections: number; panels: number } {
+  return sections.reduce((counts, section) => {
+    const children = countScreenTree(section.children);
+    return {
+      sections: counts.sections + 1 + children.sections,
+      panels: counts.panels + section.items.length + children.panels,
+    };
+  }, { sections: 0, panels: 0 });
 }
 
 function defaultItemLayout(): DmScreenItem['layout'] {
@@ -165,9 +185,13 @@ export default function DmScreenPage() {
     status: screenStatus,
     hydrated: screenHydrated,
     dirty: screenDirty,
+    firstUse: screenFirstUse,
+    replacementUndo,
     error: screenError,
     updateScreen,
     replaceScreen,
+    undoScreenReplacement,
+    acknowledgeFirstUse,
     retryScreenStorage,
   } = useDmScreenStore();
   const setScreen = useCallback((transform: (current: DmScreenState) => DmScreenState) => {
@@ -191,8 +215,8 @@ export default function DmScreenPage() {
     () => screen ? hasDmPartyItem(screen.sections) : false,
     [screen],
   );
-  const [pinnedMonsterIds] = usePersistentState<string[]>('bestiaryPinnedMonsters', [], (value): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
-  const [pinnedSpellIds] = usePersistentState<string[]>('pinnedSpells', [], (value): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
+  const [pinnedMonsterIds, , pinnedMonsterIdsHydrated] = usePersistentState<string[]>('bestiaryPinnedMonsters', [], (value): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
+  const [pinnedSpellIds, , pinnedSpellIdsHydrated] = usePersistentState<string[]>('pinnedSpells', [], (value): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
   const { all: monsters } = useMonsters();
   const spells = useSpells();
   const { addMonsters, removeMonster } = useCustomMonsters();
@@ -210,6 +234,36 @@ export default function DmScreenPage() {
     ? targetSectionId
     : sectionOptions[0]?.id ?? '';
   const screenAvailable = screen !== null;
+  const templateSourcesReady = partyLibraryHydrated
+    && pinnedMonsterIdsHydrated
+    && pinnedSpellIdsHydrated;
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [templateNotice, setTemplateNotice] = useState<{
+    kind: 'replace' | 'notice' | 'error';
+    message: string;
+  } | null>(null);
+  const templateButtonRef = useRef<HTMLButtonElement>(null);
+  const templateNoticeRef = useRef<HTMLDivElement>(null);
+  const sawReplacementUndo = useRef(false);
+  const screenCounts = useMemo(
+    () => countScreenTree(screen?.sections ?? []),
+    [screen?.sections],
+  );
+
+  useEffect(() => {
+    if (replacementUndo) {
+      sawReplacementUndo.current = true;
+      return;
+    }
+    if (!sawReplacementUndo.current) return;
+    sawReplacementUndo.current = false;
+    setTemplateNotice((current) => current?.kind === 'replace' ? null : current);
+  }, [replacementUndo]);
+
+  useEffect(() => {
+    if (!templateNotice) return;
+    window.requestAnimationFrame(() => templateNoticeRef.current?.focus());
+  }, [templateNotice]);
 
   useEffect(() => {
     if (!screenAvailable) return;
@@ -295,6 +349,84 @@ export default function DmScreenPage() {
 
   function addResource(resourceId: string, resourceTitle: string) {
     addItem({ id: id(addKind), kind: addKind, title: resourceTitle, resourceId, collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
+  }
+
+  function closeTemplateChooser(): void {
+    acknowledgeFirstUse();
+    setTemplatesOpen(false);
+    window.requestAnimationFrame(() => templateButtonRef.current?.focus());
+  }
+
+  function dismissTemplateNotice(): void {
+    setTemplateNotice(null);
+    window.requestAnimationFrame(() => templateButtonRef.current?.focus());
+  }
+
+  function materializeTemplate(
+    template: DmScreenTemplateDefinition,
+    options: { includePinnedResources: boolean },
+  ): DmScreenState {
+    const created = createDmScreenFromTemplate(template);
+    const withPinnedResources = options.includePinnedResources
+      ? syncPinnedItems(
+          created,
+          pinnedMonsterIds,
+          pinnedSpellIds,
+          (resourceId) => monsterMap.get(resourceId)?.name,
+          (resourceId) => spellMap.get(resourceId)?.name,
+        )
+      : created;
+    return syncDmPartySnapshot(withPinnedResources, partySummary);
+  }
+
+  async function applyTemplate(
+    template: DmScreenTemplateDefinition,
+    action: DmScreenTemplateAction,
+  ): Promise<{ ok: boolean; error?: string }> {
+    if (!screen) return { ok: false, error: 'The current DM Screen is not available.' };
+    if (!templateSourcesReady) {
+      return { ok: false, error: 'Your party and pinned references are still loading. Try the template again in a moment.' };
+    }
+    const incoming = materializeTemplate(template, {
+      includePinnedResources: action === 'replace',
+    });
+    const namespace = id(`template-${template.id}`);
+    const result = action === 'add'
+      ? await updateScreen((current) => mergeDmScreenDocuments(
+          current,
+          incoming,
+          deterministicDocumentIds(namespace),
+        ).document)
+      : await replaceScreen(incoming, { undoable: true });
+
+    if (!result.ok && !result.queued) {
+      return { ok: false, error: result.error?.message ?? 'That template could not be applied.' };
+    }
+
+    acknowledgeFirstUse();
+    setTemplatesOpen(false);
+    const saveWarning = result.queued
+      ? ' It is available in this tab but still needs to be saved; use Retry in the save status.'
+      : '';
+    setTemplateNotice({
+      kind: action === 'replace' ? 'replace' : 'notice',
+      message: action === 'replace'
+        ? `Started from ${template.name}. You can undo until the next saved screen edit.${saveWarning}`
+        : `Added ${template.name} after the current sections.${saveWarning}`,
+    });
+    return { ok: true };
+  }
+
+  async function undoTemplateReplacement(): Promise<void> {
+    const result = await undoScreenReplacement();
+    if (result.ok) {
+      setTemplateNotice({ kind: 'notice', message: 'Restored the screen you had before applying the template.' });
+      return;
+    }
+    setTemplateNotice({
+      kind: 'error',
+      message: result.error?.message ?? 'The template replacement could not be undone.',
+    });
   }
 
   function exportJson() {
@@ -453,12 +585,21 @@ export default function DmScreenPage() {
       path="/dm-screen"
       description="Build a durable command surface for your games. Keep references, notes, party details, and live tools together; stash panels until you need them."
       actions={<div className="flex flex-wrap gap-2">
-        <button type="button" className="btn-secondary text-sm" disabled={!screen} onClick={() => {
+        <button
+          ref={templateButtonRef}
+          type="button"
+          className="btn-secondary text-sm"
+          disabled={!screen}
+          aria-controls="dm-screen-template-chooser"
+          aria-expanded={screenFirstUse || templatesOpen}
+          onClick={() => setTemplatesOpen(true)}
+        ><LayoutTemplate size={16} aria-hidden="true" /> Templates</button>
+        <button type="button" className="btn-secondary text-sm" disabled={!screen || screenFirstUse} onClick={() => {
           const exportScreen = screenForExport();
           if (!exportScreen) return;
           download('dm-screen.md', dmScreenToMarkdown(exportScreen, monsterMap, spellMap, battle), 'text/markdown');
         }}><FileText size={16} aria-hidden="true" /> MD</button>
-        <button type="button" className="btn-secondary text-sm" disabled={!screen} onClick={() => window.print()}><Printer size={16} aria-hidden="true" /> Print</button>
+        <button type="button" className="btn-secondary text-sm" disabled={!screen || screenFirstUse} onClick={() => window.print()}><Printer size={16} aria-hidden="true" /> Print</button>
       </div>}
     />;
 
@@ -493,8 +634,60 @@ export default function DmScreenPage() {
     </div>;
   }
 
+  if (screenFirstUse) {
+    return <div className="animate-fade-in dm-screen-print">
+      {pageHeader}
+      <DmScreenTemplateChooser
+        mode="first-use"
+        busy={screenStatus === 'saving'}
+        ready={templateSourcesReady}
+        currentTitle={screen.title}
+        currentSectionCount={screenCounts.sections}
+        currentPanelCount={screenCounts.panels}
+        onApply={applyTemplate}
+        onCancel={closeTemplateChooser}
+      />
+    </div>;
+  }
+
   return <div className="animate-fade-in dm-screen-print">
     {pageHeader}
+
+    {templatesOpen && <DmScreenTemplateChooser
+      mode="existing"
+      busy={screenStatus === 'saving'}
+      ready={templateSourcesReady}
+      currentTitle={screen.title}
+      currentSectionCount={screenCounts.sections}
+      currentPanelCount={screenCounts.panels}
+      onApply={applyTemplate}
+      onCancel={closeTemplateChooser}
+    />}
+
+    {(templateNotice || replacementUndo) && <div
+      ref={templateNoticeRef}
+      tabIndex={-1}
+      role={templateNotice?.kind === 'error' ? 'alert' : 'status'}
+      className={`mb-5 flex flex-col gap-3 rounded-xl border p-4 print:hidden sm:flex-row sm:items-center sm:justify-between ${templateNotice?.kind === 'error' ? 'border-[var(--status-danger)] bg-[var(--status-danger-wash)]' : 'border-[var(--status-success)] bg-[var(--status-success-wash)]'}`}
+    >
+      <p className="text-sm">
+        <strong>{templateNotice?.kind === 'error' ? 'Template action needs attention.' : 'Screen updated.'}</strong>{' '}
+        {templateNotice?.message ?? 'A template replaced this screen. You can undo until the next saved screen edit.'}
+      </p>
+      <div className="flex shrink-0 flex-wrap gap-2">
+        {replacementUndo && <button
+          type="button"
+          className="btn-secondary text-sm"
+          disabled={screenStatus === 'saving' || screenDirty}
+          onClick={() => void undoTemplateReplacement()}
+        ><Undo2 size={16} aria-hidden="true" /> Undo replacement</button>}
+        {!replacementUndo && <button
+          type="button"
+          className="btn-ghost text-sm"
+          onClick={dismissTemplateNotice}
+        >Dismiss</button>}
+      </div>
+    </div>}
 
     <div className="card panel-accent mb-5 print:hidden">
       <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">

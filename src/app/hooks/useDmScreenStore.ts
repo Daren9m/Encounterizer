@@ -8,6 +8,7 @@ import {
   SERVER_DM_SCREEN_SNAPSHOT,
   createDmScreenRepository,
   type DmScreenLegacyReadResult,
+  type DmScreenReplaceOptions,
   type DmScreenRepository,
   type DmScreenStoreSnapshot,
   type DmScreenWriteResult,
@@ -89,7 +90,12 @@ export interface DmScreenStoreApi extends DmScreenStoreSnapshot {
   updateScreen: (
     transform: (current: DmScreenState) => DmScreenState,
   ) => Promise<DmScreenWriteResult>;
-  replaceScreen: (next: DmScreenState) => Promise<DmScreenWriteResult>;
+  replaceScreen: (
+    next: DmScreenState,
+    options?: DmScreenReplaceOptions,
+  ) => Promise<DmScreenWriteResult>;
+  undoScreenReplacement: () => Promise<DmScreenWriteResult>;
+  acknowledgeFirstUse: () => void;
   refreshScreen: () => Promise<void>;
   retryScreenStorage: () => Promise<void>;
 }
@@ -113,9 +119,19 @@ export function useDmScreenStore(): DmScreenStoreApi {
     [repository],
   );
   const replaceScreen = useCallback(
-    (next: DmScreenState) => repository
-      ? repository.replace(next)
+    (next: DmScreenState, options?: DmScreenReplaceOptions) => repository
+      ? repository.replace(next, options)
       : Promise.resolve(unavailableResult()),
+    [repository],
+  );
+  const undoScreenReplacement = useCallback(
+    () => repository
+      ? repository.undoReplacement()
+      : Promise.resolve(unavailableResult()),
+    [repository],
+  );
+  const acknowledgeFirstUse = useCallback(
+    () => repository?.acknowledgeFirstUse(),
     [repository],
   );
   const refreshScreen = useCallback(
@@ -131,6 +147,8 @@ export function useDmScreenStore(): DmScreenStoreApi {
     ...snapshot,
     updateScreen,
     replaceScreen,
+    undoScreenReplacement,
+    acknowledgeFirstUse,
     refreshScreen,
     retryScreenStorage,
   };
