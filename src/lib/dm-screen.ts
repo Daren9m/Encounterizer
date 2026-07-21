@@ -3,8 +3,9 @@ import { monsterToMarkdown } from './monster-export';
 import type { Monster } from './types';
 import type { Spell } from '../data/spells';
 import { rulesReferenceToMarkdown } from '../data/rules-reference';
+import type { DmPartySummary } from './party-adapters';
 
-export type DmScreenItemKind = 'note' | 'monster' | 'spell' | 'tool' | 'rules' | 'initiative' | 'battle';
+export type DmScreenItemKind = 'note' | 'monster' | 'spell' | 'tool' | 'rules' | 'party' | 'initiative' | 'battle';
 
 export interface DmScreenItem {
   id: string;
@@ -31,6 +32,8 @@ export interface DmScreenState {
   title: string;
   autoAddPinnedMonsters: boolean;
   autoAddPinnedSpells: boolean;
+  /** Last rendered party summary, retained for print/export and storage outages. */
+  partySnapshot?: DmPartySummary;
   sections: DmScreenSection[];
 }
 
@@ -131,11 +134,69 @@ export function syncPinnedItems(
   };
 }
 
+function clonePartySummary(summary: DmPartySummary): DmPartySummary {
+  return {
+    ...summary,
+    levelRange: summary.levelRange ? { ...summary.levelRange } : null,
+    members: summary.members.map((member) => ({ ...member })),
+  };
+}
+
+export function hasDmPartyItem(sections: readonly DmScreenSection[]): boolean {
+  return sections.some((section) => (
+    section.items.some((item) => item.kind === 'party')
+    || hasDmPartyItem(section.children)
+  ));
+}
+
+/** Keep one screen-level snapshot rather than duplicating private notes per item. */
+export function syncDmPartySnapshot(
+  state: DmScreenState,
+  summary: DmPartySummary | null,
+): DmScreenState {
+  if (!hasDmPartyItem(state.sections)) {
+    if (state.partySnapshot === undefined) return state;
+    const withoutSnapshot = { ...state };
+    delete withoutSnapshot.partySnapshot;
+    return withoutSnapshot;
+  }
+  if (!summary) {
+    if (state.partySnapshot === undefined) return state;
+    const withoutSnapshot = { ...state };
+    delete withoutSnapshot.partySnapshot;
+    return withoutSnapshot;
+  }
+  const snapshot = clonePartySummary(summary);
+  return JSON.stringify(state.partySnapshot) === JSON.stringify(snapshot)
+    ? state
+    : { ...state, partySnapshot: snapshot };
+}
+
+function markdownCell(value: string | number | undefined): string {
+  if (value === undefined || value === '') return '—';
+  return String(value).replace(/\|/g, '\\|').replace(/\r?\n/g, '<br>');
+}
+
+function partyMarkdown(summary: DmPartySummary | undefined): string[] {
+  if (!summary) return ['_Party snapshot unavailable_', ''];
+  return [
+    `**${summary.name}** — ${summary.memberCount} ${summary.memberCount === 1 ? 'hero' : 'heroes'}`,
+    '',
+    '| Hero | Level / class | AC | Initiative | Passive Perception | Notes |',
+    '| --- | --- | ---: | ---: | ---: | --- |',
+    ...summary.members.map((member) => (
+      `| ${markdownCell(member.name)} | ${markdownCell(`Level ${member.level} · ${member.classLabel}`)} | ${member.armorClass} | ${markdownCell(member.initiativeBonus === undefined ? undefined : member.initiativeBonus >= 0 ? `+${member.initiativeBonus}` : member.initiativeBonus)} | ${markdownCell(member.passivePerception)} | ${markdownCell(member.notes)} |`
+    )),
+    '',
+  ];
+}
+
 function itemMarkdown(
   item: DmScreenItem,
   monsters: ReadonlyMap<string, Monster>,
   spells: ReadonlyMap<string, Spell>,
   battle: BattleState,
+  party: DmPartySummary | undefined,
 ): string[] {
   const visibility = item.hidden ? ' _(hidden)_' : '';
   if (item.kind === 'monster') {
@@ -156,6 +217,9 @@ function itemMarkdown(
   if (item.kind === 'rules') {
     return [`### ${item.title}${visibility}`, '', nestedMarkdown(rulesReferenceToMarkdown()), ''];
   }
+  if (item.kind === 'party') {
+    return [`### ${item.title}${visibility}`, '', ...partyMarkdown(party)];
+  }
   if (item.kind === 'tool') return [`### ${item.title}${visibility}`, '', item.href ?? '', ''];
   return [`### ${item.title}${visibility}`, '', item.body ?? '', ''];
 }
@@ -175,7 +239,9 @@ export function dmScreenToMarkdown(
   const walk = (sections: DmScreenSection[], depth: number) => {
     for (const section of sections) {
       lines.push(`${'#'.repeat(Math.min(depth + 1, 6))} ${section.title}`, '');
-      for (const item of section.items) lines.push(...itemMarkdown(item, monsters, spells, battle));
+      for (const item of section.items) {
+        lines.push(...itemMarkdown(item, monsters, spells, battle, state.partySnapshot));
+      }
       walk(section.children, depth + 1);
     }
   };
@@ -190,6 +256,7 @@ export function isDmScreenState(value: unknown): value is DmScreenState {
     && typeof state.title === 'string'
     && typeof state.autoAddPinnedMonsters === 'boolean'
     && typeof state.autoAddPinnedSpells === 'boolean'
+    && (state.partySnapshot === undefined || isDmPartySummary(state.partySnapshot))
     && Array.isArray(state.sections)
     && state.sections.every(isSection);
 }
@@ -211,7 +278,38 @@ function isItem(value: unknown): value is DmScreenItem {
   const item = value as Partial<DmScreenItem>;
   return typeof item.id === 'string'
     && typeof item.title === 'string'
-    && ['note', 'monster', 'spell', 'tool', 'rules', 'initiative', 'battle'].includes(item.kind ?? '')
+    && ['note', 'monster', 'spell', 'tool', 'rules', 'party', 'initiative', 'battle'].includes(item.kind ?? '')
     && typeof item.collapsed === 'boolean'
     && typeof item.hidden === 'boolean';
+}
+
+function optionalText(value: unknown): value is string | undefined {
+  return value === undefined || typeof value === 'string';
+}
+
+function isDmPartySummary(value: unknown): value is DmPartySummary {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const summary = value as Partial<DmPartySummary>;
+  if (typeof summary.id !== 'string'
+    || typeof summary.name !== 'string'
+    || !Number.isInteger(summary.memberCount)
+    || !Array.isArray(summary.members)
+    || summary.memberCount !== summary.members.length
+    || !(summary.levelRange === null
+      || (typeof summary.levelRange === 'object'
+        && summary.levelRange !== null
+        && Number.isInteger(summary.levelRange.min)
+        && Number.isInteger(summary.levelRange.max)))
+  ) return false;
+  return summary.members.every((member) => (
+    typeof member.id === 'string'
+    && typeof member.name === 'string'
+    && typeof member.classLabel === 'string'
+    && Number.isInteger(member.level)
+    && Number.isInteger(member.armorClass)
+    && (member.initiativeBonus === undefined || Number.isInteger(member.initiativeBonus))
+    && (member.passivePerception === undefined || Number.isInteger(member.passivePerception))
+    && optionalText(member.playerName)
+    && optionalText(member.notes)
+  ));
 }

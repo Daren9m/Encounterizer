@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { generateMap } from '@/lib/map-generator';
 import {
-  isMapHistoryArray, resolveHistoryEntry, toHistoryEntry,
+  historyEntryPartyCount,
+  historyEntryPartyTokens,
+  isMapHistoryArray,
+  resolveHistoryEntry,
+  toHistoryEntry,
 } from '@/lib/map-history';
-import type { EncounterMap } from '@/lib/types';
+import type { EncounterMap, MapToken } from '@/lib/types';
 
 const MAP = generateMap({
   environment: 'Urban', seed: 4242, width: 32, height: 24,
@@ -35,6 +39,44 @@ describe('toHistoryEntry', () => {
     const legacy = legacyMap();
     expect(toHistoryEntry(legacy)).toBe(legacy);
   });
+
+  it('freezes optional party tokens without changing map regeneration', () => {
+    const tokens: MapToken[] = [{
+      id: 'party-member-aria', kind: 'party', name: 'Aria', label: 'AR',
+      x: 2, y: 3, sizeCells: 1,
+    }];
+    const entry = toHistoryEntry(MAP, tokens);
+    expect(historyEntryPartyTokens(entry)).toEqual(tokens);
+    expect(historyEntryPartyTokens(entry)).not.toBe(tokens);
+    expect(resolveHistoryEntry(entry)).toEqual(MAP);
+
+    tokens[0].name = 'Changed';
+    expect(historyEntryPartyTokens(entry)[0].name).toBe('Aria');
+  });
+
+  it('keeps token identities outside the resolved map export contract', () => {
+    const legacy = legacyMap();
+    const entry = toHistoryEntry(legacy, [{
+      id: 'party-member-aria', kind: 'party', name: 'Aria', label: 'AR',
+      x: 2, y: 3, sizeCells: 1,
+    }]);
+
+    expect(historyEntryPartyTokens(entry)[0].name).toBe('Aria');
+    expect(JSON.stringify(resolveHistoryEntry(entry))).not.toContain('Aria');
+    expect(resolveHistoryEntry(entry)).toEqual(legacy);
+  });
+
+  it('preserves the requested count when the map cannot place every token', () => {
+    const tokens: MapToken[] = [{
+      id: 'party-one', kind: 'party', name: 'One', label: '1',
+      x: 0, y: 0, sizeCells: 1,
+    }];
+    const entry = toHistoryEntry(MAP, tokens, 50);
+
+    expect(historyEntryPartyCount(entry)).toBe(50);
+    expect(historyEntryPartyTokens(entry)).toHaveLength(1);
+    expect(JSON.stringify(resolveHistoryEntry(entry))).not.toContain('partyCount');
+  });
 });
 
 describe('resolveHistoryEntry', () => {
@@ -62,7 +104,14 @@ describe('resolveHistoryEntry', () => {
 
 describe('isMapHistoryArray', () => {
   it('accepts mixed stub and legacy arrays', () => {
-    expect(isMapHistoryArray([toHistoryEntry(MAP), legacyMap(), MAP])).toBe(true);
+    expect(isMapHistoryArray([
+      toHistoryEntry(MAP, [{
+        id: 'party-one', kind: 'party', name: 'One', label: '1',
+        x: 0, y: 0, sizeCells: 1,
+      }]),
+      legacyMap(),
+      MAP,
+    ])).toBe(true);
     expect(isMapHistoryArray([])).toBe(true);
   });
 
@@ -71,5 +120,13 @@ describe('isMapHistoryArray', () => {
     expect(isMapHistoryArray('nope')).toBe(false);
     expect(isMapHistoryArray([{ id: 'x' }])).toBe(false);
     expect(isMapHistoryArray([{ ...toHistoryEntry(MAP), seed: 'bad' }])).toBe(false);
+    expect(isMapHistoryArray([{ ...toHistoryEntry(MAP), partyCount: 51 }])).toBe(false);
+    expect(isMapHistoryArray([{
+      ...toHistoryEntry(MAP),
+      partyTokens: [{
+        id: 'party-one', kind: 'party', name: 'One', label: 'TOO-LONG',
+        x: 0, y: 0, sizeCells: 1,
+      }],
+    }])).toBe(false);
   });
 });

@@ -109,9 +109,10 @@ describe('lever plumbing at the union level', () => {
   });
   it('party size threads through to skill-challenge structure', () => {
     const small = generateNoncombat({ kind: 'skill-challenge', partySize: 2, seed: 7 });
-    const large = generateNoncombat({ kind: 'skill-challenge', partySize: 8, seed: 7 });
+    const large = generateNoncombat({ kind: 'skill-challenge', partySize: 50, seed: 7 });
     if (small.resultKind === 'challenge' && large.resultKind === 'challenge') {
       expect(small.structure!.successesNeeded).toBeLessThan(large.structure!.successesNeeded);
+      expect(large.partySize).toBe(50);
     }
   });
   it('time budget threads through to hints and clue-web size', () => {

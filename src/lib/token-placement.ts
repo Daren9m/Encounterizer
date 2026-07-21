@@ -35,6 +35,73 @@ export interface TokenPlacement {
   notes: string[];
 }
 
+export interface PartyTokenIdentity {
+  id: string;
+  name: string;
+  /** Stable one- or two-character table label. */
+  label: string;
+}
+
+/** Attach local durable identities after deterministic positional placement. */
+export function labelPartyTokens(
+  tokens: readonly MapToken[],
+  identities: readonly PartyTokenIdentity[],
+): MapToken[] {
+  let partyIndex = 0;
+  return tokens.map((token) => {
+    if (token.kind !== 'party') return { ...token };
+    const identity = identities[partyIndex];
+    partyIndex += 1;
+    if (!identity) return { ...token };
+    return {
+      ...token,
+      id: identity.id.startsWith('party-') ? identity.id : `party-${identity.id}`,
+      name: identity.name.trim() || `Party Member ${partyIndex}`,
+      label: identity.label.trim().slice(0, 2) || String(partyIndex),
+    };
+  });
+}
+
+/** Remove IDs, names, and labels before sharing or exporting a map. */
+export function anonymizePartyTokens(tokens: readonly MapToken[]): MapToken[] {
+  let partyIndex = 0;
+  return tokens.map((token) => {
+    if (token.kind !== 'party') return { ...token };
+    const position = partyIndex;
+    partyIndex += 1;
+    return {
+      ...token,
+      id: `party-${position}`,
+      name: `Party Member ${position + 1}`,
+      // 1–50 stays inside MapToken's documented two-character label bound.
+      label: String(position + 1),
+    };
+  });
+}
+
+/**
+ * Prepare tokens for a file or print boundary. Party IDs are always replaced
+ * with positional IDs. Character names and initials only cross the boundary
+ * after the DM explicitly opts in.
+ */
+export function preparePartyTokensForExport(
+  tokens: readonly MapToken[],
+  includeNames = false,
+): MapToken[] {
+  const anonymous = anonymizePartyTokens(tokens);
+  if (!includeNames) return anonymous;
+
+  return anonymous.map((token, index) => {
+    const localToken = tokens[index];
+    if (token.kind !== 'party' || localToken?.kind !== 'party') return token;
+    return {
+      ...token,
+      name: localToken.name,
+      label: localToken.label,
+    };
+  });
+}
+
 function initials(name: string): string {
   const words = name.split(/\s+/).filter(Boolean);
   if (words.length === 0) return '?';
@@ -154,7 +221,7 @@ export function placeTokens(
       id: `party-${i}`,
       kind: 'party',
       name: `Party Member ${i + 1}`,
-      label: `P${i + 1}`,
+      label: String(i + 1),
       x: cell % w,
       y: Math.floor(cell / w),
       sizeCells: 1,

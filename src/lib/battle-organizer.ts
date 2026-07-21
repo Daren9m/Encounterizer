@@ -3,9 +3,13 @@ import type { PartyMemberConfig } from './battle-sim-types';
 import { buildSimPlayer } from '../data/class-templates';
 import {
   cloneEncounterPartyContext,
+  contextFromActiveParty,
   isEncounterPartyContext,
+  reconcilePartySelection,
   type EncounterPartyContext,
 } from './encounter-party';
+import { partyToBattleCombatants } from './party-adapters';
+import type { PartyProfile } from './party';
 
 export type CombatantKind = 'player' | 'ally' | 'enemy';
 export type BattlePhase = 'setup' | 'active' | 'complete';
@@ -66,6 +70,65 @@ export const EMPTY_BATTLE: BattleState = {
   combatants: [],
   log: [],
 };
+
+function cloneCombatant(combatant: BattleCombatant): BattleCombatant {
+  return {
+    ...combatant,
+    conditions: [...combatant.conditions],
+  };
+}
+
+/**
+ * Replace only Party-Library-sourced players in a battle draft. Manual
+ * players, allies, and enemies remain untouched, and live/completed battles
+ * never change underneath the DM.
+ */
+export function seedBattleFromParty(
+  state: BattleState,
+  party: PartyProfile,
+  memberIds?: readonly string[],
+): BattleState {
+  if (getBattlePhase(state) !== 'setup') return state;
+
+  const selectedMemberIds = reconcilePartySelection(party, memberIds);
+  if (selectedMemberIds.length === 0) return state;
+
+  const preserved = state.combatants
+    .filter((combatant) => combatant.sourcePartyMemberId === undefined)
+    .map(cloneCombatant);
+  const players = partyToBattleCombatants(party, selectedMemberIds)
+    .map(cloneCombatant);
+
+  return {
+    ...state,
+    combatants: [...players, ...preserved],
+    partyContext: cloneEncounterPartyContext(
+      contextFromActiveParty(party, selectedMemberIds),
+    ),
+  };
+}
+
+/** Attendance restored from a matching seeded draft, in durable roster order. */
+export function seededPartyMemberIds(
+  state: BattleState,
+  party: PartyProfile,
+): string[] | undefined {
+  const context = state.partyContext;
+  if (getBattlePhase(state) !== 'setup'
+    || context?.source !== 'library'
+    || context.partyId !== party.id
+  ) return undefined;
+  const rosterMemberIds = new Set(
+    state.combatants
+      .filter((combatant) => combatant.kind === 'player')
+      .map((combatant) => combatant.sourcePartyMemberId)
+      .filter((memberId): memberId is string => memberId !== undefined),
+  );
+  return reconcilePartySelection(
+    party,
+    context.selectedMemberIds.filter((memberId) => rosterMemberIds.has(memberId)),
+  );
+}
 
 /** Build a table-ready tracker from the encounter builder's final roster. */
 export function battleFromEncounter(
@@ -294,10 +357,32 @@ export function removeBattleCombatant(state: BattleState, combatantId: string): 
   const ordered = sortCombatants(state.combatants);
   const currentIndex = ordered.findIndex((combatant) => combatant.id === combatantId);
   const combatants = state.combatants.filter((combatant) => combatant.id !== combatantId);
+  const sourceIndex = phase === 'setup'
+    && target.sourcePartyMemberId
+    && state.partyContext?.source === 'library'
+    ? state.partyContext.selectedMemberIds.indexOf(target.sourcePartyMemberId)
+    : -1;
+  const baseState: BattleState = sourceIndex >= 0 && state.partyContext?.source === 'library'
+    ? {
+        ...state,
+        partyContext: {
+          ...state.partyContext,
+          selectedMemberIds: state.partyContext.selectedMemberIds.filter(
+            (_memberId, index) => index !== sourceIndex,
+          ),
+          snapshot: {
+            ...state.partyContext.snapshot,
+            members: state.partyContext.snapshot.members.filter(
+              (_member, index) => index !== sourceIndex,
+            ),
+          },
+        },
+      }
+    : state;
 
   if (combatants.length === 0) {
     return {
-      ...state,
+      ...baseState,
       phase: 'setup',
       round: 1,
       currentId: undefined,
@@ -307,7 +392,7 @@ export function removeBattleCombatant(state: BattleState, combatantId: string): 
     };
   }
 
-  if (phase !== 'active') return { ...state, combatants };
+  if (phase !== 'active') return { ...baseState, combatants };
   if (state.currentId !== combatantId) {
     return log({ ...state, combatants }, `${target.name} leaves the battle.`);
   }

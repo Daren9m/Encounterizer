@@ -8,6 +8,7 @@ import { TERRAIN_INFO } from '@/lib/map-generator';
 import { buildMapScene, CELL, RULER_GUTTER } from '@/lib/map-render/scene';
 import { DARK_PALETTE, LIGHT_PALETTE } from '@/lib/map-render/palettes';
 import { sceneToSvgString } from '@/lib/map-render/svg';
+import { anonymizePartyTokens } from '@/lib/token-placement';
 
 // Clean-tactical battle map renderer. The svg is built as a string
 // (single source shared with PNG export and print) and injected; one
@@ -22,14 +23,27 @@ import { sceneToSvgString } from '@/lib/map-render/svg';
 
 const ZOOM_LEVELS = [0.75, 1, 1.25] as const;
 
-export default function MapSvg({ map, tokens }: { map: EncounterMap; tokens?: MapToken[] }) {
+export default function MapSvg({
+  map,
+  tokens,
+  printTokens,
+}: {
+  map: EncounterMap;
+  tokens?: MapToken[];
+  /** Defaults to a redacted copy of screen tokens if the caller omits it. */
+  printTokens?: MapToken[];
+}) {
   const [inspected, setInspected] = useState({ x: 0, y: 0 });
   const [zoomIndex, setZoomIndex] = useState(1);
   const zoom = ZOOM_LEVELS[zoomIndex];
 
   const scene = useMemo(() => buildMapScene(map, tokens ?? []), [map, tokens]);
+  const printScene = useMemo(
+    () => buildMapScene(map, printTokens ?? anonymizePartyTokens(tokens ?? [])),
+    [map, printTokens, tokens],
+  );
   const screenSvg = useMemo(() => sceneToSvgString(scene, DARK_PALETTE), [scene]);
-  const printSvg = useMemo(() => sceneToSvgString(scene, LIGHT_PALETTE), [scene]);
+  const printSvg = useMemo(() => sceneToSvgString(printScene, LIGHT_PALETTE), [printScene]);
 
   const notableCells = useMemo(
     () => map.grid.flatMap((row, y) => row

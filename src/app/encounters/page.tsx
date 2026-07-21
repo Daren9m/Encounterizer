@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   BookOpen,
   Box,
@@ -93,9 +94,8 @@ import {
 } from '@/lib/encounter-export';
 import {
   battleFromEncounter,
-  isBattleState,
-  type BattleState,
 } from '@/lib/battle-organizer';
+import { getBrowserBattleStore, replaceBattleState } from '@/app/hooks/useBattleStore';
 import { getActiveParty } from '@/lib/party';
 import { setActiveParty as activateParty } from '@/lib/party-manager';
 import { partyToForecastConfig } from '@/lib/party-adapters';
@@ -322,6 +322,7 @@ export default function EncounterPage() {
 }
 
 function EncounterBuilder() {
+  const router = useRouter();
   const { all: allMonsters } = useMonsters();
   const {
     library: partyLibrary,
@@ -1173,11 +1174,7 @@ function EncounterBuilder() {
       focusInvalidPartyField();
       return;
     }
-    const existing = storageLoad<BattleState | null>(
-      'battleOrganizer',
-      null,
-      (value): value is BattleState | null => value === null || isBattleState(value),
-    );
+    const existing = getBrowserBattleStore()?.getSnapshot().battle ?? null;
     if (
       existing?.combatants.length
       && !window.confirm(`Replace the current battle “${existing.name}” with “${encounter.name}”?`)
@@ -1191,11 +1188,12 @@ function EncounterBuilder() {
       effectiveForecastConfig.members,
       cloneEncounterPartyContext(effectivePartyContext),
     );
-    if (!storageSave('battleOrganizer', nextBattle)) {
-      window.alert('The battle could not be saved in this browser.');
-      return;
+    if (!replaceBattleState(nextBattle).ok) {
+      window.alert('The battle is ready in this tab, but this browser could not save it for a later visit.');
     }
-    window.location.assign('/battle/');
+    // Client navigation keeps the shared in-memory battle snapshot alive if
+    // persistence is unavailable; a hard reload would discard that draft.
+    router.push('/battle/');
   }
 
   function handleSaveEncounter() {
