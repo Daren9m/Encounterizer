@@ -1522,6 +1522,105 @@ select optgroup {
   grid-column: 1 / -1;
 }
 
+.dm-screen-panel {
+  position: relative;
+  container-type: inline-size;
+  container-name: dm-screen-panel;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.dm-screen-panel[data-drag-source='true'] {
+  opacity: 0.62;
+}
+
+.dm-screen-panel[data-drop-position='before'] {
+  box-shadow: 0 -4px 0 var(--bronze);
+}
+
+.dm-screen-panel[data-drop-position='after'] {
+  box-shadow: 0 4px 0 var(--bronze);
+}
+
+.dm-screen-drag-handle {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.dm-screen-drag-handle:active {
+  cursor: grabbing;
+  background: var(--bronze-wash);
+  color: var(--bronze-light);
+}
+
+/* Embedded tools respond to their panel rather than the browser viewport. */
+.dm-screen-panel :where(
+  .dm-party-members,
+  .rules-reference-results,
+  .dm-screen-spell-facts,
+  .initiative-actions,
+  .initiative-combatant-details
+) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.dm-screen-panel :where(.monster-ability-grid) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dm-screen-panel :where(.initiative-tracker-heading) {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.dm-screen-panel :where(.initiative-setup-row) {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+}
+
+@container dm-screen-panel (min-width: 34rem) {
+  .dm-party-members {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dm-screen-spell-facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .monster-ability-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .initiative-tracker-heading {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .initiative-setup-row {
+    grid-template-columns: minmax(0, 1fr) 5rem;
+    align-items: center;
+  }
+
+  .initiative-actions,
+  .initiative-combatant-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container dm-screen-panel (min-width: 52rem) {
+  .dm-party-members {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .rules-reference-results {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .initiative-combatant-details {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 .dm-screen-panel-grid[data-density='compact'] {
   gap: 0.5rem;
 }

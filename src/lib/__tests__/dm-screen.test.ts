@@ -9,8 +9,12 @@ import {
   createEmptyDmScreen,
   dmScreenToMarkdown,
   duplicateDmScreenItem,
+  effectiveDmScreenPanelWidth,
+  getDmScreenPanelLocation,
   isDmScreenState,
   mergeDmScreenDocuments,
+  minimumDmScreenPanelWidth,
+  moveDmScreenPanel,
   parseDmScreenDocument,
   reduceDmScreenGrid,
   reduceDmScreenPanelDisplay,
@@ -180,6 +184,98 @@ describe('DM screen', () => {
     expect(reduceDmScreenPanelDisplay(printable, 'missing', {
       type: 'set-collapsed', collapsed: false,
     })).toBe(printable);
+  });
+
+  it('moves panels one position at a time and reports their saved position', () => {
+    const document = screen([{
+      id: 'section', title: 'Table', collapsed: false,
+      items: [note('first'), note('second'), note('third')], children: [],
+    }]);
+
+    const earlier = moveDmScreenPanel(document, 'second', { type: 'before' });
+    expect(earlier.sections[0].items.map((item) => item.id)).toEqual([
+      'second', 'first', 'third',
+    ]);
+    expect(getDmScreenPanelLocation(earlier, 'second')).toEqual({
+      sectionId: 'section', sectionTitle: 'Table', index: 0, count: 3,
+    });
+
+    const later = moveDmScreenPanel(earlier, 'second', { type: 'after' });
+    expect(later.sections[0].items.map((item) => item.id)).toEqual([
+      'first', 'second', 'third',
+    ]);
+    expect(moveDmScreenPanel(later, 'first', { type: 'before' })).toBe(later);
+    expect(moveDmScreenPanel(later, 'third', { type: 'after' })).toBe(later);
+  });
+
+  it('moves an intact panel between nested sections without duplicating its ID', () => {
+    const moving = note('moving', {
+      kind: 'monster', resourceId: 'owlbear', body: 'Keep nested fields.',
+      layout: layout({ width: 'wide', stashed: true }),
+    });
+    const document = screen([{
+      id: 'source', title: 'Source', collapsed: false,
+      items: [note('stay'), moving],
+      children: [{
+        id: 'destination', title: 'Destination', collapsed: true,
+        items: [note('there')], children: [],
+      }],
+    }]);
+
+    const moved = moveDmScreenPanel(document, moving.id, {
+      type: 'to-section', sectionId: 'destination',
+    });
+    const ids = moved.sections.flatMap(function collect(section): string[] {
+      return [
+        ...section.items.map((item) => item.id),
+        ...section.children.flatMap(collect),
+      ];
+    });
+
+    expect(moved.sections[0].items.map((item) => item.id)).toEqual(['stay']);
+    expect(moved.sections[0].children[0].collapsed).toBe(false);
+    expect(moved.sections[0].children[0].items).toEqual([note('there'), moving]);
+    expect(ids.filter((panelId) => panelId === moving.id)).toHaveLength(1);
+    expect(isDmScreenState(moved)).toBe(true);
+    expect(document.sections[0].items).toEqual([note('stay'), moving]);
+    const markdown = dmScreenToMarkdown(moved, new Map(), new Map(), EMPTY_BATTLE);
+    expect(markdown.indexOf('### there')).toBeLessThan(markdown.indexOf('### moving'));
+  });
+
+  it('places pointer moves relative to a target and treats invalid drops as no-ops', () => {
+    const document = screen([{
+      id: 'left', title: 'Left', collapsed: false,
+      items: [note('one'), note('two')],
+      children: [{
+        id: 'right', title: 'Right', collapsed: false,
+        items: [note('three'), note('four')], children: [],
+      }],
+    }]);
+
+    const moved = moveDmScreenPanel(document, 'one', {
+      type: 'relative', targetItemId: 'four', position: 'before',
+    });
+    expect(moved.sections[0].items.map((item) => item.id)).toEqual(['two']);
+    expect(moved.sections[0].children[0].items.map((item) => item.id)).toEqual([
+      'three', 'one', 'four',
+    ]);
+    expect(moveDmScreenPanel(document, 'one', {
+      type: 'relative', targetItemId: 'missing', position: 'after',
+    })).toBe(document);
+    expect(moveDmScreenPanel(document, 'missing', { type: 'after' })).toBe(document);
+    expect(moveDmScreenPanel(document, 'one', {
+      type: 'to-section', sectionId: 'missing',
+    })).toBe(document);
+  });
+
+  it('raises complex embedded tools to a safe effective width', () => {
+    expect(minimumDmScreenPanelWidth('note')).toBe('compact');
+    expect(minimumDmScreenPanelWidth('monster')).toBe('standard');
+    expect(minimumDmScreenPanelWidth('party')).toBe('wide');
+    expect(minimumDmScreenPanelWidth('initiative')).toBe('wide');
+    expect(effectiveDmScreenPanelWidth('rules', 'compact')).toBe('wide');
+    expect(effectiveDmScreenPanelWidth('spell', 'compact')).toBe('standard');
+    expect(effectiveDmScreenPanelWidth('battle', 'full')).toBe('full');
   });
 
   it('duplicates a nested manual panel beside its source with a fresh global ID', () => {

@@ -1,11 +1,20 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import { flushSync } from 'react-dom';
 import Link from 'next/link';
 import {
   Archive,
   ArchiveRestore,
+  ArrowDown,
+  ArrowUp,
   BookOpen,
   CheckCircle2,
   ChevronDown,
@@ -14,6 +23,7 @@ import {
   Expand,
   FileText,
   FolderPlus,
+  GripVertical,
   Link as LinkIcon,
   LayoutTemplate,
   Columns3,
@@ -58,8 +68,12 @@ import {
   appendItemToSectionTree,
   dmScreenToMarkdown,
   duplicateDmScreenItem,
+  effectiveDmScreenPanelWidth,
+  getDmScreenPanelLocation,
   hasDmPartyItem,
   mergeDmScreenDocuments,
+  minimumDmScreenPanelWidth,
+  moveDmScreenPanel,
   reduceDmScreenGrid,
   reduceDmScreenPanelDisplay,
   removeSectionTree,
@@ -70,6 +84,7 @@ import {
   type DmScreenItemKind,
   type DmScreenIdFactory,
   type DmScreenPanelDisplayAction,
+  type DmScreenPanelMoveAction,
   type DmScreenPanelWidth,
   type DmScreenSection,
   type DmScreenState,
@@ -130,6 +145,12 @@ interface DmScreenItemLocation {
   sectionTitle: string;
 }
 
+interface DmScreenDropPreview {
+  sourceItemId: string;
+  targetItemId: string;
+  position: 'before' | 'after';
+}
+
 function collectScreenItems(
   sections: readonly DmScreenSection[],
 ): DmScreenItemLocation[] {
@@ -156,8 +177,12 @@ function panelWidthLabel(width: DmScreenPanelWidth): string {
         : 'Full';
 }
 
-function defaultItemLayout(): DmScreenItem['layout'] {
-  return { width: 'standard', stashed: false, excludedFromPrint: false };
+function defaultItemLayout(kind: DmScreenItemKind): DmScreenItem['layout'] {
+  return {
+    width: minimumDmScreenPanelWidth(kind),
+    stashed: false,
+    excludedFromPrint: false,
+  };
 }
 
 function prepareImportedScreen(
@@ -302,6 +327,7 @@ export default function DmScreenPage() {
   const [printing, setPrinting] = useState(false);
   const [workspaceNotice, setWorkspaceNotice] = useState('');
   const [workspaceError, setWorkspaceError] = useState('');
+  const [dropPreview, setDropPreview] = useState<DmScreenDropPreview | null>(null);
   const [templateNotice, setTemplateNotice] = useState<{
     kind: 'replace' | 'notice' | 'error';
     message: string;
@@ -314,6 +340,7 @@ export default function DmScreenPage() {
   const suppressTrayReturnFocusRef = useRef(false);
   const moreHeadingRef = useRef<HTMLHeadingElement>(null);
   const pendingPanelFocusRef = useRef<string | null>(null);
+  const pendingMoveFocusRef = useRef<string | null>(null);
   const pendingStashButtonFocusRef = useRef(false);
   const templateNoticeRef = useRef<HTMLDivElement>(null);
   const sawReplacementUndo = useRef(false);
@@ -423,6 +450,22 @@ export default function DmScreenPage() {
   }, [focusedItemId, quickAddOpen, screen, stashTrayOpen]);
 
   useEffect(() => {
+    const panelId = pendingMoveFocusRef.current;
+    if (!panelId) return;
+    const frame = window.requestAnimationFrame(() => {
+      const control = document.getElementById(`dm-screen-move-section-${panelId}`);
+      if (!(control instanceof HTMLElement)) return;
+      pendingMoveFocusRef.current = null;
+      control.focus({ preventScroll: true });
+      document.getElementById(`dm-screen-panel-${panelId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [screen]);
+
+  useEffect(() => {
     if (!screenAvailable) return;
     setScreen((current) => {
       const next = syncPinnedItems(
@@ -522,20 +565,20 @@ export default function DmScreenPage() {
 
   async function addConfiguredItem(): Promise<DmScreenQuickAddActionResult> {
     if (addKind === 'note' && (title.trim() || body.trim())) {
-      return addItem({ id: id('note'), kind: 'note', title: title.trim() || 'Note', body: body.trim(), collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
+      return addItem({ id: id('note'), kind: 'note', title: title.trim() || 'Note', body: body.trim(), collapsed: false, layout: defaultItemLayout('note'), origin: 'manual' });
     }
     if (addKind === 'tool') {
       const route = DM_SCREEN_TOOL_ROUTES.find((candidate) => candidate.path === toolPath)!;
-      return addItem({ id: id('tool'), kind: 'tool', title: title.trim() || route.title, body: body.trim() || route.description, href: route.path, collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
+      return addItem({ id: id('tool'), kind: 'tool', title: title.trim() || route.title, body: body.trim() || route.description, href: route.path, collapsed: false, layout: defaultItemLayout('tool'), origin: 'manual' });
     }
     if (addKind === 'initiative') {
-      return addItem({ id: id('initiative'), kind: 'initiative', title: title.trim() || 'Initiative Tracker', collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
+      return addItem({ id: id('initiative'), kind: 'initiative', title: title.trim() || 'Initiative Tracker', collapsed: false, layout: defaultItemLayout('initiative'), origin: 'manual' });
     }
     if (addKind === 'rules') {
-      return addItem({ id: id('rules'), kind: 'rules', title: title.trim() || 'Table Rules Reference', collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
+      return addItem({ id: id('rules'), kind: 'rules', title: title.trim() || 'Table Rules Reference', collapsed: false, layout: defaultItemLayout('rules'), origin: 'manual' });
     }
     if (addKind === 'party') {
-      return addItem({ id: id('party'), kind: 'party', title: title.trim() || 'Active Party', collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
+      return addItem({ id: id('party'), kind: 'party', title: title.trim() || 'Active Party', collapsed: false, layout: defaultItemLayout('party'), origin: 'manual' });
     }
     return { ok: false, error: 'Choose a supported panel and finish its required fields.' };
   }
@@ -544,7 +587,7 @@ export default function DmScreenPage() {
     resourceId: string,
     resourceTitle: string,
   ): Promise<DmScreenQuickAddActionResult> {
-    return addItem({ id: id(addKind), kind: addKind, title: resourceTitle, resourceId, collapsed: false, layout: defaultItemLayout(), origin: 'manual' });
+    return addItem({ id: id(addKind), kind: addKind, title: resourceTitle, resourceId, collapsed: false, layout: defaultItemLayout(addKind), origin: 'manual' });
   }
 
   function openQuickAdd(): void {
@@ -594,6 +637,23 @@ export default function DmScreenPage() {
     setScreen((current) => reduceDmScreenPanelDisplay(current, itemId, action));
   }
 
+  function movePanel(itemId: string, action: DmScreenPanelMoveAction): void {
+    if (!screen) return;
+    const preview = moveDmScreenPanel(screen, itemId, action);
+    if (preview === screen) return;
+    const source = screenItems.find(({ item }) => item.id === itemId)?.item;
+    const location = getDmScreenPanelLocation(preview, itemId);
+    if (!source || !location) return;
+
+    pendingMoveFocusRef.current = itemId;
+    setDropPreview(null);
+    setWorkspaceError('');
+    setWorkspaceNotice(
+      `${source.title} moved to ${location.sectionTitle}, position ${location.index + 1} of ${location.count}.`,
+    );
+    setScreen((current) => moveDmScreenPanel(current, itemId, action));
+  }
+
   function stashPanel(itemId: string): void {
     pendingStashButtonFocusRef.current = true;
     changePanelDisplay(itemId, { type: 'set-stashed', stashed: true });
@@ -635,6 +695,7 @@ export default function DmScreenPage() {
     if (nextMode === 'run') {
       setQuickAddOpen(false);
       setMoreOpen(false);
+      setDropPreview(null);
     }
   }
 
@@ -1232,6 +1293,8 @@ export default function DmScreenPage() {
         arranging={arranging}
         printing={printing}
         screenLayout={screen.layout}
+        sectionOptions={sectionOptions}
+        dropPreview={dropPreview}
         monsters={monsterMap}
         spells={spellMap}
         partySummary={partySummary}
@@ -1242,6 +1305,8 @@ export default function DmScreenPage() {
         onDuplicateItem={(itemId) => setScreen((current) => duplicateDmScreenItem(current, itemId))}
         onFocusItem={openPanelFocus}
         onPanelDisplay={changePanelDisplay}
+        onMovePanel={movePanel}
+        onDropPreview={setDropPreview}
         onStashItem={stashPanel}
         onUpdate={(sectionId, update) => setScreen((current) => ({
           ...current,
@@ -1265,12 +1330,14 @@ export default function DmScreenPage() {
   </div>;
 }
 
-function ScreenSection({ section, depth, arranging, printing, screenLayout, monsters, spells, partySummary, partyLoading, partyUnavailable, onAddChild, onAddPanel, onDuplicateItem, onFocusItem, onPanelDisplay, onStashItem, onUpdate, onRemove }: {
+function ScreenSection({ section, depth, arranging, printing, screenLayout, sectionOptions, dropPreview, monsters, spells, partySummary, partyLoading, partyUnavailable, onAddChild, onAddPanel, onDuplicateItem, onFocusItem, onPanelDisplay, onMovePanel, onDropPreview, onStashItem, onUpdate, onRemove }: {
   section: DmScreenSection;
   depth: number;
   arranging: boolean;
   printing: boolean;
   screenLayout: DmScreenState['layout'];
+  sectionOptions: readonly { id: string; label: string }[];
+  dropPreview: DmScreenDropPreview | null;
   monsters: ReadonlyMap<string, Monster>;
   spells: ReadonlyMap<string, Spell>;
   partySummary: ReturnType<typeof partyToDmScreenSummary> | null;
@@ -1281,6 +1348,8 @@ function ScreenSection({ section, depth, arranging, printing, screenLayout, mons
   onDuplicateItem: (itemId: string) => void;
   onFocusItem: (itemId: string, returnTarget: HTMLElement | null) => void;
   onPanelDisplay: (itemId: string, action: DmScreenPanelDisplayAction) => void;
+  onMovePanel: (itemId: string, action: DmScreenPanelMoveAction) => void;
+  onDropPreview: (preview: DmScreenDropPreview | null) => void;
   onStashItem: (itemId: string) => void;
   onUpdate: (sectionId: string, update: (section: DmScreenSection) => DmScreenSection) => void;
   onRemove: (sectionId: string) => void;
@@ -1312,11 +1381,16 @@ function ScreenSection({ section, depth, arranging, printing, screenLayout, mons
     </header>
     {showContents && <div className={`min-w-0 ${depth === 0 ? 'p-3 sm:p-4' : 'p-1.5 sm:p-3'} print:p-0 print:pt-3`}>
       <div className="dm-screen-panel-grid" data-columns={screenLayout.columns} data-density={screenLayout.density}>
-        {section.items.map((item) => <ScreenItem
+        {section.items.map((item, itemIndex) => <ScreenItem
           key={item.id}
           item={item}
           arranging={arranging}
           printing={printing}
+          sectionId={section.id}
+          sectionOptions={sectionOptions}
+          panelIndex={itemIndex}
+          panelCount={section.items.length}
+          dropPreview={dropPreview}
           monster={item.resourceId ? monsters.get(item.resourceId) : undefined}
           spell={item.resourceId ? spells.get(item.resourceId) : undefined}
           partySummary={partySummary}
@@ -1325,6 +1399,8 @@ function ScreenSection({ section, depth, arranging, printing, screenLayout, mons
           onDuplicate={() => onDuplicateItem(item.id)}
           onFocus={(returnTarget) => onFocusItem(item.id, returnTarget)}
           onDisplayAction={(action) => onPanelDisplay(item.id, action)}
+          onMove={(action) => onMovePanel(item.id, action)}
+          onDropPreview={onDropPreview}
           onStash={() => onStashItem(item.id)}
           onUpdate={(update) => updateItem(item.id, update)}
           onRemove={() => onUpdate(section.id, (current) => ({
@@ -1346,6 +1422,8 @@ function ScreenSection({ section, depth, arranging, printing, screenLayout, mons
           arranging={arranging}
           printing={printing}
           screenLayout={screenLayout}
+          sectionOptions={sectionOptions}
+          dropPreview={dropPreview}
           monsters={monsters}
           spells={spells}
           partySummary={partySummary}
@@ -1356,6 +1434,8 @@ function ScreenSection({ section, depth, arranging, printing, screenLayout, mons
           onDuplicateItem={onDuplicateItem}
           onFocusItem={onFocusItem}
           onPanelDisplay={onPanelDisplay}
+          onMovePanel={onMovePanel}
+          onDropPreview={onDropPreview}
           onStashItem={onStashItem}
           onUpdate={onUpdate}
           onRemove={onRemove}
@@ -1381,10 +1461,15 @@ function panelSummary(
   return `${panelKindLabel(item.kind)} panel`;
 }
 
-function ScreenItem({ item, arranging, printing, monster, spell, partySummary, partyLoading, partyUnavailable, onDuplicate, onFocus, onDisplayAction, onStash, onUpdate, onRemove }: {
+function ScreenItem({ item, arranging, printing, sectionId, sectionOptions, panelIndex, panelCount, dropPreview, monster, spell, partySummary, partyLoading, partyUnavailable, onDuplicate, onFocus, onDisplayAction, onMove, onDropPreview, onStash, onUpdate, onRemove }: {
   item: DmScreenItem;
   arranging: boolean;
   printing: boolean;
+  sectionId: string;
+  sectionOptions: readonly { id: string; label: string }[];
+  panelIndex: number;
+  panelCount: number;
+  dropPreview: DmScreenDropPreview | null;
   monster?: Monster;
   spell?: Spell;
   partySummary: ReturnType<typeof partyToDmScreenSummary> | null;
@@ -1393,6 +1478,8 @@ function ScreenItem({ item, arranging, printing, monster, spell, partySummary, p
   onDuplicate: () => void;
   onFocus: (returnTarget: HTMLElement) => void;
   onDisplayAction: (action: DmScreenPanelDisplayAction) => void;
+  onMove: (action: DmScreenPanelMoveAction) => void;
+  onDropPreview: (preview: DmScreenDropPreview | null) => void;
   onStash: () => void;
   onUpdate: (update: (item: DmScreenItem) => DmScreenItem) => void;
   onRemove: () => void;
@@ -1400,11 +1487,80 @@ function ScreenItem({ item, arranging, printing, monster, spell, partySummary, p
   const Icon = item.kind === 'party' ? Users : item.kind === 'monster' ? Swords : item.kind === 'spell' ? Sparkles : item.kind === 'tool' ? LinkIcon : item.kind === 'rules' ? BookOpen : item.kind === 'initiative' || item.kind === 'battle' ? Swords : FileText;
   const bodyVisible = printing || (!item.layout.stashed && !item.collapsed);
   const summary = panelSummary(item, monster, spell, partySummary);
+  const minimumWidth = minimumDmScreenPanelWidth(item.kind);
+  const effectiveWidth = effectiveDmScreenPanelWidth(item.kind, item.layout.width);
+  const dragStartRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
+  const pendingDropRef = useRef<DmScreenDropPreview | null>(null);
+
+  function cancelPointerMove(currentTarget?: HTMLElement, pointerId?: number): void {
+    if (currentTarget && pointerId !== undefined && currentTarget.hasPointerCapture(pointerId)) {
+      currentTarget.releasePointerCapture(pointerId);
+    }
+    dragStartRef.current = null;
+    pendingDropRef.current = null;
+    onDropPreview(null);
+  }
+
+  function beginPointerMove(event: ReactPointerEvent<HTMLSpanElement>): void {
+    if (event.button !== 0) return;
+    dragStartRef.current = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function previewPointerMove(event: ReactPointerEvent<HTMLSpanElement>): void {
+    const start = dragStartRef.current;
+    if (!start || start.pointerId !== event.pointerId) return;
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) < 7) return;
+    event.preventDefault();
+    const target = document.elementFromPoint(event.clientX, event.clientY)
+      ?.closest<HTMLElement>('[data-dm-screen-panel-id]');
+    const targetItemId = target?.dataset.dmScreenPanelId;
+    if (!target || !targetItemId || targetItemId === item.id) {
+      pendingDropRef.current = null;
+      onDropPreview(null);
+      return;
+    }
+    const bounds = target.getBoundingClientRect();
+    const position = event.clientY < bounds.top + (bounds.height / 2)
+      ? 'before'
+      : 'after';
+    const preview: DmScreenDropPreview = {
+      sourceItemId: item.id,
+      targetItemId,
+      position,
+    };
+    if (pendingDropRef.current?.targetItemId === targetItemId
+      && pendingDropRef.current.position === position) return;
+    pendingDropRef.current = preview;
+    onDropPreview(preview);
+  }
+
+  function finishPointerMove(event: ReactPointerEvent<HTMLSpanElement>): void {
+    const start = dragStartRef.current;
+    const drop = pendingDropRef.current;
+    cancelPointerMove(event.currentTarget, start?.pointerId);
+    if (start && drop) {
+      onMove({
+        type: 'relative',
+        targetItemId: drop.targetItemId,
+        position: drop.position,
+      });
+    }
+  }
+
   return <article
     id={`dm-screen-panel-${item.id}`}
     tabIndex={-1}
-    data-panel-width={item.layout.width}
+    data-dm-screen-panel-id={item.id}
+    data-panel-width={effectiveWidth}
+    data-panel-preferred-width={item.layout.width}
     data-print-excluded={item.layout.excludedFromPrint ? 'true' : undefined}
+    data-drop-position={dropPreview?.targetItemId === item.id ? dropPreview.position : undefined}
+    data-drag-source={dropPreview?.sourceItemId === item.id ? 'true' : undefined}
     className={`dm-screen-panel min-w-0 rounded-xl border border-[var(--steel-800)] bg-[var(--steel-900)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bronze)] ${item.layout.stashed ? 'hidden print:block' : ''}`}
   >
     <header className="dm-screen-panel-header grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 py-2 print:block">
@@ -1424,14 +1580,59 @@ function ScreenItem({ item, arranging, printing, monster, spell, partySummary, p
         <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-[var(--steel-800)]" onClick={() => onDisplayAction({ type: 'set-collapsed', collapsed: !item.collapsed })} aria-expanded={!item.collapsed} aria-label={`${item.collapsed ? 'Expand' : 'Collapse'} ${item.title}`} title={`${item.collapsed ? 'Expand' : 'Collapse'} ${item.title}`}>{item.collapsed ? <ChevronDown size={17} aria-hidden="true" /> : <ChevronUp size={17} aria-hidden="true" />}</button>
       </div>
       {arranging && <div className="col-span-3 flex min-w-0 flex-wrap items-center justify-end gap-1 border-t border-[var(--steel-800)] pt-2 print:hidden">
-        <div className="mr-auto flex min-w-0 flex-wrap items-center gap-1.5">
+        <div className="dm-screen-position-controls mr-auto flex min-w-0 flex-wrap items-center gap-1">
+          <span
+            className="dm-screen-drag-handle inline-flex h-10 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-3)]"
+            title={`Drag ${item.title} to another position`}
+            aria-hidden="true"
+            onPointerDown={beginPointerMove}
+            onPointerMove={previewPointerMove}
+            onPointerUp={finishPointerMove}
+            onPointerCancel={(event) => cancelPointerMove(event.currentTarget, event.pointerId)}
+            onLostPointerCapture={() => {
+              if (dragStartRef.current) cancelPointerMove();
+            }}
+          ><GripVertical size={18} /></span>
+          <span className="px-1 text-xs tabular-nums text-[var(--text-3)]" aria-hidden="true">{panelIndex + 1}/{panelCount}</span>
+          <button
+            id={`dm-screen-move-before-${item.id}`}
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-[var(--steel-800)] disabled:cursor-not-allowed disabled:opacity-35"
+            disabled={panelIndex === 0}
+            onClick={() => onMove({ type: 'before' })}
+            aria-label={`Move ${item.title} before the previous panel`}
+            title="Move earlier"
+          ><ArrowUp size={16} aria-hidden="true" /></button>
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-[var(--steel-800)] disabled:cursor-not-allowed disabled:opacity-35"
+            disabled={panelIndex === panelCount - 1}
+            onClick={() => onMove({ type: 'after' })}
+            aria-label={`Move ${item.title} after the next panel`}
+            title="Move later"
+          ><ArrowDown size={16} aria-hidden="true" /></button>
+          <label className="flex min-h-10 min-w-0 items-center gap-1.5 rounded-lg px-1.5 text-xs text-[var(--text-3)]">
+            <span className="shrink-0">Move to</span>
+            <select
+              id={`dm-screen-move-section-${item.id}`}
+              className="max-w-40 !min-h-9 min-w-0 !py-1 text-xs"
+              value={sectionId}
+              disabled={sectionOptions.length < 2}
+              onChange={(event) => onMove({ type: 'to-section', sectionId: event.target.value })}
+              aria-label={`Move ${item.title} to section`}
+            >
+              {sectionOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           {item.origin === 'auto-pin' && <span className="rounded-full bg-[var(--bronze-wash)] px-2 py-0.5 text-[10px] font-semibold text-[var(--bronze)]">AUTO-PINNED</span>}
           {item.layout.excludedFromPrint && <span className="text-xs text-[var(--text-3)]">Not printed</span>}
         </div>
         <label className="flex min-h-10 items-center gap-1.5 rounded-lg px-1.5 text-xs text-[var(--text-3)]">
           <span>Size</span>
-          <select className="!min-h-9 !py-1 text-xs" value={item.layout.width} onChange={(event) => onDisplayAction({ type: 'set-width', width: event.target.value as DmScreenPanelWidth })} aria-label={`Size for ${item.title}`}>
-            {(['compact', 'standard', 'wide', 'full'] as const).map((width) => <option key={width} value={width}>{panelWidthLabel(width)}</option>)}
+          <select className="!min-h-9 !py-1 text-xs" value={effectiveWidth} onChange={(event) => onDisplayAction({ type: 'set-width', width: event.target.value as DmScreenPanelWidth })} aria-label={`Size for ${item.title}`} title={`Minimum size: ${panelWidthLabel(minimumWidth)}`}>
+            {(['compact', 'standard', 'wide', 'full'] as const).map((width) => <option key={width} value={width} disabled={effectiveDmScreenPanelWidth(item.kind, width) !== width}>{panelWidthLabel(width)}</option>)}
           </select>
         </label>
         <button type="button" className="inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-lg px-2 text-xs hover:bg-[var(--steel-800)]" onClick={onStash} aria-label={`Stash ${item.title}`} title={`Stash ${item.title}`}><Archive size={16} aria-hidden="true" /><span className="hidden xl:inline">Stash</span></button>
@@ -1440,7 +1641,8 @@ function ScreenItem({ item, arranging, printing, monster, spell, partySummary, p
       </div>}
     </header>
     {bodyVisible && <div className="dm-screen-panel-body border-t border-[var(--steel-800)] p-3 print:p-0 print:pt-2">
-      <ScreenItemBody
+      <div className="dm-screen-embedded min-w-0" data-embedded-kind={item.kind}>
+        <ScreenItemBody
         item={item}
         arranging={arranging}
         monster={monster}
@@ -1450,7 +1652,8 @@ function ScreenItem({ item, arranging, printing, monster, spell, partySummary, p
         partyUnavailable={partyUnavailable}
         onUpdate={onUpdate}
         onDisplayAction={onDisplayAction}
-      />
+        />
+      </div>
     </div>}
   </article>;
 }
@@ -1491,9 +1694,9 @@ function ScreenItemBody({ item, arranging, monster, spell, partySummary, partyLo
 }
 
 function SpellReference({ spell }: { spell: Spell }) {
-  return <div className="rounded-lg bg-[var(--steel-950)] p-4">
+  return <div className="dm-screen-spell-reference rounded-lg bg-[var(--steel-950)] p-4">
     <div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="text-xl">{spell.name}</h3><p className="text-xs text-[var(--text-2)]">{levelLabel(spell.level)} {spell.school} · {spell.components}</p></div><div className="flex gap-1">{spell.concentration && <span className="rounded bg-[var(--bronze-wash)] px-2 py-1 text-xs text-[var(--bronze)]">Concentration</span>}{spell.ritual && <span className="rounded bg-[var(--steel-800)] px-2 py-1 text-xs">Ritual</span>}</div></div>
-    <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-3"><div><dt className="micro-label">Casting time</dt><dd>{spell.castingTime}</dd></div><div><dt className="micro-label">Range</dt><dd>{spell.range}</dd></div><div><dt className="micro-label">Duration</dt><dd>{spell.duration}</dd></div></dl>
+    <dl className="dm-screen-spell-facts mt-3 grid gap-2 text-sm"><div><dt className="micro-label">Casting time</dt><dd>{spell.castingTime}</dd></div><div><dt className="micro-label">Range</dt><dd>{spell.range}</dd></div><div><dt className="micro-label">Duration</dt><dd>{spell.duration}</dd></div></dl>
     <p className="mt-3 font-semibold">{spell.effectSummary}</p>
     <div className="mt-3 space-y-2 text-sm leading-relaxed">{spell.description.split('\n\n').map((paragraph, index) => <p key={index} className="whitespace-pre-line">{paragraph}</p>)}</div>
   </div>;

@@ -106,6 +106,44 @@ export type DmScreenPanelDisplayAction =
   | { type: 'set-stashed'; stashed: boolean }
   | { type: 'set-print-excluded'; excludedFromPrint: boolean };
 
+export type DmScreenPanelMoveAction =
+  | { type: 'before' }
+  | { type: 'after' }
+  | { type: 'to-section'; sectionId: string }
+  | { type: 'relative'; targetItemId: string; position: 'before' | 'after' };
+
+export interface DmScreenPanelLocation {
+  sectionId: string;
+  sectionTitle: string;
+  index: number;
+  count: number;
+}
+
+const PANEL_WIDTH_ORDER: readonly DmScreenPanelWidth[] = [
+  'compact', 'standard', 'wide', 'full',
+];
+
+/** Minimum safe board span for embedded tools with dense, interactive content. */
+export function minimumDmScreenPanelWidth(
+  kind: DmScreenItemKind,
+): DmScreenPanelWidth {
+  if (kind === 'battle' || kind === 'initiative') return 'wide';
+  if (kind === 'rules' || kind === 'party') return 'wide';
+  if (kind === 'monster' || kind === 'spell') return 'standard';
+  return 'compact';
+}
+
+/** Resolve a saved preference to the smallest span that remains usable. */
+export function effectiveDmScreenPanelWidth(
+  kind: DmScreenItemKind,
+  preferred: DmScreenPanelWidth,
+): DmScreenPanelWidth {
+  const minimum = minimumDmScreenPanelWidth(kind);
+  return PANEL_WIDTH_ORDER.indexOf(preferred) >= PANEL_WIDTH_ORDER.indexOf(minimum)
+    ? preferred
+    : minimum;
+}
+
 function defaultId(kind: DmScreenIdKind): string {
   const suffix = globalThis.crypto?.randomUUID?.()
     ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
@@ -255,6 +293,161 @@ export function reduceDmScreenPanelDisplay(
 
   const result = updateSections(state.sections);
   return result.changed ? { ...state, sections: result.sections } : state;
+}
+
+interface LocatedDmScreenPanel extends DmScreenPanelLocation {
+  item: DmScreenItem;
+}
+
+function locateDmScreenPanel(
+  sections: readonly DmScreenSection[],
+  itemId: string,
+): LocatedDmScreenPanel | null {
+  for (const section of sections) {
+    const index = section.items.findIndex((item) => item.id === itemId);
+    if (index >= 0) {
+      return {
+        item: section.items[index],
+        sectionId: section.id,
+        sectionTitle: section.title,
+        index,
+        count: section.items.length,
+      };
+    }
+    const nested = locateDmScreenPanel(section.children, itemId);
+    if (nested) return nested;
+  }
+  return null;
+}
+
+export function getDmScreenPanelLocation(
+  state: DmScreenState,
+  itemId: string,
+): DmScreenPanelLocation | null {
+  const location = locateDmScreenPanel(state.sections, itemId);
+  if (!location) return null;
+  const { item: _item, ...publicLocation } = location;
+  return publicLocation;
+}
+
+function findDmScreenSection(
+  sections: readonly DmScreenSection[],
+  sectionId: string,
+): DmScreenSection | null {
+  for (const section of sections) {
+    if (section.id === sectionId) return section;
+    const nested = findDmScreenSection(section.children, sectionId);
+    if (nested) return nested;
+  }
+  return null;
+}
+
+function removePanelFromSectionTree(
+  sections: DmScreenSection[],
+  sectionId: string,
+  itemId: string,
+): DmScreenSection[] {
+  return sections.map((section) => {
+    if (section.id === sectionId) {
+      return {
+        ...section,
+        items: section.items.filter((item) => item.id !== itemId),
+      };
+    }
+    const children = removePanelFromSectionTree(section.children, sectionId, itemId);
+    return children === section.children ? section : { ...section, children };
+  });
+}
+
+function insertPanelInSectionTree(
+  sections: DmScreenSection[],
+  sectionId: string,
+  item: DmScreenItem,
+  requestedIndex: number,
+): DmScreenSection[] {
+  let changed = false;
+  const next = sections.map((section) => {
+    if (section.id === sectionId) {
+      changed = true;
+      const index = Math.max(0, Math.min(requestedIndex, section.items.length));
+      return {
+        ...section,
+        collapsed: false,
+        items: [
+          ...section.items.slice(0, index),
+          item,
+          ...section.items.slice(index),
+        ],
+      };
+    }
+    const children = insertPanelInSectionTree(
+      section.children,
+      sectionId,
+      item,
+      requestedIndex,
+    );
+    if (children === section.children) return section;
+    changed = true;
+    return { ...section, collapsed: false, children };
+  });
+  return changed ? next : sections;
+}
+
+/**
+ * Move one panel without cloning, dropping, or duplicating its nested data.
+ * All inputs are resolved before the document changes, so an invalid target is
+ * a strict no-op and pointer cancellation can safely abandon a pending move.
+ */
+export function moveDmScreenPanel(
+  state: DmScreenState,
+  itemId: string,
+  action: DmScreenPanelMoveAction,
+): DmScreenState {
+  const source = locateDmScreenPanel(state.sections, itemId);
+  if (!source) return state;
+
+  let destinationSectionId = source.sectionId;
+  let destinationIndex = source.index;
+
+  if (action.type === 'before') {
+    if (source.index === 0) return state;
+    destinationIndex = source.index - 1;
+  } else if (action.type === 'after') {
+    if (source.index === source.count - 1) return state;
+    // Removing the source shifts the next panel into the source index; insert
+    // after it to advance exactly one logical position.
+    destinationIndex = source.index + 1;
+  } else if (action.type === 'to-section') {
+    if (action.sectionId === source.sectionId
+      || !findDmScreenSection(state.sections, action.sectionId)) return state;
+    destinationSectionId = action.sectionId;
+    const destination = findDmScreenSection(state.sections, action.sectionId);
+    destinationIndex = destination?.items.length ?? 0;
+  } else {
+    const target = locateDmScreenPanel(state.sections, action.targetItemId);
+    if (!target || target.item.id === source.item.id) return state;
+    destinationSectionId = target.sectionId;
+    destinationIndex = target.index + (action.position === 'after' ? 1 : 0);
+    if (source.sectionId === target.sectionId && source.index < destinationIndex) {
+      destinationIndex -= 1;
+    }
+    if (source.sectionId === target.sectionId && destinationIndex === source.index) {
+      return state;
+    }
+  }
+
+  const withoutSource = removePanelFromSectionTree(
+    state.sections,
+    source.sectionId,
+    source.item.id,
+  );
+  const sections = insertPanelInSectionTree(
+    withoutSource,
+    destinationSectionId,
+    source.item,
+    destinationIndex,
+  );
+  return sections === state.sections ? state : { ...state, sections };
 }
 
 export function removeSectionTree(sections: DmScreenSection[], sectionId: string): DmScreenSection[] {

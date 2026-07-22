@@ -63,7 +63,7 @@ export default function DmPartyPanel({
       </div>
 
       {summary.members.length > 0 ? (
-        <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="dm-party-members grid gap-2">
           {summary.members.map((member) => (
             <li key={member.id} className="surface-inset min-w-0 p-3">
               <div className="flex min-w-0 items-start justify-between gap-2">

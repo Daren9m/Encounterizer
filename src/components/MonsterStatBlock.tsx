@@ -64,7 +64,7 @@ export default function MonsterStatBlock({
       <hr className="border-[var(--steel-800)] my-2" />
 
       {/* Ability Scores */}
-      <div className="grid grid-cols-6 gap-1 text-center text-sm mb-2">
+      <div className="monster-ability-grid grid grid-cols-6 gap-1 text-center text-sm mb-2">
         {(['str', 'dex', 'con', 'int', 'wis', 'cha'] as const).map(ab => (
           <div key={ab}>
             <div className="font-bold text-[var(--bronze)] uppercase text-xs">{ab}</div>
