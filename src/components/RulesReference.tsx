@@ -184,7 +184,7 @@ export default function RulesReference({ variant = 'embedded' }: { variant?: Rul
             </div>
           </section>
         ) : (
-          <div className="mt-3 grid gap-2 lg:grid-cols-2 print:grid-cols-1">
+          <div className="rules-reference-results mt-3 grid gap-2 print:grid-cols-1">
             {entries.map(renderEntry)}
           </div>
         )

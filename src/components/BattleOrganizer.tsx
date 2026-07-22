@@ -832,7 +832,7 @@ function LiveCombatantRow({ combatant, active, compact = false, onUpdate, onDama
         </button>
       </div>
 
-      <div id={detailsId} className={`${expanded ? 'grid' : 'hidden'} mt-3 gap-3 border-t border-[var(--border-subtle)] pt-3 sm:grid-cols-2 lg:grid-cols-4 print:grid`}>
+      <div id={detailsId} className={`${expanded ? 'grid' : 'hidden'} ${compact ? 'initiative-combatant-details' : ''} mt-3 gap-3 border-t border-[var(--border-subtle)] pt-3 sm:grid-cols-2 lg:grid-cols-4 print:grid`}>
         <label><span className="field-label">Name</span><input className="w-full" value={combatant.name} onChange={(event) => onUpdate({ name: event.target.value })} /></label>
         <label><span className="field-label">Initiative</span><input type="number" className="w-full" value={combatant.initiative} onChange={(event) => onUpdate({ initiative: Number(event.target.value) || 0 })} /></label>
         <label><span className="field-label">Side</span><select className="w-full" value={combatant.kind} onChange={(event) => onUpdate({ kind: event.target.value as CombatantKind })}><option value="player">Player</option><option value="ally">Ally</option><option value="enemy">Enemy</option></select></label>
@@ -1046,7 +1046,7 @@ function CompactBattleOrganizer({ battle, phase, ordered, callouts, onStart, onA
   return (
     <section className="initiative-tracker" aria-label="Initiative tracker">
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">Initiative tracker phase: {phaseLabel}.</p>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 print:hidden">
+      <div className="initiative-tracker-heading mb-3 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div><p className="micro-label">Initiative tracker</p><h3 ref={headingRef} tabIndex={-1} className="text-lg">{battle.name}</h3></div>
         <Link href="/battle" className="btn-secondary text-sm">Open full organizer <span aria-hidden="true">→</span></Link>
       </div>
@@ -1058,7 +1058,7 @@ function CompactBattleOrganizer({ battle, phase, ordered, callouts, onStart, onA
           <div className="content-panel-heading"><div><h3>Prepare initiative</h3><p>Enter initiative, then start combat.</p></div><span className="status-readout status-readout-warning text-sm"><span className="status-readout-dot" aria-hidden="true" />Setup</span></div>
           <div className="space-y-2">
             {ordered.map((combatant) => (
-              <label key={combatant.id} className="surface-inset grid gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_5rem] sm:items-center">
+              <label key={combatant.id} className="initiative-setup-row surface-inset grid gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_5rem] sm:items-center">
                 <span><span className="font-semibold">{combatant.name}</span><span className="block text-xs text-[var(--text-3)]">{kindLabel(combatant.kind)}</span></span>
                 <span><span className="field-label">Initiative</span><input type="number" className="w-full text-center" value={combatant.initiative} onChange={(event) => onUpdate(combatant.id, { initiative: Number(event.target.value) || 0 })} /></span>
               </label>
@@ -1075,7 +1075,7 @@ function CompactBattleOrganizer({ battle, phase, ordered, callouts, onStart, onA
               <Callout label="Next up" combatant={callouts.next} />
               <Callout label="On deck" combatant={callouts.onDeck} />
             </div>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div className="initiative-actions mt-3 grid gap-2 sm:grid-cols-2">
               <button type="button" className="btn-primary" onClick={onAdvance}><Clock size={17} aria-hidden="true" /> End {callouts.current?.name ?? 'current'} turn</button>
               <button type="button" className="btn-secondary" onClick={onFinish}><Flag size={17} aria-hidden="true" /> Finish battle</button>
             </div>
@@ -1109,7 +1109,7 @@ function CompactBattleOrganizer({ battle, phase, ordered, callouts, onStart, onA
         <div className="content-panel">
           <div className="flex items-start justify-between gap-3"><div><p className="micro-label">Battle complete</p><p className="mt-1 font-semibold">Finished after round {battle.round}</p></div><Trophy size={24} className="text-[var(--bronze)]" aria-hidden="true" /></div>
           <p className="mt-2 text-sm text-[var(--text-2)]">{battle.combatants.filter((combatant) => combatant.currentHp === 0).length} at 0 HP · {battle.log.length} log events</p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2 print:hidden"><button type="button" className="btn-secondary" onClick={onResume}><RotateCcw size={17} aria-hidden="true" /> Resume combat</button><Link href="/battle" className="btn-primary">Open battle summary</Link></div>
+          <div className="initiative-actions mt-3 grid gap-2 sm:grid-cols-2 print:hidden"><button type="button" className="btn-secondary" onClick={onResume}><RotateCcw size={17} aria-hidden="true" /> Resume combat</button><Link href="/battle" className="btn-primary">Open battle summary</Link></div>
         </div>
       )}
     </section>
